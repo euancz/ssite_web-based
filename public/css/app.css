@@ -1,0 +1,24 @@
+:root {
+    --ssite-blue: #A7E1F5;
+    --ssite-blue-light: #C7ECF9;
+    --ssite-navy: #17324D;
+    --ssite-navy-soft: #3E5972;
+    --ssite-line: #E4E9ED;
+}
+
+body {
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    color: var(--ssite-navy);
+}
+
+.font-display {
+    font-family: 'Lora', ui-serif, Georgia, serif;
+}
+
+.ssite-bg {
+    background-color: var(--ssite-blue);
+}
+
+.ssite-navy {
+    color: var(--ssite-navy);
+}
