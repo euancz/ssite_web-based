@@ -43,4 +43,17 @@ class ExampleTest extends TestCase
             ->assertSee('aria-expanded="true"', false)
             ->assertSee('The email or password is incorrect.');
     }
+
+    public function test_about_page_is_public_and_renders_the_officers(): void
+    {
+        $this->get('/about')
+            ->assertOk()
+            ->assertSee('Get to Know SSITE')
+            ->assertSee('Mission')
+            ->assertSee('Vision')
+            ->assertSee('SSITE Officers A.Y. 2026-2027')
+            ->assertSee('Kyle Alegre')
+            ->assertSee('Leadership History')
+            ->assertSee('https://placehold.co/320x320', false);
+    }
 }

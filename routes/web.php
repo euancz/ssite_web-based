@@ -13,6 +13,10 @@ Route::get('/', function () {
     return view('home.home');
 });
 
+Route::get('/about', function () {
+    return view('about.about');
+})->name('about');
+
 
 // ==============================
 // GUEST ROUTES
@@ -45,10 +49,6 @@ Route::middleware('auth')->group(function () {
  Route::get('/home', function () {
     return view('home.home');
 })->name('home');
-
-Route::get('/about', function () {
-    return view('about.about');
-})->name('about');
 
 Route::get('/articles', function () {
     return view('articles.articles');

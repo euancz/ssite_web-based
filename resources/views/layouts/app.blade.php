@@ -144,6 +144,13 @@
                             <div class="account-menu-name">
                                 {{ auth()->user()->name }}
                             </div>
+                            <button type="button" class="account-menu-action">
+                                <svg aria-hidden="true" class="icon-small" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25a3.75 3.75 0 100 7.5 3.75 3.75 0 000-7.5z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06-1.5 2.6-.08-.02a1.65 1.65 0 00-1.78.76l-.04.07h-3l-.02-.08a1.65 1.65 0 00-1.4-1.14 1.65 1.65 0 00-1.73.92l-.04.08-2.84-1.02.02-.08a1.65 1.65 0 00-.76-1.78l-.07-.04v-3l.08-.02a1.65 1.65 0 001.14-1.4 1.65 1.65 0 00-.92-1.73l-.08-.04 1.02-2.84.08.02a1.65 1.65 0 001.78-.76l.04-.07h3l.02.08a1.65 1.65 0 001.4 1.14 1.65 1.65 0 001.73-.92l.04-.08 2.84 1.02-.02.08a1.65 1.65 0 00.76 1.78l.07.04v3l-.08.02A1.65 1.65 0 0019.4 15z"/>
+                                </svg>
+                                <span>Settings</span>
+                            </button>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="account-menu-logout">

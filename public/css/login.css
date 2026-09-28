@@ -39,11 +39,11 @@ body {
 
 .login-image {
     width: 100%;
-    height: 148px;
+    height: 170px;
 
-    background-image: url('/images/login-bg.png');
+    background-image: url('/images/Wolf.png');
 
-    background-size: cover;
+    background-size: 115% auto;
     background-position: center;
     background-repeat: no-repeat;
 }
