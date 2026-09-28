@@ -2,6 +2,10 @@
 
 @section('title', 'About Us')
 
+@push('styles')
+	<link rel="stylesheet" href="{{ asset('css/about.css') }}">
+@endpush
+
 @section('content')
 <div class="about-page">
 	<h1 class="about-page-title">Get to Know SSITE</h1>

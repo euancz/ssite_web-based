@@ -22,7 +22,7 @@
         <div class="site-header-main">
             <a href="{{ url('/') }}" class="site-brand">
                 {{-- LOGO PLACEHOLDER --}}
-                <img src="https://placehold.co/56x56/17324D/A7E1F5?text=SSITE"
+                <img src="{{ asset('images/SSITE LOGO.png') }}"
                      alt="SSITE Logo"
                      class="site-logo">
                 <span class="site-brand-name">
@@ -298,7 +298,7 @@
             <div class="footer-organization">
                 <div class="footer-brand">
                     {{-- LOGO PLACEHOLDER --}}
-                    <img src="https://placehold.co/56x56/17324D/A7E1F5?text=SSITE"
+                    <img src="{{ asset('images/SSITE LOGO.png') }}"
                          alt="SSITE Logo"
                         class="footer-logo">
                     <span class="footer-brand-name">
@@ -312,9 +312,9 @@
 
                 <div class="footer-badges">
                     {{-- BADGE PLACEHOLDERS --}}
-                    <img src="https://placehold.co/64x64/17324D/A7E1F5?text=Badge+1" alt="Badge 1" class="footer-badge">
-                    <img src="https://placehold.co/64x64/17324D/A7E1F5?text=Badge+2" alt="Badge 2" class="footer-badge">
-                    <img src="https://placehold.co/64x64/17324D/A7E1F5?text=Badge+3" alt="Badge 3" class="footer-badge">
+                    <img src="{{ asset('images/ICS LOGO 1.png') }}" alt="Badge 1" class="footer-badge">
+                    <img src="{{ asset('images/MCC LOGO 1.png') }}" alt="Badge 2" class="footer-badge">
+                    <img src="{{ asset('images/ssite - revamp logo 2.png') }}" alt="Badge 3" class="footer-badge">
                 </div>
             </div>
 

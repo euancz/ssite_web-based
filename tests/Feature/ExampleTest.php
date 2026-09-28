@@ -60,6 +60,7 @@ class ExampleTest extends TestCase
             ->assertSee('SSITE Officers A.Y. 2026-2027')
             ->assertSee('Kyle Alegre')
             ->assertSee('Leadership History')
-            ->assertSee('https://placehold.co/320x320', false);
+            ->assertSee('https://placehold.co/320x320', false)
+            ->assertSee('css/about.css');
     }
 }
