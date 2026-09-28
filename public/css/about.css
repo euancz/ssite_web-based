@@ -1,6 +1,6 @@
 .about-page {
     width: 100%;
-    max-width: 588px;
+    max-width: 800px;
     margin: 0 auto;
     padding: 24px 24px 0;
 }
@@ -11,7 +11,7 @@
     border-bottom: 2px solid var(--ssite-navy);
     padding-bottom: 8px;
     color: var(--ssite-navy);
-    font-family: 'Lora', ui-serif, Georgia, serif;
+    font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
     font-size: 19px;
     font-weight: 700;
 }
@@ -49,7 +49,7 @@
     border-bottom: 2px solid #64c5df;
     padding-bottom: 7px;
     color: var(--ssite-navy);
-    font-family: 'Lora', ui-serif, Georgia, serif;
+    font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
     font-size: 18px;
     font-weight: 700;
     text-transform: uppercase;
@@ -96,7 +96,7 @@
     min-height: 2.2em;
     margin: 0;
     color: var(--ssite-navy);
-    font-family: 'Lora', ui-serif, Georgia, serif;
+    font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
     font-size: 12px;
     font-weight: 700;
     line-height: 1.15;
@@ -135,7 +135,7 @@
     gap: 12px;
     padding: 8px 16px;
     cursor: pointer;
-    font-family: 'Lora', ui-serif, Georgia, serif;
+    font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
     font-size: 14px;
     font-weight: 700;
     list-style: none;

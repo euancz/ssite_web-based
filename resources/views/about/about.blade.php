@@ -26,12 +26,12 @@
 
 		@php
 			$officers = [
-				['Kyle Alegre', 'Adviser'],
-				['Lance Carlo Bernabe', 'Student Adviser'],
-				['Michaelle Vickeema Sarmiento', 'President'],
-				['Irish Nicole Bernabe', 'Vice President (Internal)'],
-				['Charlotte Sapnu', 'Vice President (External)'],
-				['Lian San Diego', 'Secretary'],
+				['Khyle Alegre', 'Adviser', 'images/officerimg/Khyle Alegre 1.png'],
+				['Lance Carlo Bernabe', 'Student Adviser', 'resources/images/officers/lance-carlo-bernabe.jpg'],
+				['Michaelle Vickeema Sarmiento', 'President', 'resources/images/officers/michaelle-vickeema-sarmiento.jpg'],
+				['Irish Nicole Bernabe', 'Vice President (Internal)', 'resources/images/officers/irish-nicole-bernabe.jpg'],
+				['Charlotte Sapnu', 'Vice President (External)', 'resources/images/officers/charlotte-sapnu.jpg'],
+				['Lian San Diego', 'Secretary', 'resources/images/officers/lian-san-diego.jpg'],
 				['John Daniel Bayani', 'Treasurer'],
 				['Xyra Shannel Alvarez', 'Auditor'],
 				['Chanel Jeraldine Fernandez', 'Public Information Officer'],
@@ -45,11 +45,18 @@
 		@endphp
 
 		<div class="officers-grid">
-			@foreach ($officers as [$name, $role])
+			@foreach ($officers as $officer)
+				@php
+					[$name, $role] = $officer;
+					$photoPath = $officer[2] ?? null;
+					$photoUrl = $photoPath && file_exists(public_path($photoPath))
+						? asset($photoPath)
+						: 'https://placehold.co/320x320/F7FBFC/17324D?text=Photo';
+				@endphp
 				<article class="officer-card">
 					<img class="officer-photo"
-						 src="https://placehold.co/320x320/F7FBFC/17324D?text=Photo"
-						 alt="Placeholder portrait for {{ $name }}">
+						 src="{{ $photoUrl }}"
+						 alt="Officer portrait for {{ $name }}">
 					<h3>{{ $name }}</h3>
 					<p>{{ $role }}</p>
 				</article>

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MicrosoftAuthController;
+use App\Http\Middleware\RequireAuthentication;
 
 
 // ==============================
@@ -13,11 +14,6 @@ Route::get('/', function () {
     return view('home.home');
 });
 
-Route::get('/about', function () {
-    return view('about.about');
-})->name('about');
-
-
 // ==============================
 // GUEST ROUTES
 // ==============================
@@ -25,7 +21,9 @@ Route::get('/about', function () {
 Route::middleware('guest')->group(function () {
 
     // Normal login
-    Route::get('/login', [AuthController::class, 'showLogin'])
+    Route::get('/login', function () {
+        return redirect('/')->with('error', 'Sign in first before proceeding.');
+    })
         ->name('login');
 
     Route::post('/login', [AuthController::class, 'login']);
@@ -44,7 +42,11 @@ Route::middleware('guest')->group(function () {
 // AUTHENTICATED ROUTES
 // ==============================
 
-Route::middleware('auth')->group(function () {
+Route::middleware(RequireAuthentication::class)->group(function () {
+Route::get('/about', function () {
+    return view('about.about');
+})->name('about');
+
 //home
  Route::get('/home', function () {
     return view('home.home');

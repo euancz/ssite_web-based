@@ -10,12 +10,12 @@
 *::before,
 *::after {
     box-sizing: border-box;
+    font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
 }
 
 body.site-body {
     margin: 0;
     background: #fff;
-    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
     color: var(--ssite-navy);
     -webkit-font-smoothing: antialiased;
 }
@@ -46,7 +46,7 @@ ol {
 }
 
 .font-display {
-    font-family: 'Lora', ui-serif, Georgia, serif;
+    font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
 }
 
 .site-header,
@@ -104,7 +104,7 @@ ol {
 .site-brand-name,
 .footer-brand-name {
     color: var(--ssite-navy);
-    font-family: 'Lora', ui-serif, Georgia, serif;
+    font-family: 'Universal', 'Poppins', ui-sans-serif, system-ui, sans-serif;
     font-weight: 700;
     line-height: 1.15;
 }
@@ -136,8 +136,8 @@ ol {
 .site-search-input {
     width: 100%;
     height: 38px;
-    border: 1px solid #c8d7df;
-    border-radius: 0;
+    border: 1px solid #000;
+    border-radius: 6px;
     padding: 0 40px 0 20px;
     background: rgb(255 255 255 / 90%);
     color: #334155;
@@ -149,8 +149,8 @@ ol {
 }
 
 .site-search-input:focus {
-    outline: 2px solid #fff;
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: none;
 }
 
 .site-search-icon {
@@ -237,13 +237,14 @@ ol {
     z-index: 30;
     display: none;
     border-top: 2px solid var(--ssite-line);
+    border-bottom: 2px solid var(--ssite-line);
     background: var(--ssite-blue);
 }
 
 .site-nav-list {
     gap: 32px;
     overflow: visible;
-    padding: 0 24px;
+    padding: 0 24px 0 40px;
     color: var(--ssite-navy);
     font-size: 15px;
     font-weight: 500;
@@ -407,6 +408,7 @@ ol {
 
 .site-footer {
     margin-top: 64px;
+    border-top: 2px solid var(--ssite-line);
 }
 
 .site-footer-content {
@@ -458,7 +460,7 @@ ol {
 .footer-heading {
     margin: 0 0 16px;
     color: var(--ssite-navy);
-    font-family: 'Lora', ui-serif, Georgia, serif;
+    font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
     font-size: 18px;
     font-weight: 600;
 }
@@ -504,9 +506,9 @@ ol {
 
 .home-content {
     width: 100%;
-    max-width: 80rem;
+    max-width: 65rem;
     margin: 0 auto;
-    padding: 32px 16px 0;
+    padding: 32px 20px 0;
 }
 
 .home-heading {
@@ -514,7 +516,7 @@ ol {
     border-bottom: 2px solid var(--ssite-navy);
     padding-bottom: 16px;
     color: var(--ssite-navy);
-    font-family: 'Lora', ui-serif, Georgia, serif;
+    font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
     font-size: 24px;
     font-weight: 700;
 }
@@ -533,7 +535,7 @@ ol {
 .featured-title {
     margin: 0 0 12px;
     color: var(--ssite-navy);
-    font-family: 'Lora', ui-serif, Georgia, serif;
+    font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
     font-size: 24px;
     font-weight: 700;
     line-height: 1.1;
@@ -581,7 +583,7 @@ ol {
 .home-divider {
     margin: 0 0 40px;
     border: 0;
-    border-top: 1px solid var(--ssite-line);
+    border-top: 1px solid #d1d5db;
 }
 
 .secondary-articles {
@@ -602,7 +604,7 @@ ol {
 .secondary-article-title {
     margin: 0 0 8px;
     color: var(--ssite-navy);
-    font-family: 'Lora', ui-serif, Georgia, serif;
+    font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
     font-size: 20px;
     font-weight: 700;
     line-height: 1.375;
@@ -794,7 +796,7 @@ ol {
         left: 50%;
         display: block;
         width: 1px;
-        background: var(--ssite-line);
+        background: #d1d5db;
     }
 
     .secondary-article-title {
@@ -910,13 +912,29 @@ ol {
     background: #12546c;
 }
 
+.login-popover-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0;
+    color: #777;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.login-popover-divider::before,
+.login-popover-divider::after {
+    flex: 1;
+    border-top: 1px solid #d4d4d4;
+    content: '';
+}
+
 .login-popover-microsoft {
     display: flex;
     min-height: 36px;
     align-items: center;
     justify-content: center;
     gap: 9px;
-    margin-top: 10px;
     border: 1px solid #d4d4d4;
     border-radius: 4px;
     color: #3f3f3f;

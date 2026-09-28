@@ -7,7 +7,7 @@
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- App styles -->
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
@@ -108,6 +108,10 @@
 
                                     <button type="submit" class="login-popover-submit">Login</button>
                                 </form>
+
+                                <div class="login-popover-divider" aria-hidden="true">
+                                    <span>OR</span>
+                                </div>
 
                                 <a href="{{ route('microsoft.login') }}" class="login-popover-microsoft">
                                     <span class="microsoft-mark" aria-hidden="true">

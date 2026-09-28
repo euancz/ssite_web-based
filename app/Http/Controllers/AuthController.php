@@ -30,15 +30,6 @@ class AuthController extends Controller
 
         $credentials = $validator->validated();
 
-        // Only allow MCC emails
-        if (!str_ends_with(strtolower($credentials['email']), '@mcc.edu.ph')) {
-            return redirect('/')
-                ->withErrors([
-                    'email' => 'Please use your MCC email address.',
-                ])
-                ->withInput($request->only('email'));
-        }
-
         // Attempt login
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
 
