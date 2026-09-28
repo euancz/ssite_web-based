@@ -15,7 +15,13 @@ class ExampleTest extends TestCase
     {
         $response = $this->get('/');
 
-        $response->assertStatus(200);
+        $response->assertOk()
+            ->assertSee('Latest Updates')
+            ->assertSee('Featured Stories')
+            ->assertSee('Most Read')
+            ->assertSee('Latest Activities')
+            ->assertSee('Featured Activities')
+            ->assertSee('Most Viewed');
     }
 
     public function test_failed_login_returns_home_with_login_modal_open(): void

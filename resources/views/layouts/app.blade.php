@@ -208,8 +208,11 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                         </svg>
                     </button>
-                    <ul class="site-nav-dropdown-menu">
+                    <ul class="site-nav-dropdown-menu articles-dropdown-menu">
                         <li><a href="{{ url('/articles') }}" class="site-dropdown-link">All Articles</a></li>
+                        <li><a href="{{ url('/articles') }}" class="site-dropdown-link">Latest Updates</a></li>
+                        <li><a href="{{ url('/articles') }}" class="site-dropdown-link">Featured Stories</a></li>
+                        <li><a href="{{ url('/articles') }}" class="site-dropdown-link">Most Read</a></li>
                     </ul>
                 </li>
 
@@ -220,8 +223,11 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                         </svg>
                     </button>
-                    <ul class="site-nav-dropdown-menu">
+                    <ul class="site-nav-dropdown-menu activities-dropdown-menu">
                         <li><a href="{{ url('/activities') }}" class="site-dropdown-link">All Activities</a></li>
+                        <li><a href="{{ url('/activities') }}" class="site-dropdown-link">Latest Activities</a></li>
+                        <li><a href="{{ url('/activities') }}" class="site-dropdown-link">Featured Activities</a></li>
+                        <li><a href="{{ url('/activities') }}" class="site-dropdown-link">Most Viewed</a></li>
                     </ul>
                 </li>
 
@@ -249,6 +255,9 @@
                         </summary>
                         <ul class="mobile-nav-sublist">
                             <li><a href="{{ url('/articles') }}" class="mobile-nav-sublink">All Articles</a></li>
+                            <li><a href="{{ url('/articles') }}" class="mobile-nav-sublink">Latest Updates</a></li>
+                            <li><a href="{{ url('/articles') }}" class="mobile-nav-sublink">Featured Stories</a></li>
+                            <li><a href="{{ url('/articles') }}" class="mobile-nav-sublink">Most Read</a></li>
                         </ul>
                     </details>
                 </li>
@@ -263,6 +272,9 @@
                         </summary>
                         <ul class="mobile-nav-sublist">
                             <li><a href="{{ url('/activities') }}" class="mobile-nav-sublink">All Activities</a></li>
+                            <li><a href="{{ url('/activities') }}" class="mobile-nav-sublink">Latest Activities</a></li>
+                            <li><a href="{{ url('/activities') }}" class="mobile-nav-sublink">Featured Activities</a></li>
+                            <li><a href="{{ url('/activities') }}" class="mobile-nav-sublink">Most Viewed</a></li>
                         </ul>
                     </details>
                 </li>

@@ -233,6 +233,8 @@ ol {
 }
 
 .desktop-navigation {
+    position: relative;
+    z-index: 30;
     display: none;
     border-top: 1px solid rgb(255 255 255 / 40%);
     background: var(--ssite-blue);
@@ -240,7 +242,7 @@ ol {
 
 .site-nav-list {
     gap: 32px;
-    overflow-x: auto;
+    overflow: visible;
     padding: 0 24px;
     color: var(--ssite-navy);
     font-size: 15px;
@@ -298,6 +300,30 @@ ol {
     box-shadow: 0 10px 20px rgb(15 23 42 / 12%);
 }
 
+.articles-dropdown-menu {
+    left: 50%;
+    width: 108px;
+    min-width: 108px;
+    transform: translateX(-50%);
+    border-color: #b8e7f3;
+    border-radius: 2px;
+    padding: 4px 0;
+    background: #effaff;
+    box-shadow: 0 3px 8px rgb(23 50 77 / 12%);
+}
+
+.activities-dropdown-menu {
+    left: 50%;
+    width: 132px;
+    min-width: 132px;
+    transform: translateX(-50%);
+    border-color: #b8e7f3;
+    border-radius: 2px;
+    padding: 4px 0;
+    background: #effaff;
+    box-shadow: 0 3px 8px rgb(23 50 77 / 12%);
+}
+
 .site-nav-dropdown:hover .site-nav-dropdown-menu,
 .site-nav-dropdown:focus-within .site-nav-dropdown-menu {
     display: block;
@@ -305,13 +331,14 @@ ol {
 
 .site-dropdown-link {
     display: block;
-    padding: 8px 16px;
-    font-size: 14px;
+    padding: 4px 14px;
+    font-size: 11px;
+    line-height: 1.15;
     text-decoration: none;
 }
 
 .site-dropdown-link:hover {
-    background: #f8fafc;
+    background: #dff5fb;
 }
 
 .mobile-navigation {
@@ -463,6 +490,7 @@ ol {
 }
 
 .footer-copyright {
+    margin: 0;
     padding: 20px 24px;
     color: var(--ssite-navy);
     font-size: 12px;
@@ -474,7 +502,7 @@ ol {
     width: 100%;
     max-width: 80rem;
     margin: 0 auto;
-    padding: 32px 16px;
+    padding: 32px 16px 0;
 }
 
 .home-heading {
@@ -580,7 +608,7 @@ ol {
     width: 100%;
     max-width: 588px;
     margin: 0 auto;
-    padding: 24px 24px 112px;
+    padding: 24px 24px 0;
 }
 
 .about-page-title,
@@ -836,7 +864,7 @@ ol {
     }
 
     .home-content {
-        padding: 48px 24px;
+        padding: 48px 24px 0;
     }
 
     .home-heading {
@@ -921,7 +949,7 @@ ol {
 
 @media (max-width: 560px) {
     .about-page {
-        padding: 24px 20px 80px;
+        padding: 24px 20px 0;
     }
 
     .mission-vision-grid {
