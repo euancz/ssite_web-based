@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -16,17 +17,26 @@ class AuthController extends Controller
     // Process login
     public function login(Request $request)
     {
-        // Validate input
-        $credentials = $request->validate([
+        $validator = Validator::make($request->all(), [
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
 
+        if ($validator->fails()) {
+            return redirect('/')
+                ->withErrors($validator)
+                ->withInput($request->only('email'));
+        }
+
+        $credentials = $validator->validated();
+
         // Only allow MCC emails
         if (!str_ends_with(strtolower($credentials['email']), '@mcc.edu.ph')) {
-            return back()->withErrors([
-                'email' => 'Please use your MCC email address.',
-            ])->withInput();
+            return redirect('/')
+                ->withErrors([
+                    'email' => 'Please use your MCC email address.',
+                ])
+                ->withInput($request->only('email'));
         }
 
         // Attempt login
@@ -39,9 +49,11 @@ class AuthController extends Controller
         }
 
         // Incorrect credentials
-        return back()->withErrors([
-            'email' => 'The email or password is incorrect.',
-        ])->withInput();
+        return redirect('/')
+            ->withErrors([
+                'email' => 'The email or password is incorrect.',
+            ])
+            ->withInput($request->only('email'));
     }
 
     // Logout

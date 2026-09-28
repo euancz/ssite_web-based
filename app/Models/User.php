@@ -43,6 +43,7 @@ class User extends Authenticatable
         'gender',
         'contact_number',
         'email',
+        'microsoft_id',
         'address',
         'password',
         'profile_picture',

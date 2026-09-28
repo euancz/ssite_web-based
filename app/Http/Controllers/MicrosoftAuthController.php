@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Socialite\Two\InvalidStateException;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
 
@@ -35,8 +36,7 @@ class MicrosoftAuthController extends Controller
                 !filter_var($email, FILTER_VALIDATE_EMAIL) ||
                 !str_ends_with($email, '@mcc.edu.ph')
             ) {
-                return redirect()
-                    ->route('login')
+                return redirect('/')
                     ->with(
                         'error',
                         'Only MCC email accounts are allowed.'
@@ -85,13 +85,22 @@ class MicrosoftAuthController extends Controller
 
             return redirect()->route('home');
 
-        } catch (\Exception $e) {
-    return redirect()
-        ->route('login')
-        ->with(
-            'error',
-            'Microsoft login error: ' . $e->getMessage()
-        );
-}
+        } catch (InvalidStateException $e) {
+            report($e);
+
+            return redirect('/')
+                ->with(
+                    'error',
+                    'Microsoft could not verify this sign-in session. Please start again from this site and use the same address throughout sign-in.'
+                );
+        } catch (\Throwable $e) {
+            report($e);
+
+            return redirect('/')
+                ->with(
+                    'error',
+                    'Microsoft sign-in could not be completed. Please try again.'
+                );
+        }
     }
 }
