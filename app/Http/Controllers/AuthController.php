@@ -6,15 +6,24 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
+/**
+ * Handles password sign-in and logout for accounts that also support Microsoft login.
+ */
 class AuthController extends Controller
 {
     // Show login page
+    /**
+     * Render the standalone login view when it is requested directly.
+     */
     public function showLogin()
     {
         return view('auth.login');
     }
 
     // Process login
+    /**
+     * Validate credentials, regenerate the session, then enforce profile and role routing.
+     */
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -38,6 +47,7 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
+            // Profile completion must precede the normal role dashboard redirect.
             if ($user && ! $user->hasCompletedProfile()) {
                 return redirect()->route('profile.complete');
             }
@@ -54,6 +64,9 @@ class AuthController extends Controller
     }
 
     // Logout
+    /**
+     * End the current session; logout remains available even when profile completion is pending.
+     */
     public function logout(Request $request)
     {
         Auth::logout();

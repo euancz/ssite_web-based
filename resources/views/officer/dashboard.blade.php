@@ -4,6 +4,7 @@
 
 @section('content')
 <div class="dashboard-page">
+    {{-- Shared page header identifies the signed-in officer and keeps the unavailable create action visibly disabled. --}}
     <x-page-header
         title="Welcome, {{ auth()->user()->name }}"
         subtitle="Officer dashboard · Your role is {{ ucfirst(auth()->user()->role) }}."
@@ -42,10 +43,12 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {{-- TODO: Populate from the officer's own posts when post storage and authorization are added. --}}
                     @forelse ($posts as $post)
                         <tr>
                             <td>
                                 <strong>{{ $post->title }}</strong>
+                                {{-- Rejection feedback belongs only to rejected submissions. --}}
                                 @if ($post->status === 'rejected' && $post->rejection_reason)
                                     <p class="dashboard-rejection-reason">
                                         Rejection reason: {{ $post->rejection_reason }}

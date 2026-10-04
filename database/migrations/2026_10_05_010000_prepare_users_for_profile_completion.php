@@ -5,14 +5,22 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Makes Microsoft-created accounts completable while retaining existing user data.
+ */
 return new class extends Migration
 {
+    /**
+     * Add profile completion support while preserving existing user rows.
+     */
     public function up(): void
     {
+        // Stop before making changes when this migration is pointed at the wrong database.
         if (! Schema::hasTable('users')) {
             throw new RuntimeException('The users table must exist before profile completion can be enabled.');
         }
 
+        // Avoid a partially applied unique index when existing student numbers collide.
         if (Schema::hasColumn('users', 'student_number')) {
             $hasDuplicates = DB::table('users')
                 ->whereNotNull('student_number')
@@ -28,12 +36,14 @@ return new class extends Migration
             }
         }
 
+        // Preserve existing IDs while adapting Laravel's default key name to this app's user_id key.
         if (! Schema::hasColumn('users', 'user_id') && Schema::hasColumn('users', 'id')) {
             Schema::table('users', function (Blueprint $table): void {
                 $table->renameColumn('id', 'user_id');
             });
         }
 
+        // Nullable profile columns let new Microsoft accounts exist before they submit the form.
         $nullableColumns = [
             'student_number' => 20,
             'year_level' => 30,
@@ -60,6 +70,7 @@ return new class extends Migration
             });
         }
 
+        // Guard missing role columns and use student as the safe default for new rows.
         if (! Schema::hasColumn('users', 'role')) {
             Schema::table('users', function (Blueprint $table): void {
                 $table->string('role', 20)->default('student');
@@ -70,6 +81,7 @@ return new class extends Migration
             });
         }
 
+        // Timestamp guards allow this migration to work with the manually managed users schema.
         if (! Schema::hasColumn('users', 'created_at')) {
             Schema::table('users', function (Blueprint $table): void {
                 $table->timestamp('created_at')->nullable();
@@ -82,6 +94,7 @@ return new class extends Migration
             });
         }
 
+        // Keep an existing unique constraint and add one only when the schema lacks it.
         $indexes = Schema::getIndexes('users');
         $hasStudentNumberUniqueIndex = collect($indexes)->contains(
             fn (array $index): bool => ($index['unique'] ?? false)
@@ -94,6 +107,7 @@ return new class extends Migration
             });
         }
 
+        // Existing accounts use updated_at as the best available joined-date backfill.
         if (Schema::hasColumn('users', 'updated_at')) {
             DB::table('users')
                 ->whereNull('created_at')
@@ -101,6 +115,7 @@ return new class extends Migration
                 ->update(['created_at' => DB::raw('updated_at')]);
         }
 
+        // Mark only real, populated profiles complete; blank values and legacy placeholders stay gated.
         $completeProfile = DB::table('users')->whereNull('profile_completed_at');
 
         foreach (['student_number', 'name', 'institute', 'program', 'year_level', 'gender', 'contact_number', 'address'] as $column) {
@@ -116,6 +131,9 @@ return new class extends Migration
         $completeProfile->update(['profile_completed_at' => now()]);
     }
 
+    /**
+     * Keep this migration irreversible to avoid losing user profile data.
+     */
     public function down(): void
     {
         // Intentionally irreversible: rolling back would discard profile completion data or

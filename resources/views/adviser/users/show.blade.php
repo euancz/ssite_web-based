@@ -6,6 +6,7 @@
 <div class="dashboard-page">
     <x-page-header title="User Information" subtitle="Read-only account and profile details." />
 
+    {{-- Read-only detail view lets advisers inspect a complete account without editing user-submitted fields here. --}}
     <section class="dashboard-panel profile-readonly-grid">
         @foreach ([
             'Name' => $user->name,

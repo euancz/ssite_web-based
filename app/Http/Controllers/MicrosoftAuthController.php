@@ -9,8 +9,18 @@ use Laravel\Socialite\Two\InvalidStateException;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
 
+/*
+ * Microsoft login flow: Socialite verifies the identity, then the callback finds or creates
+ * the local user, sends incomplete profiles to completion, and sends completed accounts home by role.
+ */
+/**
+ * Starts Microsoft sign-in and connects the verified Microsoft identity to a local user.
+ */
 class MicrosoftAuthController extends Controller
 {
+    /**
+     * Start the Microsoft OAuth flow and request an interactive account selection.
+     */
     public function redirect()
     {
         return Socialite::driver('microsoft')
@@ -20,6 +30,9 @@ class MicrosoftAuthController extends Controller
             ->redirect();
     }
 
+    /**
+     * Validate Microsoft's identity, preserve existing profile edits, and route after login.
+     */
     public function callback()
     {
         try {
@@ -51,6 +64,7 @@ class MicrosoftAuthController extends Controller
                     ->with('error', 'Microsoft did not provide a valid account identifier.');
             }
 
+            // Prefer the stable Microsoft ID; email is used only to link a prior local account.
             $user = User::where('microsoft_id', $microsoftId)->first();
 
             if (!$user) {
@@ -69,6 +83,7 @@ class MicrosoftAuthController extends Controller
             }
 
             if (!$user) {
+                // Set system-managed fields directly so they never need to be mass assignable.
                 $user = new User();
                 $user->name = $name;
                 $user->email = $email;
@@ -78,6 +93,7 @@ class MicrosoftAuthController extends Controller
                 $user->role = 'student';
             }
 
+            // Never replace a profile value the user already has with a login-time default.
             if (! $user->profile_picture) {
                 $user->profile_picture = config('school.default_profile_picture', 'images/Wolf.png');
             }
@@ -90,6 +106,7 @@ class MicrosoftAuthController extends Controller
 
             request()->session()->regenerate();
 
+            // Profile enforcement happens before role routing so unfinished accounts cannot browse.
             if (! $user->hasCompletedProfile()) {
                 return redirect()->route('profile.complete');
             }

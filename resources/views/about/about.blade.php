@@ -24,6 +24,7 @@
 	<section class="officers-section" aria-labelledby="officers-heading">
 		<h2 id="officers-heading" class="about-section-title">SSITE Officers A.Y. 2026-2027</h2>
 
+		{{-- TODO: Keep this presentation list current; missing local portraits use a neutral placeholder. --}}
 		@php
 			$officers = [
 				['Khyle Alegre', 'Adviser', 'images/officerimg/Khyle Alegre 1.png'],
@@ -44,6 +45,7 @@
 			];
 		@endphp
 
+		{{-- Build officer cards from one list so names, roles, and portrait fallbacks stay aligned. --}}
 		<div class="officers-grid">
 			@foreach ($officers as $officer)
 				@php

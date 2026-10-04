@@ -1,8 +1,13 @@
 <?php
 
 return [
+    // Advisers may be exempted; other signed-in roles must complete their profile by default.
     'require_profile_for_all_roles' => (bool) env('SCHOOL_REQUIRE_PROFILE_FOR_ALL_ROLES', true),
+
+    // Set to an empty string to allow any valid Microsoft email domain.
     'microsoft_email_domain' => env('SCHOOL_MICROSOFT_EMAIL_DOMAIN', 'mcc.edu.ph'),
+
+    // Used for new Microsoft accounts until a profile image upload flow is added.
     'default_profile_picture' => 'images/Wolf.png',
 
     // TODO: Replace the empty options with the official institute names for this school.
@@ -22,6 +27,7 @@ return [
     // TODO: If programs differ by institute, map each institute name to its program labels here.
     'programs_by_institute' => [],
 
+    // Stored values remain the same display labels shown on the form.
     'year_levels' => [
         '1st Year',
         '2nd Year',
@@ -30,6 +36,7 @@ return [
         '5th Year',
     ],
 
+    // Limit profile submissions to the school's supported options.
     'genders' => [
         'Male',
         'Female',

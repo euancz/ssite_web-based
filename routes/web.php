@@ -16,6 +16,8 @@ use App\Http\Middleware\RequireAuthentication;
 // PUBLIC / ROOT
 // ==============================
 
+// Root is public with profile.complete middleware: guests pass through, incomplete signed-in users go to completion.
+
 Route::get('/', function () {
     return view('home.home');
 })->middleware('profile.complete');
@@ -24,6 +26,7 @@ Route::get('/', function () {
 // GUEST ROUTES
 // ==============================
 
+// The guest middleware lets any role start sign-in; the Microsoft callback stays outside profile.complete.
 Route::middleware('guest')->group(function () {
 
     // Normal login
@@ -48,6 +51,7 @@ Route::middleware('guest')->group(function () {
 // AUTHENTICATED ROUTES
 // ==============================
 
+// These auth-only routes serve every role and intentionally omit profile.complete so the form remains reachable.
 Route::middleware(RequireAuthentication::class)->group(function () {
     Route::get('/profile/complete', [ProfileController::class, 'create'])
         ->name('profile.complete');
@@ -55,6 +59,7 @@ Route::middleware(RequireAuthentication::class)->group(function () {
         ->name('profile.complete.store');
 });
 
+// RequireAuthentication plus EnsureProfileCompleted protect shared pages and profile edits for every role.
 Route::middleware([RequireAuthentication::class, EnsureProfileCompleted::class])->group(function () {
 Route::get('/about', function () {
     return view('about.about');
@@ -91,10 +96,12 @@ Route::put('/profile', [ProfileController::class, 'update'])
 
 });
 
+// Officer and adviser dashboards require both the matching role and a completed profile.
 Route::get('/officer/dashboard', OfficerDashboardController::class)
     ->middleware(['auth', 'role:officer,adviser', 'profile.complete'])
     ->name('officer.dashboard');
 
+// Adviser-only user and review tools; profile enforcement also protects these write-capable routes.
 Route::prefix('adviser')
     ->name('adviser.')
     ->middleware(['auth', 'role:adviser', 'profile.complete'])
@@ -111,6 +118,7 @@ Route::prefix('adviser')
             ->name('reviews.index');
     });
 
+// Logout deliberately skips profile completion so an incomplete user can always leave the session.
 Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware(RequireAuthentication::class)
     ->name('logout');

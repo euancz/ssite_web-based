@@ -9,6 +9,7 @@
         subtitle="Your details are stored securely on your SSITE account."
     />
 
+    {{-- Keep the required-profile gate clear while field-level errors appear beside their inputs. --}}
     @if ($errors->any())
         <div class="dashboard-error" role="alert">
             <p>Please review the highlighted fields and try again.</p>
@@ -16,6 +17,7 @@
     @endif
 
     <form method="POST" action="{{ route('profile.complete.store') }}" class="dashboard-panel profile-form">
+        {{-- SECURITY: The endpoint updates only the signed-in user and validates the allowed profile fields. --}}
         @csrf
         @include('profile.partials.fields', ['allowStudentNumber' => true])
         <div class="profile-form-actions">

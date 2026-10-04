@@ -5,8 +5,14 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Shares the school-configured validation rules and messages for profile submissions.
+ */
 abstract class ProfileRequest extends FormRequest
 {
+    /**
+     * Validate profile fields against the allowed school options and PH mobile format.
+     */
     protected function commonProfileRules(): array
     {
         $institute = (string) $this->input('institute', '');
@@ -26,6 +32,9 @@ abstract class ProfileRequest extends FormRequest
         ];
     }
 
+    /**
+     * Validate a unique student number using user_id so the current row is ignored safely.
+     */
     protected function studentNumberRules(bool $required): array
     {
         return [
@@ -37,6 +46,9 @@ abstract class ProfileRequest extends FormRequest
         ];
     }
 
+    /**
+     * Replace generic validation text with guidance suitable for the student form.
+     */
     public function messages(): array
     {
         return [

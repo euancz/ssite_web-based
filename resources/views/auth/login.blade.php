@@ -18,6 +18,7 @@
 
         {{-- TOP IMAGE --}}
         <div class="login-image"></div>
+        {{-- Sign-in and Microsoft callback failures are displayed without exposing internal exceptions. --}}
         @if(session('error'))
     <div class="login-error">
         {{ session('error') }}
@@ -35,6 +36,7 @@
 
 
             <form method="POST" action="{{ route('login') }}">
+                {{-- SECURITY: Laravel's CSRF token protects the credential submission. --}}
                 @csrf
 
                 {{-- EMAIL --}}
@@ -54,6 +56,7 @@
                         autocomplete="email"
                     >
 
+                    {{-- Display only the validation/authentication message for this field. --}}
                     @error('email')
                         <span class="error">
                             {{ $message }}

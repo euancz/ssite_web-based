@@ -1,5 +1,6 @@
 @props(['id'])
 
+{{-- TODO: The reason field is required, but submission stays disabled until post review endpoints exist. --}}
 <dialog id="{{ $id }}" class="reject-modal" aria-labelledby="{{ $id }}-title">
     <div class="reject-modal-content">
         <h2 id="{{ $id }}-title">Reject post</h2>
@@ -23,6 +24,7 @@
 @once
     @push('scripts')
         <script>
+            // Bind once per page so each review row can open or close its shared rejection dialog.
             document.querySelectorAll('[data-modal-open]').forEach((trigger) => {
                 trigger.addEventListener('click', () => {
                     document.getElementById(trigger.dataset.modalOpen)?.showModal();

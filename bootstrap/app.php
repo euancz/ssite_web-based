@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Aliases keep role and profile checks readable in route definitions.
         $middleware->alias([
             'profile.complete' => EnsureProfileCompleted::class,
             'role' => RoleMiddleware::class,

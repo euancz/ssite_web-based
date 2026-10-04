@@ -6,8 +6,17 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Keeps authenticated users on profile completion until their required information is saved.
+ *
+ * Completion and logout routes are deliberately excluded from this middleware; JSON requests
+ * receive a forbidden response, while browser requests return to the completion form.
+ */
 class EnsureProfileCompleted
 {
+    /**
+     * Allow complete profiles through and redirect incomplete users to their own form.
+     */
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();

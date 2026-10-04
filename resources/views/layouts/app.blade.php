@@ -15,6 +15,7 @@
     @stack('styles')
 </head>
 <body class="site-body">
+    {{-- Officers/advisers use their role dashboard as Home; students and guests keep the public home link. --}}
     @php
         $roleHomeUrl = auth()->check() && auth()->user()->canPost()
             ? route(auth()->user()->dashboardRoute())
@@ -22,6 +23,7 @@
     @endphp
 
     {{-- ============================= NAVBAR ============================= --}}
+    {{-- The completion screen hides site navigation so an incomplete account cannot browse away. --}}
     @if (request()->routeIs('profile.complete'))
         <header class="site-header profile-minimal-header">
             <div class="site-header-main">
@@ -68,6 +70,7 @@
                 </button>
 
                 {{-- LOGGED OUT: Login button --}}
+                {{-- Guests see sign-in controls; authenticated users instead see their account menu below. --}}
                 @guest
                     <div class="login-area">
                         <button type="button"
@@ -85,6 +88,7 @@
                             <div class="login-popover-content">
                                 <h2>Welcome</h2>
                                 <p class="login-popover-subtitle">Log in to your account to continue</p>
+                                {{-- Show login or Microsoft callback errors inside the open sign-in panel. --}}
                                 @if(session('error'))
                                     <p class="login-popover-error" role="alert">{{ session('error') }}</p>
                                 @endif
@@ -141,6 +145,7 @@
                 @endguest
 
                 {{-- LOGGED IN: notifications + account icons --}}
+                {{-- Account controls are available to every signed-in role. --}}
                 @auth
                     <button type="button" aria-label="Notifications" class="icon-button account-notifications">
                         <svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -258,11 +263,13 @@
                 <li class="site-nav-item"><a href="{{ url('/liquidation') }}" class="site-nav-link">Liquidation</a></li>
                 <li class="site-nav-item"><a href="{{ url('/documents') }}" class="site-nav-link">Documents</a></li>
                 @auth
+                    {{-- Only completed accounts can edit their profile; incomplete users remain on the completion route. --}}
                     @if (auth()->user()->hasCompletedProfile())
                         <li class="site-nav-item">
                             <a href="{{ route('profile.edit') }}" class="site-nav-link">My Profile</a>
                         </li>
                     @endif
+                    {{-- SECURITY: This shared dashboard link is limited by the canPost ability to officers and advisers. --}}
                     @can('view-post-dashboard')
                         <li class="site-nav-item">
                             <a href="{{ route(auth()->user()->dashboardRoute()) }}"
@@ -275,11 +282,13 @@
                                     title="Post creation is not implemented yet">New Post</button>
                         </li>
                     @endcan
+                    {{-- SECURITY: Review tools are shown only to advisers; route middleware enforces the same rule. --}}
                     @can('review-posts')
                         <li class="site-nav-item">
                             <a href="{{ route('adviser.reviews.index') }}" class="site-nav-link">Review Posts</a>
                         </li>
                     @endcan
+                    {{-- SECURITY: User-role management is adviser-only and protected again on its routes. --}}
                     @can('manage-users')
                         <li class="site-nav-item">
                             <a href="{{ route('adviser.users.index') }}" class="site-nav-link">Manage Users</a>
@@ -338,11 +347,13 @@
                 <li class="mobile-nav-item"><a href="{{ url('/liquidation') }}" class="mobile-nav-link">Liquidation</a></li>
                 <li class="mobile-nav-item"><a href="{{ url('/documents') }}" class="mobile-nav-link">Documents</a></li>
                 @auth
+                    {{-- Mirror the desktop profile condition so unfinished users only see completion/logout. --}}
                     @if (auth()->user()->hasCompletedProfile())
                         <li class="mobile-nav-item">
                             <a href="{{ route('profile.edit') }}" class="mobile-nav-link">My Profile</a>
                         </li>
                     @endif
+                    {{-- SECURITY: The mobile dashboard link uses the same officer/adviser Gate as desktop navigation. --}}
                     @can('view-post-dashboard')
                         <li class="mobile-nav-item">
                             <a href="{{ route(auth()->user()->dashboardRoute()) }}"
@@ -355,11 +366,13 @@
                                     title="Post creation is not implemented yet">New Post</button>
                         </li>
                     @endcan
+                    {{-- SECURITY: Only advisers see the review queue shortcut. --}}
                     @can('review-posts')
                         <li class="mobile-nav-item">
                             <a href="{{ route('adviser.reviews.index') }}" class="mobile-nav-link">Review Posts</a>
                         </li>
                     @endcan
+                    {{-- SECURITY: Only advisers see user-role management. --}}
                     @can('manage-users')
                         <li class="mobile-nav-item">
                             <a href="{{ route('adviser.users.index') }}" class="mobile-nav-link">Manage Users</a>

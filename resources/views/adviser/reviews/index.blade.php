@@ -6,6 +6,7 @@
 <div class="dashboard-page">
     <x-page-header title="Review Posts" subtitle="Review submitted posts by status." />
 
+    {{-- Keep the selected status in the URL so advisers can share or refresh a filtered queue. --}}
     <nav class="dashboard-tabs" aria-label="Filter posts by status">
         @foreach (['pending' => 'Pending', 'approved' => 'Approved', 'rejected' => 'Rejected'] as $status => $label)
             <a href="{{ route('adviser.reviews.index', ['status' => $status]) }}"
@@ -30,6 +31,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {{-- TODO: Query only the selected status; students must never receive non-approved posts. --}}
                     @forelse ($posts as $post)
                         <tr>
                             <td>{{ $post->title }}</td>
@@ -38,11 +40,13 @@
                             <td>{{ $post->created_at?->format('M j, Y') }}</td>
                             <td><x-status-badge :status="$post->status" /></td>
                             <td class="dashboard-table-actions">
+                                {{-- Preview and review actions depend on URLs supplied by the post backend. --}}
                                 @if ($post->preview_url)
                                     <a href="{{ $post->preview_url }}" class="dashboard-text-button">Preview</a>
                                 @else
                                     <button type="button" class="dashboard-text-button" disabled>Preview</button>
                                 @endif
+                                {{-- SECURITY: Only advisers review pending items; write endpoints are not implemented yet. --}}
                                 @if ($post->status === 'pending')
                                     <button type="button" class="dashboard-text-button" disabled>Approve</button>
                                     <button type="button" class="dashboard-text-button"

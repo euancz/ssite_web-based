@@ -1,5 +1,6 @@
 @props(['status'])
 
+{{-- Keep status coloring consistent wherever a role or post status is displayed. --}}
 @php
     $normalizedStatus = strtolower((string) $status);
     $statusClass = match ($normalizedStatus) {

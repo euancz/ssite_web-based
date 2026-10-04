@@ -9,8 +9,18 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
+/*
+ * Adviser role assignment is limited to student/officer accounts. Promotion requires an
+ * officer position, demotion clears it, and advisers cannot change their own or peer roles.
+ */
+/**
+ * Lists user information and provides adviser-only role assignment and read-only details.
+ */
 class UserController extends Controller
 {
+    /**
+     * Search and paginate user accounts, including their academic profile fields.
+     */
     public function index(Request $request): View
     {
         $filters = $request->validate([
@@ -37,11 +47,17 @@ class UserController extends Controller
         return view('adviser.users.index', compact('users'));
     }
 
+    /**
+     * Show an account's full profile to an authorized adviser without edit controls.
+     */
     public function show(User $user): View
     {
         return view('adviser.users.show', compact('user'));
     }
 
+    /**
+     * Change a non-adviser user's role and keep officer position consistent with that role.
+     */
     public function updateRole(Request $request, User $user): RedirectResponse
     {
         abort_if($request->user()->is($user) || $user->isAdviser(), 403);

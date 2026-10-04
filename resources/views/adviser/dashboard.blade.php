@@ -32,12 +32,14 @@
             </a>
         </div>
 
+        {{-- TODO: Populate with the five newest pending posts after the approval model exists. --}}
         @forelse ($pendingPosts as $post)
             <article class="dashboard-review-item">
                 <div>
                     <h3>{{ $post->title }}</h3>
                     <p>{{ ucfirst($post->type) }} &middot; Submitted {{ $post->created_at?->format('M j, Y') }}</p>
                 </div>
+                {{-- A review link exists only when the post backend supplies a preview destination. --}}
                 @if ($post->review_url)
                     <a href="{{ $post->review_url }}" class="dashboard-text-button">Review</a>
                 @else

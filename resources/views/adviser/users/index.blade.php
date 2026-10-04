@@ -6,10 +6,12 @@
 <div class="dashboard-page">
     <x-page-header title="Manage Users" subtitle="View accounts and assign student or officer roles." />
 
+    {{-- Report the result of a completed role update without hiding validation errors. --}}
     @if (session('status'))
         <p class="dashboard-success" role="status">{{ session('status') }}</p>
     @endif
 
+    {{-- FormRequest/role validation failures are shown before the adviser retries. --}}
     @if ($errors->any())
         <div class="dashboard-error" role="alert">
             <p>Please correct the following:</p>
@@ -59,6 +61,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {{-- User rows include academic information so advisers can identify the correct account. --}}
                     @forelse ($users as $user)
                         <tr>
                             <td><a href="{{ route('adviser.users.show', $user) }}">{{ $user->name }}</a></td>
@@ -70,6 +73,7 @@
                             <td><x-status-badge :status="$user->role" /></td>
                             <td>{{ $user->created_at?->format('M j, Y') ?? '-' }}</td>
                             <td>
+                                {{-- SECURITY: Advisers cannot change their own role or promote/demote another adviser. --}}
                                 @if (auth()->user()->is($user) || $user->isAdviser())
                                     <span class="dashboard-muted">
                                         {{ auth()->user()->is($user) ? 'Your role cannot be changed' : 'Adviser role is protected' }}
@@ -134,6 +138,7 @@
 
 @push('scripts')
     <script>
+        // Match the position field's browser-required state to the selected role; server validation remains authoritative.
         document.querySelectorAll('[data-position-id]').forEach((roleSelect) => {
             const positionInput = document.getElementById(roleSelect.dataset.positionId);
             const syncPositionRequirement = () => {
