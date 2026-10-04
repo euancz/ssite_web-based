@@ -2,7 +2,13 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\OfficerDashboardController;
+use App\Http\Controllers\Adviser\DashboardController as AdviserDashboardController;
+use App\Http\Controllers\Adviser\ReviewController;
+use App\Http\Controllers\Adviser\UserController;
 use App\Http\Controllers\MicrosoftAuthController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Middleware\EnsureProfileCompleted;
 use App\Http\Middleware\RequireAuthentication;
 
 
@@ -12,7 +18,7 @@ use App\Http\Middleware\RequireAuthentication;
 
 Route::get('/', function () {
     return view('home.home');
-});
+})->middleware('profile.complete');
 
 // ==============================
 // GUEST ROUTES
@@ -43,6 +49,13 @@ Route::middleware('guest')->group(function () {
 // ==============================
 
 Route::middleware(RequireAuthentication::class)->group(function () {
+    Route::get('/profile/complete', [ProfileController::class, 'create'])
+        ->name('profile.complete');
+    Route::post('/profile/complete', [ProfileController::class, 'store'])
+        ->name('profile.complete.store');
+});
+
+Route::middleware([RequireAuthentication::class, EnsureProfileCompleted::class])->group(function () {
 Route::get('/about', function () {
     return view('about.about');
 })->name('about');
@@ -71,10 +84,33 @@ Route::get('/documents', function () {
     return view('documents.documents');
 })->name('documents');
 
+Route::get('/profile/edit', [ProfileController::class, 'edit'])
+    ->name('profile.edit');
+Route::put('/profile', [ProfileController::class, 'update'])
+    ->name('profile.update');
 
-
-    // Logout
-    Route::post('/logout', [AuthController::class, 'logout'])
-        ->name('logout');
 });
 
+Route::get('/officer/dashboard', OfficerDashboardController::class)
+    ->middleware(['auth', 'role:officer,adviser', 'profile.complete'])
+    ->name('officer.dashboard');
+
+Route::prefix('adviser')
+    ->name('adviser.')
+    ->middleware(['auth', 'role:adviser', 'profile.complete'])
+    ->group(function () {
+        Route::get('/dashboard', AdviserDashboardController::class)
+            ->name('dashboard');
+        Route::get('/users', [UserController::class, 'index'])
+            ->name('users.index');
+        Route::get('/users/{user}', [UserController::class, 'show'])
+            ->name('users.show');
+        Route::put('/users/{user}/role', [UserController::class, 'updateRole'])
+            ->name('users.update-role');
+        Route::get('/reviews', [ReviewController::class, 'index'])
+            ->name('reviews.index');
+    });
+
+Route::post('/logout', [AuthController::class, 'logout'])
+    ->middleware(RequireAuthentication::class)
+    ->name('logout');

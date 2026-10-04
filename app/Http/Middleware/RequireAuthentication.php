@@ -11,6 +11,10 @@ class RequireAuthentication
     public function handle(Request $request, Closure $next): Response
     {
         if (! $request->user()) {
+            if ($request->isMethod('GET')) {
+                $request->session()->put('url.intended', $request->fullUrl());
+            }
+
             return redirect('/')->with('error', 'Sign in first before proceeding.');
         }
 

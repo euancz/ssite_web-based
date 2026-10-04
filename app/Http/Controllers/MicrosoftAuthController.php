@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Two\InvalidStateException;
 use Laravel\Socialite\Facades\Socialite;
@@ -28,62 +29,72 @@ class MicrosoftAuthController extends Controller
             $microsoftId = $microsoftUser->getId();
             $name = $microsoftUser->getName()
                 ?: $microsoftUser->getNickname()
-                ?: 'MCC Student';
+                ?: 'Student';
+            $emailDomain = strtolower((string) config('school.microsoft_email_domain', ''));
 
-            // Only MCC accounts are allowed
             if (
                 !$email ||
                 !filter_var($email, FILTER_VALIDATE_EMAIL) ||
-                !str_ends_with($email, '@mcc.edu.ph')
+                ($emailDomain !== '' && Str::afterLast($email, '@') !== $emailDomain)
             ) {
                 return redirect('/')
                     ->with(
                         'error',
-                        'Only MCC email accounts are allowed.'
+                        $emailDomain !== ''
+                            ? "Only {$emailDomain} Microsoft accounts are allowed."
+                            : 'Microsoft did not provide a valid email address.'
                     );
             }
 
-            // Find existing account using Microsoft ID
+            if (! $microsoftId) {
+                return redirect('/')
+                    ->with('error', 'Microsoft did not provide a valid account identifier.');
+            }
+
             $user = User::where('microsoft_id', $microsoftId)->first();
 
-            // If Microsoft ID is not linked yet, find by email
             if (!$user) {
                 $user = User::where('email', $email)->first();
 
                 if ($user) {
-                    $user->update([
-                        'microsoft_id' => $microsoftId,
-                    ]);
+                    if ($user->microsoft_id && $user->microsoft_id !== $microsoftId) {
+                        return redirect('/')
+                            ->with('error', 'This email address is already linked to a different Microsoft account.');
+                    }
+
+                    if (! $user->microsoft_id) {
+                        $user->microsoft_id = $microsoftId;
+                    }
                 }
             }
 
-            // Create a new student account if it does not exist
             if (!$user) {
-                $user = User::create([
-                    'student_number' => 'PENDING-' . strtoupper(Str::random(8)),
-                    'name' => $name,
-                    'year_level' => 'Not Set',
-                    'program' => 'Not Set',
-                    'institute' => 'Not Set',
-                    'gender' => 'Not Set',
-                    'contact_number' => 'Not Set',
-                    'email' => $email,
-                    'microsoft_id' => $microsoftId,
-                    'address' => 'Not Set',
-                    'password' => bcrypt(Str::random(32)),
-                    'remember_token' => null,
-                    'profile_picture' => 'default.png',
-                    'role' => 'student',
-                    'officer_position' => null,
-                ]);
+                $user = new User();
+                $user->name = $name;
+                $user->email = $email;
+                $user->microsoft_id = $microsoftId;
+                $user->password = Hash::make(Str::random(64));
+                $user->profile_picture = config('school.default_profile_picture', 'images/Wolf.png');
+                $user->role = 'student';
             }
 
-            // Log the user in
+            if (! $user->profile_picture) {
+                $user->profile_picture = config('school.default_profile_picture', 'images/Wolf.png');
+            }
+
+            if ($user->isDirty()) {
+                $user->save();
+            }
+
             Auth::login($user);
 
             request()->session()->regenerate();
 
-            return redirect()->route('home');
+            if (! $user->hasCompletedProfile()) {
+                return redirect()->route('profile.complete');
+            }
+
+            return redirect()->intended(route($user->dashboardRoute()));
 
         } catch (InvalidStateException $e) {
             report($e);

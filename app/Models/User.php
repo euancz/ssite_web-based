@@ -24,7 +24,7 @@ class User extends Authenticatable
     |--------------------------------------------------------------------------
     */
 
-    const CREATED_AT = null;
+    const CREATED_AT = 'created_at';
     const UPDATED_AT = 'updated_at';
 
 
@@ -37,18 +37,12 @@ class User extends Authenticatable
     protected $fillable = [
         'student_number',
         'name',
-        'year_level',
-        'program',
         'institute',
+        'program',
+        'year_level',
         'gender',
         'contact_number',
-        'email',
-        'microsoft_id',
         'address',
-        'password',
-        'profile_picture',
-        'role',
-        'officer_position',
     ];
 
 
@@ -72,7 +66,43 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
+            'created_at' => 'datetime',
             'updated_at' => 'datetime',
+            'profile_completed_at' => 'datetime',
         ];
+    }
+
+    public function isStudent(): bool
+    {
+        return $this->role === 'student';
+    }
+
+    public function isOfficer(): bool
+    {
+        return $this->role === 'officer';
+    }
+
+    public function isAdviser(): bool
+    {
+        return $this->role === 'adviser';
+    }
+
+    public function canPost(): bool
+    {
+        return $this->isOfficer() || $this->isAdviser();
+    }
+
+    public function hasCompletedProfile(): bool
+    {
+        return $this->profile_completed_at !== null;
+    }
+
+    public function dashboardRoute(): string
+    {
+        return match (true) {
+            $this->isAdviser() => 'adviser.dashboard',
+            $this->isOfficer() => 'officer.dashboard',
+            default => 'home',
+        };
     }
 }

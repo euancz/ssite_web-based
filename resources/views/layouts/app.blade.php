@@ -15,12 +15,28 @@
     @stack('styles')
 </head>
 <body class="site-body">
+    @php
+        $roleHomeUrl = auth()->check() && auth()->user()->canPost()
+            ? route(auth()->user()->dashboardRoute())
+            : url('/');
+    @endphp
 
     {{-- ============================= NAVBAR ============================= --}}
+    @if (request()->routeIs('profile.complete'))
+        <header class="site-header profile-minimal-header">
+            <div class="site-header-main">
+                <img src="{{ asset('images/SSITE LOGO.png') }}" alt="SSITE Logo" class="site-logo">
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="site-button">Logout</button>
+                </form>
+            </div>
+        </header>
+    @else
     <header class="site-header">
         {{-- Top bar: logo + search + icons --}}
         <div class="site-header-main">
-            <a href="{{ url('/') }}" class="site-brand">
+            <a href="{{ $roleHomeUrl }}" class="site-brand">
                 {{-- LOGO PLACEHOLDER --}}
                 <img src="{{ asset('images/SSITE LOGO.png') }}"
                      alt="SSITE Logo"
@@ -201,7 +217,10 @@
         <nav class="desktop-navigation">
             <ul class="site-nav-list">
                 <li class="site-nav-item">
-                    <a href="{{ url('/') }}" class="site-nav-link {{ request()->is('/') ? 'is-active' : '' }}">Home</a>
+                    <a href="{{ $roleHomeUrl }}"
+                       class="site-nav-link {{ request()->is('/') || request()->routeIs('officer.dashboard', 'adviser.dashboard') ? 'is-active' : '' }}">
+                        Home
+                    </a>
                 </li>
                 <li class="site-nav-item"><a href="{{ url('/about') }}" class="site-nav-link">About us</a></li>
 
@@ -238,6 +257,35 @@
                 <li class="site-nav-item"><a href="{{ url('/achievements') }}" class="site-nav-link">Achievements</a></li>
                 <li class="site-nav-item"><a href="{{ url('/liquidation') }}" class="site-nav-link">Liquidation</a></li>
                 <li class="site-nav-item"><a href="{{ url('/documents') }}" class="site-nav-link">Documents</a></li>
+                @auth
+                    @if (auth()->user()->hasCompletedProfile())
+                        <li class="site-nav-item">
+                            <a href="{{ route('profile.edit') }}" class="site-nav-link">My Profile</a>
+                        </li>
+                    @endif
+                    @can('view-post-dashboard')
+                        <li class="site-nav-item">
+                            <a href="{{ route(auth()->user()->dashboardRoute()) }}"
+                               class="site-nav-link {{ request()->routeIs('officer.dashboard', 'adviser.dashboard') ? 'is-active' : '' }}">
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="site-nav-item">
+                            <button type="button" class="site-nav-link role-nav-disabled" disabled
+                                    title="Post creation is not implemented yet">New Post</button>
+                        </li>
+                    @endcan
+                    @can('review-posts')
+                        <li class="site-nav-item">
+                            <a href="{{ route('adviser.reviews.index') }}" class="site-nav-link">Review Posts</a>
+                        </li>
+                    @endcan
+                    @can('manage-users')
+                        <li class="site-nav-item">
+                            <a href="{{ route('adviser.users.index') }}" class="site-nav-link">Manage Users</a>
+                        </li>
+                    @endcan
+                @endauth
             </ul>
         </nav>
 
@@ -245,7 +293,10 @@
         <nav id="mobile-nav" class="mobile-navigation hidden">
             <ul class="mobile-nav-list">
                 <li class="mobile-nav-item">
-                    <a href="{{ url('/') }}" class="mobile-nav-link {{ request()->is('/') ? 'is-active' : '' }}">Home</a>
+                    <a href="{{ $roleHomeUrl }}"
+                       class="mobile-nav-link {{ request()->is('/') || request()->routeIs('officer.dashboard', 'adviser.dashboard') ? 'is-active' : '' }}">
+                        Home
+                    </a>
                 </li>
                 <li class="mobile-nav-item"><a href="{{ url('/about') }}" class="mobile-nav-link">About us</a></li>
 
@@ -286,9 +337,39 @@
                 <li class="mobile-nav-item"><a href="{{ url('/achievements') }}" class="mobile-nav-link">Achievements</a></li>
                 <li class="mobile-nav-item"><a href="{{ url('/liquidation') }}" class="mobile-nav-link">Liquidation</a></li>
                 <li class="mobile-nav-item"><a href="{{ url('/documents') }}" class="mobile-nav-link">Documents</a></li>
+                @auth
+                    @if (auth()->user()->hasCompletedProfile())
+                        <li class="mobile-nav-item">
+                            <a href="{{ route('profile.edit') }}" class="mobile-nav-link">My Profile</a>
+                        </li>
+                    @endif
+                    @can('view-post-dashboard')
+                        <li class="mobile-nav-item">
+                            <a href="{{ route(auth()->user()->dashboardRoute()) }}"
+                               class="mobile-nav-link {{ request()->routeIs('officer.dashboard', 'adviser.dashboard') ? 'is-active' : '' }}">
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="mobile-nav-item">
+                            <button type="button" class="mobile-nav-link role-nav-disabled" disabled
+                                    title="Post creation is not implemented yet">New Post</button>
+                        </li>
+                    @endcan
+                    @can('review-posts')
+                        <li class="mobile-nav-item">
+                            <a href="{{ route('adviser.reviews.index') }}" class="mobile-nav-link">Review Posts</a>
+                        </li>
+                    @endcan
+                    @can('manage-users')
+                        <li class="mobile-nav-item">
+                            <a href="{{ route('adviser.users.index') }}" class="mobile-nav-link">Manage Users</a>
+                        </li>
+                    @endcan
+                @endauth
             </ul>
         </nav>
     </header>
+    @endif
 
     {{-- ============================= PAGE CONTENT ============================= --}}
     <main>

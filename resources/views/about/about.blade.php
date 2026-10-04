@@ -28,8 +28,8 @@
 			$officers = [
 				['Khyle Alegre', 'Adviser', 'images/officerimg/Khyle Alegre 1.png'],
 				['Lance Carlo Bernabe', 'Student Adviser', 'resources/images/officers/lance-carlo-bernabe.jpg'],
-				['Michaelle Vickeema Sarmiento', 'President', 'resources/images/officers/michaelle-vickeema-sarmiento.jpg'],
-				['Irish Nicole Bernabe', 'Vice President (Internal)', 'resources/images/officers/irish-nicole-bernabe.jpg'],
+				['Michaelle Vickeemae Sarmiento', 'President', 'resources/images/officers/michaelle-vickeema-sarmiento.jpg'],
+				['Irish Nicole Bernardo', 'Vice President (Internal)', 'resources/images/officers/irish-nicole-bernabe.jpg'],
 				['Charlotte Sapnu', 'Vice President (External)', 'resources/images/officers/charlotte-sapnu.jpg'],
 				['Lian San Diego', 'Secretary', 'resources/images/officers/lian-san-diego.jpg'],
 				['John Daniel Bayani', 'Treasurer'],

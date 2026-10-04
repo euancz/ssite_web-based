@@ -36,7 +36,13 @@ class AuthController extends Controller
             // Regenerate session after successful login
             $request->session()->regenerate();
 
-            return redirect()->intended('/');
+            $user = Auth::user();
+
+            if ($user && ! $user->hasCompletedProfile()) {
+                return redirect()->route('profile.complete');
+            }
+
+            return redirect()->intended(route($user?->dashboardRoute() ?? 'home'));
         }
 
         // Incorrect credentials
