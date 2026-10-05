@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\OfficerDashboardController;
 use App\Http\Controllers\Adviser\DashboardController as AdviserDashboardController;
 use App\Http\Controllers\Adviser\ReviewController;
@@ -70,10 +71,6 @@ Route::get('/about', function () {
     return view('home.home');
 })->name('home');
 
-Route::get('/articles', function () {
-    return view('articles.articles');
-})->name('articles');
-
 Route::get('/activities', function () {
     return view('activities.activities');
 })->name('activities');
@@ -95,6 +92,36 @@ Route::put('/profile', [ProfileController::class, 'update'])
     ->name('profile.update');
 
 });
+
+// Public Articles listing and detail pages allow guests and rely on the controller for approved/active visibility.
+Route::middleware('profile.complete')->group(function () {
+    Route::get('/articles', [ArticleController::class, 'index'])->name('articles.index');
+    Route::get('/articles/{article}', [ArticleController::class, 'show'])
+        ->whereNumber('article')
+        ->name('articles.show');
+});
+
+// Article posting, editing, archive, and restore actions require a completed officer or adviser account.
+Route::prefix('articles')->name('articles.')
+    ->middleware(['auth', 'role:officer,adviser', 'profile.complete'])
+    ->group(function () {
+        Route::get('/create', [ArticleController::class, 'create'])->name('create');
+        Route::post('/', [ArticleController::class, 'store'])->name('store');
+        Route::get('/{article}/edit', [ArticleController::class, 'edit'])->whereNumber('article')->name('edit');
+        Route::patch('/{article}', [ArticleController::class, 'update'])->whereNumber('article')->name('update');
+        Route::post('/{article}/archive', [ArticleController::class, 'archive'])->whereNumber('article')->name('archive');
+        Route::post('/{article}/restore', [ArticleController::class, 'restore'])->whereNumber('article')->name('restore');
+    });
+
+// Article review, permanent deletion, and bulk archive are adviser-only and profile-gated.
+Route::prefix('articles')->name('articles.')
+    ->middleware(['auth', 'role:adviser', 'profile.complete'])
+    ->group(function () {
+        Route::post('/bulk-archive', [ArticleController::class, 'bulkArchive'])->name('bulk-archive');
+        Route::post('/{article}/approve', [ArticleController::class, 'approve'])->whereNumber('article')->name('approve');
+        Route::post('/{article}/reject', [ArticleController::class, 'reject'])->whereNumber('article')->name('reject');
+        Route::delete('/{article}', [ArticleController::class, 'destroy'])->whereNumber('article')->name('destroy');
+    });
 
 // Officer and adviser dashboards require both the matching role and a completed profile.
 Route::get('/officer/dashboard', OfficerDashboardController::class)

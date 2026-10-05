@@ -237,10 +237,7 @@
                         </svg>
                     </button>
                     <ul class="site-nav-dropdown-menu articles-dropdown-menu">
-                        <li><a href="{{ url('/articles') }}" class="site-dropdown-link">All Articles</a></li>
-                        <li><a href="{{ url('/articles') }}" class="site-dropdown-link">Latest Updates</a></li>
-                        <li><a href="{{ url('/articles') }}" class="site-dropdown-link">Featured Stories</a></li>
-                        <li><a href="{{ url('/articles') }}" class="site-dropdown-link">Most Read</a></li>
+                        <li><a href="{{ route('articles.index') }}" class="site-dropdown-link">Published Articles</a></li>
                     </ul>
                 </li>
 
@@ -278,8 +275,7 @@
                             </a>
                         </li>
                         <li class="site-nav-item">
-                            <button type="button" class="site-nav-link role-nav-disabled" disabled
-                                    title="Post creation is not implemented yet">New Post</button>
+                            <a href="{{ route('articles.create') }}" class="site-nav-link">New Article</a>
                         </li>
                     @endcan
                     {{-- SECURITY: Review tools are shown only to advisers; route middleware enforces the same rule. --}}
@@ -318,10 +314,7 @@
                             </svg>
                         </summary>
                         <ul class="mobile-nav-sublist">
-                            <li><a href="{{ url('/articles') }}" class="mobile-nav-sublink">All Articles</a></li>
-                            <li><a href="{{ url('/articles') }}" class="mobile-nav-sublink">Latest Updates</a></li>
-                            <li><a href="{{ url('/articles') }}" class="mobile-nav-sublink">Featured Stories</a></li>
-                            <li><a href="{{ url('/articles') }}" class="mobile-nav-sublink">Most Read</a></li>
+                            <li><a href="{{ route('articles.index') }}" class="mobile-nav-sublink">Published Articles</a></li>
                         </ul>
                     </details>
                 </li>
@@ -362,8 +355,7 @@
                             </a>
                         </li>
                         <li class="mobile-nav-item">
-                            <button type="button" class="mobile-nav-link role-nav-disabled" disabled
-                                    title="Post creation is not implemented yet">New Post</button>
+                            <a href="{{ route('articles.create') }}" class="mobile-nav-link">New Article</a>
                         </li>
                     @endcan
                     {{-- SECURITY: Only advisers see the review queue shortcut. --}}

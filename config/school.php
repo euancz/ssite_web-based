@@ -4,6 +4,12 @@ return [
     // Advisers may be exempted; other signed-in roles must complete their profile by default.
     'require_profile_for_all_roles' => (bool) env('SCHOOL_REQUIRE_PROFILE_FOR_ALL_ROLES', true),
 
+    // Adviser-created articles are published immediately unless this setting is disabled.
+    'adviser_posts_auto_approved' => (bool) env('SCHOOL_ADVISER_POSTS_AUTO_APPROVED', true),
+
+    // Editing an approved officer article sends the changed content back for adviser review.
+    'reset_approval_on_edit' => (bool) env('SCHOOL_RESET_APPROVAL_ON_EDIT', true),
+
     // Set to an empty string to allow any valid Microsoft email domain.
     'microsoft_email_domain' => env('SCHOOL_MICROSOFT_EMAIL_DOMAIN', 'mcc.edu.ph'),
 

@@ -7,6 +7,7 @@
         'pending' => 'status-badge-pending',
         'approved' => 'status-badge-approved',
         'rejected' => 'status-badge-rejected',
+        'archived' => 'status-badge-archived',
         default => 'status-badge-neutral',
     };
 @endphp
