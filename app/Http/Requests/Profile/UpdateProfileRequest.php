@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Profile;
 
 /**
  * Validates later profile edits while reserving student-number changes for advisers.

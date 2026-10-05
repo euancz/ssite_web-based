@@ -1,13 +1,14 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Officer;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Contracts\View\View;
 
 /**
  * Supplies the officer dashboard with the current placeholder post statistics.
  */
-class OfficerDashboardController extends Controller
+class DashboardController extends Controller
 {
     /**
      * Render the officer dashboard; post-backed values await post storage.

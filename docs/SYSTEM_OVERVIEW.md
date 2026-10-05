@@ -16,16 +16,16 @@ The current code enforces dashboard and adviser route roles, and adviser role ch
 
 An adviser opening `/adviser/users` follows this path:
 
-1. `routes/web.php` matches the named `adviser.users.index` route.
+1. `routes/adviser.php` matches the named `adviser.users.index` route.
 2. Laravel runs `auth`, `role:adviser`, and `profile.complete` middleware.
 3. `App\Http\Controllers\Adviser\UserController::index` validates filters and queries users through the `User` model.
-4. The controller renders `resources/views/adviser/users/index.blade.php`, which uses shared components from `resources/views/components`.
+4. The controller renders `resources/views/adviser/users/index.blade.php`, which uses shared components from `resources/views/components/ui`.
 
 Profile editing uses the same authenticated-user pattern: the profile controller obtains the user from the request session rather than accepting a user ID from the form.
 
 An officer viewing their own pending Articles follows this path:
 
-1. `routes/web.php` matches `articles.index` at `/articles` with the `tab=pending` query value.
+1. `routes/features.php` matches `articles.index` at `/articles` with the `tab=pending` query value.
 2. The route applies `profile.complete`, which lets guests pass and redirects incomplete signed-in accounts; write routes separately require `auth`, `role:officer,adviser`, and `profile.complete`.
 3. `ArticleController::index` validates the tab against the signed-in role, scopes the query, and searches/paginates only those rows.
 4. `Article` maps `article_id`, relates authors through `users.user_id`, and `ArticlePolicy` governs private article viewing.
@@ -58,15 +58,15 @@ The database table is managed outside this repository's migrations. Adviser revi
 
 | Location | Purpose | Important files |
 | --- | --- | --- |
-| `routes/` | URL definitions and route middleware | `web.php` |
-| `app/Http/Controllers/` | Login, profile, dashboard, adviser, and article request handling | `ArticleController.php`, `MicrosoftAuthController.php`, `ProfileController.php`, `Adviser/UserController.php` |
+| `routes/` | URL definitions grouped by feature and access role | `web.php`, `auth.php`, `profile.php`, `officer.php`, `adviser.php`, `features.php` |
+| `app/Http/Controllers/` | Login, profile, dashboard, adviser, and article request handling | `ArticleController.php`, `Auth/`, `Profile/`, `Officer/`, `Adviser/` |
 | `app/Http/Middleware/` | Authentication, role, and profile-completion gates | `EnsureProfileCompleted.php`, `RoleMiddleware.php` |
-| `app/Http/Requests/` | Validation and authorization for profile and article forms | `StoreArticleRequest.php`, `UpdateArticleRequest.php`, `RejectArticleRequest.php`, profile request files |
+| `app/Http/Requests/` | Validation and authorization grouped by feature | `Article/`, `Profile/` |
 | `app/Models/` | User and article persistence and role helpers | `User.php`, `Article.php` |
 | `app/Policies/` | Per-record authorization for article visibility and actions | `ArticlePolicy.php` |
 | `database/migrations/` | Database schema changes | The custom Microsoft, role, and profile migrations; no Articles-table migration exists in this repository |
 | `config/` | Environment and school option configuration | `school.php`, `services.php` |
-| `resources/views/` | Shared layout, dashboards, profile and article forms, and Blade components | `layouts/app.blade.php`, `articles/index.blade.php`, `articles/show.blade.php`, `articles/create.blade.php`, `articles/edit.blade.php`, `articles/_form.blade.php`, `components/` |
+| `resources/views/` | Public pages, feature pages, dashboards, forms, and UI components | `pages/`, `layouts/`, `articles/`, `profile/`, `officer/`, `adviser/`, `components/ui/` |
 | `bootstrap/` | Framework boot configuration and middleware aliases | `app.php` |
 
 ## Gotchas and extension notes

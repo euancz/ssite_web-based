@@ -5,7 +5,7 @@
 @section('content')
 <div class="dashboard-page">
     {{-- The shared page heading and form panel follow existing dashboard spacing. --}}
-    <x-page-header title="Edit Article" subtitle="Update the article content or replace its image." />
+    <x-ui.page-header title="Edit Article" subtitle="Update the article content or replace its image." />
     <section class="dashboard-panel">
         {{-- SECURITY: ArticlePolicy and the update endpoint both check ownership or adviser role. --}}
         @include('articles._form', [

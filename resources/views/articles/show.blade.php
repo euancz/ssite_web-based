@@ -13,14 +13,14 @@
     @endif
 
     {{-- Article metadata uses the shared heading and status badge components. --}}
-    <x-page-header :title="$article->title" subtitle="By {{ $article->author?->name ?? 'Former member' }} · {{ $article->created_at?->format('M j, Y') }}">
+    <x-ui.page-header :title="$article->title" subtitle="By {{ $article->author?->name ?? 'Former member' }} · {{ $article->created_at?->format('M j, Y') }}">
         <x-slot:actions>
             <div class="article-badges">
-                <x-status-badge :status="$article->approval_status" />
-                @if ($article->isArchived()) <x-status-badge status="archived" /> @endif
+                <x-ui.status-badge :status="$article->approval_status" />
+                @if ($article->isArchived()) <x-ui.status-badge status="archived" /> @endif
             </div>
         </x-slot:actions>
-    </x-page-header>
+    </x-ui.page-header>
 
     {{-- Archived content remains readable to its owner and advisers with a clear visibility notice. --}}
     @if ($article->isArchived())
@@ -92,7 +92,7 @@
     {{-- The shared rejection modal posts a required reason to the adviser-only review route. --}}
     @can('reject', $article)
         @if ($article->isPending())
-            <x-reject-modal id="article-reject-modal" :action="route('articles.reject', $article)" />
+            <x-ui.reject-modal id="article-reject-modal" :action="route('articles.reject', $article)" />
         @endif
     @endcan
 

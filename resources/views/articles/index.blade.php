@@ -5,14 +5,14 @@
 @section('content')
 <div class="dashboard-page">
     {{-- The shared heading follows the existing dashboard card and page spacing. --}}
-    <x-page-header title="Articles" subtitle="Read and manage SSITE articles." >
+    <x-ui.page-header title="Articles" subtitle="Read and manage SSITE articles." >
         <x-slot:actions>
             {{-- SECURITY: Posting links are shown only when ArticlePolicy permits article creation. --}}
             @can('create', \App\Models\Article::class)
                 <a href="{{ route('articles.create') }}" class="dashboard-button">New Article</a>
             @endcan
         </x-slot:actions>
-    </x-page-header>
+    </x-ui.page-header>
 
     {{-- Role-whitelisted tabs keep private workflow states out of student and guest navigation. --}}
     @php
@@ -85,9 +85,9 @@
                 </a>
                 <div class="article-list-content">
                     <div class="article-badges">
-                        <x-status-badge :status="$article->approval_status" />
+                        <x-ui.status-badge :status="$article->approval_status" />
                         @if ($article->isArchived())
-                            <x-status-badge status="archived" />
+                            <x-ui.status-badge status="archived" />
                         @endif
                     </div>
                     <h2><a href="{{ route('articles.show', $article) }}">{{ $article->title }}</a></h2>

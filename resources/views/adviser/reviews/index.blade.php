@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="dashboard-page">
-    <x-page-header title="Review Posts" subtitle="Review submitted posts by status." />
+    <x-ui.page-header title="Review Posts" subtitle="Review submitted posts by status." />
 
     {{-- Keep the selected status in the URL so advisers can share or refresh a filtered queue. --}}
     <nav class="dashboard-tabs" aria-label="Filter posts by status">
@@ -18,7 +18,7 @@
     </nav>
 
     <section class="dashboard-panel">
-        <x-data-table label="{{ ucfirst($activeStatus) }} posts">
+        <x-ui.data-table label="{{ ucfirst($activeStatus) }} posts">
             <table class="dashboard-table">
                 <thead>
                     <tr>
@@ -38,7 +38,7 @@
                             <td>{{ $post->author?->name ?? 'Unknown author' }}</td>
                             <td>{{ ucfirst($post->type) }}</td>
                             <td>{{ $post->created_at?->format('M j, Y') }}</td>
-                            <td><x-status-badge :status="$post->status" /></td>
+                            <td><x-ui.status-badge :status="$post->status" /></td>
                             <td class="dashboard-table-actions">
                                 {{-- Preview and review actions depend on URLs supplied by the post backend. --}}
                                 @if ($post->preview_url)
@@ -63,9 +63,9 @@
                     @endforelse
                 </tbody>
             </table>
-        </x-data-table>
+        </x-ui.data-table>
     </section>
 
-    <x-reject-modal id="reject-post-modal" />
+    <x-ui.reject-modal id="reject-post-modal" />
 </div>
 @endsection

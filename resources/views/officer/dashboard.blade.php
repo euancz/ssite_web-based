@@ -5,7 +5,7 @@
 @section('content')
 <div class="dashboard-page">
     {{-- Shared page header identifies the signed-in officer and keeps the unavailable create action visibly disabled. --}}
-    <x-page-header
+    <x-ui.page-header
         title="Welcome, {{ auth()->user()->name }}"
         subtitle="Officer dashboard · Your role is {{ ucfirst(auth()->user()->role) }}."
     >
@@ -14,13 +14,13 @@
                 New Post
             </button>
         </x-slot:actions>
-    </x-page-header>
+    </x-ui.page-header>
 
     <section class="dashboard-stat-grid" aria-label="My post statistics">
-        <x-stat-card label="My Posts" :value="$postCounts['total']" />
-        <x-stat-card label="Pending" :value="$postCounts['pending']" />
-        <x-stat-card label="Approved" :value="$postCounts['approved']" />
-        <x-stat-card label="Rejected" :value="$postCounts['rejected']" />
+        <x-ui.stat-card label="My Posts" :value="$postCounts['total']" />
+        <x-ui.stat-card label="Pending" :value="$postCounts['pending']" />
+        <x-ui.stat-card label="Approved" :value="$postCounts['approved']" />
+        <x-ui.stat-card label="Rejected" :value="$postCounts['rejected']" />
     </section>
 
     <section class="dashboard-panel">
@@ -31,7 +31,7 @@
             </div>
         </div>
 
-        <x-data-table label="My recent posts">
+        <x-ui.data-table label="My recent posts">
             <table class="dashboard-table">
                 <thead>
                     <tr>
@@ -56,7 +56,7 @@
                                 @endif
                             </td>
                             <td>{{ ucfirst($post->type) }}</td>
-                            <td><x-status-badge :status="$post->status" /></td>
+                            <td><x-ui.status-badge :status="$post->status" /></td>
                             <td>{{ $post->created_at?->format('M j, Y') }}</td>
                             <td class="dashboard-table-actions">
                                 <button type="button" class="dashboard-text-button" disabled>Edit</button>
@@ -72,7 +72,7 @@
                     @endforelse
                 </tbody>
             </table>
-        </x-data-table>
+        </x-ui.data-table>
     </section>
 </div>
 @endsection

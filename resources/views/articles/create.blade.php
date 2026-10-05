@@ -5,7 +5,7 @@
 @section('content')
 <div class="dashboard-page">
     {{-- The shared page heading and form panel follow existing dashboard spacing. --}}
-    <x-page-header title="New Article" subtitle="Write an article for the SSITE community." />
+    <x-ui.page-header title="New Article" subtitle="Write an article for the SSITE community." />
     <section class="dashboard-panel">
         {{-- SECURITY: The POST endpoint authorizes the role and sets ownership and status server-side. --}}
         @include('articles._form', [

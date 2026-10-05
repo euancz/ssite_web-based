@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="dashboard-page profile-page">
-    <x-page-header
+    <x-ui.page-header
         title="Welcome, {{ $user->name }}! Please complete your information to continue"
         subtitle="Your details are stored securely on your SSITE account."
     />

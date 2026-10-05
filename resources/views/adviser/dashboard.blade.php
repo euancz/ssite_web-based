@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="dashboard-page">
-    <x-page-header
+    <x-ui.page-header
         title="Welcome, {{ auth()->user()->name }}"
         subtitle="Adviser dashboard - Review and manage the SSITE community."
     >
@@ -12,13 +12,13 @@
             <a href="{{ route('adviser.users.index') }}" class="dashboard-button dashboard-button-secondary">Manage Users</a>
             <a href="{{ route('adviser.reviews.index') }}" class="dashboard-button">Review Posts</a>
         </x-slot:actions>
-    </x-page-header>
+    </x-ui.page-header>
 
     <section class="dashboard-stat-grid" aria-label="Adviser statistics">
-        <x-stat-card label="Pending Reviews" :value="$pendingPosts->count()" />
-        <x-stat-card label="Approved This Month" :value="$approvedThisMonth" />
-        <x-stat-card label="Total Officers" :value="$totalOfficers" />
-        <x-stat-card label="Total Students" :value="$totalStudents" />
+        <x-ui.stat-card label="Pending Reviews" :value="$pendingPosts->count()" />
+        <x-ui.stat-card label="Approved This Month" :value="$approvedThisMonth" />
+        <x-ui.stat-card label="Total Officers" :value="$totalOfficers" />
+        <x-ui.stat-card label="Total Students" :value="$totalStudents" />
     </section>
 
     <section class="dashboard-panel">

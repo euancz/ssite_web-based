@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="dashboard-page profile-page">
-    <x-page-header title="My Profile" subtitle="Update your student information." />
+    <x-ui.page-header title="My Profile" subtitle="Update your student information." />
 
     {{-- Show a confirmation after the signed-in user saves profile edits. --}}
     @if (session('status'))

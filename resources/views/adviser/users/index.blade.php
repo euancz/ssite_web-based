@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="dashboard-page">
-    <x-page-header title="Manage Users" subtitle="View accounts and assign student or officer roles." />
+    <x-ui.page-header title="Manage Users" subtitle="View accounts and assign student or officer roles." />
 
     {{-- Report the result of a completed role update without hiding validation errors. --}}
     @if (session('status'))
@@ -45,7 +45,7 @@
             <button type="submit" class="dashboard-button">Search</button>
         </form>
 
-        <x-data-table label="Users">
+        <x-ui.data-table label="Users">
             <table class="dashboard-table">
                 <thead>
                     <tr>
@@ -70,7 +70,7 @@
                             <td>{{ $user->institute ?? '-' }}</td>
                             <td>{{ $user->program ?? '-' }}</td>
                             <td>{{ $user->year_level ?? '-' }}</td>
-                            <td><x-status-badge :status="$user->role" /></td>
+                            <td><x-ui.status-badge :status="$user->role" /></td>
                             <td>{{ $user->created_at?->format('M j, Y') ?? '-' }}</td>
                             <td>
                                 {{-- SECURITY: Advisers cannot change their own role or promote/demote another adviser. --}}
@@ -112,7 +112,7 @@
                     @endforelse
                 </tbody>
             </table>
-        </x-data-table>
+        </x-ui.data-table>
 
         <nav class="dashboard-pagination" aria-label="User pagination">
             <span>

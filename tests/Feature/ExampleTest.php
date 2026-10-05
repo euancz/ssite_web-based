@@ -17,9 +17,7 @@ class ExampleTest extends TestCase
         $response = $this->get('/');
 
         $response->assertOk()
-            ->assertSee('Latest Updates')
-            ->assertSee('Featured Stories')
-            ->assertSee('Most Read')
+            ->assertSee('Published Articles')
             ->assertSee('Latest Activities')
             ->assertSee('Featured Activities')
             ->assertSee('Most Viewed')
@@ -174,7 +172,7 @@ class ExampleTest extends TestCase
         $this->actingAs($student)
             ->get('/articles')
             ->assertRedirect(route('profile.complete'))
-            ->assertSessionHas('url.intended', route('articles'));
+            ->assertSessionHas('url.intended', route('articles.index'));
 
         $this->get(route('profile.complete'))
             ->assertOk()

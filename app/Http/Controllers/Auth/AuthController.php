@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Auth;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -11,15 +12,6 @@ use Illuminate\Support\Facades\Validator;
  */
 class AuthController extends Controller
 {
-    // Show login page
-    /**
-     * Render the standalone login view when it is requested directly.
-     */
-    public function showLogin()
-    {
-        return view('auth.login');
-    }
-
     // Process login
     /**
      * Validate credentials, regenerate the session, then enforce profile and role routing.
