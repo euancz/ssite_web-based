@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Stores authentication, role, and student information together on the users table.
@@ -21,6 +22,8 @@ class User extends Authenticatable
     public $incrementing = true;
 
     protected $keyType = 'int';
+
+    // SECURITY: profile_picture is intentionally excluded from $fillable; only trusted picture actions set it.
 
     /*
     |--------------------------------------------------------------------------
@@ -79,6 +82,46 @@ class User extends Authenticatable
             'updated_at' => 'datetime',
             'profile_completed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Return an existing public image URL, or null so views can safely show initials.
+     */
+    public function avatarUrl(): ?string
+    {
+        $picture = trim((string) $this->profile_picture);
+
+        if ($picture === '') {
+            return null;
+        }
+
+        if (preg_match('/^https?:\/\//i', $picture)) {
+            return $picture;
+        }
+
+        // Check storage first so manually removed files never become broken image links.
+        if (! Storage::disk('public')->exists($picture)) {
+            return null;
+        }
+
+        $version = $this->updated_at?->timestamp ?? 0;
+
+        return asset('storage/' . $picture) . '?v=' . $version . '-' . substr(sha1($picture), 0, 8);
+    }
+
+    /**
+     * Return up to two initials for accounts without an available picture.
+     */
+    public function initials(): string
+    {
+        $words = preg_split('/\s+/u', trim((string) $this->name), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $initials = '';
+
+        foreach (array_slice($words, 0, 2) as $word) {
+            $initials .= mb_strtoupper(mb_substr($word, 0, 1));
+        }
+
+        return $initials !== '' ? $initials : '?';
     }
 
     /**

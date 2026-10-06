@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Profile;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Profile\StoreProfileRequest;
 use App\Http\Requests\Profile\UpdateProfileRequest;
+use App\Http\Requests\Profile\UpdateProfilePictureRequest;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use App\Models\User;
 
 /**
@@ -72,6 +75,46 @@ class ProfileController extends Controller
 
         return redirect()->route('profile.edit')
             ->with('status', 'Your profile has been updated.');
+    }
+
+    /**
+     * Store a validated picture for the signed-in user, then return to profile settings.
+     */
+    public function updatePicture(UpdateProfilePictureRequest $request): RedirectResponse
+    {
+        $user = $request->user();
+        $upload = $request->file('picture');
+        $filename = $user->user_id . '-' . Str::random(40) . '.' . $upload->extension();
+        $path = $upload->storeAs('profile-pictures', $filename, 'public');
+
+        // Delete only a prior local file after the replacement has been stored successfully.
+        $oldPicture = (string) $user->profile_picture;
+        if ($oldPicture !== '' && ! preg_match('/^https?:\/\//i', $oldPicture)) {
+            Storage::disk('public')->delete($oldPicture);
+        }
+
+        $user->profile_picture = $path;
+        $user->save();
+
+        return back()->with('status', 'Your profile picture has been updated.');
+    }
+
+    /**
+     * Remove the signed-in user's local picture and return to profile settings.
+     */
+    public function removePicture(): RedirectResponse
+    {
+        $user = auth()->user();
+        $picture = (string) $user->profile_picture;
+
+        if ($picture !== '' && ! preg_match('/^https?:\/\//i', $picture)) {
+            Storage::disk('public')->delete($picture);
+        }
+
+        $user->profile_picture = null;
+        $user->save();
+
+        return back()->with('status', 'Your profile picture has been removed.');
     }
 
     /**

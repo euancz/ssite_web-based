@@ -18,4 +18,10 @@ Route::middleware([RequireAuthentication::class, EnsureProfileCompleted::class])
         ->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])
         ->name('profile.update');
+
+    // SECURITY: Picture actions use the authenticated account and never accept a user ID.
+    Route::post('/profile/picture', [ProfileController::class, 'updatePicture'])
+        ->name('profile.picture.update');
+    Route::delete('/profile/picture', [ProfileController::class, 'removePicture'])
+        ->name('profile.picture.remove');
 });

@@ -5,6 +5,11 @@ Use this guide to find the file that owns a common change.
 | If I want to change... | Open... |
 | --- | --- |
 | The desktop/mobile navigation or account menus | `resources/views/layouts/app.blade.php` |
+| The navbar avatar and initials fallback | `resources/views/components/ui/avatar.blade.php` and `app/Models/User.php` |
+| How fallback initials are calculated | `app/Models/User.php` (`initials()`) |
+| Picture upload size and type rules | `app/Http/Requests/Profile/UpdateProfilePictureRequest.php` |
+| Where uploaded pictures are stored | `app/Http/Controllers/Profile/ProfileController.php` (`profile-pictures/` on the public disk) |
+| Profile picture upload/remove controls | `resources/views/profile/partials/picture.blade.php` |
 | The sign-in and Microsoft callback URLs | `routes/auth.php` |
 | Password login/logout behavior | `app/Http/Controllers/Auth/AuthController.php` |
 | Microsoft login and post-login redirect | `app/Http/Controllers/Auth/MicrosoftAuthController.php` |

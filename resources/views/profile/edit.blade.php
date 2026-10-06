@@ -18,6 +18,8 @@
         </div>
     @endif
 
+    @include('profile.partials.picture', ['user' => $user])
+
     <form method="POST" action="{{ route('profile.update') }}" class="dashboard-panel profile-form">
         {{-- SECURITY: The request is scoped to the authenticated user; role and email are not submitted. --}}
         @csrf

@@ -90,14 +90,11 @@ class MicrosoftAuthController extends Controller
                 $user->email = $email;
                 $user->microsoft_id = $microsoftId;
                 $user->password = Hash::make(Str::random(64));
-                $user->profile_picture = config('school.default_profile_picture', 'images/Wolf.png');
+                $user->profile_picture = null;
                 $user->role = 'student';
             }
 
-            // Never replace a profile value the user already has with a login-time default.
-            if (! $user->profile_picture) {
-                $user->profile_picture = config('school.default_profile_picture', 'images/Wolf.png');
-            }
+            // Leave existing pictures untouched; this callback does not fetch Microsoft photos.
 
             if ($user->isDirty()) {
                 $user->save();

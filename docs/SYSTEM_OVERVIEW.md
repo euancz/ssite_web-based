@@ -35,10 +35,10 @@ An officer viewing their own pending Articles follows this path:
 
 1. The user starts Microsoft OAuth at `/auth/microsoft`; Socialite returns to the callback.
 2. `MicrosoftAuthController` finds the local account by Microsoft ID, or links a matching email account if it is not already linked.
-3. If no local account exists, the callback creates a student account with Microsoft-provided name/email and server-set authentication fields.
+3. If no local account exists, the callback creates a student account with Microsoft-provided name/email and server-set authentication fields. A picture is not fetched; a Microsoft photo URL is retained only when an existing account already has one.
 4. The user is logged in. If `profile_completed_at` is null, the callback sends them to `profile.complete`; otherwise, it redirects to an intended URL or the route selected for their role.
 5. `EnsureProfileCompleted` redirects an incomplete account away from protected routes. The completion form and logout are exempt so the user can finish the form or leave.
-6. `ProfileController` validates and saves the signed-in user's allowed profile fields, sets `profile_completed_at`, and redirects onward.
+6. `ProfileController` validates and saves the signed-in user's allowed profile fields, sets `profile_completed_at`, and redirects onward. Picture upload/removal uses separate authenticated actions; completing required fields does not require a picture.
 
 `config/school.php` controls the school email domain, profile enforcement flag, allowed gender/year values, student-number format, and TODO institute/program lists.
 
@@ -61,17 +61,18 @@ The database table is managed outside this repository's migrations. Adviser revi
 | `routes/` | URL definitions grouped by feature and access role | `web.php`, `auth.php`, `profile.php`, `officer.php`, `adviser.php`, `features.php` |
 | `app/Http/Controllers/` | Login, profile, dashboard, adviser, and article request handling | `ArticleController.php`, `Auth/`, `Profile/`, `Officer/`, `Adviser/` |
 | `app/Http/Middleware/` | Authentication, role, and profile-completion gates | `EnsureProfileCompleted.php`, `RoleMiddleware.php` |
-| `app/Http/Requests/` | Validation and authorization grouped by feature | `Article/`, `Profile/` |
+| `app/Http/Requests/` | Validation and authorization grouped by feature | `Article/`, `Profile/`, `Profile/UpdateProfilePictureRequest.php` |
 | `app/Models/` | User and article persistence and role helpers | `User.php`, `Article.php` |
 | `app/Policies/` | Per-record authorization for article visibility and actions | `ArticlePolicy.php` |
-| `database/migrations/` | Database schema changes | The custom Microsoft, role, and profile migrations; no Articles-table migration exists in this repository |
+| `database/migrations/` | Database schema changes | `2026_10_06_010000_make_user_profile_picture_nullable.php`; custom Microsoft, role, and profile migrations; no Articles-table migration exists in this repository |
 | `config/` | Environment and school option configuration | `school.php`, `services.php` |
-| `resources/views/` | Public pages, feature pages, dashboards, forms, and UI components | `pages/`, `layouts/`, `articles/`, `profile/`, `officer/`, `adviser/`, `components/ui/` |
+| `resources/views/` | Public pages, feature pages, dashboards, forms, and UI components | `pages/`, `layouts/`, `articles/`, `profile/`, `officer/`, `adviser/`, `components/ui/avatar.blade.php` |
 | `bootstrap/` | Framework boot configuration and middleware aliases | `app.php` |
 
 ## Gotchas and extension notes
 
 - **Custom user key:** `User` uses `user_id`, not Laravel's conventional `id`. Use the model key or explicitly target `user_id` in validation and relationships.
+- **Profile pictures:** `profile_picture` is nullable and never mass-assignable. Uploads use generated names in `storage/app/public/profile-pictures`; run `php artisan storage:link`. Missing files fall back to initials. Microsoft login does not fetch photos; existing picture values are never overwritten by the callback.
 - **Article primary key:** Articles use `article_id`; user ownership and reviewer relationships target `users.user_id`, not `id`.
 - **Article mass assignment:** `Article::$fillable` contains only `title`, `content`, and `image`. Set owner, approval/content status, rejection reason, and review fields in authorized controller actions.
 - **Article tabs:** The `tab` query value is checked against role-specific allowlists; invalid or hidden tabs fall back to Published. Keep query scopes role-safe when adding a tab.

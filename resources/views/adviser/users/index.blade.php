@@ -64,7 +64,8 @@
                     {{-- User rows include academic information so advisers can identify the correct account. --}}
                     @forelse ($users as $user)
                         <tr>
-                            <td><a href="{{ route('adviser.users.show', $user) }}">{{ $user->name }}</a></td>
+                            {{-- Keep the existing user link and identify each account with its shared avatar. --}}
+                            <td><a href="{{ route('adviser.users.show', $user) }}" class="adviser-user-link"><x-ui.avatar :user="$user" size="sm" />{{ $user->name }}</a></td>
                             <td>{{ $user->email }}</td>
                             <td>{{ $user->student_number ?? '-' }}</td>
                             <td>{{ $user->institute ?? '-' }}</td>
