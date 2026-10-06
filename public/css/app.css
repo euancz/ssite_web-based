@@ -1338,6 +1338,11 @@ ol {
     font-size: 12px;
 }
 
+.account-toggle .ui-avatar-sm {
+    width: 36px;
+    height: 36px;
+}
+
 .ui-avatar-md {
     width: 48px;
     height: 48px;

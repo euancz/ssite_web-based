@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\AboutController;
 use App\Http\Middleware\EnsureProfileCompleted;
 use App\Http\Middleware\RequireAuthentication;
 use Illuminate\Support\Facades\Route;
@@ -8,10 +9,6 @@ use Illuminate\Support\Facades\Route;
 // Holds shared content pages and Articles routes; ordinary feature pages require completed sign-in,
 // while Article listing/show accept guests and Article writes require the existing role middleware.
 Route::middleware([RequireAuthentication::class, EnsureProfileCompleted::class])->group(function () {
-    Route::get('/about', function () {
-        return view('pages.about');
-    })->name('about');
-
     Route::get('/activities', function () {
         return view('activities.index');
     })->name('activities');
@@ -28,6 +25,9 @@ Route::middleware([RequireAuthentication::class, EnsureProfileCompleted::class])
         return view('documents.index');
     })->name('documents');
 });
+
+// About content is public; officer cards are read-only snapshots supplied by the controller.
+Route::get('/about', AboutController::class)->name('about');
 
 // Public Articles listing and detail pages rely on ArticleController for approved/active visibility.
 Route::middleware('profile.complete')->group(function () {

@@ -10,7 +10,7 @@ SSITE is a Laravel Blade application for the Student Society in Information Tech
 | Officer | Student capabilities, plus post articles, edit and archive/restore their own articles; new articles start pending. |
 | Adviser | Officer capabilities, plus review all articles, approve/reject, archive/restore any article, permanently delete, bulk archive, and manage non-adviser user roles. |
 
-The current code enforces dashboard and adviser route roles, and adviser role changes are implemented. Article posting, ownership checks, approval, rejection, archive/restore, and approved-only queries are implemented for the existing `articles` table.
+The current code enforces dashboard and adviser route roles, and adviser role changes are implemented. About page leadership is stored as annual officer snapshots managed by advisers. Article posting, ownership checks, approval, rejection, archive/restore, and approved-only queries are implemented for the existing `articles` table.
 
 ## Request flow example
 
@@ -42,6 +42,10 @@ An officer viewing their own pending Articles follows this path:
 
 `config/school.php` controls the school email domain, profile enforcement flag, allowed gender/year values, student-number format, and TODO institute/program lists.
 
+## Officer history
+
+`AcademicYear::current()` calculates the current A.Y. using `school.academic_year_start_month` (June by default), so the changeover happens from the calendar date without a scheduled task. Adviser-managed `officer_terms` rows are snapshots: name, position, and photo stay with that year even if a linked account changes or is deleted. Role changes synchronize only the current year's row. New officers are not copied forward automatically; an adviser can use the explicit copy action as a starting point. The public About page shows current-year rows above newest-first history rows.
+
 ## Post approval flow
 
 The Articles workflow is:
@@ -59,14 +63,16 @@ The database table is managed outside this repository's migrations. Adviser revi
 | Location | Purpose | Important files |
 | --- | --- | --- |
 | `routes/` | URL definitions grouped by feature and access role | `web.php`, `auth.php`, `profile.php`, `officer.php`, `adviser.php`, `features.php` |
-| `app/Http/Controllers/` | Login, profile, dashboard, adviser, and article request handling | `ArticleController.php`, `Auth/`, `Profile/`, `Officer/`, `Adviser/` |
+| `app/Http/Controllers/` | Login, profile, dashboard, adviser, About, and article request handling | `AboutController.php`, `ArticleController.php`, `Auth/`, `Profile/`, `Officer/`, `Adviser/OfficerTermController.php` |
 | `app/Http/Middleware/` | Authentication, role, and profile-completion gates | `EnsureProfileCompleted.php`, `RoleMiddleware.php` |
-| `app/Http/Requests/` | Validation and authorization grouped by feature | `Article/`, `Profile/`, `Profile/UpdateProfilePictureRequest.php` |
-| `app/Models/` | User and article persistence and role helpers | `User.php`, `Article.php` |
+| `app/Http/Requests/` | Validation and authorization grouped by feature | `Article/`, `Profile/`, `StoreOfficerTermRequest.php`, `UpdateOfficerTermRequest.php` |
+| `app/Models/` | User, article, and officer term persistence | `User.php`, `Article.php`, `OfficerTerm.php` |
 | `app/Policies/` | Per-record authorization for article visibility and actions | `ArticlePolicy.php` |
-| `database/migrations/` | Database schema changes | `2026_10_06_010000_make_user_profile_picture_nullable.php`; custom Microsoft, role, and profile migrations; no Articles-table migration exists in this repository |
+| `database/migrations/` | Database schema changes | `2026_10_06_010000_make_user_profile_picture_nullable.php`, `2026_10_06_020000_create_officer_terms_table.php`; custom Microsoft, role, and profile migrations; no Articles-table migration exists in this repository |
+| `database/seeders/` | Explicit data seeders | `OfficerTermSeeder.php` (run manually after migration) |
+| `app/Support/` | Focused school-year calculation | `AcademicYear.php` |
 | `config/` | Environment and school option configuration | `school.php`, `services.php` |
-| `resources/views/` | Public pages, feature pages, dashboards, forms, and UI components | `pages/`, `layouts/`, `articles/`, `profile/`, `officer/`, `adviser/`, `components/ui/avatar.blade.php` |
+| `resources/views/` | Public pages, feature pages, dashboards, forms, and UI components | `pages/about.blade.php`, `layouts/`, `articles/`, `profile/`, `officer/`, `adviser/officers/`, `components/ui/avatar.blade.php` |
 | `bootstrap/` | Framework boot configuration and middleware aliases | `app.php` |
 
 ## Gotchas and extension notes
@@ -83,6 +89,7 @@ The database table is managed outside this repository's migrations. Adviser revi
 - **Adding a role:** Update the role values and helpers in `User`, the `role` middleware route declarations, Gate definitions, role-specific dashboard redirect, and tests. Review all existing user-management validation before making a new role assignable.
 - **Adding an approval-required feature:** Add its schema/model and ownership relationship, policies or equivalent authorization, validated create/update/review endpoints, and status transitions. Set initial status in the server, require a rejection reason, and scope public/student queries to approved and active records only.
 - **School options:** Fill the TODO institute and program arrays in `config/school.php`; empty lists intentionally do not allow a student to submit arbitrary values.
+- **Officer terms:** The current A.Y. is computed from today's date. Officer name, title, and photo are copied per year; role changes never edit past years. Photos live on the public disk at `storage/app/public/officer-photos` and need `php artisan storage:link`. Officers are never copied forward automatically; use the adviser action when a starting point is wanted.
 
 ## Articles tab
 

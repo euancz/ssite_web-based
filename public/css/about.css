@@ -195,3 +195,11 @@
         font-size: 18px;
     }
 }
+
+.officer-photo-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #526b7d;
+    font-size: 12px;
+}

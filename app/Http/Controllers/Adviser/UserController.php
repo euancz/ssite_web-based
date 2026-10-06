@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Adviser;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\OfficerTerm;
+use App\Support\AcademicYear;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
 
 /*
  * Adviser role assignment is limited to student/officer accounts. Promotion requires an
@@ -77,6 +80,26 @@ class UserController extends Controller
             ? trim($validated['officer_position'])
             : null;
         $user->save();
+
+        // Keep only the current term in sync; previous academic years remain historical snapshots.
+        $currentYear = AcademicYear::current();
+        if ($user->role === 'officer') {
+            $term = OfficerTerm::updateOrCreate(
+                ['user_id' => $user->user_id, 'academic_year' => $currentYear],
+                ['name' => $user->name, 'position' => $user->officer_position, 'photo' => $user->profile_picture]
+            );
+            // SECURITY: user_id is assigned from the already-authorized User model, never request input.
+            $term->user_id = $user->user_id;
+            $term->save();
+        } else {
+            $term = OfficerTerm::forYear($currentYear)->where('user_id', $user->user_id)->first();
+            if ($term) {
+                if ($term->photo && str_starts_with($term->photo, 'officer-photos/') && !preg_match('/^https?:\/\//i', $term->photo)) {
+                    Storage::disk('public')->delete($term->photo);
+                }
+                $term->delete();
+            }
+        }
 
         return redirect()
             ->route('adviser.users.index', $request->only('search', 'role', 'page'))

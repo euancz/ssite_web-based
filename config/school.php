@@ -1,6 +1,17 @@
 <?php
 
 return [
+    // The A.Y. changes automatically in this month; no scheduled rollover is needed.
+    'academic_year_start_month' => 6,
+
+    // TODO: Confirm and fill this list with the official officer positions in display order.
+    'officer_positions' => [
+        'Adviser', 'Student Adviser', 'President', 'Vice President (Internal)',
+        'Vice President (External)', 'Secretary', 'Treasurer', 'Auditor',
+        'Public Information Officer', 'Business Manager', 'Social Media Manager',
+        'Multimedia (Creative)', 'Multimedia (Documentation)',
+        'IT Representative I', 'IT Representative II',
+    ],
     // Advisers may be exempted; other signed-in roles must complete their profile by default.
     'require_profile_for_all_roles' => (bool) env('SCHOOL_REQUIRE_PROFILE_FOR_ALL_ROLES', true),
 

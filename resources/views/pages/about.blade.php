@@ -22,55 +22,31 @@
 	</section>
 
 	<section class="officers-section" aria-labelledby="officers-heading">
-		<h2 id="officers-heading" class="about-section-title">SSITE Officers A.Y. 2026-2027</h2>
-
-		{{-- TODO: Keep this presentation list current; missing local portraits use a neutral placeholder. --}}
-		@php
-			$officers = [
-				['Khyle Alegre', 'Adviser', 'images/officerimg/Khyle Alegre 1.png'],
-				['Lance Carlo Bernabe', 'Student Adviser', 'resources/images/officers/lance-carlo-bernabe.jpg'],
-				['Michaelle Vickeemae Sarmiento', 'President', 'resources/images/officers/michaelle-vickeema-sarmiento.jpg'],
-				['Irish Nicole Bernardo', 'Vice President (Internal)', 'resources/images/officers/irish-nicole-bernabe.jpg'],
-				['Charlotte Sapnu', 'Vice President (External)', 'resources/images/officers/charlotte-sapnu.jpg'],
-				['Lian San Diego', 'Secretary', 'resources/images/officers/lian-san-diego.jpg'],
-				['John Daniel Bayani', 'Treasurer'],
-				['Xyra Shannel Alvarez', 'Auditor'],
-				['Chanel Jeraldine Fernandez', 'Public Information Officer'],
-				['Robert John Garcia', 'Business Manager'],
-				['Jhan Mino Daracan', 'Social Media Manager'],
-				['Febbie Ann Escoto', 'Multimedia (Creative)'],
-				['Sophia Cassandra Pare', 'Multimedia (Documentation)'],
-				['Ashley Alessandra Annunciation', 'IT Representative I'],
-				['Izhar Henjie Allague', 'IT Representative II'],
-			];
-		@endphp
-
-		{{-- Build officer cards from one list so names, roles, and portrait fallbacks stay aligned. --}}
+		<h2 id="officers-heading" class="about-section-title">SSITE Officers A.Y. {{ $current }}</h2>
+		{{-- Year-specific snapshots keep the public list stable when user profiles change. --}}
 		<div class="officers-grid">
-			@foreach ($officers as $officer)
-				@php
-					[$name, $role] = $officer;
-					$photoPath = $officer[2] ?? null;
-					$photoUrl = $photoPath && file_exists(public_path($photoPath))
-						? asset($photoPath)
-						: 'https://placehold.co/320x320/F7FBFC/17324D?text=Photo';
-				@endphp
+			@forelse ($officers as $officer)
 				<article class="officer-card">
-					<img class="officer-photo"
-						 src="{{ $photoUrl }}"
-						 alt="Officer portrait for {{ $name }}">
-					<h3>{{ $name }}</h3>
-					<p>{{ $role }}</p>
+					@if ($officer->photoUrl())
+						<img class="officer-photo" src="{{ $officer->photoUrl() }}" alt="Officer portrait for {{ $officer->name }}">
+					@else
+						<div class="officer-photo officer-photo-placeholder" role="img" aria-label="Photo unavailable">Photo</div>
+					@endif
+					<h3>{{ $officer->name }}</h3>
+					<p>{{ $officer->position }}</p>
 				</article>
-			@endforeach
+			@empty
+				<p>Officers for A.Y. {{ $current }} will be announced soon.</p>
+			@endforelse
 		</div>
 	</section>
 
+	@if ($history->isNotEmpty())
 	<section class="leadership-section" aria-labelledby="leadership-heading">
 		<h2 id="leadership-heading" class="about-section-title">Leadership History</h2>
 
 		<div class="leadership-list">
-			@foreach (['2025-2026', '2024-2025', '2023-2024'] as $year)
+			@foreach ($history as $year => $yearOfficers)
 				<details class="leadership-item">
 					<summary>
 						<span>SSITE Officers A.Y. {{ $year }}</span>
@@ -78,10 +54,22 @@
 							<path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/>
 						</svg>
 					</summary>
-					<p>Officer history for A.Y. {{ $year }} will be added here.</p>
+					<div class="officers-grid">
+						@foreach ($yearOfficers as $officer)
+							<article class="officer-card">
+								@if ($officer->photoUrl())
+									<img class="officer-photo" src="{{ $officer->photoUrl() }}" alt="Officer portrait for {{ $officer->name }}">
+								@else
+									<div class="officer-photo officer-photo-placeholder" role="img" aria-label="Photo unavailable">Photo</div>
+								@endif
+								<h3>{{ $officer->name }}</h3><p>{{ $officer->position }}</p>
+							</article>
+						@endforeach
+					</div>
 				</details>
 			@endforeach
 		</div>
 	</section>
+	@endif
 </div>
 @endsection

@@ -289,6 +289,9 @@
                             <a href="{{ route('adviser.users.index') }}" class="site-nav-link">Manage Users</a>
                         </li>
                     @endcan
+                    @can('manage-users')
+                        <li class="site-nav-item"><a href="{{ route('adviser.officers.index') }}" class="site-nav-link">Manage Officers</a></li>
+                    @endcan
                 @endauth
             </ul>
         </nav>
@@ -368,6 +371,9 @@
                         <li class="mobile-nav-item">
                             <a href="{{ route('adviser.users.index') }}" class="mobile-nav-link">Manage Users</a>
                         </li>
+                    @endcan
+                    @can('manage-users')
+                        <li class="mobile-nav-item"><a href="{{ route('adviser.officers.index') }}" class="mobile-nav-link">Manage Officers</a></li>
                     @endcan
                 @endauth
             </ul>
