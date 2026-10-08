@@ -26,6 +26,22 @@ Use this guide to find the file that owns a common change.
 | Article create/edit fields and image preview | `resources/views/articles/_form.blade.php` |
 | Article input validation | `app/Http/Requests/Article/` |
 | Article table mapping, status scopes, or image URLs | `app/Models/Article.php` |
+| Activity roles and allowed actions | `app/Policies/ActivityPolicy.php` and `routes/features.php` |
+| Activity tabs, search, or visibility queries | `app/Http/Controllers/ActivityController.php` |
+| Activity approve, reject, archive, or restore behavior | `app/Http/Controllers/ActivityController.php` |
+| Activity action buttons and confirmation dialogs | `resources/views/activities/show.blade.php` |
+| Activity list cards, tabs, or bulk archive selection | `resources/views/activities/index.blade.php` |
+| Activity create/edit fields and image preview | `resources/views/activities/_form.blade.php` |
+| Activity input validation | `app/Http/Requests/Activity/` |
+| Activity table mapping, status scopes, or image URLs | `app/Models/Activity.php` |
+| Achievement roles and allowed actions | `app/Policies/AchievementPolicy.php` and `routes/features.php` |
+| Achievement tabs, search, or visibility queries | `app/Http/Controllers/AchievementController.php` |
+| Achievement approve, reject, archive, or restore behavior | `app/Http/Controllers/AchievementController.php` |
+| Achievement action buttons and confirmation dialogs | `resources/views/achievements/show.blade.php` |
+| Achievement list cards, tabs, or bulk archive selection | `resources/views/achievements/index.blade.php` |
+| Achievement create/edit fields and image preview | `resources/views/achievements/_form.blade.php` |
+| Achievement input validation | `app/Http/Requests/Achievement/` |
+| Achievement table mapping, status scopes, or image URLs | `app/Models/Achievement.php` |
 | Required profile fields or profile validation | `app/Http/Requests/Profile/` and `resources/views/profile/partials/fields.blade.php` |
 | Profile completion/edit page flow | `app/Http/Controllers/Profile/ProfileController.php` and `routes/profile.php` |
 | Role checks and profile-completion middleware | `app/Http/Middleware/` and `bootstrap/app.php` |
@@ -35,7 +51,7 @@ Use this guide to find the file that owns a common change.
 | Activity, achievement, document, or liquidation page content | The matching `resources/views/<feature>/index.blade.php` |
 | Shared page headers, badges, tables, statistic cards, or reject modal | `resources/views/components/ui/` |
 | Which feature route file owns a URL | `routes/features.php`, `routes/auth.php`, `routes/profile.php`, `routes/officer.php`, or `routes/adviser.php` |
-| School profile options or Article post settings | `config/school.php` |
+| School profile options or shared Article, Activity, and Achievement post settings | `config/school.php` |
 | Database schema migrations | `database/migrations/` (keep filenames already run unchanged) |
 
 Route URLs, route names, middleware, and role checks are defined separately from the Blade pages. Moving a view changes its `view(...)` path, while the URL is controlled by its route file.

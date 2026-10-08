@@ -1,16 +1,16 @@
 # SSITE System Overview
 
-SSITE is a Laravel Blade application for the Student Society in Information Technology Education at Mabalacat City College. Users sign in with Microsoft or the existing password login, then complete required student information before using protected pages. The app stores identity, role, and student information on one `users` table with `user_id` as its primary key. Articles have a separate posting, review, and archiving workflow.
+SSITE is a Laravel Blade application for the Student Society in Information Technology Education at Mabalacat City College. Users sign in with Microsoft or the existing password login, then complete required student information before using protected pages. The app stores identity, role, and student information on one `users` table with `user_id` as its primary key. Articles, Activities, and Achievements use the same separate posting, review, and archiving workflow.
 
 ## Roles
 
 | Role | Intended capabilities |
 | --- | --- |
-| Student | View published (approved and active) articles and edit allowed personal information. |
-| Officer | Student capabilities, plus post articles, edit and archive/restore their own articles; new articles start pending. |
-| Adviser | Officer capabilities, plus review all articles, approve/reject, archive/restore any article, permanently delete, bulk archive, and manage non-adviser user roles. |
+| Student | View published (approved and active) articles, activities, and achievements; edit allowed personal information. |
+| Officer | Student capabilities, plus post articles, activities, and achievements; edit and archive/restore their own posts. New officer posts start pending. |
+| Adviser | Officer capabilities, plus review all three post types, approve/reject, archive/restore any post, permanently delete, bulk archive, and manage non-adviser user roles. |
 
-The current code enforces dashboard and adviser route roles, and adviser role changes are implemented. About page leadership is stored as annual officer snapshots managed by advisers. Article posting, ownership checks, approval, rejection, archive/restore, and approved-only queries are implemented for the existing `articles` table.
+The current code enforces dashboard and adviser route roles, and adviser role changes are implemented. About page leadership is stored as annual officer snapshots managed by advisers. Article, Activity, and Achievement posting, ownership checks, approval, rejection, archive/restore, and approved-only queries use their existing SQL-managed tables.
 
 ## Request flow example
 
@@ -48,31 +48,31 @@ An officer viewing their own pending Articles follows this path:
 
 ## Post approval flow
 
-The Articles workflow is:
+Articles, Activities, and Achievements share this workflow and keep approval and content status separate:
 
-1. An officer creates an article owned by that officer. The server sets `approval_status=pending` and `content_status=active`; advisers can post directly approved by the school setting.
-2. The adviser reviews pending articles and either approves them or rejects them with a required reason.
-3. Public/student-facing queries return only `approval_status=approved` AND `content_status=active` articles.
-4. Archiving changes only `content_status` to `archived`; restoring changes it to `active` and preserves approval state, so a pending or rejected article does not become published.
-5. Officers can edit and archive/restore only their own articles; advisers can manage all articles, bulk archive, and permanently delete.
+1. An officer creates a post owned by that officer. The server sets `approval_status=pending` and `content_status=active`; advisers can post directly approved by the school setting.
+2. The adviser reviews pending posts and either approves them or rejects them with a required reason.
+3. Public/student-facing queries return only `approval_status=approved` AND `content_status=active` records.
+4. Archiving changes only `content_status` to `archived`; restoring changes it to `active` and preserves approval state, so a pending or rejected post does not become published.
+5. Officers can edit and archive/restore only their own posts; advisers can manage all posts, bulk archive, and permanently delete.
 
-The database table is managed outside this repository's migrations. Adviser review for Articles is provided by the Articles tabs; the legacy adviser review and dashboard pages still contain placeholder content for other post types.
+The Articles, Activities, and Achievements tables were created with SQL outside this repository's migrations. Adviser review for all three modules is provided by their tabs; the legacy adviser dashboard review page still contains placeholder content for other post types.
 
 ## Folder map
 
 | Location | Purpose | Important files |
 | --- | --- | --- |
 | `routes/` | URL definitions grouped by feature and access role | `web.php`, `auth.php`, `profile.php`, `officer.php`, `adviser.php`, `features.php` |
-| `app/Http/Controllers/` | Login, profile, dashboard, adviser, About, and article request handling | `AboutController.php`, `ArticleController.php`, `Auth/`, `Profile/`, `Officer/`, `Adviser/OfficerTermController.php` |
+| `app/Http/Controllers/` | Login, profile, dashboard, adviser, About, and post request handling | `AboutController.php`, `ArticleController.php`, `ActivityController.php`, `AchievementController.php`, `Auth/`, `Profile/`, `Officer/`, `Adviser/OfficerTermController.php` |
 | `app/Http/Middleware/` | Authentication, role, and profile-completion gates | `EnsureProfileCompleted.php`, `RoleMiddleware.php` |
-| `app/Http/Requests/` | Validation and authorization grouped by feature | `Article/`, `Profile/`, `StoreOfficerTermRequest.php`, `UpdateOfficerTermRequest.php` |
-| `app/Models/` | User, article, and officer term persistence | `User.php`, `Article.php`, `OfficerTerm.php` |
-| `app/Policies/` | Per-record authorization for article visibility and actions | `ArticlePolicy.php` |
+| `app/Http/Requests/` | Validation and authorization grouped by feature | `Activity/StoreActivityRequest.php`, `Activity/UpdateActivityRequest.php`, `Activity/RejectActivityRequest.php`, `Achievement/StoreAchievementRequest.php`, `Achievement/UpdateAchievementRequest.php`, `Achievement/RejectAchievementRequest.php`; `Article/`, `Profile/`, officer term requests |
+| `app/Models/` | User, post, and officer term persistence | `User.php`, `Article.php`, `Activity.php`, `Achievement.php`, `OfficerTerm.php` |
+| `app/Policies/` | Per-record authorization for post visibility and actions | `ArticlePolicy.php`, `ActivityPolicy.php`, `AchievementPolicy.php` |
 | `database/migrations/` | Database schema changes | `2026_10_06_010000_make_user_profile_picture_nullable.php`, `2026_10_06_020000_create_officer_terms_table.php`; custom Microsoft, role, and profile migrations; no Articles-table migration exists in this repository |
 | `database/seeders/` | Explicit data seeders | `OfficerTermSeeder.php` (run manually after migration) |
 | `app/Support/` | Focused school-year calculation | `AcademicYear.php` |
 | `config/` | Environment and school option configuration | `school.php`, `services.php` |
-| `resources/views/` | Public pages, feature pages, dashboards, forms, and UI components | `pages/about.blade.php`, `layouts/`, `articles/`, `profile/`, `officer/`, `adviser/officers/`, `components/ui/avatar.blade.php` |
+| `resources/views/` | Public pages, feature pages, dashboards, forms, and UI components | `pages/home.blade.php`; each of `activities/` and `achievements/` contains `index.blade.php`, `show.blade.php`, `create.blade.php`, `edit.blade.php`, and `_form.blade.php`; `layouts/`, `articles/`, `profile/`, `officer/`, `adviser/officers/`, `components/ui/` |
 | `bootstrap/` | Framework boot configuration and middleware aliases | `app.php` |
 
 ## Gotchas and extension notes
@@ -81,6 +81,10 @@ The database table is managed outside this repository's migrations. Adviser revi
 - **Profile pictures:** `profile_picture` is nullable and never mass-assignable. Uploads use generated names in `storage/app/public/profile-pictures`; run `php artisan storage:link`. Missing files fall back to initials. Microsoft login does not fetch photos; existing picture values are never overwritten by the callback.
 - **Article primary key:** Articles use `article_id`; user ownership and reviewer relationships target `users.user_id`, not `id`.
 - **Article mass assignment:** `Article::$fillable` contains only `title`, `content`, and `image`. Set owner, approval/content status, rejection reason, and review fields in authorized controller actions.
+- **Activity and Achievement primary keys:** Activities use `activity_id` and Achievements use `achievement_id`; both relate owners and reviewers through `users.user_id`.
+- **Activity and Achievement mass assignment:** Their fillable lists contain only domain fields. Ownership, both statuses, rejection reason, and reviewer fields are set only by trusted controller actions.
+- **Activity and Achievement images:** Files use the public disk under `activities/` and `achievements/` with generated names. Run `php artisan storage:link`; missing files use the existing placeholder.
+- **Activity and Achievement schemas:** Both tables were created with SQL and have no create/alter migrations in this repository. Check the live schema before changing the database.
 - **Article tabs:** The `tab` query value is checked against role-specific allowlists; invalid or hidden tabs fall back to Published. Keep query scopes role-safe when adding a tab.
 - **Article images:** Images live on the public disk under `articles/` with generated names. Run `php artisan storage:link` so stored images can be served; missing files use the existing placeholder.
 - **Article status rule:** `approval_status` (pending/approved/rejected) records adviser review; `content_status` (active/archived) controls shelving. Restoring never changes approval, and neither field is mass-assignable.
@@ -94,3 +98,7 @@ The database table is managed outside this repository's migrations. Adviser revi
 ## Articles tab
 
 Students and guests see Published articles only. Officers also see My Posts and their own Archived articles; advisers see Pending Review, Rejected, Archived, and All. `approval_status` tracks review while `content_status` tracks active or archived visibility. When adding a tab, add it to the role allowlist in `ArticleController::index`, query with the Article scopes, and keep public/student results approved AND active.
+
+## Activities and Achievements tabs
+
+Activities and Achievements use the same role-specific tabs, search, and ten-item pagination as Articles. Change their tab rules in `ActivityController::index` or `AchievementController::index`; public lists and home cards must use each model's `publiclyVisible()` scope. Their date, location, awardee, and category fields are feature-specific domain data.
