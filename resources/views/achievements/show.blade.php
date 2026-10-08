@@ -46,14 +46,14 @@
         @can('archive', $achievement)
             @if (! $achievement->isArchived())
                 <form id="archive-achievement-form" method="POST" action="{{ route('achievements.archive', $achievement) }}">@csrf</form>
-                <button class="dashboard-button dashboard-button-secondary" type="button" data-modal-open="archive-achievement-modal">Archive</button>
+                <button class="dashboard-button dashboard-button-secondary" type="button" onclick="document.getElementById('archive-achievement-modal').showModal()">Archive</button>
             @endif
         @endcan
         {{-- SECURITY: Restore is owner/adviser-only and leaves the approval state unchanged. --}}
         @can('restore', $achievement)
             @if ($achievement->isArchived())
                 <form id="restore-achievement-form" method="POST" action="{{ route('achievements.restore', $achievement) }}">@csrf</form>
-                <button class="dashboard-button dashboard-button-secondary" type="button" data-modal-open="restore-achievement-modal">Restore</button>
+                <button class="dashboard-button dashboard-button-secondary" type="button" onclick="document.getElementById('restore-achievement-modal').showModal()">Restore</button>
             @endif
         @endcan
         {{-- SECURITY: Adviser review controls appear only while the achievement is pending. --}}
@@ -66,7 +66,7 @@
         {{-- SECURITY: Permanent deletion is adviser-only and requires confirmation before DELETE. --}}
         @can('delete', $achievement)
             <form id="delete-achievement-form" method="POST" action="{{ route('achievements.destroy', $achievement) }}">@csrf @method('DELETE')</form>
-            <button class="dashboard-button dashboard-button-secondary" type="button" data-modal-open="delete-achievement-modal">Delete</button>
+            <button class="dashboard-button dashboard-button-secondary" type="button" onclick="document.getElementById('delete-achievement-modal').showModal()">Delete</button>
         @endcan
     </div>
 
@@ -81,7 +81,7 @@
         @if (! $achievement->isArchived())
             <dialog id="archive-achievement-modal" class="reject-modal"><div class="reject-modal-content">
                 <h2>Archive achievement?</h2><p>The achievement leaves Published and remains available in Archived.</p>
-                <div class="reject-modal-actions"><button type="button" class="dashboard-button dashboard-button-secondary" data-modal-close="archive-achievement-modal">Cancel</button>
+                <div class="reject-modal-actions"><button type="button" class="dashboard-button dashboard-button-secondary" onclick="document.getElementById('archive-achievement-modal').close()">Cancel</button>
                     <button type="submit" form="archive-achievement-form" class="dashboard-button">Archive</button></div>
             </div></dialog>
         @endif
@@ -90,7 +90,7 @@
         @if ($achievement->isArchived())
             <dialog id="restore-achievement-modal" class="reject-modal"><div class="reject-modal-content">
                 <h2>Restore achievement?</h2><p>Its approval status will stay unchanged.</p>
-                <div class="reject-modal-actions"><button type="button" class="dashboard-button dashboard-button-secondary" data-modal-close="restore-achievement-modal">Cancel</button>
+                <div class="reject-modal-actions"><button type="button" class="dashboard-button dashboard-button-secondary" onclick="document.getElementById('restore-achievement-modal').close()">Cancel</button>
                     <button type="submit" form="restore-achievement-form" class="dashboard-button">Restore</button></div>
             </div></dialog>
         @endif
@@ -98,7 +98,7 @@
     @can('delete', $achievement)
         <dialog id="delete-achievement-modal" class="reject-modal"><div class="reject-modal-content">
             <h2>Delete achievement permanently?</h2><p>This also removes its stored image and cannot be undone.</p>
-            <div class="reject-modal-actions"><button type="button" class="dashboard-button dashboard-button-secondary" data-modal-close="delete-achievement-modal">Cancel</button>
+            <div class="reject-modal-actions"><button type="button" class="dashboard-button dashboard-button-secondary" onclick="document.getElementById('delete-achievement-modal').close()">Cancel</button>
                 <button type="submit" form="delete-achievement-form" class="dashboard-button">Delete permanently</button></div>
         </div></dialog>
     @endcan

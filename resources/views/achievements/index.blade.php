@@ -52,7 +52,7 @@
                 @csrf
             </form>
             <div class="article-bulk-actions">
-                <button type="button" class="dashboard-button dashboard-button-secondary" data-modal-open="bulk-archive-achievement-modal">
+                <button type="button" class="dashboard-button dashboard-button-secondary" onclick="document.getElementById('bulk-archive-achievement-modal').showModal()">
                     Archive selected
                 </button>
             </div>
@@ -62,7 +62,7 @@
                     <h2>Archive selected achievements?</h2>
                     <p>Selected achievements leave Published and keep their current approval status.</p>
                     <div class="reject-modal-actions">
-                        <button type="button" class="dashboard-button dashboard-button-secondary" data-modal-close="bulk-archive-achievement-modal">Cancel</button>
+                        <button type="button" class="dashboard-button dashboard-button-secondary" onclick="document.getElementById('bulk-archive-achievement-modal').close()">Cancel</button>
                         <button type="submit" form="achievement-bulk-archive" class="dashboard-button">Archive selected</button>
                     </div>
                 </div>

@@ -52,7 +52,7 @@
                 @csrf
             </form>
             <div class="article-bulk-actions">
-                <button type="button" class="dashboard-button dashboard-button-secondary" data-modal-open="bulk-archive-activity-modal">
+                <button type="button" class="dashboard-button dashboard-button-secondary" onclick="document.getElementById('bulk-archive-activity-modal').showModal()">
                     Archive selected
                 </button>
             </div>
@@ -62,7 +62,7 @@
                     <h2>Archive selected activities?</h2>
                     <p>Selected activities leave Published and keep their current approval status.</p>
                     <div class="reject-modal-actions">
-                        <button type="button" class="dashboard-button dashboard-button-secondary" data-modal-close="bulk-archive-activity-modal">Cancel</button>
+                        <button type="button" class="dashboard-button dashboard-button-secondary" onclick="document.getElementById('bulk-archive-activity-modal').close()">Cancel</button>
                         <button type="submit" form="activity-bulk-archive" class="dashboard-button">Archive selected</button>
                     </div>
                 </div>

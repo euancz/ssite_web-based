@@ -45,14 +45,14 @@
         @can('archive', $activity)
             @if (! $activity->isArchived())
                 <form id="archive-activity-form" method="POST" action="{{ route('activities.archive', $activity) }}">@csrf</form>
-                <button class="dashboard-button dashboard-button-secondary" type="button" data-modal-open="archive-activity-modal">Archive</button>
+                <button class="dashboard-button dashboard-button-secondary" type="button" onclick="document.getElementById('archive-activity-modal').showModal()">Archive</button>
             @endif
         @endcan
         {{-- SECURITY: Restore is owner/adviser-only and leaves the approval state unchanged. --}}
         @can('restore', $activity)
             @if ($activity->isArchived())
                 <form id="restore-activity-form" method="POST" action="{{ route('activities.restore', $activity) }}">@csrf</form>
-                <button class="dashboard-button dashboard-button-secondary" type="button" data-modal-open="restore-activity-modal">Restore</button>
+                <button class="dashboard-button dashboard-button-secondary" type="button" onclick="document.getElementById('restore-activity-modal').showModal()">Restore</button>
             @endif
         @endcan
         {{-- SECURITY: Adviser review controls appear only while the activity is pending. --}}
@@ -65,7 +65,7 @@
         {{-- SECURITY: Permanent deletion is adviser-only and requires confirmation before DELETE. --}}
         @can('delete', $activity)
             <form id="delete-activity-form" method="POST" action="{{ route('activities.destroy', $activity) }}">@csrf @method('DELETE')</form>
-            <button class="dashboard-button dashboard-button-secondary" type="button" data-modal-open="delete-activity-modal">Delete</button>
+            <button class="dashboard-button dashboard-button-secondary" type="button" onclick="document.getElementById('delete-activity-modal').showModal()">Delete</button>
         @endcan
     </div>
 
@@ -80,7 +80,7 @@
         @if (! $activity->isArchived())
             <dialog id="archive-activity-modal" class="reject-modal"><div class="reject-modal-content">
                 <h2>Archive activity?</h2><p>The activity leaves Published and remains available in Archived.</p>
-                <div class="reject-modal-actions"><button type="button" class="dashboard-button dashboard-button-secondary" data-modal-close="archive-activity-modal">Cancel</button>
+                <div class="reject-modal-actions"><button type="button" class="dashboard-button dashboard-button-secondary" onclick="document.getElementById('archive-activity-modal').close()">Cancel</button>
                     <button type="submit" form="archive-activity-form" class="dashboard-button">Archive</button></div>
             </div></dialog>
         @endif
@@ -89,7 +89,7 @@
         @if ($activity->isArchived())
             <dialog id="restore-activity-modal" class="reject-modal"><div class="reject-modal-content">
                 <h2>Restore activity?</h2><p>Its approval status will stay unchanged.</p>
-                <div class="reject-modal-actions"><button type="button" class="dashboard-button dashboard-button-secondary" data-modal-close="restore-activity-modal">Cancel</button>
+                <div class="reject-modal-actions"><button type="button" class="dashboard-button dashboard-button-secondary" onclick="document.getElementById('restore-activity-modal').close()">Cancel</button>
                     <button type="submit" form="restore-activity-form" class="dashboard-button">Restore</button></div>
             </div></dialog>
         @endif
@@ -97,7 +97,7 @@
     @can('delete', $activity)
         <dialog id="delete-activity-modal" class="reject-modal"><div class="reject-modal-content">
             <h2>Delete activity permanently?</h2><p>This also removes its stored image and cannot be undone.</p>
-            <div class="reject-modal-actions"><button type="button" class="dashboard-button dashboard-button-secondary" data-modal-close="delete-activity-modal">Cancel</button>
+            <div class="reject-modal-actions"><button type="button" class="dashboard-button dashboard-button-secondary" onclick="document.getElementById('delete-activity-modal').close()">Cancel</button>
                 <button type="submit" form="delete-activity-form" class="dashboard-button">Delete permanently</button></div>
         </div></dialog>
     @endcan
