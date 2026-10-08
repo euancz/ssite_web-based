@@ -175,6 +175,14 @@
                                 </svg>
                                 <span>Settings</span>
                             </button>
+                            @if (auth()->user()->hasCompletedProfile())
+                                <a href="{{ route('profile.edit') }}" class="account-menu-action">
+                                    <svg aria-hidden="true" class="icon-small" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.1a7.5 7.5 0 0115 0A17.9 17.9 0 0112 21.75c-2.7 0-5.25-.6-7.5-1.65z"/>
+                                    </svg>
+                                    <span>My Profile</span>
+                                </a>
+                            @endif
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="account-menu-logout">
@@ -259,12 +267,6 @@
                 <li class="site-nav-item"><a href="{{ url('/liquidation') }}" class="site-nav-link">Liquidation</a></li>
                 <li class="site-nav-item"><a href="{{ url('/documents') }}" class="site-nav-link">Documents</a></li>
                 @auth
-                    {{-- Only completed accounts can edit their profile; incomplete users remain on the completion route. --}}
-                    @if (auth()->user()->hasCompletedProfile())
-                        <li class="site-nav-item">
-                            <a href="{{ route('profile.edit') }}" class="site-nav-link">My Profile</a>
-                        </li>
-                    @endif
                     {{-- SECURITY: This shared dashboard link is limited by the canPost ability to officers and advisers. --}}
                     @can('view-post-dashboard')
                         <li class="site-nav-item">
@@ -342,12 +344,6 @@
                 <li class="mobile-nav-item"><a href="{{ url('/liquidation') }}" class="mobile-nav-link">Liquidation</a></li>
                 <li class="mobile-nav-item"><a href="{{ url('/documents') }}" class="mobile-nav-link">Documents</a></li>
                 @auth
-                    {{-- Mirror the desktop profile condition so unfinished users only see completion/logout. --}}
-                    @if (auth()->user()->hasCompletedProfile())
-                        <li class="mobile-nav-item">
-                            <a href="{{ route('profile.edit') }}" class="mobile-nav-link">My Profile</a>
-                        </li>
-                    @endif
                     {{-- SECURITY: The mobile dashboard link uses the same officer/adviser Gate as desktop navigation. --}}
                     @can('view-post-dashboard')
                         <li class="mobile-nav-item">
