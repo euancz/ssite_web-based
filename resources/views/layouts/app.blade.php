@@ -377,6 +377,32 @@
     </header>
     @endif
 
+    {{-- Keep anchor offsets matched to the rendered header and add its shadow only after scrolling. --}}
+    <script>
+        (() => {
+            const siteHeader = document.querySelector('.site-header');
+
+            if (!siteHeader) return;
+
+            const updateHeaderHeight = () => {
+                document.documentElement.style.setProperty('--site-header-height', `${siteHeader.offsetHeight}px`);
+            };
+            const updateHeaderShadow = () => {
+                siteHeader.classList.toggle('is-scrolled', window.scrollY > 8);
+            };
+
+            updateHeaderHeight();
+            updateHeaderShadow();
+            window.addEventListener('scroll', updateHeaderShadow, { passive: true });
+
+            if ('ResizeObserver' in window) {
+                new ResizeObserver(updateHeaderHeight).observe(siteHeader);
+            } else {
+                window.addEventListener('resize', updateHeaderHeight, { passive: true });
+            }
+        })();
+    </script>
+
     {{-- ============================= PAGE CONTENT ============================= --}}
     <main>
         @yield('content')

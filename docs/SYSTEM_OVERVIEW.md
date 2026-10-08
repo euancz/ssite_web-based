@@ -75,6 +75,14 @@ The Articles, Activities, and Achievements tables were created with SQL outside 
 | `resources/views/` | Public pages, feature pages, dashboards, forms, and UI components | `pages/home.blade.php`; each of `activities/` and `achievements/` contains `index.blade.php`, `show.blade.php`, `create.blade.php`, `edit.blade.php`, and `_form.blade.php`; `layouts/`, `articles/`, `profile/`, `officer/`, `adviser/officers/`, `components/ui/` |
 | `bootstrap/` | Framework boot configuration and middleware aliases | `app.php` |
 
+## Shared navbar behavior
+
+The shared header in `resources/views/layouts/app.blade.php` stays sticky while scrolling. Its measured height sets `--site-header-height` in `public/css/app.css`, which also offsets in-page scroll targets. The layout adds the `is-scrolled` class after the page moves down so the header shadow is absent at the top. The header uses z-index 40; account popovers use z-index 50 inside that header, and native dialogs render above both in the browser top layer.
+
+- If I want to change navbar pinning, open `public/css/app.css` (`.site-header`).
+- If I want to change the header height used by anchor offsets, open `resources/views/layouts/app.blade.php` (measurement) and `public/css/app.css` (`--site-header-height`).
+- If I want to change the scroll shadow, open `resources/views/layouts/app.blade.php` (scroll threshold) and `public/css/app.css` (`.site-header.is-scrolled`).
+
 ## Gotchas and extension notes
 
 - **Custom user key:** `User` uses `user_id`, not Laravel's conventional `id`. Use the model key or explicitly target `user_id` in validation and relationships.
@@ -94,6 +102,7 @@ The Articles, Activities, and Achievements tables were created with SQL outside 
 - **Adding an approval-required feature:** Add its schema/model and ownership relationship, policies or equivalent authorization, validated create/update/review endpoints, and status transitions. Set initial status in the server, require a rejection reason, and scope public/student queries to approved and active records only.
 - **School options:** Fill the TODO institute and program arrays in `config/school.php`; empty lists intentionally do not allow a student to submit arbitrary values.
 - **Officer terms:** The current A.Y. is computed from today's date. Officer name, title, and photo are copied per year; role changes never edit past years. Photos live on the public disk at `storage/app/public/officer-photos` and need `php artisan storage:link`. Officers are never copied forward automatically; use the adviser action when a starting point is wanted.
+- **Sticky navbar:** An ancestor with `overflow: auto`, `overflow: hidden`, or `overflow: scroll` can change or block sticky positioning; check the full parent chain before adding such a rule around the shared header.
 
 ## Articles tab
 

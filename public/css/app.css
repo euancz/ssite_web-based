@@ -1,9 +1,14 @@
 :root {
+    --site-header-height: 0px;
     --ssite-blue: #8AD5F4;
     --ssite-blue-light: #C7ECF9;
     --ssite-navy: #17324D;
     --ssite-navy-soft: #3E5972;
     --ssite-line: #3DAFEA;
+}
+
+html {
+    scroll-padding-top: var(--site-header-height);
 }
 
 *,
@@ -49,7 +54,20 @@ ol {
     font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
 }
 
-.site-header,
+.site-header {
+    /* Sticky works because document parents have no blocking overflow; this stacking level clears page content. */
+    position: sticky;
+    z-index: 40;
+    top: 0;
+    background-color: var(--ssite-blue);
+    transition: box-shadow 160ms ease;
+}
+
+.site-header.is-scrolled {
+    /* The passive scroll listener adds this below the page top; dialogs stay above it in the browser top layer. */
+    box-shadow: 0 4px 12px rgb(17 42 55 / 14%);
+}
+
 .site-footer {
     background-color: var(--ssite-blue);
 }

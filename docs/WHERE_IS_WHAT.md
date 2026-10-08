@@ -4,6 +4,9 @@ Use this guide to find the file that owns a common change.
 
 | If I want to change... | Open... |
 | --- | --- |
+| Navbar pinning while scrolling | `public/css/app.css` (`.site-header`) |
+| The measured header height used for anchor offsets | `resources/views/layouts/app.blade.php` and `public/css/app.css` (`--site-header-height`) |
+| The navbar shadow after scrolling | `resources/views/layouts/app.blade.php` and `public/css/app.css` (`.site-header.is-scrolled`) |
 | The desktop/mobile navigation or account menus | `resources/views/layouts/app.blade.php` |
 | The month when the academic year starts | `config/school.php` (`academic_year_start_month`) |
 | Officer position choices and their About page order | `config/school.php` (`officer_positions`) |
@@ -55,6 +58,8 @@ Use this guide to find the file that owns a common change.
 | Database schema migrations | `database/migrations/` (keep filenames already run unchanged) |
 
 Route URLs, route names, middleware, and role checks are defined separately from the Blade pages. Moving a view changes its `view(...)` path, while the URL is controlled by its route file.
+
+Sticky navbar gotcha: an ancestor with `overflow: auto`, `overflow: hidden`, or `overflow: scroll` can block or change sticky positioning. Check the shared header's full parent chain before adding overflow rules.
 
 ## Officer history
 
