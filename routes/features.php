@@ -1,22 +1,64 @@
 <?php
 
 use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\LiquidationController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\AchievementController;
 use App\Http\Controllers\AboutController;
-use App\Http\Middleware\EnsureProfileCompleted;
-use App\Http\Middleware\RequireAuthentication;
 use Illuminate\Support\Facades\Route;
 
 // Holds shared content pages and post routes; feature listings accept guests, while writes use role gates.
-Route::middleware([RequireAuthentication::class, EnsureProfileCompleted::class])->group(function () {
-    Route::get('/liquidation', function () {
-        return view('liquidation.index');
-    })->name('liquidation');
+// Public listing flags decide whether guests may browse metadata; all PDF routes remain authenticated.
+$documentListMiddleware = config('school.documents_list_public', true)
+    ? ['profile.complete'] : ['auth', 'profile.complete'];
+$liquidationListMiddleware = config('school.liquidation_list_public', false)
+    ? ['profile.complete'] : ['auth', 'profile.complete'];
 
-    Route::get('/documents', function () {
-        return view('documents.index');
-    })->name('documents');
+Route::prefix('documents')->name('documents.')->middleware($documentListMiddleware)->group(function () {
+    Route::get('/', [DocumentController::class, 'index'])->name('index');
+    Route::get('/{document}', [DocumentController::class, 'show'])->whereNumber('document')->name('show');
+});
+Route::prefix('documents')->name('documents.')->middleware(['auth', 'profile.complete'])->group(function () {
+    Route::get('/{document}/view', [DocumentController::class, 'viewFile'])->whereNumber('document')->name('view');
+    Route::get('/{document}/download', [DocumentController::class, 'download'])->whereNumber('document')->name('download');
+});
+Route::prefix('documents')->name('documents.')->middleware(['auth', 'role:officer,adviser', 'profile.complete'])->group(function () {
+    Route::get('/create', [DocumentController::class, 'create'])->name('create');
+    Route::post('/', [DocumentController::class, 'store'])->name('store');
+    Route::get('/{document}/edit', [DocumentController::class, 'edit'])->whereNumber('document')->name('edit');
+    Route::patch('/{document}', [DocumentController::class, 'update'])->whereNumber('document')->name('update');
+    Route::post('/{document}/archive', [DocumentController::class, 'archive'])->whereNumber('document')->name('archive');
+    Route::post('/{document}/restore', [DocumentController::class, 'restore'])->whereNumber('document')->name('restore');
+});
+Route::prefix('documents')->name('documents.')->middleware(['auth', 'role:adviser', 'profile.complete'])->group(function () {
+    Route::post('/bulk-archive', [DocumentController::class, 'bulkArchive'])->name('bulk-archive');
+    Route::post('/{document}/approve', [DocumentController::class, 'approve'])->whereNumber('document')->name('approve');
+    Route::post('/{document}/reject', [DocumentController::class, 'reject'])->whereNumber('document')->name('reject');
+    Route::delete('/{document}', [DocumentController::class, 'destroy'])->whereNumber('document')->name('destroy');
+});
+
+Route::prefix('liquidation')->name('liquidations.')->middleware($liquidationListMiddleware)->group(function () {
+    Route::get('/', [LiquidationController::class, 'index'])->name('index');
+    Route::get('/{liquidation}', [LiquidationController::class, 'show'])->whereNumber('liquidation')->name('show');
+});
+Route::prefix('liquidation')->name('liquidations.')->middleware(['auth', 'profile.complete'])->group(function () {
+    Route::get('/{liquidation}/view', [LiquidationController::class, 'viewFile'])->whereNumber('liquidation')->name('view');
+    Route::get('/{liquidation}/download', [LiquidationController::class, 'download'])->whereNumber('liquidation')->name('download');
+});
+Route::prefix('liquidation')->name('liquidations.')->middleware(['auth', 'role:officer,adviser', 'profile.complete'])->group(function () {
+    Route::get('/create', [LiquidationController::class, 'create'])->name('create');
+    Route::post('/', [LiquidationController::class, 'store'])->name('store');
+    Route::get('/{liquidation}/edit', [LiquidationController::class, 'edit'])->whereNumber('liquidation')->name('edit');
+    Route::patch('/{liquidation}', [LiquidationController::class, 'update'])->whereNumber('liquidation')->name('update');
+    Route::post('/{liquidation}/archive', [LiquidationController::class, 'archive'])->whereNumber('liquidation')->name('archive');
+    Route::post('/{liquidation}/restore', [LiquidationController::class, 'restore'])->whereNumber('liquidation')->name('restore');
+});
+Route::prefix('liquidation')->name('liquidations.')->middleware(['auth', 'role:adviser', 'profile.complete'])->group(function () {
+    Route::post('/bulk-archive', [LiquidationController::class, 'bulkArchive'])->name('bulk-archive');
+    Route::post('/{liquidation}/approve', [LiquidationController::class, 'approve'])->whereNumber('liquidation')->name('approve');
+    Route::post('/{liquidation}/reject', [LiquidationController::class, 'reject'])->whereNumber('liquidation')->name('reject');
+    Route::delete('/{liquidation}', [LiquidationController::class, 'destroy'])->whereNumber('liquidation')->name('destroy');
 });
 
 // About content is public; officer cards are read-only snapshots supplied by the controller.

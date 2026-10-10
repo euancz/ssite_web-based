@@ -21,6 +21,11 @@ return [
     // Editing an approved officer article sends the changed content back for adviser review.
     'reset_approval_on_edit' => (bool) env('SCHOOL_RESET_APPROVAL_ON_EDIT', true),
 
+    // PDF lists may be public; stored files remain private and are delivered through authorized routes.
+    'documents_list_public' => (bool) env('SCHOOL_DOCUMENTS_LIST_PUBLIC', true),
+    'liquidation_list_public' => (bool) env('SCHOOL_LIQUIDATION_LIST_PUBLIC', false),
+    'max_pdf_size_kb' => (int) env('SCHOOL_MAX_PDF_SIZE_KB', 10240),
+
     // Set to an empty string to allow any valid Microsoft email domain.
     'microsoft_email_domain' => env('SCHOOL_MICROSOFT_EMAIL_DOMAIN', 'mcc.edu.ph'),
 

@@ -4,11 +4,11 @@ SSITE is a Laravel Blade application for the Student Society in Information Tech
 
 ## Roles
 
-| Role | Intended capabilities |
-| --- | --- |
-| Student | View published (approved and active) articles, activities, and achievements; edit allowed personal information. |
-| Officer | Student capabilities, plus post articles, activities, and achievements; edit and archive/restore their own posts. New officer posts start pending. |
-| Adviser | Officer capabilities, plus review all three post types, approve/reject, archive/restore any post, permanently delete, bulk archive, and manage non-adviser user roles. |
+| Role | Upload PDFs | Approve or reject | View or download PDFs | Other capabilities |
+| --- | --- | --- | --- | --- |
+| Student | No | No | Published PDFs after login and profile completion | View published Articles, Activities, Achievements, Documents, and Liquidation; edit allowed personal information. |
+| Officer | Documents and Liquidation | No | Published PDFs and own non-public PDFs after login and profile completion | Post the other content types; edit and archive/restore own posts. New submissions start pending. |
+| Adviser | Documents and Liquidation | Yes; pending items only | Published PDFs and non-public records they manage | Post the other content types; archive/restore any post, permanently delete, bulk archive, and manage non-adviser user roles. Adviser-created PDFs are auto-approved by the school setting. |
 
 The current code enforces dashboard and adviser route roles, and adviser role changes are implemented. About page leadership is stored as annual officer snapshots managed by advisers. Article, Activity, and Achievement posting, ownership checks, approval, rejection, archive/restore, and approved-only queries use their existing SQL-managed tables.
 
@@ -48,7 +48,7 @@ An officer viewing their own pending Articles follows this path:
 
 ## Post approval flow
 
-Articles, Activities, and Achievements share this workflow and keep approval and content status separate:
+Articles, Activities, Achievements, Documents, and Liquidation share this workflow and keep approval and content status separate:
 
 1. An officer creates a post owned by that officer. The server sets `approval_status=pending` and `content_status=active`; advisers can post directly approved by the school setting.
 2. The adviser reviews pending posts and either approves them or rejects them with a required reason.
@@ -56,23 +56,25 @@ Articles, Activities, and Achievements share this workflow and keep approval and
 4. Archiving changes only `content_status` to `archived`; restoring changes it to `active` and preserves approval state, so a pending or rejected post does not become published.
 5. Officers can edit and archive/restore only their own posts; advisers can manage all posts, bulk archive, and permanently delete.
 
-The Articles, Activities, and Achievements tables were created with SQL outside this repository's migrations. Adviser review for all three modules is provided by their tabs; the legacy adviser dashboard review page still contains placeholder content for other post types.
+The Articles, Activities, Achievements, Documents, and Liquidation tables were created with SQL outside this repository's migrations. Adviser review is provided by each module's tabs; the legacy adviser dashboard review page still contains placeholder content for other post types.
+
+Documents and Liquidation store PDFs on Laravel's private `local` disk under `storage/app/private/documents` and `storage/app/private/liquidation`. Authorized controller routes stream or download files after policy checks; the files are not exposed through `storage:link`. Documents may have a public listing (`school.documents_list_public`, default true), but PDF access requires login and a completed profile. Liquidation listing access follows `school.liquidation_list_public` (default false). Both use `school.max_pdf_size_kb` (default 10240).
 
 ## Folder map
 
 | Location | Purpose | Important files |
 | --- | --- | --- |
 | `routes/` | URL definitions grouped by feature and access role | `web.php`, `auth.php`, `profile.php`, `officer.php`, `adviser.php`, `features.php` |
-| `app/Http/Controllers/` | Login, profile, dashboard, adviser, About, and post request handling | `AboutController.php`, `ArticleController.php`, `ActivityController.php`, `AchievementController.php`, `Auth/`, `Profile/`, `Officer/`, `Adviser/OfficerTermController.php` |
+| `app/Http/Controllers/` | Login, profile, dashboard, adviser, About, and post request handling | `AboutController.php`, `ArticleController.php`, `ActivityController.php`, `AchievementController.php`, `DocumentController.php`, `LiquidationController.php`, `Auth/`, `Profile/`, `Officer/`, `Adviser/OfficerTermController.php` |
 | `app/Http/Middleware/` | Authentication, role, and profile-completion gates | `EnsureProfileCompleted.php`, `RoleMiddleware.php` |
-| `app/Http/Requests/` | Validation and authorization grouped by feature | `Activity/StoreActivityRequest.php`, `Activity/UpdateActivityRequest.php`, `Activity/RejectActivityRequest.php`, `Achievement/StoreAchievementRequest.php`, `Achievement/UpdateAchievementRequest.php`, `Achievement/RejectAchievementRequest.php`; `Article/`, `Profile/`, officer term requests |
-| `app/Models/` | User, post, and officer term persistence | `User.php`, `Article.php`, `Activity.php`, `Achievement.php`, `OfficerTerm.php` |
-| `app/Policies/` | Per-record authorization for post visibility and actions | `ArticlePolicy.php`, `ActivityPolicy.php`, `AchievementPolicy.php` |
+| `app/Http/Requests/` | Validation and authorization grouped by feature | `Activity/`, `Achievement/`, `Article/`, `Document/`, `Liquidation/`, `Profile/`, officer term requests |
+| `app/Models/` | User, post, and officer term persistence | `User.php`, `Article.php`, `Activity.php`, `Achievement.php`, `Document.php`, `Liquidation.php`, `OfficerTerm.php` |
+| `app/Policies/` | Per-record authorization for post visibility and actions | `ArticlePolicy.php`, `ActivityPolicy.php`, `AchievementPolicy.php`, `DocumentPolicy.php`, `LiquidationPolicy.php` |
 | `database/migrations/` | Database schema changes | `2026_10_06_010000_make_user_profile_picture_nullable.php`, `2026_10_06_020000_create_officer_terms_table.php`; custom Microsoft, role, and profile migrations; no Articles-table migration exists in this repository |
 | `database/seeders/` | Explicit data seeders | `OfficerTermSeeder.php` (run manually after migration) |
 | `app/Support/` | Focused school-year calculation | `AcademicYear.php` |
 | `config/` | Environment and school option configuration | `school.php`, `services.php` |
-| `resources/views/` | Public pages, feature pages, dashboards, forms, and UI components | `pages/home.blade.php`; each of `activities/` and `achievements/` contains `index.blade.php`, `show.blade.php`, `create.blade.php`, `edit.blade.php`, and `_form.blade.php`; `layouts/`, `articles/`, `profile/`, `officer/`, `adviser/officers/`, `components/ui/` |
+| `resources/views/` | Public pages, feature pages, dashboards, forms, and UI components | `pages/home.blade.php`; `articles/`, `activities/`, `achievements/`, `documents/`, and `liquidation/` contain feature pages and forms; `layouts/`, `profile/`, `officer/`, `adviser/officers/`, `components/ui/` |
 | `bootstrap/` | Framework boot configuration and middleware aliases | `app.php` |
 
 ## Shared navbar behavior
@@ -97,6 +99,10 @@ The shared header in `resources/views/layouts/app.blade.php` stays sticky while 
 - **Article images:** Images live on the public disk under `articles/` with generated names. Run `php artisan storage:link` so stored images can be served; missing files use the existing placeholder.
 - **Article status rule:** `approval_status` (pending/approved/rejected) records adviser review; `content_status` (active/archived) controls shelving. Restoring never changes approval, and neither field is mass-assignable.
 - **Articles schema:** The supplied Articles table is external to the repository migrations; confirm it has the documented columns before deployment.
+- **Documents and Liquidation schemas:** These tables are SQL-managed and have no create/alter migrations here. Confirm the live schemas before deployment; the application does not alter them.
+- **Private PDF storage:** Document and liquidation PDFs live under `storage/app/private/documents` and `storage/app/private/liquidation` on the local disk. Do not run `storage:link` for these files. Backups and deployments must preserve the private storage directory.
+- **PDF upload limits:** `school.max_pdf_size_kb` is the application limit. PHP's `upload_max_filesize` and `post_max_size` in `php.ini` must also be large enough for the desired upload.
+- **PDF access:** `school.documents_list_public` controls whether document metadata lists are public; `school.liquidation_list_public` controls liquidation listing access. PDF view/download routes always require login and a completed profile.
 - **Role checks:** Blade `@can` checks only hide navigation. Keep middleware or authorization checks on every protected route and write action.
 - **Adding a role:** Update the role values and helpers in `User`, the `role` middleware route declarations, Gate definitions, role-specific dashboard redirect, and tests. Review all existing user-management validation before making a new role assignable.
 - **Adding an approval-required feature:** Add its schema/model and ownership relationship, policies or equivalent authorization, validated create/update/review endpoints, and status transitions. Set initial status in the server, require a rejection reason, and scope public/student queries to approved and active records only.
@@ -111,3 +117,7 @@ Students and guests see Published articles only. Officers also see My Posts and 
 ## Activities and Achievements tabs
 
 Activities and Achievements use the same role-specific tabs, search, and ten-item pagination as Articles. Change their tab rules in `ActivityController::index` or `AchievementController::index`; public lists and home cards must use each model's `publiclyVisible()` scope. Their date, location, awardee, and category fields are feature-specific domain data.
+
+## Documents and Liquidation tabs
+
+Documents and Liquidation use the Article role-specific tabs, title search, and ten-item pagination. Documents also filters by category. Public/student queries must use each model's `publiclyVisible()` scope. PDF view and download handlers authorize before reading from the private local disk; missing files return a friendly message. Change list access and maximum size in `config/school.php`.
