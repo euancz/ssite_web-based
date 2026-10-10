@@ -5,6 +5,15 @@ Use this guide to find the file that owns a common change.
 | If I want to change... | Open... |
 | --- | --- |
 | Navbar pinning while scrolling | `public/css/app.css` (`.site-header`) |
+| Header suggestions, keyboard behavior, or dropdown limits | `resources/views/layouts/app.blade.php` and `public/css/app.css` |
+| Full search results, filtering, and pagination | `app/Http/Controllers/SearchController.php` and `resources/views/search/index.blade.php` |
+| Add a searchable type | `app/Support/SiteSearch.php` (type method, visibility, fields, route, and metadata) and `app/Http/Controllers/SearchController.php` (type label) |
+| Change searched columns | `app/Support/SiteSearch.php` (per-type method) |
+| Change minimum query length or word/character limits | `app/Support/SiteSearch.php` (`normalize`) |
+| Change guest search access | `config/school.php` (`search_include_documents_for_guests`, `search_include_liquidation_for_guests`) |
+| Change the dropdown result caps | `app/Http/Controllers/SearchController.php` (`suggest`) and `resources/views/layouts/app.blade.php` |
+| Change the relevance order | `app/Support/SiteSearch.php` (`applyTitleOrder`, `relevanceRank`, and result sorting) |
+| Search routes and throttling | `routes/features.php` (`search.index`, `search.suggest`) |
 | The measured header height used for anchor offsets | `resources/views/layouts/app.blade.php` and `public/css/app.css` (`--site-header-height`) |
 | The navbar shadow after scrolling | `resources/views/layouts/app.blade.php` and `public/css/app.css` (`.site-header.is-scrolled`) |
 | The desktop/mobile navigation or account menus | `resources/views/layouts/app.blade.php` |
@@ -74,6 +83,8 @@ Use this guide to find the file that owns a common change.
 | Database schema migrations | `database/migrations/` (keep filenames already run unchanged) |
 
 Route URLs, route names, middleware, and role checks are defined separately from the Blade pages. Moving a view changes its `view(...)` path, while the URL is controlled by its route file.
+
+Search gotchas: users and their profile fields are never searchable. Only approved, active items appear because content models reuse `publiclyVisible()`; pending, rejected, and archived items stay in their module tabs. Guest Documents and Liquidation search follows the search toggles, which default to the matching tab visibility settings. Documents and Liquidation results link to their show page, never the PDF. Search uses LIKE matching and may need FULLTEXT indexes if the data grows large.
 
 Sticky navbar gotcha: an ancestor with `overflow: auto`, `overflow: hidden`, or `overflow: scroll` can block or change sticky positioning. Check the shared header's full parent chain before adding overflow rules.
 

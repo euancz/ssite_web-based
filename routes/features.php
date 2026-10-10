@@ -7,7 +7,14 @@ use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\AchievementController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AboutController;
+use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
+
+// SECURITY: Throttle public endpoints; profile.complete passes guests and redirects incomplete signed-in users.
+Route::middleware(['profile.complete', 'throttle:60,1'])->group(function () {
+    Route::get('/search', [SearchController::class, 'index'])->name('search.index');
+    Route::get('/search/suggest', [SearchController::class, 'suggest'])->name('search.suggest');
+});
 
 // SECURITY: Notification reads and state changes are confined to the authenticated, profile-complete owner.
 Route::middleware(['auth', 'profile.complete'])->prefix('notifications')->name('notifications.')->group(function () {

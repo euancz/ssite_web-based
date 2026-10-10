@@ -58,6 +58,14 @@ Articles, Activities, Achievements, Documents, and Liquidation share this workfl
 
 The Articles, Activities, Achievements, Documents, and Liquidation tables were created with SQL outside this repository's migrations. Adviser review is provided by each module's tabs; the legacy adviser dashboard review page still contains placeholder content for other post types.
 
+## Site search
+
+Header suggestions and the `/search` page use `app/Support/SiteSearch.php`; `SearchController` serves both the page and JSON suggestion endpoint. Search uses bound LIKE queries with escaped wildcard characters and is limited to five words and 100 characters. Both endpoints are throttled to 60 requests per minute. The search is LIKE-based and may need FULLTEXT indexes if the data grows large.
+
+Search never queries users or profile fields. Articles, Activities, Achievements, Documents, and Liquidation reuse each model's `publiclyVisible()` scope, so only approved and active records appear. Guests can be restricted from Documents or Liquidation by `search_include_documents_for_guests` and `search_include_liquidation_for_guests`, which default to the matching list-public settings. Documents and Liquidation respect those tab visibility settings; their file paths and files are never returned from search. Officer terms search the public About-page snapshots.
+
+To change the minimum query length, dropdown limits, relevance order, or searched columns, edit `app/Support/SiteSearch.php` and the header search UI in `resources/views/layouts/app.blade.php` as applicable.
+
 ### In-app notifications
 
 | Event | Recipients | Notification |
@@ -81,6 +89,8 @@ Documents and Liquidation store PDFs on Laravel's private `local` disk under `st
 | --- | --- | --- |
 | `routes/` | URL definitions grouped by feature and access role | `web.php`, `auth.php`, `profile.php`, `officer.php`, `adviser.php`, `features.php` |
 | `app/Http/Controllers/` | Login, profile, dashboard, adviser, About, and post request handling | `AboutController.php`, `ArticleController.php`, `ActivityController.php`, `AchievementController.php`, `DocumentController.php`, `LiquidationController.php`, `Auth/`, `Profile/`, `Officer/`, `Adviser/OfficerTermController.php` |
+| `app/Http/Controllers/` | Public full-page and live suggestion search endpoints | `SearchController.php` |
+| `app/Support/` | Shared site-wide search normalization, matching, result mapping, and highlighting | `SiteSearch.php` |
 | `app/Http/Middleware/` | Authentication, role, and profile-completion gates | `EnsureProfileCompleted.php`, `RoleMiddleware.php` |
 | `app/Http/Requests/` | Validation and authorization grouped by feature | `Activity/`, `Achievement/`, `Article/`, `Document/`, `Liquidation/`, `Profile/`, officer term requests |
 | `app/Models/` | User, post, and officer term persistence | `User.php`, `Article.php`, `Activity.php`, `Achievement.php`, `Document.php`, `Liquidation.php`, `OfficerTerm.php` |
@@ -92,12 +102,15 @@ Documents and Liquidation store PDFs on Laravel's private `local` disk under `st
 | `app/Http/Controllers/` | User-scoped notification list, summary, read, and dismiss endpoints | `NotificationController.php` |
 | `config/` | Environment and school option configuration | `school.php`, `services.php` |
 | `resources/views/` | Public pages, feature pages, dashboards, forms, and UI components | `pages/home.blade.php`; `articles/`, `activities/`, `achievements/`, `documents/`, and `liquidation/` contain feature pages and forms; `layouts/`, `profile/`, `officer/`, `adviser/officers/`, `components/ui/` |
+| `resources/views/search/` | Full search results and filters | `index.blade.php` |
 | `resources/views/notifications/` | Paginated notification history | `index.blade.php` |
 | `bootstrap/` | Framework boot configuration and middleware aliases | `app.php` |
 
 ## Shared navbar behavior
 
 The shared header in `resources/views/layouts/app.blade.php` stays sticky while scrolling. Its measured height sets `--site-header-height` in `public/css/app.css`, which also offsets in-page scroll targets. The layout adds the `is-scrolled` class after the page moves down so the header shadow is absent at the top. The header uses z-index 40; account popovers use z-index 50 inside that header, and native dialogs render above both in the browser top layer.
+
+Search suggestions render inside the sticky header with visible overflow and remain below modal dialogs. The existing mobile search icon opens the same search form and suggestion behavior.
 
 - If I want to change navbar pinning, open `public/css/app.css` (`.site-header`).
 - If I want to change the header height used by anchor offsets, open `resources/views/layouts/app.blade.php` (measurement) and `public/css/app.css` (`--site-header-height`).

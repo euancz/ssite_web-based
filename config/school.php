@@ -24,6 +24,9 @@ return [
     // PDF lists may be public; stored files remain private and are delivered through authorized routes.
     'documents_list_public' => (bool) env('SCHOOL_DOCUMENTS_LIST_PUBLIC', true),
     'liquidation_list_public' => (bool) env('SCHOOL_LIQUIDATION_LIST_PUBLIC', false),
+    // SECURITY: Guest search follows the existing list visibility flags unless explicitly overridden.
+    'search_include_documents_for_guests' => (bool) env('SCHOOL_SEARCH_INCLUDE_DOCUMENTS_FOR_GUESTS', env('SCHOOL_DOCUMENTS_LIST_PUBLIC', true)),
+    'search_include_liquidation_for_guests' => (bool) env('SCHOOL_SEARCH_INCLUDE_LIQUIDATION_FOR_GUESTS', env('SCHOOL_LIQUIDATION_LIST_PUBLIC', false)),
     'max_pdf_size_kb' => (int) env('SCHOOL_MAX_PDF_SIZE_KB', 10240),
 
     // Set to an empty string to allow any valid Microsoft email domain.
