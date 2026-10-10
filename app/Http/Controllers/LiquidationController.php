@@ -6,6 +6,7 @@ use App\Http\Requests\Liquidation\RejectLiquidationRequest;
 use App\Http\Requests\Liquidation\StoreLiquidationRequest;
 use App\Http\Requests\Liquidation\UpdateLiquidationRequest;
 use App\Models\Liquidation;
+use App\Support\PostNotificationRecipients;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -21,6 +22,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 /*
  * Officer reports start pending; advisers approve or reject with a reason. Only approved AND active
  * reports are public; files stay on the private disk and every file response authorizes before reading.
+ * Archive, restore, and delete stay silent; only review and publication transitions send notifications.
  */
 class LiquidationController extends Controller
 {
@@ -47,6 +49,9 @@ class LiquidationController extends Controller
         elseif ($tab === 'rejected') $liquidations->rejected();
         $liquidations->when($search !== '', fn ($query) => $query->where('title', 'like', '%' . $search . '%'));
         $liquidations = $liquidations->latest('created_at')->paginate(10)->withQueryString();
+        // SECURITY: Visiting Liquidation clears only this user's unread publication notices for this tab.
+        if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
+            ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['liquidation'])->update(['read_at' => now()]);
         return view('liquidation.index', compact('liquidations', 'allowedTabs', 'tab', 'search'));
     }
 
@@ -76,6 +81,10 @@ class LiquidationController extends Controller
         }
         [$liquidation->file_path, $liquidation->original_name, $liquidation->file_size] = $this->storePdf($file);
         $liquidation->save();
+        // Pending submissions go to advisers only; adviser auto-approved posts are already published.
+        $notifications = app(PostNotificationRecipients::class);
+        if ($autoApprove && $liquidation->content_status === Liquidation::CONTENT_ACTIVE) $notifications->published('liquidation', $liquidation, $request->user());
+        elseif ($request->user()->isOfficer()) $notifications->submitted('liquidation', $liquidation, $request->user());
         return redirect()->route('liquidations.show', $liquidation)->with('status', 'The liquidation report was uploaded.');
     }
 
@@ -105,6 +114,10 @@ class LiquidationController extends Controller
             $liquidation->reviewed_at = null;
         }
         $liquidation->save();
+        // SECURITY: Only officer edits returned to pending trigger a review notice; failures never block saving.
+        if ($request->user()->isOfficer() && ($wasRejected || ($wasApproved && config('school.reset_approval_on_edit', true)))) {
+            app(PostNotificationRecipients::class)->submitted('liquidation', $liquidation, $request->user(), true);
+        }
         if ($oldPath && $oldPath !== $liquidation->file_path) $this->deletePrivatePath($oldPath);
         return redirect()->route('liquidations.show', $liquidation)->with('status', 'The liquidation report was updated.');
     }
@@ -127,15 +140,18 @@ class LiquidationController extends Controller
         return back()->with('status', 'The report was restored.');
     }
 
-    public function approve(Liquidation $liquidation): RedirectResponse
+    public function approve(Request $request, Liquidation $liquidation): RedirectResponse
     {
         $this->authorize('approve', $liquidation);
         if (! $liquidation->isPending()) return back()->with('error', 'Only pending reports can be approved.');
+        // SECURITY: A conditional state change ensures concurrent clicks can send only one notification set.
+        $reviewedAt = now();
+        $changed = $liquidation->newQuery()->whereKey($liquidation->getKey())->where('approval_status', Liquidation::APPROVAL_PENDING)
+            ->update(['approval_status' => Liquidation::APPROVAL_APPROVED, 'rejection_reason' => null,
+                'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => $reviewedAt]);
+        if (! $changed) return back()->with('error', 'Only pending reports can be approved.');
         $liquidation->approval_status = Liquidation::APPROVAL_APPROVED;
-        $liquidation->rejection_reason = null;
-        $liquidation->reviewed_by_user_id = auth()->user()->user_id;
-        $liquidation->reviewed_at = now();
-        $liquidation->save();
+        app(PostNotificationRecipients::class)->approved('liquidation', $liquidation, $request->user());
         return back()->with('status', 'The report was approved.');
     }
 
@@ -143,11 +159,14 @@ class LiquidationController extends Controller
     {
         $this->authorize('reject', $liquidation);
         if (! $liquidation->isPending()) return back()->with('error', 'Only pending reports can be rejected.');
+        $reason = $request->validated('rejection_reason');
+        $changed = $liquidation->newQuery()->whereKey($liquidation->getKey())->where('approval_status', Liquidation::APPROVAL_PENDING)
+            ->update(['approval_status' => Liquidation::APPROVAL_REJECTED, 'rejection_reason' => $reason,
+                'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => now()]);
+        if (! $changed) return back()->with('error', 'Only pending reports can be rejected.');
         $liquidation->approval_status = Liquidation::APPROVAL_REJECTED;
-        $liquidation->rejection_reason = $request->validated('rejection_reason');
-        $liquidation->reviewed_by_user_id = $request->user()->user_id;
-        $liquidation->reviewed_at = now();
-        $liquidation->save();
+        $liquidation->rejection_reason = $reason;
+        app(PostNotificationRecipients::class)->rejected('liquidation', $liquidation, $request->user(), $reason);
         return back()->with('status', 'The report was rejected.');
     }
 

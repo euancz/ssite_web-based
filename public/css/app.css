@@ -210,8 +210,149 @@ ol {
 }
 
 .login-area,
-.account-menu-wrapper {
+.account-menu-wrapper,
+.notification-menu-wrapper {
     position: relative;
+}
+
+.account-notifications { position: relative; }
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -7px;
+    min-width: 18px;
+    height: 18px;
+    border: 2px solid var(--ssite-blue);
+    border-radius: 999px;
+    padding: 0 4px;
+    background: #b42318;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 14px;
+    text-align: center;
+}
+
+/* Notification popovers reuse the account menu palette and keep the bell control's dimensions unchanged. */
+.notification-dropdown {
+    position: absolute;
+    z-index: 60;
+    top: calc(100% + 10px);
+    right: 0;
+    width: min(360px, calc(100vw - 24px));
+    overflow: hidden;
+    border: 1px solid #cfe6ee;
+    border-radius: 4px;
+    background: #effaff;
+    box-shadow: 0 8px 20px rgb(17 42 55 / 18%);
+}
+
+.notification-dropdown-heading,
+.notification-view-all {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    border-bottom: 1px solid #b8dce8;
+    color: #17324d;
+    font-size: 13px;
+}
+
+.notification-mark-all {
+    border: 0;
+    padding: 4px 0;
+    background: transparent;
+    color: var(--ssite-navy-soft);
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.notification-mark-all:hover,
+.notification-view-all:hover { color: #0877a7; }
+
+.notification-list { max-height: min(60vh, 420px); overflow-y: auto; }
+.notification-entry-form { margin: 0; border-bottom: 1px solid #d6eaf0; }
+.notification-entry {
+    display: flex;
+    width: 100%;
+    align-items: flex-start;
+    gap: 10px;
+    border: 0;
+    padding: 11px 12px;
+    background: transparent;
+    color: var(--ssite-navy);
+    text-align: left;
+    cursor: pointer;
+}
+.notification-entry:hover { background: #dff3fa; }
+.notification-type-icon {
+    position: relative;
+    display: grid;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    place-items: center;
+    border-radius: 50%;
+    background: #d7edf5;
+    color: var(--ssite-navy);
+    font-size: 12px;
+    font-weight: 700;
+}
+.notification-type-icon small { position: absolute; z-index: 2; right: -4px; bottom: -3px; min-width: 13px; border: 1px solid #fff; border-radius: 7px; padding: 0 2px; background: var(--ssite-navy); color: #fff; font-size: 7px; line-height: 11px; text-align: center; }
+.notification-actor-avatar { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.notification-type-published { background: #d8f1e4; color: #17633b; }
+.notification-type-approved { background: #d8f1e4; color: #17633b; }
+.notification-type-rejected { background: #fbe4e1; color: #a12b21; }
+.notification-entry-copy { display: grid; min-width: 0; flex: 1; gap: 2px; }
+.notification-entry-message { font-size: 12px; font-weight: 600; }
+.notification-entry-title { overflow: hidden; color: #3e5972; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.notification-entry-meta { color: #607487; font-size: 10px; }
+.notification-entry-unread-dot,
+.nav-unread-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    flex: 0 0 7px;
+    border-radius: 50%;
+    background: #b42318;
+    vertical-align: middle;
+}
+.notification-empty { margin: 0; padding: 22px 14px; color: #607487; font-size: 13px; text-align: center; }
+.notification-view-all { justify-content: center; border-top: 1px solid #b8dce8; border-bottom: 0; font-weight: 600; text-decoration: none; }
+.site-nav-link .nav-unread-dot,
+.mobile-nav-summary .nav-unread-dot,
+.mobile-nav-link .nav-unread-dot { margin-left: 5px; }
+
+.notification-page { width: min(100% - 32px, 920px); margin: 36px auto 64px; color: var(--ssite-navy); }
+.notification-page-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.notification-page-heading h1 { margin: 0; font-size: clamp(24px, 4vw, 32px); }
+.notification-page-heading p { margin: 4px 0 0; color: var(--ssite-navy-soft); font-size: 14px; }
+.notification-page-action { border: 0; padding: 8px 12px; background: var(--ssite-navy); color: #fff; font-size: 12px; cursor: pointer; }
+.notification-filter { display: flex; gap: 18px; margin-bottom: 12px; border-bottom: 1px solid #cfe6ee; }
+.notification-filter a { padding: 9px 2px; color: var(--ssite-navy-soft); font-size: 13px; text-decoration: none; }
+.notification-filter a.is-active { border-bottom: 2px solid var(--ssite-line); color: var(--ssite-navy); font-weight: 600; }
+.notification-page-card { display: flex; align-items: flex-start; gap: 8px; border: 1px solid #d6eaf0; border-bottom: 0; background: #fff; }
+.notification-page-card:last-child { border-bottom: 1px solid #d6eaf0; }
+.notification-page-card.is-unread { background: #effaff; }
+.notification-page-open-form { min-width: 0; flex: 1; margin: 0; }
+.notification-page-open { display: flex; width: 100%; align-items: flex-start; gap: 12px; border: 0; padding: 14px; background: transparent; color: var(--ssite-navy); text-align: left; cursor: pointer; }
+.notification-page-open:hover { background: #dff3fa; }
+.notification-page-copy { display: grid; min-width: 0; flex: 1; gap: 4px; }
+.notification-page-copy strong { font-size: 14px; }
+.notification-page-copy > span { overflow-wrap: anywhere; font-size: 13px; }
+.notification-page-copy small,.notification-page-reason { color: var(--ssite-navy-soft); font-size: 12px; }
+.notification-page-reason { padding-top: 3px; }
+.notification-dismiss { margin: 12px 12px 0 0; border: 0; padding: 5px; background: transparent; color: var(--ssite-navy-soft); font-size: 11px; cursor: pointer; }
+.notification-page-empty { border: 1px solid #d6eaf0; padding: 36px 16px; color: var(--ssite-navy-soft); text-align: center; }
+
+@media (max-width: 639px) {
+    .notification-dropdown { right: -84px; }
+    .notification-page { width: calc(100% - 24px); margin-top: 24px; }
+    .notification-page-heading { align-items: flex-start; }
+    .notification-page-open { gap: 8px; padding: 12px 9px; }
+    .notification-dismiss { margin-right: 6px; }
 }
 
 .site-button {

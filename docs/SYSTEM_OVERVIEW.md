@@ -58,6 +58,21 @@ Articles, Activities, Achievements, Documents, and Liquidation share this workfl
 
 The Articles, Activities, Achievements, Documents, and Liquidation tables were created with SQL outside this repository's migrations. Adviser review is provided by each module's tabs; the legacy adviser dashboard review page still contains placeholder content for other post types.
 
+### In-app notifications
+
+| Event | Recipients | Notification |
+| --- | --- | --- |
+| Officer submits a pending post | All advisers | `submitted`; a new post needs review |
+| Officer edit returns approved/rejected post to pending | All advisers | `submitted`; needs review again |
+| Adviser approves a pending post | Author, then everyone except author and adviser if active | Author receives `approved`; others receive `published` |
+| Adviser rejects a pending post | Author only, when the account exists | `rejected` with the reason |
+| Adviser creates an auto-approved active post | Everyone except that adviser | `published` |
+| Archive, restore, permanent delete | Nobody | Silent; restore never republishes |
+
+Displayed messages are “A new post was submitted for review.”, “A post needs review again.”, “Your post was approved.”, “Your post was rejected.”, and “A new post was published.” Rejection notices also include the saved reason.
+
+Notifications are synchronous database notifications. Pending items are announced only to advisers, and the author is excluded from the separate publication broadcast to prevent duplicate notices. Users with incomplete profiles are included because this app has no inactive-account flag; the profile gate controls page access instead. The bell shows the latest 10 items, while `/notifications` paginates by 15. “Approved”, “rejected”, and “submitted” messages stay out of tab-dot counts. Visiting the matching index clears only that user's `published` notices for that type.
+
 Documents and Liquidation store PDFs on Laravel's private `local` disk under `storage/app/private/documents` and `storage/app/private/liquidation`. Authorized controller routes stream or download files after policy checks; the files are not exposed through `storage:link`. Documents may have a public listing (`school.documents_list_public`, default true), but PDF access requires login and a completed profile. Liquidation listing access follows `school.liquidation_list_public` (default false). Both use `school.max_pdf_size_kb` (default 10240).
 
 ## Folder map
@@ -72,9 +87,12 @@ Documents and Liquidation store PDFs on Laravel's private `local` disk under `st
 | `app/Policies/` | Per-record authorization for post visibility and actions | `ArticlePolicy.php`, `ActivityPolicy.php`, `AchievementPolicy.php`, `DocumentPolicy.php`, `LiquidationPolicy.php` |
 | `database/migrations/` | Database schema changes | `2026_10_06_010000_make_user_profile_picture_nullable.php`, `2026_10_06_020000_create_officer_terms_table.php`; custom Microsoft, role, and profile migrations; no Articles-table migration exists in this repository |
 | `database/seeders/` | Explicit data seeders | `OfficerTermSeeder.php` (run manually after migration) |
-| `app/Support/` | Focused school-year calculation | `AcademicYear.php` |
+| `app/Support/` | Focused school-year calculation and post notification recipient selection | `AcademicYear.php`, `PostNotificationRecipients.php` |
+| `app/Notifications/` | Synchronous database notifications for post review and publication | `PostSubmittedForReview.php`, `PostPublished.php`, `PostApproved.php`, `PostRejected.php` |
+| `app/Http/Controllers/` | User-scoped notification list, summary, read, and dismiss endpoints | `NotificationController.php` |
 | `config/` | Environment and school option configuration | `school.php`, `services.php` |
 | `resources/views/` | Public pages, feature pages, dashboards, forms, and UI components | `pages/home.blade.php`; `articles/`, `activities/`, `achievements/`, `documents/`, and `liquidation/` contain feature pages and forms; `layouts/`, `profile/`, `officer/`, `adviser/officers/`, `components/ui/` |
+| `resources/views/notifications/` | Paginated notification history | `index.blade.php` |
 | `bootstrap/` | Framework boot configuration and middleware aliases | `app.php` |
 
 ## Shared navbar behavior
@@ -84,6 +102,12 @@ The shared header in `resources/views/layouts/app.blade.php` stays sticky while 
 - If I want to change navbar pinning, open `public/css/app.css` (`.site-header`).
 - If I want to change the header height used by anchor offsets, open `resources/views/layouts/app.blade.php` (measurement) and `public/css/app.css` (`--site-header-height`).
 - If I want to change the scroll shadow, open `resources/views/layouts/app.blade.php` (scroll threshold) and `public/css/app.css` (`.site-header.is-scrolled`).
+- If I want to change who receives review or publication notifications, open `app/Support/PostNotificationRecipients.php`.
+- If I want to change when a post sends a notification, open the matching `app/Http/Controllers/<PostType>Controller.php` store, update, approve, or reject action.
+- If I want to change notification text or stored fields, open the matching class in `app/Notifications/`.
+- If I want to change notification ownership checks, paging, polling data, read behavior, or actor profile pictures, open `app/Http/Controllers/NotificationController.php` and `routes/features.php`.
+- If I want to change the bell dropdown, badge, polling interval, or tab dots, open `resources/views/layouts/app.blade.php` and `public/css/app.css`.
+- If I want to change the notifications page layout, open `resources/views/notifications/index.blade.php` and `public/css/app.css`.
 
 ## Gotchas and extension notes
 
@@ -109,6 +133,11 @@ The shared header in `resources/views/layouts/app.blade.php` stays sticky while 
 - **School options:** Fill the TODO institute and program arrays in `config/school.php`; empty lists intentionally do not allow a student to submit arbitrary values.
 - **Officer terms:** The current A.Y. is computed from today's date. Officer name, title, and photo are copied per year; role changes never edit past years. Photos live on the public disk at `storage/app/public/officer-photos` and need `php artisan storage:link`. Officers are never copied forward automatically; use the adviser action when a starting point is wanted.
 - **Sticky navbar:** An ancestor with `overflow: auto`, `overflow: hidden`, or `overflow: scroll` can change or block sticky positioning; check the full parent chain before adding such a rule around the shared header.
+- **Notifications table:** It was created with SQL, not a project migration. `notifiable_id` is `BIGINT UNSIGNED` while `users.user_id` is `INT UNSIGNED`; the key values fit and Laravel's polymorphic relation uses the custom user key.
+- **Notification delivery:** There is no queue worker; sends are synchronous and failures are logged without failing the post action. Broadcast recipients are chunked by `user_id`.
+- **Notification links:** A post may be archived or deleted after a notice is sent; opening its stale link returns a friendly message. Tab dots clear when the matching index is visited.
+- **Notification polling:** The bell polls every 60 seconds while the tab is visible and the dropdown is closed. Poll errors after logout or session expiry are ignored.
+- **Notification JSON filtering:** MariaDB 10.4.32 supports `JSON_EXTRACT` on the notification table's `TEXT` `data` field; the shared layout computes all post-type dot counts in one grouped query.
 
 ## Articles tab
 

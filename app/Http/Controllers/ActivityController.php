@@ -6,6 +6,7 @@ use App\Http\Requests\Activity\RejectActivityRequest;
 use App\Http\Requests\Activity\StoreActivityRequest;
 use App\Http\Requests\Activity\UpdateActivityRequest;
 use App\Models\Activity;
+use App\Support\PostNotificationRecipients;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -18,7 +19,8 @@ use Illuminate\Validation\Rule;
 /*
  * Officer activities start pending; advisers approve or reject with a reason. Only approved
  * AND active activities appear publicly; archive shelves content without changing review state,
- * and restore returns it to active while preserving pending or rejected approval state.
+ * and restore returns it to active while preserving pending or rejected approval state. Archive,
+ * restore, and delete stay silent; only review and publication transitions send notifications.
  */
 /** Lists, edits, reviews, and archives activities with server-side role and state checks. */
 class ActivityController extends Controller
@@ -68,6 +70,9 @@ class ActivityController extends Controller
         });
 
         $activities = $activities->latest('created_at')->paginate(10)->withQueryString();
+        // SECURITY: Visiting Activities clears only this user's unread publication notices for this tab.
+        if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
+            ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['activity'])->update(['read_at' => now()]);
 
         return view('activities.index', compact('activities', 'allowedTabs', 'tab', 'search'));
     }
@@ -119,6 +124,10 @@ class ActivityController extends Controller
         }
 
         $activity->save();
+        // Pending submissions go to advisers only; adviser auto-approved posts are already published.
+        $notifications = app(PostNotificationRecipients::class);
+        if ($autoApprove && $activity->content_status === Activity::CONTENT_ACTIVE) $notifications->published('activity', $activity, $user);
+        elseif ($user->isOfficer()) $notifications->submitted('activity', $activity, $user);
 
         return redirect()->route('activities.show', $activity)->with('status', 'The activity was created.');
     }
@@ -155,6 +164,10 @@ class ActivityController extends Controller
         }
 
         $activity->save();
+        // SECURITY: Only officer edits returned to pending trigger a review notice; failures never block saving.
+        if ($request->user()->isOfficer() && ($wasRejected || ($wasApproved && config('school.reset_approval_on_edit', true)))) {
+            app(PostNotificationRecipients::class)->submitted('activity', $activity, $request->user(), true);
+        }
         if ($oldImage && $oldImage !== $activity->image) {
             $this->deleteStoredImage($oldImage);
         }
@@ -191,18 +204,21 @@ class ActivityController extends Controller
     }
 
     /** Approve only pending activities and report repeated review requests clearly. */
-    public function approve(Activity $activity): RedirectResponse
+    public function approve(Request $request, Activity $activity): RedirectResponse
     {
         $this->authorize('approve', $activity);
         if (! $activity->isPending()) {
             return back()->with('error', 'Only pending activities can be approved.');
         }
 
+        // SECURITY: A conditional state change ensures concurrent clicks can send only one notification set.
+        $reviewedAt = now();
+        $changed = $activity->newQuery()->whereKey($activity->getKey())->where('approval_status', Activity::APPROVAL_PENDING)
+            ->update(['approval_status' => Activity::APPROVAL_APPROVED, 'rejection_reason' => null,
+                'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => $reviewedAt]);
+        if (! $changed) return back()->with('error', 'Only pending activities can be approved.');
         $activity->approval_status = Activity::APPROVAL_APPROVED;
-        $activity->rejection_reason = null;
-        $activity->reviewed_by_user_id = auth()->user()->user_id;
-        $activity->reviewed_at = now();
-        $activity->save();
+        app(PostNotificationRecipients::class)->approved('activity', $activity, $request->user());
 
         return back()->with('status', 'The activity was approved.');
     }
@@ -215,11 +231,14 @@ class ActivityController extends Controller
             return back()->with('error', 'Only pending activities can be rejected.');
         }
 
+        $reason = $request->validated('rejection_reason');
+        $changed = $activity->newQuery()->whereKey($activity->getKey())->where('approval_status', Activity::APPROVAL_PENDING)
+            ->update(['approval_status' => Activity::APPROVAL_REJECTED, 'rejection_reason' => $reason,
+                'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => now()]);
+        if (! $changed) return back()->with('error', 'Only pending activities can be rejected.');
         $activity->approval_status = Activity::APPROVAL_REJECTED;
-        $activity->rejection_reason = $request->validated('rejection_reason');
-        $activity->reviewed_by_user_id = $request->user()->user_id;
-        $activity->reviewed_at = now();
-        $activity->save();
+        $activity->rejection_reason = $reason;
+        app(PostNotificationRecipients::class)->rejected('activity', $activity, $request->user(), $reason);
 
         return back()->with('status', 'The activity was rejected.');
     }

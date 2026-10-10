@@ -5,8 +5,19 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\LiquidationController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\AchievementController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AboutController;
 use Illuminate\Support\Facades\Route;
+
+// SECURITY: Notification reads and state changes are confined to the authenticated, profile-complete owner.
+Route::middleware(['auth', 'profile.complete'])->prefix('notifications')->name('notifications.')->group(function () {
+    Route::get('/summary', [NotificationController::class, 'summary'])->name('summary');
+    Route::get('/', [NotificationController::class, 'index'])->name('index');
+    Route::post('/read-all', [NotificationController::class, 'readAll'])->name('read-all');
+    Route::get('/{notification}/avatar', [NotificationController::class, 'avatar'])->whereUuid('notification')->name('avatar');
+    Route::post('/{notification}/read', [NotificationController::class, 'read'])->whereUuid('notification')->name('read');
+    Route::delete('/{notification}', [NotificationController::class, 'destroy'])->whereUuid('notification')->name('destroy');
+});
 
 // Holds shared content pages and post routes; feature listings accept guests, while writes use role gates.
 // Public listing flags decide whether guests may browse metadata; all PDF routes remain authenticated.

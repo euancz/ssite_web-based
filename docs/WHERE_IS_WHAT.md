@@ -8,6 +8,14 @@ Use this guide to find the file that owns a common change.
 | The measured header height used for anchor offsets | `resources/views/layouts/app.blade.php` and `public/css/app.css` (`--site-header-height`) |
 | The navbar shadow after scrolling | `resources/views/layouts/app.blade.php` and `public/css/app.css` (`.site-header.is-scrolled`) |
 | The desktop/mobile navigation or account menus | `resources/views/layouts/app.blade.php` |
+| The bell dropdown, unread badge, 60-second polling, or tab dots | `resources/views/layouts/app.blade.php` and `public/css/app.css` |
+| Notification list page or All/Unread filter | `resources/views/notifications/index.blade.php` and `app/Http/Controllers/NotificationController.php` |
+| Notification messages and stored payload fields | `app/Notifications/` |
+| Who gets review or publication notifications and recipient chunking | `app/Support/PostNotificationRecipients.php` |
+| Which post actions send notifications | The matching post controller's `store`, `update`, `approve`, and `reject` methods |
+| Notification endpoints, polling summary, and read/delete security | `routes/features.php` and `app/Http/Controllers/NotificationController.php` |
+| Notification actor profile pictures | `app/Http/Controllers/NotificationController.php` (`avatar`) and `resources/views/layouts/app.blade.php` |
+| How unread tab dots are counted | `app/Providers/AppServiceProvider.php` (one grouped query for the shared layout) |
 | The month when the academic year starts | `config/school.php` (`academic_year_start_month`) |
 | Maximum PDF upload size | `config/school.php` (`max_pdf_size_kb`) and PHP `php.ini` upload limits |
 | Whether document or liquidation lists are public | `config/school.php` (`documents_list_public`, `liquidation_list_public`) |

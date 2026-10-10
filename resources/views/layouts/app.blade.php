@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'SSITE') | Student Society in Information Technology Education</title>
 
     <!-- Fonts -->
@@ -147,11 +148,31 @@
                 {{-- LOGGED IN: notifications + account icons --}}
                 {{-- Account controls are available to every signed-in role. --}}
                 @auth
-                    <button type="button" aria-label="Notifications" class="icon-button account-notifications">
-                        <svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                        </svg>
-                    </button>
+                    <div class="notification-menu-wrapper" id="notification-menu-wrapper"
+                         data-summary-url="{{ route('notifications.summary') }}"
+                         data-read-url-template="{{ route('notifications.read', '00000000-0000-4000-8000-000000000000') }}"
+                         data-avatar-url-template="{{ route('notifications.avatar', '00000000-0000-4000-8000-000000000000') }}">
+                        <button type="button" id="notifications-toggle" aria-label="Notifications"
+                                aria-controls="notifications-dropdown" aria-expanded="false" class="icon-button account-notifications">
+                            <svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                            </svg>
+                            <span id="notification-badge" class="notification-badge {{ $notificationUnreadCount ? '' : 'hidden' }}">{{ $notificationUnreadCount > 99 ? '99+' : $notificationUnreadCount }}</span>
+                        </button>
+                        <section id="notifications-dropdown" class="notification-dropdown hidden" aria-label="Notifications">
+                            <div class="notification-dropdown-heading">
+                                <strong>Notifications</strong>
+                                <form method="POST" action="{{ route('notifications.read-all') }}">
+                                    @csrf
+                                    <button type="submit" class="notification-mark-all">Mark all as read</button>
+                                </form>
+                            </div>
+                            <div id="notification-list" class="notification-list" aria-live="polite">
+                                <p class="notification-empty">Open notifications to load your latest updates.</p>
+                            </div>
+                            <a href="{{ route('notifications.index') }}" class="notification-view-all">View all</a>
+                        </section>
+                    </div>
 
                     <div class="account-menu-wrapper" id="account-menu-wrapper">
                         <button type="button"
@@ -237,8 +258,10 @@
                 <li class="site-nav-item"><a href="{{ url('/about') }}" class="site-nav-link">About us</a></li>
 
                 <li class="site-nav-item site-nav-dropdown">
+                    {{-- SECURITY: Dots represent only unread published items; review notices stay in the bell. --}}
                     <button type="button" class="site-nav-link site-nav-dropdown-toggle">
                         Articles
+                        <span class="nav-unread-dot {{ ($notificationNavCounts['article'] ?? 0) ? '' : 'hidden' }}" data-notification-post-type="article" aria-label="Unread published articles"></span>
                         <svg class="dropdown-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                         </svg>
@@ -251,6 +274,7 @@
                 <li class="site-nav-item site-nav-dropdown">
                     <button type="button" class="site-nav-link site-nav-dropdown-toggle">
                         Activities
+                        <span class="nav-unread-dot {{ ($notificationNavCounts['activity'] ?? 0) ? '' : 'hidden' }}" data-notification-post-type="activity" aria-label="Unread published activities"></span>
                         <svg class="dropdown-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                         </svg>
@@ -263,9 +287,9 @@
                     </ul>
                 </li>
 
-                <li class="site-nav-item"><a href="{{ url('/achievements') }}" class="site-nav-link">Achievements</a></li>
-                <li class="site-nav-item"><a href="{{ url('/liquidation') }}" class="site-nav-link">Liquidation</a></li>
-                <li class="site-nav-item"><a href="{{ url('/documents') }}" class="site-nav-link">Documents</a></li>
+                <li class="site-nav-item"><a href="{{ url('/achievements') }}" class="site-nav-link">Achievements <span class="nav-unread-dot {{ ($notificationNavCounts['achievement'] ?? 0) ? '' : 'hidden' }}" data-notification-post-type="achievement" aria-label="Unread published achievements"></span></a></li>
+                <li class="site-nav-item"><a href="{{ url('/liquidation') }}" class="site-nav-link">Liquidation <span class="nav-unread-dot {{ ($notificationNavCounts['liquidation'] ?? 0) ? '' : 'hidden' }}" data-notification-post-type="liquidation" aria-label="Unread published liquidations"></span></a></li>
+                <li class="site-nav-item"><a href="{{ url('/documents') }}" class="site-nav-link">Documents <span class="nav-unread-dot {{ ($notificationNavCounts['document'] ?? 0) ? '' : 'hidden' }}" data-notification-post-type="document" aria-label="Unread published documents"></span></a></li>
                 @auth
                     {{-- SECURITY: This shared dashboard link is limited by the canPost ability to officers and advisers. --}}
                     @can('view-post-dashboard')
@@ -313,6 +337,7 @@
                     <details class="mobile-nav-dropdown">
                         <summary class="mobile-nav-summary">
                             Articles
+                            <span class="nav-unread-dot {{ ($notificationNavCounts['article'] ?? 0) ? '' : 'hidden' }}" data-notification-post-type="article" aria-label="Unread published articles"></span>
                             <svg class="mobile-nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                             </svg>
@@ -327,6 +352,7 @@
                     <details class="mobile-nav-dropdown">
                         <summary class="mobile-nav-summary">
                             Activities
+                            <span class="nav-unread-dot {{ ($notificationNavCounts['activity'] ?? 0) ? '' : 'hidden' }}" data-notification-post-type="activity" aria-label="Unread published activities"></span>
                             <svg class="mobile-nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                             </svg>
@@ -340,9 +366,9 @@
                     </details>
                 </li>
 
-                <li class="mobile-nav-item"><a href="{{ url('/achievements') }}" class="mobile-nav-link">Achievements</a></li>
-                <li class="mobile-nav-item"><a href="{{ url('/liquidation') }}" class="mobile-nav-link">Liquidation</a></li>
-                <li class="mobile-nav-item"><a href="{{ url('/documents') }}" class="mobile-nav-link">Documents</a></li>
+                <li class="mobile-nav-item"><a href="{{ url('/achievements') }}" class="mobile-nav-link">Achievements <span class="nav-unread-dot {{ ($notificationNavCounts['achievement'] ?? 0) ? '' : 'hidden' }}" data-notification-post-type="achievement" aria-label="Unread published achievements"></span></a></li>
+                <li class="mobile-nav-item"><a href="{{ url('/liquidation') }}" class="mobile-nav-link">Liquidation <span class="nav-unread-dot {{ ($notificationNavCounts['liquidation'] ?? 0) ? '' : 'hidden' }}" data-notification-post-type="liquidation" aria-label="Unread published liquidations"></span></a></li>
+                <li class="mobile-nav-item"><a href="{{ url('/documents') }}" class="mobile-nav-link">Documents <span class="nav-unread-dot {{ ($notificationNavCounts['document'] ?? 0) ? '' : 'hidden' }}" data-notification-post-type="document" aria-label="Unread published documents"></span></a></li>
                 @auth
                     {{-- SECURITY: The mobile dashboard link uses the same officer/adviser Gate as desktop navigation. --}}
                     @can('view-post-dashboard')
@@ -523,6 +549,115 @@
                         accountMenu.classList.add('hidden');
                     }
                 });
+            }
+
+            const notificationWrapper = document.getElementById('notification-menu-wrapper');
+            const notificationToggle = document.getElementById('notifications-toggle');
+            const notificationDropdown = document.getElementById('notifications-dropdown');
+            const notificationList = document.getElementById('notification-list');
+            const notificationBadge = document.getElementById('notification-badge');
+            const notificationCsrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            const postLabels = { article: 'Article', activity: 'Activity', achievement: 'Achievement', document: 'Document', liquidation: 'Liquidation' };
+            document.querySelectorAll('.notification-actor-avatar').forEach((avatar) => {
+                avatar.addEventListener('error', () => avatar.remove(), { once: true });
+            });
+
+            const relativeTime = (value) => {
+                const seconds = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 1000));
+                if (seconds < 60) return 'just now';
+                if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+                if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+                return `${Math.floor(seconds / 86400)}d ago`;
+            };
+
+            const updateNotificationSummary = async (forceOpen = false) => {
+                if (!notificationWrapper || document.hidden || (!forceOpen && notificationToggle?.getAttribute('aria-expanded') === 'true')) return;
+                try {
+                    const response = await fetch(notificationWrapper.dataset.summaryUrl, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+                    if (!response.ok) return;
+                    const summary = await response.json();
+                    const count = Number(summary.unread_count || 0);
+                    notificationBadge.textContent = count > 99 ? '99+' : String(count);
+                    notificationBadge.classList.toggle('hidden', count === 0);
+
+                    document.querySelectorAll('[data-notification-post-type]').forEach((dot) => {
+                        const unread = Number(summary.nav_counts?.[dot.dataset.notificationPostType] || 0) > 0;
+                        dot.classList.toggle('hidden', !unread);
+                    });
+
+                    if (!forceOpen && notificationToggle?.getAttribute('aria-expanded') === 'true') return;
+                    notificationList.replaceChildren();
+                    if (!summary.notifications?.length) {
+                        const empty = document.createElement('p');
+                        empty.className = 'notification-empty';
+                        empty.textContent = "You're all caught up";
+                        notificationList.append(empty);
+                        return;
+                    }
+
+                    summary.notifications.forEach((item) => {
+                        const data = item.data || {};
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = notificationWrapper.dataset.readUrlTemplate.replace('00000000-0000-4000-8000-000000000000', encodeURIComponent(item.id));
+                        form.className = 'notification-entry-form';
+                        const csrf = document.createElement('input');
+                        csrf.type = 'hidden'; csrf.name = '_token'; csrf.value = notificationCsrf;
+                        const button = document.createElement('button');
+                        button.type = 'submit'; button.className = `notification-entry ${item.read_at ? '' : 'is-unread'}`;
+                        const typeIcon = document.createElement('span');
+                        typeIcon.className = `notification-type-icon notification-type-${data.type || 'published'}`;
+                        typeIcon.setAttribute('aria-hidden', 'true');
+                        typeIcon.textContent = (data.type || 'published').slice(0, 1).toUpperCase();
+                        const postIcon = document.createElement('small');
+                        postIcon.textContent = (postLabels[data.post_type] || 'P').slice(0, 1);
+                        typeIcon.append(postIcon);
+                        const avatar = document.createElement('img');
+                        avatar.className = 'notification-actor-avatar';
+                        avatar.alt = '';
+                        avatar.src = notificationWrapper.dataset.avatarUrlTemplate.replace('00000000-0000-4000-8000-000000000000', encodeURIComponent(item.id));
+                        avatar.addEventListener('error', () => avatar.remove(), { once: true });
+                        typeIcon.append(avatar);
+                        const copy = document.createElement('span'); copy.className = 'notification-entry-copy';
+                        const message = document.createElement('span'); message.className = 'notification-entry-message'; message.textContent = data.message || 'You have a new notification.';
+                        const title = document.createElement('span'); title.className = 'notification-entry-title'; title.textContent = data.title || '';
+                        const meta = document.createElement('span'); meta.className = 'notification-entry-meta';
+                        meta.textContent = `${data.actor_name || 'SSITE'} · ${postLabels[data.post_type] || 'Post'} · ${item.created_at ? relativeTime(item.created_at) : ''}`;
+                        copy.append(message, title, meta);
+                        if (!item.read_at) { const unreadDot = document.createElement('span'); unreadDot.className = 'notification-entry-unread-dot'; unreadDot.setAttribute('aria-label', 'Unread'); button.append(typeIcon, copy, unreadDot); }
+                        else button.append(typeIcon, copy);
+                        form.append(csrf, button); notificationList.append(form);
+                    });
+                } catch (_) {
+                    // Polling failures after logout or session expiry stay silent and leave the page usable.
+                }
+            };
+
+            if (notificationWrapper && notificationToggle && notificationDropdown) {
+                notificationToggle.addEventListener('click', () => {
+                    const open = notificationToggle.getAttribute('aria-expanded') !== 'true';
+                    notificationToggle.setAttribute('aria-expanded', String(open));
+                    notificationDropdown.classList.toggle('hidden', !open);
+                    if (open) updateNotificationSummary(true);
+                });
+                document.addEventListener('click', (event) => {
+                    if (!notificationWrapper.contains(event.target)) {
+                        notificationToggle.setAttribute('aria-expanded', 'false');
+                        notificationDropdown.classList.add('hidden');
+                    }
+                });
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape') {
+                        notificationToggle.setAttribute('aria-expanded', 'false');
+                        notificationDropdown.classList.add('hidden');
+                    }
+                });
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) updateNotificationSummary();
+                });
+                // SECURITY: Hidden tabs and an open dropdown pause polling to avoid wasted requests and flicker.
+                window.setInterval(updateNotificationSummary, 60000);
+                updateNotificationSummary();
             }
         </script>
     @endauth

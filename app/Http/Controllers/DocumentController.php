@@ -6,6 +6,7 @@ use App\Http\Requests\Document\RejectDocumentRequest;
 use App\Http\Requests\Document\StoreDocumentRequest;
 use App\Http\Requests\Document\UpdateDocumentRequest;
 use App\Models\Document;
+use App\Support\PostNotificationRecipients;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -21,6 +22,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 /*
  * Officer PDFs start pending; advisers approve or reject with a reason. Only approved AND active
  * items are public; files stay on the private disk and every file response authorizes before reading.
+ * Archive, restore, and delete stay silent; only review and publication transitions send notifications.
  */
 class DocumentController extends Controller
 {
@@ -52,6 +54,9 @@ class DocumentController extends Controller
             ->when($category !== '', fn ($query) => $query->where('category', $category));
         $categories = Document::query()->publiclyVisible()->whereNotNull('category')->distinct()->orderBy('category')->pluck('category');
         $documents = $documents->latest('created_at')->paginate(10)->withQueryString();
+        // SECURITY: Visiting Documents clears only this user's unread publication notices for this tab.
+        if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
+            ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['document'])->update(['read_at' => now()]);
 
         return view('documents.index', compact('documents', 'allowedTabs', 'tab', 'search', 'category', 'categories'));
     }
@@ -82,6 +87,10 @@ class DocumentController extends Controller
         }
         [$document->file_path, $document->original_name, $document->file_size] = $this->storePdf($file);
         $document->save();
+        // Pending submissions go to advisers only; adviser auto-approved posts are already published.
+        $notifications = app(PostNotificationRecipients::class);
+        if ($autoApprove && $document->content_status === Document::CONTENT_ACTIVE) $notifications->published('document', $document, $request->user());
+        elseif ($request->user()->isOfficer()) $notifications->submitted('document', $document, $request->user());
         return redirect()->route('documents.show', $document)->with('status', 'The document was uploaded.');
     }
 
@@ -111,6 +120,10 @@ class DocumentController extends Controller
             $document->reviewed_at = null;
         }
         $document->save();
+        // SECURITY: Only officer edits returned to pending trigger a review notice; failures never block saving.
+        if ($request->user()->isOfficer() && ($wasRejected || ($wasApproved && config('school.reset_approval_on_edit', true)))) {
+            app(PostNotificationRecipients::class)->submitted('document', $document, $request->user(), true);
+        }
         if ($oldPath && $oldPath !== $document->file_path) $this->deletePrivatePath($oldPath);
         return redirect()->route('documents.show', $document)->with('status', 'The document was updated.');
     }
@@ -133,15 +146,18 @@ class DocumentController extends Controller
         return back()->with('status', 'The document was restored.');
     }
 
-    public function approve(Document $document): RedirectResponse
+    public function approve(Request $request, Document $document): RedirectResponse
     {
         $this->authorize('approve', $document);
         if (! $document->isPending()) return back()->with('error', 'Only pending documents can be approved.');
+        // SECURITY: A conditional state change ensures concurrent clicks can send only one notification set.
+        $reviewedAt = now();
+        $changed = $document->newQuery()->whereKey($document->getKey())->where('approval_status', Document::APPROVAL_PENDING)
+            ->update(['approval_status' => Document::APPROVAL_APPROVED, 'rejection_reason' => null,
+                'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => $reviewedAt]);
+        if (! $changed) return back()->with('error', 'Only pending documents can be approved.');
         $document->approval_status = Document::APPROVAL_APPROVED;
-        $document->rejection_reason = null;
-        $document->reviewed_by_user_id = auth()->user()->user_id;
-        $document->reviewed_at = now();
-        $document->save();
+        app(PostNotificationRecipients::class)->approved('document', $document, $request->user());
         return back()->with('status', 'The document was approved.');
     }
 
@@ -149,11 +165,14 @@ class DocumentController extends Controller
     {
         $this->authorize('reject', $document);
         if (! $document->isPending()) return back()->with('error', 'Only pending documents can be rejected.');
+        $reason = $request->validated('rejection_reason');
+        $changed = $document->newQuery()->whereKey($document->getKey())->where('approval_status', Document::APPROVAL_PENDING)
+            ->update(['approval_status' => Document::APPROVAL_REJECTED, 'rejection_reason' => $reason,
+                'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => now()]);
+        if (! $changed) return back()->with('error', 'Only pending documents can be rejected.');
         $document->approval_status = Document::APPROVAL_REJECTED;
-        $document->rejection_reason = $request->validated('rejection_reason');
-        $document->reviewed_by_user_id = $request->user()->user_id;
-        $document->reviewed_at = now();
-        $document->save();
+        $document->rejection_reason = $reason;
+        app(PostNotificationRecipients::class)->rejected('document', $document, $request->user(), $reason);
         return back()->with('status', 'The document was rejected.');
     }
 

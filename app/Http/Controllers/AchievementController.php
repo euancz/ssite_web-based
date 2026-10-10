@@ -6,6 +6,7 @@ use App\Http\Requests\Achievement\RejectAchievementRequest;
 use App\Http\Requests\Achievement\StoreAchievementRequest;
 use App\Http\Requests\Achievement\UpdateAchievementRequest;
 use App\Models\Achievement;
+use App\Support\PostNotificationRecipients;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -18,7 +19,8 @@ use Illuminate\Validation\Rule;
 /*
  * Officer achievements start pending; advisers approve or reject with a reason. Only approved
  * AND active achievements appear publicly; archive shelves content without changing review state,
- * and restore returns it to active while preserving pending or rejected approval state.
+ * and restore returns it to active while preserving pending or rejected approval state. Archive,
+ * restore, and delete stay silent; only review and publication transitions send notifications.
  */
 /** Lists, edits, reviews, and archives achievements with server-side role and state checks. */
 class AchievementController extends Controller
@@ -69,6 +71,9 @@ class AchievementController extends Controller
         });
 
         $achievements = $achievements->latest('created_at')->paginate(10)->withQueryString();
+        // SECURITY: Visiting Achievements clears only this user's unread publication notices for this tab.
+        if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
+            ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['achievement'])->update(['read_at' => now()]);
 
         return view('achievements.index', compact('achievements', 'allowedTabs', 'tab', 'search'));
     }
@@ -120,6 +125,10 @@ class AchievementController extends Controller
         }
 
         $achievement->save();
+        // Pending submissions go to advisers only; adviser auto-approved posts are already published.
+        $notifications = app(PostNotificationRecipients::class);
+        if ($autoApprove && $achievement->content_status === Achievement::CONTENT_ACTIVE) $notifications->published('achievement', $achievement, $user);
+        elseif ($user->isOfficer()) $notifications->submitted('achievement', $achievement, $user);
 
         return redirect()->route('achievements.show', $achievement)->with('status', 'The achievement was created.');
     }
@@ -156,6 +165,10 @@ class AchievementController extends Controller
         }
 
         $achievement->save();
+        // SECURITY: Only officer edits returned to pending trigger a review notice; failures never block saving.
+        if ($request->user()->isOfficer() && ($wasRejected || ($wasApproved && config('school.reset_approval_on_edit', true)))) {
+            app(PostNotificationRecipients::class)->submitted('achievement', $achievement, $request->user(), true);
+        }
         if ($oldImage && $oldImage !== $achievement->image) {
             $this->deleteStoredImage($oldImage);
         }
@@ -192,18 +205,21 @@ class AchievementController extends Controller
     }
 
     /** Approve only pending achievements and report repeated review requests clearly. */
-    public function approve(Achievement $achievement): RedirectResponse
+    public function approve(Request $request, Achievement $achievement): RedirectResponse
     {
         $this->authorize('approve', $achievement);
         if (! $achievement->isPending()) {
             return back()->with('error', 'Only pending achievements can be approved.');
         }
 
+        // SECURITY: A conditional state change ensures concurrent clicks can send only one notification set.
+        $reviewedAt = now();
+        $changed = $achievement->newQuery()->whereKey($achievement->getKey())->where('approval_status', Achievement::APPROVAL_PENDING)
+            ->update(['approval_status' => Achievement::APPROVAL_APPROVED, 'rejection_reason' => null,
+                'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => $reviewedAt]);
+        if (! $changed) return back()->with('error', 'Only pending achievements can be approved.');
         $achievement->approval_status = Achievement::APPROVAL_APPROVED;
-        $achievement->rejection_reason = null;
-        $achievement->reviewed_by_user_id = auth()->user()->user_id;
-        $achievement->reviewed_at = now();
-        $achievement->save();
+        app(PostNotificationRecipients::class)->approved('achievement', $achievement, $request->user());
 
         return back()->with('status', 'The achievement was approved.');
     }
@@ -216,11 +232,14 @@ class AchievementController extends Controller
             return back()->with('error', 'Only pending achievements can be rejected.');
         }
 
+        $reason = $request->validated('rejection_reason');
+        $changed = $achievement->newQuery()->whereKey($achievement->getKey())->where('approval_status', Achievement::APPROVAL_PENDING)
+            ->update(['approval_status' => Achievement::APPROVAL_REJECTED, 'rejection_reason' => $reason,
+                'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => now()]);
+        if (! $changed) return back()->with('error', 'Only pending achievements can be rejected.');
         $achievement->approval_status = Achievement::APPROVAL_REJECTED;
-        $achievement->rejection_reason = $request->validated('rejection_reason');
-        $achievement->reviewed_by_user_id = $request->user()->user_id;
-        $achievement->reviewed_at = now();
-        $achievement->save();
+        $achievement->rejection_reason = $reason;
+        app(PostNotificationRecipients::class)->rejected('achievement', $achievement, $request->user(), $reason);
 
         return back()->with('status', 'The achievement was rejected.');
     }

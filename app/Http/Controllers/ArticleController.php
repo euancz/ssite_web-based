@@ -6,6 +6,7 @@ use App\Http\Requests\Article\RejectArticleRequest;
 use App\Http\Requests\Article\StoreArticleRequest;
 use App\Http\Requests\Article\UpdateArticleRequest;
 use App\Models\Article;
+use App\Support\PostNotificationRecipients;
 use Illuminate\Contracts\View\View;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -18,7 +19,8 @@ use Illuminate\Validation\Rule;
 /*
  * Officer articles start pending; advisers approve or reject with a reason. Only approved
  * AND active articles appear publicly; archive shelves content without changing review state,
- * and restore returns it to active while preserving pending or rejected approval state.
+ * and restore returns it to active while preserving pending or rejected approval state. Archive,
+ * restore, and delete stay silent; only review and publication transitions send notifications.
  */
 /**
  * Lists, edits, reviews, and archives Articles while keeping role and state rules server-side.
@@ -70,6 +72,10 @@ class ArticleController extends Controller
         });
 
         $articles = $articles->latest('created_at')->paginate(10)->withQueryString();
+
+        // SECURITY: Visiting Articles clears only this user's unread publication notices for this tab.
+        if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
+            ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['article'])->update(['read_at' => now()]);
 
         return view('articles.index', compact('articles', 'allowedTabs', 'tab', 'search'));
     }
@@ -128,6 +134,11 @@ class ArticleController extends Controller
 
         $article->save();
 
+        // Pending submissions go to advisers only; adviser auto-approved posts are already published.
+        $notifications = app(PostNotificationRecipients::class);
+        if ($autoApprove && $article->content_status === Article::CONTENT_ACTIVE) $notifications->published('article', $article, $user);
+        elseif ($user->isOfficer()) $notifications->submitted('article', $article, $user);
+
         return redirect()->route('articles.show', $article)->with('status', 'The article was created.');
     }
 
@@ -167,6 +178,10 @@ class ArticleController extends Controller
         }
 
         $article->save();
+        // SECURITY: Only officer edits returned to pending trigger a review notice; failures never block saving.
+        if ($request->user()->isOfficer() && ($wasRejected || ($wasApproved && config('school.reset_approval_on_edit', true)))) {
+            app(PostNotificationRecipients::class)->submitted('article', $article, $request->user(), true);
+        }
         if ($oldImage && $oldImage !== $article->image) {
             Storage::disk('public')->delete($oldImage);
         }
@@ -209,18 +224,21 @@ class ArticleController extends Controller
     /**
      * Approve only pending articles and return a friendly message for repeated requests.
      */
-    public function approve(Article $article): RedirectResponse
+    public function approve(Request $request, Article $article): RedirectResponse
     {
         $this->authorize('approve', $article);
         if (! $article->isPending()) {
             return back()->with('error', 'Only pending articles can be approved.');
         }
 
+        // SECURITY: A conditional state change ensures concurrent clicks can send only one notification set.
+        $reviewedAt = now();
+        $changed = $article->newQuery()->whereKey($article->getKey())->where('approval_status', Article::APPROVAL_PENDING)
+            ->update(['approval_status' => Article::APPROVAL_APPROVED, 'rejection_reason' => null,
+                'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => $reviewedAt]);
+        if (! $changed) return back()->with('error', 'Only pending articles can be approved.');
         $article->approval_status = Article::APPROVAL_APPROVED;
-        $article->rejection_reason = null;
-        $article->reviewed_by_user_id = auth()->user()->user_id;
-        $article->reviewed_at = now();
-        $article->save();
+        app(PostNotificationRecipients::class)->approved('article', $article, $request->user());
 
         return back()->with('status', 'The article was approved.');
     }
@@ -235,11 +253,14 @@ class ArticleController extends Controller
             return back()->with('error', 'Only pending articles can be rejected.');
         }
 
+        $reason = $request->validated('rejection_reason');
+        $changed = $article->newQuery()->whereKey($article->getKey())->where('approval_status', Article::APPROVAL_PENDING)
+            ->update(['approval_status' => Article::APPROVAL_REJECTED, 'rejection_reason' => $reason,
+                'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => now()]);
+        if (! $changed) return back()->with('error', 'Only pending articles can be rejected.');
         $article->approval_status = Article::APPROVAL_REJECTED;
-        $article->rejection_reason = $request->validated('rejection_reason');
-        $article->reviewed_by_user_id = $request->user()->user_id;
-        $article->reviewed_at = now();
-        $article->save();
+        $article->rejection_reason = $reason;
+        app(PostNotificationRecipients::class)->rejected('article', $article, $request->user(), $reason);
 
         return back()->with('status', 'The article was rejected.');
     }
