@@ -6,6 +6,7 @@ Use this guide to find the file that owns a common change.
 | --- | --- |
 | Navbar pinning while scrolling | `public/css/app.css` (`.site-header`) |
 | Header suggestions, keyboard behavior, or dropdown limits | `resources/views/layouts/app.blade.php` and `public/css/app.css` |
+| Search query normalization, searchable fields, excerpts, and result relevance | `app/Support/SiteSearch.php` |
 | Full search results, filtering, and pagination | `app/Http/Controllers/SearchController.php` and `resources/views/search/index.blade.php` |
 | Add a searchable type | `app/Support/SiteSearch.php` (type method, visibility, fields, route, and metadata) and `app/Http/Controllers/SearchController.php` (type label) |
 | Change searched columns | `app/Support/SiteSearch.php` (per-type method) |
@@ -19,6 +20,7 @@ Use this guide to find the file that owns a common change.
 | The desktop/mobile navigation or account menus | `resources/views/layouts/app.blade.php` |
 | The bell dropdown, unread badge, 60-second polling, or tab dots | `resources/views/layouts/app.blade.php` and `public/css/app.css` |
 | Notification list page or All/Unread filter | `resources/views/notifications/index.blade.php` and `app/Http/Controllers/NotificationController.php` |
+| Notification summary JSON, owned read/dismiss actions, or stale-link handling | `app/Http/Controllers/NotificationController.php` and `routes/features.php` |
 | Notification messages and stored payload fields | `app/Notifications/` |
 | Who gets review or publication notifications and recipient chunking | `app/Support/PostNotificationRecipients.php` |
 | Which post actions send notifications | The matching post controller's `store`, `update`, `approve`, and `reject` methods |
@@ -84,7 +86,9 @@ Use this guide to find the file that owns a common change.
 
 Route URLs, route names, middleware, and role checks are defined separately from the Blade pages. Moving a view changes its `view(...)` path, while the URL is controlled by its route file.
 
-Search gotchas: users and their profile fields are never searchable. Only approved, active items appear because content models reuse `publiclyVisible()`; pending, rejected, and archived items stay in their module tabs. Guest Documents and Liquidation search follows the search toggles, which default to the matching tab visibility settings. Documents and Liquidation results link to their show page, never the PDF. Search uses LIKE matching and may need FULLTEXT indexes if the data grows large.
+Search behavior: `/search` and `/search/suggest` share `SiteSearch::normalize()`. Control characters become spaces, whitespace is collapsed, input is capped at 100 characters and five words, and fewer than two characters returns no results without querying feature models. Each word must match at least one allowed field, with bound and escaped LIKE patterns. Results rank title prefix matches first, title substring matches second, then other-field matches; newer records break ties. The suggestion endpoint keeps at most three matches per type and ten overall. The results page filters by type and paginates ten per page. Users and profile fields are never searched; only approved, active posts use `publiclyVisible()`. Guest Documents and Liquidation visibility follows the search toggles, which default to the corresponding list visibility settings. Those results link to metadata show pages, never PDFs. LIKE matching may need FULLTEXT indexes if the data grows large.
+
+Notification behavior: notification endpoints require authentication and completed profiles. Every list, summary, read, read-all, dismiss, and avatar lookup is scoped to the signed-in user's notification relation. The summary returns unread total, unread `published` counts by post type for navigation dots, and the latest ten notifications. The list paginates fifteen and supports `all` or `unread`. Opening a notice marks only that notice read; missing, archived, or no-longer-published content gets a friendly fallback. Read-all and dismiss never affect another user's records. Publication notices are sent only for approved active content; archiving and restoring do not send them.
 
 Sticky navbar gotcha: an ancestor with `overflow: auto`, `overflow: hidden`, or `overflow: scroll` can block or change sticky positioning. Check the shared header's full parent chain before adding overflow rules.
 
