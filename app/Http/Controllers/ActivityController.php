@@ -2,9 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Activity\RejectActivityRequest;
-use App\Http\Requests\Activity\StoreActivityRequest;
-use App\Http\Requests\Activity\UpdateActivityRequest;
 use App\Models\Activity;
 use App\Support\PostNotificationRecipients;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -103,11 +100,28 @@ class ActivityController extends Controller
     }
 
     /** Store officer submissions as pending and adviser submissions according to school settings. */
-    public function store(StoreActivityRequest $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
+        // Validate editable activity fields and the optional image before writing.
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:200'],
+            'description' => ['required', 'string'],
+            'activity_date' => ['nullable', 'date'],
+            'location' => ['nullable', 'string', 'max:200'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ], [
+            'title.required' => 'Enter an activity title.',
+            'title.max' => 'The title may not be longer than 200 characters.',
+            'description.required' => 'Enter the activity description.',
+            'activity_date.date' => 'Enter a valid activity date.',
+            'location.max' => 'The location may not be longer than 200 characters.',
+            'image.image' => 'Choose a valid image file.',
+            'image.mimes' => 'The image must be a JPG, JPEG, PNG, or WebP file.',
+            'image.max' => 'The image may not be larger than 2 MB.',
+        ]);
         $this->authorize('create', Activity::class);
         $user = $request->user();
-        $activity = new Activity($request->validated());
+        $activity = new Activity($validated);
         $activity->created_by_user_id = $user->user_id;
         $activity->content_status = Activity::CONTENT_ACTIVE;
         $autoApprove = $user->isAdviser() && config('school.adviser_posts_auto_approved', true);
@@ -141,13 +155,30 @@ class ActivityController extends Controller
     }
 
     /** Update activity fields and return rejected or configured approved officer edits to review. */
-    public function update(UpdateActivityRequest $request, Activity $activity): RedirectResponse
+    public function update(Request $request, Activity $activity): RedirectResponse
     {
+        // Keep the same optional replacement image and activity field rules as creation.
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:200'],
+            'description' => ['required', 'string'],
+            'activity_date' => ['nullable', 'date'],
+            'location' => ['nullable', 'string', 'max:200'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ], [
+            'title.required' => 'Enter an activity title.',
+            'title.max' => 'The title may not be longer than 200 characters.',
+            'description.required' => 'Enter the activity description.',
+            'activity_date.date' => 'Enter a valid activity date.',
+            'location.max' => 'The location may not be longer than 200 characters.',
+            'image.image' => 'Choose a valid image file.',
+            'image.mimes' => 'The image must be a JPG, JPEG, PNG, or WebP file.',
+            'image.max' => 'The image may not be larger than 2 MB.',
+        ]);
         $this->authorize('update', $activity);
         $wasApproved = $activity->isApproved();
         $wasRejected = $activity->isRejected();
         $oldImage = $activity->image;
-        $activity->fill($request->validated());
+        $activity->fill($validated);
 
         if ($request->hasFile('image')) {
             // SECURITY: Save a generated replacement before deleting the old module-owned file.
@@ -224,14 +255,19 @@ class ActivityController extends Controller
     }
 
     /** Reject only pending activities after the adviser reason has been validated. */
-    public function reject(RejectActivityRequest $request, Activity $activity): RedirectResponse
+    public function reject(Request $request, Activity $activity): RedirectResponse
     {
+        // Keep adviser rejection reasons required and within the database limit.
+        $validated = $request->validate(['rejection_reason' => ['required', 'string', 'max:255']], [
+            'rejection_reason.required' => 'Enter a reason before rejecting this activity.',
+            'rejection_reason.max' => 'The rejection reason may not be longer than 255 characters.',
+        ]);
         $this->authorize('reject', $activity);
         if (! $activity->isPending()) {
             return back()->with('error', 'Only pending activities can be rejected.');
         }
 
-        $reason = $request->validated('rejection_reason');
+        $reason = $validated['rejection_reason'];
         $changed = $activity->newQuery()->whereKey($activity->getKey())->where('approval_status', Activity::APPROVAL_PENDING)
             ->update(['approval_status' => Activity::APPROVAL_REJECTED, 'rejection_reason' => $reason,
                 'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => now()]);

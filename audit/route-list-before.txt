@@ -1,0 +1,448 @@
+﻿
+  GET|HEAD  / ...................................................................................... routes/web.php:10
+            ⇂ web
+            ⇂ profile.complete
+  GET|HEAD  about ............................................................................ about › AboutController
+            ⇂ web
+  GET|HEAD  achievements ............................................ achievements.index › AchievementController@index
+            ⇂ web
+            ⇂ profile.complete
+  POST      achievements ............................................ achievements.store › AchievementController@store
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  POST      achievements/bulk-archive .................. achievements.bulk-archive › AchievementController@bulkArchive
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  GET|HEAD  achievements/create ................................... achievements.create › AchievementController@create
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  GET|HEAD  achievements/{achievement} ................................ achievements.show › AchievementController@show
+            ⇂ web
+            ⇂ profile.complete
+  PATCH     achievements/{achievement} ............................ achievements.update › AchievementController@update
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  DELETE    achievements/{achievement} .......................... achievements.destroy › AchievementController@destroy
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  POST      achievements/{achievement}/approve .................. achievements.approve › AchievementController@approve
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  POST      achievements/{achievement}/archive .................. achievements.archive › AchievementController@archive
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  GET|HEAD  achievements/{achievement}/edit ........................... achievements.edit › AchievementController@edit
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  POST      achievements/{achievement}/reject ..................... achievements.reject › AchievementController@reject
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  POST      achievements/{achievement}/restore .................. achievements.restore › AchievementController@restore
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  GET|HEAD  activities ................................................... activities.index › ActivityController@index
+            ⇂ web
+            ⇂ profile.complete
+  POST      activities ................................................... activities.store › ActivityController@store
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  POST      activities/bulk-archive ......................... activities.bulk-archive › ActivityController@bulkArchive
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  GET|HEAD  activities/create .......................................... activities.create › ActivityController@create
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  GET|HEAD  activities/{activity} .......................................... activities.show › ActivityController@show
+            ⇂ web
+            ⇂ profile.complete
+  PATCH     activities/{activity} ...................................... activities.update › ActivityController@update
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  DELETE    activities/{activity} .................................... activities.destroy › ActivityController@destroy
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  POST      activities/{activity}/approve ............................ activities.approve › ActivityController@approve
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  POST      activities/{activity}/archive ............................ activities.archive › ActivityController@archive
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  GET|HEAD  activities/{activity}/edit ..................................... activities.edit › ActivityController@edit
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  POST      activities/{activity}/reject ............................... activities.reject › ActivityController@reject
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  POST      activities/{activity}/restore ............................ activities.restore › ActivityController@restore
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  GET|HEAD  adviser/dashboard ........................................ adviser.dashboard › Adviser\DashboardController
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  GET|HEAD  adviser/officers ............................ adviser.officers.index › Adviser\OfficerTermController@index
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  POST      adviser/officers ............................ adviser.officers.store › Adviser\OfficerTermController@store
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  POST      adviser/officers/copy-previous adviser.officers.copy-previous › Adviser\OfficerTermController@copyPrevious
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  GET|HEAD  adviser/officers/create ................... adviser.officers.create › Adviser\OfficerTermController@create
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  PATCH     adviser/officers/{officer} ................ adviser.officers.update › Adviser\OfficerTermController@update
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  DELETE    adviser/officers/{officer} .............. adviser.officers.destroy › Adviser\OfficerTermController@destroy
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  GET|HEAD  adviser/officers/{officer}/edit ............... adviser.officers.edit › Adviser\OfficerTermController@edit
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  GET|HEAD  adviser/reviews ................................... adviser.reviews.index › Adviser\ReviewController@index
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  GET|HEAD  adviser/users ......................................... adviser.users.index › Adviser\UserController@index
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  GET|HEAD  adviser/users/{user} .................................... adviser.users.show › Adviser\UserController@show
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  PUT       adviser/users/{user}/role .................. adviser.users.update-role › Adviser\UserController@updateRole
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  GET|HEAD  articles ........................................................ articles.index › ArticleController@index
+            ⇂ web
+            ⇂ profile.complete
+  POST      articles ........................................................ articles.store › ArticleController@store
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  POST      articles/bulk-archive .............................. articles.bulk-archive › ArticleController@bulkArchive
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  GET|HEAD  articles/create ............................................... articles.create › ArticleController@create
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  GET|HEAD  articles/{article} ................................................ articles.show › ArticleController@show
+            ⇂ web
+            ⇂ profile.complete
+  PATCH     articles/{article} ............................................ articles.update › ArticleController@update
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  DELETE    articles/{article} .......................................... articles.destroy › ArticleController@destroy
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  POST      articles/{article}/approve .................................. articles.approve › ArticleController@approve
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  POST      articles/{article}/archive .................................. articles.archive › ArticleController@archive
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  GET|HEAD  articles/{article}/edit ........................................... articles.edit › ArticleController@edit
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  POST      articles/{article}/reject ..................................... articles.reject › ArticleController@reject
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  POST      articles/{article}/restore .................................. articles.restore › ArticleController@restore
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  GET|HEAD  auth/microsoft ................................... microsoft.login › Auth\MicrosoftAuthController@redirect
+            ⇂ web
+            ⇂ guest
+  GET|HEAD  auth/microsoft/callback ....................... microsoft.callback › Auth\MicrosoftAuthController@callback
+            ⇂ web
+            ⇂ guest
+  GET|HEAD  documents ..................................................... documents.index › DocumentController@index
+            ⇂ web
+            ⇂ profile.complete
+  POST      documents ..................................................... documents.store › DocumentController@store
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  POST      documents/bulk-archive ........................... documents.bulk-archive › DocumentController@bulkArchive
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  GET|HEAD  documents/create ............................................ documents.create › DocumentController@create
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  GET|HEAD  documents/{document} ............................................ documents.show › DocumentController@show
+            ⇂ web
+            ⇂ profile.complete
+  PATCH     documents/{document} ........................................ documents.update › DocumentController@update
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  DELETE    documents/{document} ...................................... documents.destroy › DocumentController@destroy
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  POST      documents/{document}/approve .............................. documents.approve › DocumentController@approve
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  POST      documents/{document}/archive .............................. documents.archive › DocumentController@archive
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  GET|HEAD  documents/{document}/download ........................... documents.download › DocumentController@download
+            ⇂ web
+            ⇂ auth
+            ⇂ profile.complete
+  GET|HEAD  documents/{document}/edit ....................................... documents.edit › DocumentController@edit
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  POST      documents/{document}/reject ................................. documents.reject › DocumentController@reject
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  POST      documents/{document}/restore .............................. documents.restore › DocumentController@restore
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  GET|HEAD  documents/{document}/view ................................... documents.view › DocumentController@viewFile
+            ⇂ web
+            ⇂ auth
+            ⇂ profile.complete
+  GET|HEAD  home ............................................................................ home › routes/web.php:10
+            ⇂ web
+            ⇂ App\Http\Middleware\RequireAuthentication
+            ⇂ App\Http\Middleware\EnsureProfileCompleted
+  GET|HEAD  liquidation ............................................. liquidations.index › LiquidationController@index
+            ⇂ web
+            ⇂ auth
+            ⇂ profile.complete
+  POST      liquidation ............................................. liquidations.store › LiquidationController@store
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  POST      liquidation/bulk-archive ................... liquidations.bulk-archive › LiquidationController@bulkArchive
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  GET|HEAD  liquidation/create .................................... liquidations.create › LiquidationController@create
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  GET|HEAD  liquidation/{liquidation} ................................. liquidations.show › LiquidationController@show
+            ⇂ web
+            ⇂ auth
+            ⇂ profile.complete
+  PATCH     liquidation/{liquidation} ............................. liquidations.update › LiquidationController@update
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  DELETE    liquidation/{liquidation} ........................... liquidations.destroy › LiquidationController@destroy
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  POST      liquidation/{liquidation}/approve ................... liquidations.approve › LiquidationController@approve
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  POST      liquidation/{liquidation}/archive ................... liquidations.archive › LiquidationController@archive
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  GET|HEAD  liquidation/{liquidation}/download ................ liquidations.download › LiquidationController@download
+            ⇂ web
+            ⇂ auth
+            ⇂ profile.complete
+  GET|HEAD  liquidation/{liquidation}/edit ............................ liquidations.edit › LiquidationController@edit
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  POST      liquidation/{liquidation}/reject ...................... liquidations.reject › LiquidationController@reject
+            ⇂ web
+            ⇂ auth
+            ⇂ role:adviser
+            ⇂ profile.complete
+  POST      liquidation/{liquidation}/restore ................... liquidations.restore › LiquidationController@restore
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  GET|HEAD  liquidation/{liquidation}/view ........................ liquidations.view › LiquidationController@viewFile
+            ⇂ web
+            ⇂ auth
+            ⇂ profile.complete
+  GET|HEAD  login ......................................................................... login › routes/auth.php:10
+            ⇂ web
+            ⇂ guest
+  POST      login .......................................................................... Auth\AuthController@login
+            ⇂ web
+            ⇂ guest
+  POST      logout ............................................................... logout › Auth\AuthController@logout
+            ⇂ web
+            ⇂ App\Http\Middleware\RequireAuthentication
+  GET|HEAD  notifications ......................................... notifications.index › NotificationController@index
+            ⇂ web
+            ⇂ auth
+            ⇂ profile.complete
+  POST      notifications/read-all ........................... notifications.read-all › NotificationController@readAll
+            ⇂ web
+            ⇂ auth
+            ⇂ profile.complete
+  GET|HEAD  notifications/summary ............................. notifications.summary › NotificationController@summary
+            ⇂ web
+            ⇂ auth
+            ⇂ profile.complete
+  DELETE    notifications/{notification} ...................... notifications.destroy › NotificationController@destroy
+            ⇂ web
+            ⇂ auth
+            ⇂ profile.complete
+  GET|HEAD  notifications/{notification}/avatar ................. notifications.avatar › NotificationController@avatar
+            ⇂ web
+            ⇂ auth
+            ⇂ profile.complete
+  POST      notifications/{notification}/read ....................... notifications.read › NotificationController@read
+            ⇂ web
+            ⇂ auth
+            ⇂ profile.complete
+  GET|HEAD  officer/dashboard ........................................ officer.dashboard › Officer\DashboardController
+            ⇂ web
+            ⇂ auth
+            ⇂ role:officer,adviser
+            ⇂ profile.complete
+  PUT       profile ................................................ profile.update › Profile\ProfileController@update
+            ⇂ web
+            ⇂ App\Http\Middleware\RequireAuthentication
+            ⇂ App\Http\Middleware\EnsureProfileCompleted
+  GET|HEAD  profile/complete ..................................... profile.complete › Profile\ProfileController@create
+            ⇂ web
+            ⇂ App\Http\Middleware\RequireAuthentication
+  POST      profile/complete ................................ profile.complete.store › Profile\ProfileController@store
+            ⇂ web
+            ⇂ App\Http\Middleware\RequireAuthentication
+  GET|HEAD  profile/edit ............................................... profile.edit › Profile\ProfileController@edit
+            ⇂ web
+            ⇂ App\Http\Middleware\RequireAuthentication
+            ⇂ App\Http\Middleware\EnsureProfileCompleted
+  POST      profile/picture ......................... profile.picture.update › Profile\ProfileController@updatePicture
+            ⇂ web
+            ⇂ App\Http\Middleware\RequireAuthentication
+            ⇂ App\Http\Middleware\EnsureProfileCompleted
+  DELETE    profile/picture ......................... profile.picture.remove › Profile\ProfileController@removePicture
+            ⇂ web
+            ⇂ App\Http\Middleware\RequireAuthentication
+            ⇂ App\Http\Middleware\EnsureProfileCompleted
+  GET|HEAD  search ............................................................. search.index › SearchController@index
+            ⇂ web
+            ⇂ profile.complete
+            ⇂ throttle:60,1
+  GET|HEAD  search/suggest ................................................. search.suggest › SearchController@suggest
+            ⇂ web
+            ⇂ profile.complete
+            ⇂ throttle:60,1
+  GET|HEAD  storage/{path} storage.local › vendor/laravel/framework/src/Illuminate/Filesystem/FilesystemServiceProvider.php:98
+  PUT       storage/{path} storage.local.upload › vendor/laravel/framework/src/Illuminate/Filesystem/FilesystemServiceProvider.php:106
+  GET|HEAD  up ........... vendor/laravel/framework/src/Illuminate/Foundation/Configuration/ApplicationBuilder.php:219
+
+                                                                                                  Showing [102] routes
+

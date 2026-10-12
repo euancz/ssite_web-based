@@ -133,6 +133,15 @@ class ProfileController extends Controller
     private function formData(User $user): array
     {
         $programsByInstitute = config('school.programs_by_institute', []);
+        $institutesByProgram = [];
+
+        // Prepare the option mapping here so the Blade view only renders configured values.
+        foreach ($programsByInstitute as $institute => $programs) {
+            foreach ($programs as $program) {
+                $institutesByProgram[$program][] = $institute;
+            }
+        }
+
         $programOptions = $programsByInstitute !== []
             ? collect($programsByInstitute)->flatten()->unique()->values()->all()
             : config('school.programs', []);
@@ -141,7 +150,7 @@ class ProfileController extends Controller
             'user' => $user,
             'institutes' => config('school.institutes', []),
             'programs' => $programOptions,
-            'programsByInstitute' => $programsByInstitute,
+            'institutesByProgram' => $institutesByProgram,
             'yearLevels' => config('school.year_levels', []),
             'genders' => config('school.genders', []),
         ];

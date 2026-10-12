@@ -2,9 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Liquidation\RejectLiquidationRequest;
-use App\Http\Requests\Liquidation\StoreLiquidationRequest;
-use App\Http\Requests\Liquidation\UpdateLiquidationRequest;
 use App\Models\Liquidation;
 use App\Support\PostNotificationRecipients;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -65,12 +62,31 @@ class LiquidationController extends Controller
 
     public function create(): View { $this->authorize('create', Liquidation::class); return view('liquidation.create'); }
 
-    public function store(StoreLiquidationRequest $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
+        // Validate report fields and the configured PDF limit before checking file contents.
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:200'],
+            'description' => ['nullable', 'string'],
+            'amount' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
+            'report_date' => ['nullable', 'date'],
+            'file' => ['required', 'file', 'mimes:pdf', 'max:' . config('school.max_pdf_size_kb', 10240)],
+        ], [
+            'title.required' => 'Enter a liquidation report title.',
+            'title.max' => 'The title may not be longer than 200 characters.',
+            'amount.numeric' => 'Enter a valid amount.',
+            'amount.min' => 'The amount may not be negative.',
+            'amount.max' => 'The amount exceeds the supported limit.',
+            'report_date.date' => 'Enter a valid report date.',
+            'file.required' => 'Choose a PDF to upload.',
+            'file.mimes' => 'Choose a valid PDF document.',
+            'file.max' => 'The PDF exceeds the configured upload size limit.',
+        ]);
         $this->authorize('create', Liquidation::class);
         $file = $request->file('file');
         $this->assertPdf($file);
-        $liquidation = new Liquidation($request->safe()->only(['title', 'description', 'amount', 'report_date']));
+        unset($validated['file']);
+        $liquidation = new Liquidation($validated);
         $liquidation->created_by_user_id = $request->user()->user_id;
         $liquidation->content_status = Liquidation::CONTENT_ACTIVE;
         $autoApprove = $request->user()->isAdviser() && config('school.adviser_posts_auto_approved', true);
@@ -94,13 +110,31 @@ class LiquidationController extends Controller
         return view('liquidation.edit', compact('liquidation'));
     }
 
-    public function update(UpdateLiquidationRequest $request, Liquidation $liquidation): RedirectResponse
+    public function update(Request $request, Liquidation $liquidation): RedirectResponse
     {
+        // Keep replacement PDFs optional and validate the same editable report fields.
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:200'],
+            'description' => ['nullable', 'string'],
+            'amount' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
+            'report_date' => ['nullable', 'date'],
+            'file' => ['nullable', 'file', 'mimes:pdf', 'max:' . config('school.max_pdf_size_kb', 10240)],
+        ], [
+            'title.required' => 'Enter a liquidation report title.',
+            'title.max' => 'The title may not be longer than 200 characters.',
+            'amount.numeric' => 'Enter a valid amount.',
+            'amount.min' => 'The amount may not be negative.',
+            'amount.max' => 'The amount exceeds the supported limit.',
+            'report_date.date' => 'Enter a valid report date.',
+            'file.mimes' => 'Choose a valid PDF document.',
+            'file.max' => 'The PDF exceeds the configured upload size limit.',
+        ]);
         $this->authorize('update', $liquidation);
         $wasApproved = $liquidation->isApproved();
         $wasRejected = $liquidation->isRejected();
         $oldPath = $liquidation->file_path;
-        $liquidation->fill($request->safe()->only(['title', 'description', 'amount', 'report_date']));
+        unset($validated['file']);
+        $liquidation->fill($validated);
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $this->assertPdf($file);
@@ -155,11 +189,16 @@ class LiquidationController extends Controller
         return back()->with('status', 'The report was approved.');
     }
 
-    public function reject(RejectLiquidationRequest $request, Liquidation $liquidation): RedirectResponse
+    public function reject(Request $request, Liquidation $liquidation): RedirectResponse
     {
+        // Keep rejection reasons required and within the database limit.
+        $validated = $request->validate(['rejection_reason' => ['required', 'string', 'max:255']], [
+            'rejection_reason.required' => 'Enter a reason before rejecting this liquidation report.',
+            'rejection_reason.max' => 'The rejection reason may not be longer than 255 characters.',
+        ]);
         $this->authorize('reject', $liquidation);
         if (! $liquidation->isPending()) return back()->with('error', 'Only pending reports can be rejected.');
-        $reason = $request->validated('rejection_reason');
+        $reason = $validated['rejection_reason'];
         $changed = $liquidation->newQuery()->whereKey($liquidation->getKey())->where('approval_status', Liquidation::APPROVAL_PENDING)
             ->update(['approval_status' => Liquidation::APPROVAL_REJECTED, 'rejection_reason' => $reason,
                 'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => now()]);

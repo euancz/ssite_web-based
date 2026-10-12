@@ -1,23 +1,43 @@
 <?php
 
+use App\Http\Controllers\AboutController;
+use App\Http\Controllers\AchievementController;
+use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\LiquidationController;
-use App\Http\Controllers\ActivityController;
-use App\Http\Controllers\AchievementController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\AboutController;
 use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
-// SECURITY: Throttle public endpoints; profile.complete passes guests and redirects incomplete signed-in users.
+// Holds public feature pages and protected actions grouped by middleware.
+
+// Public visitors and completed users can access search and public content pages.
 Route::middleware(['profile.complete', 'throttle:60,1'])->group(function () {
     Route::get('/search', [SearchController::class, 'index'])->name('search.index');
     Route::get('/search/suggest', [SearchController::class, 'suggest'])->name('search.suggest');
 });
+Route::get('/about', AboutController::class)->name('about');
+Route::resource('articles', ArticleController::class)->only(['index', 'show'])
+    ->middleware('profile.complete')->whereNumber('article');
+Route::resource('activities', ActivityController::class)->only(['index', 'show'])
+    ->middleware('profile.complete')->whereNumber('activity');
+Route::resource('achievements', AchievementController::class)->only(['index', 'show'])
+    ->middleware('profile.complete')->whereNumber('achievement');
 
-// SECURITY: Notification reads and state changes are confined to the authenticated, profile-complete owner.
-Route::middleware(['auth', 'profile.complete'])->prefix('notifications')->name('notifications.')->group(function () {
+// Document and liquidation list access follows the configured public-list settings.
+$documentListMiddleware = config('school.documents_list_public', true)
+    ? ['profile.complete'] : ['auth', 'profile.complete'];
+$liquidationListMiddleware = config('school.liquidation_list_public', false)
+    ? ['profile.complete'] : ['auth', 'profile.complete'];
+Route::resource('documents', DocumentController::class)->only(['index', 'show'])
+    ->middleware($documentListMiddleware)->whereNumber('document');
+Route::resource('liquidation', LiquidationController::class)->names('liquidations')
+    ->parameters(['liquidation' => 'liquidation'])->only(['index', 'show'])
+    ->middleware($liquidationListMiddleware)->whereNumber('liquidation');
+
+// Signed-in users with completed profiles can use notifications and PDF delivery routes.
+Route::prefix('notifications')->name('notifications.')->middleware(['auth', 'profile.complete'])->group(function () {
     Route::get('/summary', [NotificationController::class, 'summary'])->name('summary');
     Route::get('/', [NotificationController::class, 'index'])->name('index');
     Route::post('/read-all', [NotificationController::class, 'readAll'])->name('read-all');
@@ -25,145 +45,68 @@ Route::middleware(['auth', 'profile.complete'])->prefix('notifications')->name('
     Route::post('/{notification}/read', [NotificationController::class, 'read'])->whereUuid('notification')->name('read');
     Route::delete('/{notification}', [NotificationController::class, 'destroy'])->whereUuid('notification')->name('destroy');
 });
-
-// Holds shared content pages and post routes; feature listings accept guests, while writes use role gates.
-// Public listing flags decide whether guests may browse metadata; all PDF routes remain authenticated.
-$documentListMiddleware = config('school.documents_list_public', true)
-    ? ['profile.complete'] : ['auth', 'profile.complete'];
-$liquidationListMiddleware = config('school.liquidation_list_public', false)
-    ? ['profile.complete'] : ['auth', 'profile.complete'];
-
-Route::prefix('documents')->name('documents.')->middleware($documentListMiddleware)->group(function () {
-    Route::get('/', [DocumentController::class, 'index'])->name('index');
-    Route::get('/{document}', [DocumentController::class, 'show'])->whereNumber('document')->name('show');
-});
 Route::prefix('documents')->name('documents.')->middleware(['auth', 'profile.complete'])->group(function () {
     Route::get('/{document}/view', [DocumentController::class, 'viewFile'])->whereNumber('document')->name('view');
     Route::get('/{document}/download', [DocumentController::class, 'download'])->whereNumber('document')->name('download');
-});
-Route::prefix('documents')->name('documents.')->middleware(['auth', 'role:officer,adviser', 'profile.complete'])->group(function () {
-    Route::get('/create', [DocumentController::class, 'create'])->name('create');
-    Route::post('/', [DocumentController::class, 'store'])->name('store');
-    Route::get('/{document}/edit', [DocumentController::class, 'edit'])->whereNumber('document')->name('edit');
-    Route::patch('/{document}', [DocumentController::class, 'update'])->whereNumber('document')->name('update');
-    Route::post('/{document}/archive', [DocumentController::class, 'archive'])->whereNumber('document')->name('archive');
-    Route::post('/{document}/restore', [DocumentController::class, 'restore'])->whereNumber('document')->name('restore');
-});
-Route::prefix('documents')->name('documents.')->middleware(['auth', 'role:adviser', 'profile.complete'])->group(function () {
-    Route::post('/bulk-archive', [DocumentController::class, 'bulkArchive'])->name('bulk-archive');
-    Route::post('/{document}/approve', [DocumentController::class, 'approve'])->whereNumber('document')->name('approve');
-    Route::post('/{document}/reject', [DocumentController::class, 'reject'])->whereNumber('document')->name('reject');
-    Route::delete('/{document}', [DocumentController::class, 'destroy'])->whereNumber('document')->name('destroy');
-});
-
-Route::prefix('liquidation')->name('liquidations.')->middleware($liquidationListMiddleware)->group(function () {
-    Route::get('/', [LiquidationController::class, 'index'])->name('index');
-    Route::get('/{liquidation}', [LiquidationController::class, 'show'])->whereNumber('liquidation')->name('show');
 });
 Route::prefix('liquidation')->name('liquidations.')->middleware(['auth', 'profile.complete'])->group(function () {
     Route::get('/{liquidation}/view', [LiquidationController::class, 'viewFile'])->whereNumber('liquidation')->name('view');
     Route::get('/{liquidation}/download', [LiquidationController::class, 'download'])->whereNumber('liquidation')->name('download');
 });
-Route::prefix('liquidation')->name('liquidations.')->middleware(['auth', 'role:officer,adviser', 'profile.complete'])->group(function () {
-    Route::get('/create', [LiquidationController::class, 'create'])->name('create');
-    Route::post('/', [LiquidationController::class, 'store'])->name('store');
-    Route::get('/{liquidation}/edit', [LiquidationController::class, 'edit'])->whereNumber('liquidation')->name('edit');
-    Route::patch('/{liquidation}', [LiquidationController::class, 'update'])->whereNumber('liquidation')->name('update');
-    Route::post('/{liquidation}/archive', [LiquidationController::class, 'archive'])->whereNumber('liquidation')->name('archive');
-    Route::post('/{liquidation}/restore', [LiquidationController::class, 'restore'])->whereNumber('liquidation')->name('restore');
-});
-Route::prefix('liquidation')->name('liquidations.')->middleware(['auth', 'role:adviser', 'profile.complete'])->group(function () {
-    Route::post('/bulk-archive', [LiquidationController::class, 'bulkArchive'])->name('bulk-archive');
-    Route::post('/{liquidation}/approve', [LiquidationController::class, 'approve'])->whereNumber('liquidation')->name('approve');
-    Route::post('/{liquidation}/reject', [LiquidationController::class, 'reject'])->whereNumber('liquidation')->name('reject');
-    Route::delete('/{liquidation}', [LiquidationController::class, 'destroy'])->whereNumber('liquidation')->name('destroy');
-});
 
-// About content is public; officer cards are read-only snapshots supplied by the controller.
-Route::get('/about', AboutController::class)->name('about');
+// Officers and advisers can create, update, archive, or restore module content.
+Route::middleware(['auth', 'role:officer,adviser', 'profile.complete'])->group(function () {
+    Route::resource('articles', ArticleController::class)->only(['create', 'store', 'edit'])->whereNumber('article');
+    Route::patch('/articles/{article}', [ArticleController::class, 'update'])->whereNumber('article')->name('articles.update');
+    Route::post('/articles/{article}/archive', [ArticleController::class, 'archive'])->whereNumber('article')->name('articles.archive');
+    Route::post('/articles/{article}/restore', [ArticleController::class, 'restore'])->whereNumber('article')->name('articles.restore');
 
-// Public Activity listing and detail pages filter results to approved and active records.
-Route::middleware('profile.complete')->group(function () {
-    Route::get('/activities', [ActivityController::class, 'index'])->name('activities.index');
-    Route::get('/activities/{activity}', [ActivityController::class, 'show'])
-        ->whereNumber('activity')
-        ->name('activities.show');
-    Route::get('/achievements', [AchievementController::class, 'index'])->name('achievements.index');
-    Route::get('/achievements/{achievement}', [AchievementController::class, 'show'])
-        ->whereNumber('achievement')
-        ->name('achievements.show');
-});
+    Route::resource('activities', ActivityController::class)->only(['create', 'store', 'edit'])->whereNumber('activity');
+    Route::patch('/activities/{activity}', [ActivityController::class, 'update'])->whereNumber('activity')->name('activities.update');
+    Route::post('/activities/{activity}/archive', [ActivityController::class, 'archive'])->whereNumber('activity')->name('activities.archive');
+    Route::post('/activities/{activity}/restore', [ActivityController::class, 'restore'])->whereNumber('activity')->name('activities.restore');
 
-// Activity creation, editing, archive, and restore require completed officer or adviser accounts.
-Route::prefix('activities')->name('activities.')
-    ->middleware(['auth', 'role:officer,adviser', 'profile.complete'])
-    ->group(function () {
-        Route::get('/create', [ActivityController::class, 'create'])->name('create');
-        Route::post('/', [ActivityController::class, 'store'])->name('store');
-        Route::get('/{activity}/edit', [ActivityController::class, 'edit'])->whereNumber('activity')->name('edit');
-        Route::patch('/{activity}', [ActivityController::class, 'update'])->whereNumber('activity')->name('update');
-        Route::post('/{activity}/archive', [ActivityController::class, 'archive'])->whereNumber('activity')->name('archive');
-        Route::post('/{activity}/restore', [ActivityController::class, 'restore'])->whereNumber('activity')->name('restore');
-    });
+    Route::resource('achievements', AchievementController::class)->only(['create', 'store', 'edit'])->whereNumber('achievement');
+    Route::patch('/achievements/{achievement}', [AchievementController::class, 'update'])->whereNumber('achievement')->name('achievements.update');
+    Route::post('/achievements/{achievement}/archive', [AchievementController::class, 'archive'])->whereNumber('achievement')->name('achievements.archive');
+    Route::post('/achievements/{achievement}/restore', [AchievementController::class, 'restore'])->whereNumber('achievement')->name('achievements.restore');
 
-// Activity review, deletion, and bulk archive require completed adviser accounts.
-Route::prefix('activities')->name('activities.')
-    ->middleware(['auth', 'role:adviser', 'profile.complete'])
-    ->group(function () {
-        Route::post('/bulk-archive', [ActivityController::class, 'bulkArchive'])->name('bulk-archive');
-        Route::post('/{activity}/approve', [ActivityController::class, 'approve'])->whereNumber('activity')->name('approve');
-        Route::post('/{activity}/reject', [ActivityController::class, 'reject'])->whereNumber('activity')->name('reject');
-        Route::delete('/{activity}', [ActivityController::class, 'destroy'])->whereNumber('activity')->name('destroy');
-    });
+    Route::resource('documents', DocumentController::class)->only(['create', 'store', 'edit'])->whereNumber('document');
+    Route::patch('/documents/{document}', [DocumentController::class, 'update'])->whereNumber('document')->name('documents.update');
+    Route::post('/documents/{document}/archive', [DocumentController::class, 'archive'])->whereNumber('document')->name('documents.archive');
+    Route::post('/documents/{document}/restore', [DocumentController::class, 'restore'])->whereNumber('document')->name('documents.restore');
 
-// Achievement creation, editing, archive, and restore require completed officer or adviser accounts.
-Route::prefix('achievements')->name('achievements.')
-    ->middleware(['auth', 'role:officer,adviser', 'profile.complete'])
-    ->group(function () {
-        Route::get('/create', [AchievementController::class, 'create'])->name('create');
-        Route::post('/', [AchievementController::class, 'store'])->name('store');
-        Route::get('/{achievement}/edit', [AchievementController::class, 'edit'])->whereNumber('achievement')->name('edit');
-        Route::patch('/{achievement}', [AchievementController::class, 'update'])->whereNumber('achievement')->name('update');
-        Route::post('/{achievement}/archive', [AchievementController::class, 'archive'])->whereNumber('achievement')->name('archive');
-        Route::post('/{achievement}/restore', [AchievementController::class, 'restore'])->whereNumber('achievement')->name('restore');
-    });
-
-// Achievement review, deletion, and bulk archive require completed adviser accounts.
-Route::prefix('achievements')->name('achievements.')
-    ->middleware(['auth', 'role:adviser', 'profile.complete'])
-    ->group(function () {
-        Route::post('/bulk-archive', [AchievementController::class, 'bulkArchive'])->name('bulk-archive');
-        Route::post('/{achievement}/approve', [AchievementController::class, 'approve'])->whereNumber('achievement')->name('approve');
-        Route::post('/{achievement}/reject', [AchievementController::class, 'reject'])->whereNumber('achievement')->name('reject');
-        Route::delete('/{achievement}', [AchievementController::class, 'destroy'])->whereNumber('achievement')->name('destroy');
-    });
-
-// Public Articles listing and detail pages rely on ArticleController for approved/active visibility.
-Route::middleware('profile.complete')->group(function () {
-    Route::get('/articles', [ArticleController::class, 'index'])->name('articles.index');
-    Route::get('/articles/{article}', [ArticleController::class, 'show'])
-        ->whereNumber('article')
-        ->name('articles.show');
+    Route::resource('liquidation', LiquidationController::class)->names('liquidations')
+        ->parameters(['liquidation' => 'liquidation'])->only(['create', 'store', 'edit'])->whereNumber('liquidation');
+    Route::patch('/liquidation/{liquidation}', [LiquidationController::class, 'update'])->whereNumber('liquidation')->name('liquidations.update');
+    Route::post('/liquidation/{liquidation}/archive', [LiquidationController::class, 'archive'])->whereNumber('liquidation')->name('liquidations.archive');
+    Route::post('/liquidation/{liquidation}/restore', [LiquidationController::class, 'restore'])->whereNumber('liquidation')->name('liquidations.restore');
 });
 
-// Article posting, editing, archive, and restore actions require a completed officer or adviser account.
-Route::prefix('articles')->name('articles.')
-    ->middleware(['auth', 'role:officer,adviser', 'profile.complete'])
-    ->group(function () {
-        Route::get('/create', [ArticleController::class, 'create'])->name('create');
-        Route::post('/', [ArticleController::class, 'store'])->name('store');
-        Route::get('/{article}/edit', [ArticleController::class, 'edit'])->whereNumber('article')->name('edit');
-        Route::patch('/{article}', [ArticleController::class, 'update'])->whereNumber('article')->name('update');
-        Route::post('/{article}/archive', [ArticleController::class, 'archive'])->whereNumber('article')->name('archive');
-        Route::post('/{article}/restore', [ArticleController::class, 'restore'])->whereNumber('article')->name('restore');
-    });
+// Only advisers review, permanently delete, or bulk archive module content.
+Route::middleware(['auth', 'role:adviser', 'profile.complete'])->group(function () {
+    Route::post('/articles/bulk-archive', [ArticleController::class, 'bulkArchive'])->name('articles.bulk-archive');
+    Route::post('/articles/{article}/approve', [ArticleController::class, 'approve'])->whereNumber('article')->name('articles.approve');
+    Route::post('/articles/{article}/reject', [ArticleController::class, 'reject'])->whereNumber('article')->name('articles.reject');
+    Route::delete('/articles/{article}', [ArticleController::class, 'destroy'])->whereNumber('article')->name('articles.destroy');
 
-// Article review, permanent deletion, and bulk archive are adviser-only and profile-gated.
-Route::prefix('articles')->name('articles.')
-    ->middleware(['auth', 'role:adviser', 'profile.complete'])
-    ->group(function () {
-        Route::post('/bulk-archive', [ArticleController::class, 'bulkArchive'])->name('bulk-archive');
-        Route::post('/{article}/approve', [ArticleController::class, 'approve'])->whereNumber('article')->name('approve');
-        Route::post('/{article}/reject', [ArticleController::class, 'reject'])->whereNumber('article')->name('reject');
-        Route::delete('/{article}', [ArticleController::class, 'destroy'])->whereNumber('article')->name('destroy');
-    });
+    Route::post('/activities/bulk-archive', [ActivityController::class, 'bulkArchive'])->name('activities.bulk-archive');
+    Route::post('/activities/{activity}/approve', [ActivityController::class, 'approve'])->whereNumber('activity')->name('activities.approve');
+    Route::post('/activities/{activity}/reject', [ActivityController::class, 'reject'])->whereNumber('activity')->name('activities.reject');
+    Route::delete('/activities/{activity}', [ActivityController::class, 'destroy'])->whereNumber('activity')->name('activities.destroy');
+
+    Route::post('/achievements/bulk-archive', [AchievementController::class, 'bulkArchive'])->name('achievements.bulk-archive');
+    Route::post('/achievements/{achievement}/approve', [AchievementController::class, 'approve'])->whereNumber('achievement')->name('achievements.approve');
+    Route::post('/achievements/{achievement}/reject', [AchievementController::class, 'reject'])->whereNumber('achievement')->name('achievements.reject');
+    Route::delete('/achievements/{achievement}', [AchievementController::class, 'destroy'])->whereNumber('achievement')->name('achievements.destroy');
+
+    Route::post('/documents/bulk-archive', [DocumentController::class, 'bulkArchive'])->name('documents.bulk-archive');
+    Route::post('/documents/{document}/approve', [DocumentController::class, 'approve'])->whereNumber('document')->name('documents.approve');
+    Route::post('/documents/{document}/reject', [DocumentController::class, 'reject'])->whereNumber('document')->name('documents.reject');
+    Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])->whereNumber('document')->name('documents.destroy');
+
+    Route::post('/liquidation/bulk-archive', [LiquidationController::class, 'bulkArchive'])->name('liquidations.bulk-archive');
+    Route::post('/liquidation/{liquidation}/approve', [LiquidationController::class, 'approve'])->whereNumber('liquidation')->name('liquidations.approve');
+    Route::post('/liquidation/{liquidation}/reject', [LiquidationController::class, 'reject'])->whereNumber('liquidation')->name('liquidations.reject');
+    Route::delete('/liquidation/{liquidation}', [LiquidationController::class, 'destroy'])->whereNumber('liquidation')->name('liquidations.destroy');
+});

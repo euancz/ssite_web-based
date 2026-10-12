@@ -58,13 +58,27 @@ Articles, Activities, Achievements, Documents, and Liquidation share this workfl
 
 The Articles, Activities, Achievements, Documents, and Liquidation tables were created with SQL outside this repository's migrations. Adviser review is provided by each module's tabs; the legacy adviser dashboard review page still contains placeholder content for other post types.
 
+## Simplified CRUD pattern
+
+Each content controller keeps its feature actions visible in one place: `index`, `create`, `store`, `show`, `edit`, `update`, and `destroy`, with `approve`, `reject`, `archive`, and `restore` beside them. Short feature validation rules and messages live in `store`, `update`, and `reject`; Officer Term and Profile FormRequests remain because they contain shared or custom validation logic.
+
+Before changing a module, keep this protection checklist:
+
+- Public lists, details, search, home sections, notification links, and downloads expose only `publiclyVisible()` content to students and guests. Return 404 for private records to viewers who may not see them.
+- Write routes keep their role and `profile.complete` middleware. Policies continue to authorize each action.
+- Officers may manage only their own content by comparing `created_by_user_id` with `auth()->user()->user_id`; advisers may manage any item.
+- Model keys and route keys stay custom (`article_id`, `activity_id`, `achievement_id`, `document_id`, `liquidation_id`, `term_id`, and `user_id`). Fillable fields stay limited to domain data; workflow, ownership, and file metadata are set by trusted controller code.
+- Review changes only pending records; rejection needs its bounded reason; restore preserves approval. Permanent deletion stays adviser-only and confirmed in the view.
+- Upload checks, generated names, private PDF storage and authorized delivery, deletion boundaries, notification recipients and failure handling, search escaping and limits, profile completion, and login redirects stay unchanged.
+- State-changing forms keep CSRF and the correct HTTP method. Blade output remains escaped.
+
 ## Site search
 
 Header suggestions and the `/search` page use `app/Support/SiteSearch.php`; `SearchController` serves both the page and JSON suggestion endpoint. Both endpoints are throttled to 60 requests per minute and share the same normalization: control characters become spaces, repeated whitespace is collapsed, input is capped at 100 characters and five words, and queries shorter than two characters return no matches before feature queries run. Every word must match at least one allowed field using bound LIKE patterns with escaped wildcard characters. Results rank title prefixes first, title substrings second, and other-field matches third; newest date breaks ties. The search is LIKE-based and may need FULLTEXT indexes if the data grows large.
 
 Search never queries users or profile fields. Articles, Activities, Achievements, Documents, and Liquidation reuse each model's `publiclyVisible()` scope, so only approved and active records appear. Search fields are feature-specific: Articles use title/body; Activities title/description/location; Achievements title/description/awardee/category; Documents title/description/category; Liquidation title/description; officer snapshots name/position/academic year. Guests can be restricted from Documents or Liquidation by `search_include_documents_for_guests` and `search_include_liquidation_for_guests`, which default to the matching list-public settings. Documents and Liquidation respect those visibility settings; file paths, PDFs, liquidation amounts, and user records are never returned from search. Results link to the feature's show page (officer matches link to About). The suggestion endpoint returns at most three matches per type and ten overall; the results page offers type filters and ten results per page.
 
-To change the minimum query length, dropdown limits, relevance order, or searched columns, edit `app/Support/SiteSearch.php` and the header search UI in `resources/views/layouts/app.blade.php` as applicable.
+To change the minimum query length, dropdown limits, relevance order, or searched columns, edit `app/Support/SiteSearch.php` and `resources/views/layouts/partials/search-scripts.blade.php` as applicable.
 
 ### In-app notifications
 
@@ -88,11 +102,11 @@ Documents and Liquidation store PDFs on Laravel's private `local` disk under `st
 | Location | Purpose | Important files |
 | --- | --- | --- |
 | `routes/` | URL definitions grouped by feature and access role | `web.php`, `auth.php`, `profile.php`, `officer.php`, `adviser.php`, `features.php` |
-| `app/Http/Controllers/` | Login, profile, dashboard, adviser, About, and post request handling | `AboutController.php`, `ArticleController.php`, `ActivityController.php`, `AchievementController.php`, `DocumentController.php`, `LiquidationController.php`, `Auth/`, `Profile/`, `Officer/`, `Adviser/OfficerTermController.php` |
+| `app/Http/Controllers/` | Home, login, profile, dashboard, adviser, About, and post request handling | `HomeController.php`, `AboutController.php`, `ArticleController.php`, `ActivityController.php`, `AchievementController.php`, `DocumentController.php`, `LiquidationController.php`, `Auth/`, `Profile/`, `Officer/`, `Adviser/OfficerTermController.php` |
 | `app/Http/Controllers/` | Public full-page and live suggestion search endpoints | `SearchController.php` |
 | `app/Support/` | Shared site-wide search normalization, matching, result mapping, and highlighting | `SiteSearch.php` |
 | `app/Http/Middleware/` | Authentication, role, and profile-completion gates | `EnsureProfileCompleted.php`, `RoleMiddleware.php` |
-| `app/Http/Requests/` | Validation and authorization grouped by feature | `Activity/`, `Achievement/`, `Article/`, `Document/`, `Liquidation/`, `Profile/`, officer term requests |
+| `app/Http/Requests/` | Validation with shared or custom logic | `Profile/`, `StoreOfficerTermRequest.php`, `UpdateOfficerTermRequest.php`; short content validation is inline in each feature controller |
 | `app/Models/` | User, post, and officer term persistence | `User.php`, `Article.php`, `Activity.php`, `Achievement.php`, `Document.php`, `Liquidation.php`, `OfficerTerm.php` |
 | `app/Policies/` | Per-record authorization for post visibility and actions | `ArticlePolicy.php`, `ActivityPolicy.php`, `AchievementPolicy.php`, `DocumentPolicy.php`, `LiquidationPolicy.php` |
 | `database/migrations/` | Database schema changes | `2026_10_06_010000_make_user_profile_picture_nullable.php`, `2026_10_06_020000_create_officer_terms_table.php`; custom Microsoft, role, and profile migrations; no Articles-table migration exists in this repository |
@@ -101,14 +115,18 @@ Documents and Liquidation store PDFs on Laravel's private `local` disk under `st
 | `app/Notifications/` | Synchronous database notifications for post review and publication | `PostSubmittedForReview.php`, `PostPublished.php`, `PostApproved.php`, `PostRejected.php` |
 | `app/Http/Controllers/` | User-scoped notification list, summary, read, and dismiss endpoints | `NotificationController.php` |
 | `config/` | Environment and school option configuration | `school.php`, `services.php` |
-| `resources/views/` | Public pages, feature pages, dashboards, forms, and UI components | `pages/home.blade.php`; `articles/`, `activities/`, `achievements/`, `documents/`, and `liquidation/` contain feature pages and forms; `layouts/`, `profile/`, `officer/`, `adviser/officers/`, `components/ui/` |
+| `resources/views/` | Public pages, feature pages, dashboards, forms, and UI components | `pages/home.blade.php`; `articles/`, `activities/`, `achievements/`, `documents/`, and `liquidation/` contain feature pages and forms; `layouts/partials/` holds navigation and layout scripts; `layouts/`, `profile/`, `officer/`, `adviser/officers/`, `components/ui/` |
 | `resources/views/search/` | Full search results and filters | `index.blade.php` |
 | `resources/views/notifications/` | Paginated notification history | `index.blade.php` |
 | `bootstrap/` | Framework boot configuration and middleware aliases | `app.php` |
 
+## Route organization
+
+`routes/web.php` maps `/` and `/home` to `HomeController`; it contains route declarations only. `routes/auth.php`, `routes/profile.php`, `routes/officer.php`, and `routes/adviser.php` keep their focused entry points. `routes/features.php` groups public pages, signed-in notification and PDF routes, officer/adviser CRUD routes, and adviser review routes by middleware. CRUD resources expose only the methods present in the route snapshot; `PATCH` updates and special actions remain explicit.
+
 ## Shared navbar behavior
 
-The shared header in `resources/views/layouts/app.blade.php` stays sticky while scrolling. Its measured height sets `--site-header-height` in `public/css/app.css`, which also offsets in-page scroll targets. The layout adds the `is-scrolled` class after the page moves down so the header shadow is absent at the top. The header uses z-index 40; account popovers use z-index 50 inside that header, and native dialogs render above both in the browser top layer.
+The shared header in `resources/views/layouts/app.blade.php` stays sticky while scrolling. Desktop and mobile links are in `resources/views/layouts/partials/navigation.blade.php`; search and account scripts are in their matching `layouts/partials/` files. Its measured height sets `--site-header-height` in `public/css/app.css`, which also offsets in-page scroll targets. The layout adds the `is-scrolled` class after the page moves down so the header shadow is absent at the top. The header uses z-index 40; account popovers use z-index 50 inside that header, and native dialogs render above both in the browser top layer.
 
 Search suggestions render inside the sticky header with visible overflow and remain below modal dialogs. The existing mobile search icon opens the same search form and suggestion behavior.
 
@@ -119,7 +137,9 @@ Search suggestions render inside the sticky header with visible overflow and rem
 - If I want to change when a post sends a notification, open the matching `app/Http/Controllers/<PostType>Controller.php` store, update, approve, or reject action.
 - If I want to change notification text or stored fields, open the matching class in `app/Notifications/`.
 - If I want to change notification ownership checks, paging, polling data, read behavior, or actor profile pictures, open `app/Http/Controllers/NotificationController.php` and `routes/features.php`.
-- If I want to change the bell dropdown, badge, polling interval, or tab dots, open `resources/views/layouts/app.blade.php` and `public/css/app.css`.
+- If I want to change desktop/mobile links, open `resources/views/layouts/partials/navigation.blade.php`.
+- If I want to change search suggestion behavior, open `resources/views/layouts/partials/search-scripts.blade.php`.
+- If I want to change the bell dropdown, badge, polling interval, or tab dots, open `resources/views/layouts/partials/account-scripts.blade.php` and `public/css/app.css`.
 - If I want to change the notifications page layout, open `resources/views/notifications/index.blade.php` and `public/css/app.css`.
 
 ## Gotchas and extension notes

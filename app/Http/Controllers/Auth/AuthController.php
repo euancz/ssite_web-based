@@ -12,6 +12,12 @@ use Illuminate\Support\Facades\Validator;
  */
 class AuthController extends Controller
 {
+    /** Redirect a direct login-page visit to the public home page. */
+    public function redirectToHome()
+    {
+        return redirect('/')->with('error', 'Sign in first before proceeding.');
+    }
+
     // Process login
     /**
      * Validate credentials, regenerate the session, then enforce profile and role routing.
