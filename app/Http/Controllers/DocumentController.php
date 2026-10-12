@@ -2,9 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Document\RejectDocumentRequest;
-use App\Http\Requests\Document\StoreDocumentRequest;
-use App\Http\Requests\Document\UpdateDocumentRequest;
 use App\Models\Document;
 use App\Support\PostNotificationRecipients;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -71,12 +68,27 @@ class DocumentController extends Controller
 
     public function create(): View { $this->authorize('create', Document::class); return view('documents.create'); }
 
-    public function store(StoreDocumentRequest $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
+        // Validate the metadata and configured PDF size before checking the file contents.
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:200'],
+            'description' => ['nullable', 'string'],
+            'category' => ['nullable', 'string', 'max:100'],
+            'file' => ['required', 'file', 'mimes:pdf', 'max:' . config('school.max_pdf_size_kb', 10240)],
+        ], [
+            'title.required' => 'Enter a document title.',
+            'title.max' => 'The title may not be longer than 200 characters.',
+            'category.max' => 'The category may not be longer than 100 characters.',
+            'file.required' => 'Choose a PDF to upload.',
+            'file.mimes' => 'Choose a valid PDF document.',
+            'file.max' => 'The PDF exceeds the configured upload size limit.',
+        ]);
         $this->authorize('create', Document::class);
         $file = $request->file('file');
         $this->assertPdf($file);
-        $document = new Document($request->safe()->only(['title', 'description', 'category']));
+        unset($validated['file']);
+        $document = new Document($validated);
         $document->created_by_user_id = $request->user()->user_id;
         $document->content_status = Document::CONTENT_ACTIVE;
         $autoApprove = $request->user()->isAdviser() && config('school.adviser_posts_auto_approved', true);
@@ -100,13 +112,27 @@ class DocumentController extends Controller
         return view('documents.edit', compact('document'));
     }
 
-    public function update(UpdateDocumentRequest $request, Document $document): RedirectResponse
+    public function update(Request $request, Document $document): RedirectResponse
     {
+        // Keep a replacement PDF optional while validating the same editable metadata.
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:200'],
+            'description' => ['nullable', 'string'],
+            'category' => ['nullable', 'string', 'max:100'],
+            'file' => ['nullable', 'file', 'mimes:pdf', 'max:' . config('school.max_pdf_size_kb', 10240)],
+        ], [
+            'title.required' => 'Enter a document title.',
+            'title.max' => 'The title may not be longer than 200 characters.',
+            'category.max' => 'The category may not be longer than 100 characters.',
+            'file.mimes' => 'Choose a valid PDF document.',
+            'file.max' => 'The PDF exceeds the configured upload size limit.',
+        ]);
         $this->authorize('update', $document);
         $wasApproved = $document->isApproved();
         $wasRejected = $document->isRejected();
         $oldPath = $document->file_path;
-        $document->fill($request->safe()->only(['title', 'description', 'category']));
+        unset($validated['file']);
+        $document->fill($validated);
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $this->assertPdf($file);
@@ -161,11 +187,16 @@ class DocumentController extends Controller
         return back()->with('status', 'The document was approved.');
     }
 
-    public function reject(RejectDocumentRequest $request, Document $document): RedirectResponse
+    public function reject(Request $request, Document $document): RedirectResponse
     {
+        // Keep rejection reasons required and within the database limit.
+        $validated = $request->validate(['rejection_reason' => ['required', 'string', 'max:255']], [
+            'rejection_reason.required' => 'Enter a reason before rejecting this document.',
+            'rejection_reason.max' => 'The rejection reason may not be longer than 255 characters.',
+        ]);
         $this->authorize('reject', $document);
         if (! $document->isPending()) return back()->with('error', 'Only pending documents can be rejected.');
-        $reason = $request->validated('rejection_reason');
+        $reason = $validated['rejection_reason'];
         $changed = $document->newQuery()->whereKey($document->getKey())->where('approval_status', Document::APPROVAL_PENDING)
             ->update(['approval_status' => Document::APPROVAL_REJECTED, 'rejection_reason' => $reason,
                 'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => now()]);

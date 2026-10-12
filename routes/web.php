@@ -1,24 +1,14 @@
 <?php
 
+use App\Http\Controllers\HomeController;
 use App\Http\Middleware\EnsureProfileCompleted;
 use App\Http\Middleware\RequireAuthentication;
-use App\Models\Article;
-use App\Models\Achievement;
-use App\Models\Activity;
 use Illuminate\Support\Facades\Route;
 
-$homePage = function () {
-    // SECURITY: Every home feature uses its public scope so private posts cannot appear here.
-    $articles = Article::publiclyVisible()->with('author')->latest('created_at')->take(1)->get();
-    $activities = Activity::publiclyVisible()->with('author')->latest('activity_date')->take(1)->get();
-    $achievements = Achievement::publiclyVisible()->with('author')->latest('achievement_date')->take(1)->get();
+// Holds the public home page and its authenticated, profile-complete alias.
+Route::get('/', HomeController::class)->middleware('profile.complete');
 
-    return view('pages.home', compact('articles', 'activities', 'achievements'));
-};
-
-Route::get('/', $homePage)->middleware('profile.complete');
-
-Route::get('/home', $homePage)
+Route::get('/home', HomeController::class)
     ->middleware([RequireAuthentication::class, EnsureProfileCompleted::class])
     ->name('home');
 

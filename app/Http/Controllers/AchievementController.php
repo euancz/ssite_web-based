@@ -2,9 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Achievement\RejectAchievementRequest;
-use App\Http\Requests\Achievement\StoreAchievementRequest;
-use App\Http\Requests\Achievement\UpdateAchievementRequest;
 use App\Models\Achievement;
 use App\Support\PostNotificationRecipients;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -104,11 +101,30 @@ class AchievementController extends Controller
     }
 
     /** Store officer submissions as pending and adviser submissions according to school settings. */
-    public function store(StoreAchievementRequest $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
+        // Validate editable achievement fields and the optional image before writing.
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:200'],
+            'description' => ['required', 'string'],
+            'awardee' => ['nullable', 'string', 'max:200'],
+            'category' => ['nullable', 'string', 'max:100'],
+            'achievement_date' => ['nullable', 'date'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ], [
+            'title.required' => 'Enter an achievement title.',
+            'title.max' => 'The title may not be longer than 200 characters.',
+            'description.required' => 'Enter the achievement description.',
+            'awardee.max' => 'The awardee may not be longer than 200 characters.',
+            'category.max' => 'The category may not be longer than 100 characters.',
+            'achievement_date.date' => 'Enter a valid achievement date.',
+            'image.image' => 'Choose a valid image file.',
+            'image.mimes' => 'The image must be a JPG, JPEG, PNG, or WebP file.',
+            'image.max' => 'The image may not be larger than 2 MB.',
+        ]);
         $this->authorize('create', Achievement::class);
         $user = $request->user();
-        $achievement = new Achievement($request->validated());
+        $achievement = new Achievement($validated);
         $achievement->created_by_user_id = $user->user_id;
         $achievement->content_status = Achievement::CONTENT_ACTIVE;
         $autoApprove = $user->isAdviser() && config('school.adviser_posts_auto_approved', true);
@@ -142,13 +158,32 @@ class AchievementController extends Controller
     }
 
     /** Update achievement fields and return rejected or configured approved officer edits to review. */
-    public function update(UpdateAchievementRequest $request, Achievement $achievement): RedirectResponse
+    public function update(Request $request, Achievement $achievement): RedirectResponse
     {
+        // Keep replacement images optional and retain the same field validation as creation.
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:200'],
+            'description' => ['required', 'string'],
+            'awardee' => ['nullable', 'string', 'max:200'],
+            'category' => ['nullable', 'string', 'max:100'],
+            'achievement_date' => ['nullable', 'date'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ], [
+            'title.required' => 'Enter an achievement title.',
+            'title.max' => 'The title may not be longer than 200 characters.',
+            'description.required' => 'Enter the achievement description.',
+            'awardee.max' => 'The awardee may not be longer than 200 characters.',
+            'category.max' => 'The category may not be longer than 100 characters.',
+            'achievement_date.date' => 'Enter a valid achievement date.',
+            'image.image' => 'Choose a valid image file.',
+            'image.mimes' => 'The image must be a JPG, JPEG, PNG, or WebP file.',
+            'image.max' => 'The image may not be larger than 2 MB.',
+        ]);
         $this->authorize('update', $achievement);
         $wasApproved = $achievement->isApproved();
         $wasRejected = $achievement->isRejected();
         $oldImage = $achievement->image;
-        $achievement->fill($request->validated());
+        $achievement->fill($validated);
 
         if ($request->hasFile('image')) {
             // SECURITY: Save a generated replacement before deleting the old module-owned file.
@@ -225,14 +260,19 @@ class AchievementController extends Controller
     }
 
     /** Reject only pending achievements after the adviser reason has been validated. */
-    public function reject(RejectAchievementRequest $request, Achievement $achievement): RedirectResponse
+    public function reject(Request $request, Achievement $achievement): RedirectResponse
     {
+        // Keep adviser rejection reasons required and within the database limit.
+        $validated = $request->validate(['rejection_reason' => ['required', 'string', 'max:255']], [
+            'rejection_reason.required' => 'Enter a reason before rejecting this achievement.',
+            'rejection_reason.max' => 'The rejection reason may not be longer than 255 characters.',
+        ]);
         $this->authorize('reject', $achievement);
         if (! $achievement->isPending()) {
             return back()->with('error', 'Only pending achievements can be rejected.');
         }
 
-        $reason = $request->validated('rejection_reason');
+        $reason = $validated['rejection_reason'];
         $changed = $achievement->newQuery()->whereKey($achievement->getKey())->where('approval_status', Achievement::APPROVAL_PENDING)
             ->update(['approval_status' => Achievement::APPROVAL_REJECTED, 'rejection_reason' => $reason,
                 'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => now()]);

@@ -16,13 +16,16 @@ class AboutController extends Controller
     {
         $current = AcademicYear::current();
         $officers = OfficerTerm::current()->inDisplayOrder()->get();
-        $history = OfficerTerm::past()->get()->groupBy('academic_year')
-            ->sortKeysDesc()
-            ->map(fn ($terms) => $terms->sortBy(fn ($term) => [
-                (($positionIndex = array_search($term->position, config('school.officer_positions', []), true)) !== false) ? $positionIndex : 999,
-                $term->sort_order,
-                $term->name,
-            ])->values());
+        $history = OfficerTerm::past()->get()->groupBy('academic_year')->sortKeysDesc();
+        foreach ($history as $year => $terms) {
+            // Keep unknown positions after configured roles, then use the saved order and name.
+            $history[$year] = $terms->sortBy(function ($term): array {
+                $positionIndex = array_search($term->position, config('school.officer_positions', []), true);
+                if ($positionIndex === false) $positionIndex = 999;
+
+                return [$positionIndex, $term->sort_order, $term->name];
+            })->values();
+        }
 
         return view('pages.about', compact('current', 'officers', 'history'));
     }

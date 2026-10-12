@@ -2,9 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Article\RejectArticleRequest;
-use App\Http\Requests\Article\StoreArticleRequest;
-use App\Http\Requests\Article\UpdateArticleRequest;
 use App\Models\Article;
 use App\Support\PostNotificationRecipients;
 use Illuminate\Contracts\View\View;
@@ -112,11 +109,24 @@ class ArticleController extends Controller
     /**
      * Store officer submissions as pending and adviser submissions per the school setting.
      */
-    public function store(StoreArticleRequest $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
+        // Validate only editable article fields; policy checks still protect the write below.
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:200'],
+            'content' => ['required', 'string'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ], [
+            'title.required' => 'Enter an article title.',
+            'title.max' => 'The title may not be longer than 200 characters.',
+            'content.required' => 'Enter the article content.',
+            'image.image' => 'Choose a valid image file.',
+            'image.mimes' => 'The image must be a JPG, JPEG, PNG, or WebP file.',
+            'image.max' => 'The image may not be larger than 2 MB.',
+        ]);
         $this->authorize('create', Article::class);
         $user = $request->user();
-        $article = new Article($request->validated());
+        $article = new Article($validated);
         $article->created_by_user_id = $user->user_id;
         $article->content_status = Article::CONTENT_ACTIVE;
         $autoApprove = $user->isAdviser() && config('school.adviser_posts_auto_approved', true);
@@ -155,13 +165,26 @@ class ArticleController extends Controller
     /**
      * Update article content and reset review when a rejected or approved officer post changes.
      */
-    public function update(UpdateArticleRequest $request, Article $article): RedirectResponse
+    public function update(Request $request, Article $article): RedirectResponse
     {
+        // Keep replacement images optional and validate the same editable fields as creation.
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:200'],
+            'content' => ['required', 'string'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ], [
+            'title.required' => 'Enter an article title.',
+            'title.max' => 'The title may not be longer than 200 characters.',
+            'content.required' => 'Enter the article content.',
+            'image.image' => 'Choose a valid image file.',
+            'image.mimes' => 'The image must be a JPG, JPEG, PNG, or WebP file.',
+            'image.max' => 'The image may not be larger than 2 MB.',
+        ]);
         $this->authorize('update', $article);
         $wasApproved = $article->isApproved();
         $wasRejected = $article->isRejected();
         $oldImage = $article->image;
-        $article->fill($request->validated());
+        $article->fill($validated);
 
         if ($request->hasFile('image')) {
             // SECURITY: Store the replacement with a generated name before forgetting the old path.
@@ -246,14 +269,19 @@ class ArticleController extends Controller
     /**
      * Reject only pending articles after validating an adviser reason.
      */
-    public function reject(RejectArticleRequest $request, Article $article): RedirectResponse
+    public function reject(Request $request, Article $article): RedirectResponse
     {
+        // A rejection always includes the reason shown to the officer.
+        $validated = $request->validate(['rejection_reason' => ['required', 'string', 'max:255']], [
+            'rejection_reason.required' => 'Enter a reason before rejecting this article.',
+            'rejection_reason.max' => 'The rejection reason may not be longer than 255 characters.',
+        ]);
         $this->authorize('reject', $article);
         if (! $article->isPending()) {
             return back()->with('error', 'Only pending articles can be rejected.');
         }
 
-        $reason = $request->validated('rejection_reason');
+        $reason = $validated['rejection_reason'];
         $changed = $article->newQuery()->whereKey($article->getKey())->where('approval_status', Article::APPROVAL_PENDING)
             ->update(['approval_status' => Article::APPROVAL_REJECTED, 'rejection_reason' => $reason,
                 'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => now()]);

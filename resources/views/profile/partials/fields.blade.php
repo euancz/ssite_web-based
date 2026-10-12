@@ -1,5 +1,4 @@
 @php
-    $programsByInstitute = $programsByInstitute ?? [];
     $selectedInstitute = old('institute', $user->institute);
     $selectedProgram = old('program', $user->program);
 @endphp
@@ -61,19 +60,12 @@
         </div>
         <div class="dashboard-form-field">
             <label for="profile-program">Program</label>
+            {{-- Each program's allowed institutes are prepared in ProfileController. --}}
             <select id="profile-program" name="program" required>
                 <option value="">Select program</option>
                 @foreach ($programs as $program)
-                    @php
-                        $programInstitutes = [];
-                        foreach ($programsByInstitute as $instituteName => $institutePrograms) {
-                            if (in_array($program, $institutePrograms, true)) {
-                                $programInstitutes[] = $instituteName;
-                            }
-                        }
-                    @endphp
                     <option value="{{ $program }}"
-                            data-institutes="{{ implode('|', $programInstitutes) }}"
+                            data-institutes="{{ implode('|', $institutesByProgram[$program] ?? []) }}"
                             @selected($selectedProgram === $program)>
                         {{ $program }}
                     </option>
