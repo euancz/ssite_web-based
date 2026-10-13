@@ -37,7 +37,7 @@
 
     <section class="articles-list" aria-label="{{ $tabLabels[$tab] }} documents">
         @forelse ($documents as $document)
-            <article class="article-list-item">
+            <article class="article-list-item card-hover">
                 <div class="article-list-image" aria-hidden="true" style="display:grid;place-items:center"><svg class="icon" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3.75h6l4 4v12.5H7a2 2 0 0 1-2-2v-12.5a2 2 0 0 1 2-2zM13 3.75v4h4M8 14h8M8 17h8"/></svg><span>PDF</span></div>
                 <div class="article-list-content">
                     <div class="article-badges"><x-ui.status-badge :status="$document->approval_status" />@if ($document->isArchived()) <x-ui.status-badge status="archived" /> @endif</div>

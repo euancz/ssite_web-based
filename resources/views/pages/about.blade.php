@@ -47,9 +47,10 @@
 		{{-- Year-specific snapshots keep the public list stable when user profiles change. --}}
 		<div class="officers-grid">
 			@forelse ($officers as $officer)
-				<article class="officer-card">
+				<article class="officer-card card-hover" tabindex="0">
 					@if ($officer->photoUrl())
-						<img class="officer-photo" src="{{ $officer->photoUrl() }}" alt="Officer portrait for {{ $officer->name }}">
+						{{-- The fixed frame clips photo zoom while preserving the officer grid dimensions. --}}
+						<div class="officer-photo-frame card-media"><img class="officer-photo" src="{{ $officer->photoUrl() }}" alt="Officer portrait for {{ $officer->name }}"></div>
 					@else
 						<div class="officer-photo officer-photo-placeholder" role="img" aria-label="Photo unavailable">Photo</div>
 					@endif
@@ -102,9 +103,10 @@
 					@endcan
 					<div class="officers-grid">
 						@foreach ($yearOfficers as $officer)
-							<article class="officer-card">
+							<article class="officer-card card-hover" tabindex="0">
 								@if ($officer->photoUrl())
-									<img class="officer-photo" src="{{ $officer->photoUrl() }}" alt="Officer portrait for {{ $officer->name }}">
+									{{-- The fixed frame clips photo zoom while preserving the officer grid dimensions. --}}
+									<div class="officer-photo-frame card-media"><img class="officer-photo" src="{{ $officer->photoUrl() }}" alt="Officer portrait for {{ $officer->name }}"></div>
 								@else
 									<div class="officer-photo officer-photo-placeholder" role="img" aria-label="Photo unavailable">Photo</div>
 								@endif

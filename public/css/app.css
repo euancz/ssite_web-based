@@ -5,6 +5,12 @@
     --ssite-navy: #17324D;
     --ssite-navy-soft: #3E5972;
     --ssite-line: #3DAFEA;
+    --hover-duration: 350ms;
+    --hover-card-duration: 200ms;
+    --hover-easing: ease-out;
+    --hover-scale: 1.07;
+    --hover-lift: -3px;
+    --hover-card-shadow: 0 8px 20px rgb(23 50 77 / 12%);
 }
 
 html {
@@ -1804,6 +1810,105 @@ ol {
     padding: 16px;
     background: #fff;
     box-shadow: 0 4px 14px rgb(23 50 77 / 6%);
+}
+
+/* Keep card motion inside each card and let the image frame clip zoom without changing its layout size. */
+.card-hover {
+    transition: transform var(--hover-card-duration) var(--hover-easing), box-shadow var(--hover-card-duration) var(--hover-easing);
+}
+
+.card-media:focus-visible,
+.article-list-content a:focus-visible,
+.officer-card:focus-visible {
+    outline: 2px solid var(--ssite-navy);
+    outline-offset: 3px;
+}
+
+.card-media {
+    display: block;
+    overflow: hidden;
+    isolation: isolate;
+    border-radius: 4px;
+}
+
+.featured-image-link.card-media,
+.secondary-article-image-link.card-media {
+    border-radius: 8px;
+}
+
+.article-list-item > .card-media {
+    border-radius: 4px;
+}
+
+.card-media img {
+    transition: transform var(--hover-duration) ease-out;
+}
+
+.article-list-image svg {
+    transition: transform 160ms ease-out;
+}
+
+.article-list-content h2 a,
+.article-title-link {
+    transition: color 150ms ease, opacity 150ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    /* Hover is limited to devices with a precise pointer so touch taps never leave a card raised. */
+    .card-hover:hover,
+    .card-hover:focus-within {
+        transform: translateY(var(--hover-lift));
+        box-shadow: var(--hover-card-shadow);
+    }
+
+    .article-list-item.card-hover:hover,
+    .article-list-item.card-hover:focus-within {
+        position: relative;
+        z-index: 2;
+    }
+
+    .card-hover:hover .card-media img,
+    .card-hover:focus-within .card-media img {
+        transform: scale(var(--hover-scale));
+        /* Promote the image only during motion instead of reserving a layer for every card. */
+        will-change: transform;
+    }
+
+    .card-hover:hover .article-list-image svg,
+    .card-hover:focus-within .article-list-image svg {
+        transform: translateY(-2px);
+        will-change: transform;
+    }
+
+    .card-hover:hover .article-list-content h2 a,
+    .card-hover:focus-within .article-list-content h2 a,
+    .card-hover:hover .article-title-link,
+    .card-hover:focus-within .article-title-link {
+        color: var(--ssite-navy-soft);
+    }
+}
+
+/* Hover motion is limited to precise pointer devices; reduced motion keeps cards and images still. */
+@media (prefers-reduced-motion: reduce) {
+    .card-hover,
+    .card-media img,
+    .article-list-image svg,
+    .article-list-content h2 a,
+    .article-title-link {
+        transform: none !important;
+        transition: none !important;
+        will-change: auto !important;
+    }
+
+    .card-hover:hover,
+    .card-hover:focus-within {
+        box-shadow: none !important;
+    }
+
+    .article-list-item.card-hover:hover,
+    .article-list-item.card-hover:focus-within {
+        box-shadow: 0 4px 14px rgb(23 50 77 / 6%) !important;
+    }
 }
 
 .article-list-image,

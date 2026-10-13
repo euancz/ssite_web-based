@@ -61,8 +61,8 @@
     {{-- Achievement cards contain only records returned by the active role and tab query. --}}
     <section class="articles-list" aria-label="{{ $tabLabels[$tab] }} achievements">
         @forelse ($achievements as $achievement)
-            <article class="article-list-item">
-                <a href="{{ route('achievements.show', $achievement) }}" aria-label="Read {{ $achievement->title }}">
+            <article class="article-list-item card-hover">
+                <a class="card-media" href="{{ route('achievements.show', $achievement) }}" aria-label="Read {{ $achievement->title }}">
                     <img class="article-list-image" src="{{ $achievement->imageUrl() }}" alt="">
                 </a>
                 <div class="article-list-content">

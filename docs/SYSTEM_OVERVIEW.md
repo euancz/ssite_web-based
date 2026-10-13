@@ -147,6 +147,15 @@ Search suggestions render inside the sticky header with visible overflow and rem
 - If I want to change the bell dropdown, badge, polling interval, or tab dots, open `resources/views/layouts/partials/account-scripts.blade.php` and `public/css/app.css`.
 - If I want to change the notifications page layout, open `resources/views/notifications/index.blade.php` and `public/css/app.css`.
 
+## Content card motion
+
+- If I want to change the content card zoom amount, open `public/css/app.css` (`--hover-scale`).
+- If I want to change the image or card speed and easing, open `public/css/app.css` (`--hover-duration`, `--hover-card-duration`, and `--hover-easing`).
+- If I want to change the card lift or shadow, open `public/css/app.css` (`--hover-lift` and `--hover-card-shadow`).
+- If I want to add the effect to a new content card, add `card-hover` and wrap its image in `card-media` in the matching public content view; keep management UI out of this pattern.
+- If I want to turn off content card motion, remove the `card-hover` and `card-media` classes from the affected view.
+- Content card transforms create stacking contexts. Keep card lists visibly overflowing and check row menus against the sticky header, navigation pill, and About gear menu when adding a card effect.
+
 ## Gotchas and extension notes
 
 - **Custom user key:** `User` uses `user_id`, not Laravel's conventional `id`. Use the model key or explicitly target `user_id` in validation and relationships.

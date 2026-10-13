@@ -67,8 +67,8 @@
     {{-- Article cards show only the rows returned for this role and its active tab. --}}
     <section class="articles-list" aria-label="{{ $tabLabels[$tab] }} articles">
         @forelse ($articles as $article)
-            <article class="article-list-item">
-                <a href="{{ route('articles.show', $article) }}" aria-label="Read {{ $article->title }}">
+            <article class="article-list-item card-hover">
+                <a class="card-media" href="{{ route('articles.show', $article) }}" aria-label="Read {{ $article->title }}">
                     <img class="article-list-image" src="{{ $article->imageUrl() }}" alt="">
                 </a>
                 <div class="article-list-content">

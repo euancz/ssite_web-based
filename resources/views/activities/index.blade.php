@@ -61,8 +61,8 @@
     {{-- Activity cards contain only records returned by the active role and tab query. --}}
     <section class="articles-list" aria-label="{{ $tabLabels[$tab] }} activities">
         @forelse ($activities as $activity)
-            <article class="article-list-item">
-                <a href="{{ route('activities.show', $activity) }}" aria-label="Read {{ $activity->title }}">
+            <article class="article-list-item card-hover">
+                <a class="card-media" href="{{ route('activities.show', $activity) }}" aria-label="Read {{ $activity->title }}">
                     <img class="article-list-image" src="{{ $activity->imageUrl() }}" alt="">
                 </a>
                 <div class="article-list-content">

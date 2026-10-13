@@ -22,6 +22,9 @@ Use this guide to find the file that owns a common change.
 | Adviser tabs or the More menu | `resources/views/components/ui/workflow-tabs.blade.php` and the matching feature `index.blade.php`; role whitelists stay in the feature controllers |
 | Feature row menus or adviser bulk selection bars | The matching `resources/views/<feature>/index.blade.php`, `resources/views/components/ui/workflow-tabs.blade.php`, and `public/css/app.css` |
 | Dashboard stat cards | `resources/views/components/ui/stat-card.blade.php` and the matching adviser/officer dashboard view |
+| Content card zoom amount, speed, or easing | `public/css/app.css` (`--hover-scale`, `--hover-duration`, `--hover-card-duration`, `--hover-easing`) |
+| Content card lift or shadow | `public/css/app.css` (`--hover-lift`, `--hover-card-shadow`) |
+| Add or turn off content card motion | `public/css/app.css` (`.card-hover`, `.card-media`) and the matching public content view |
 | The account menus, bell dropdown, unread badge, polling, or tab dots | `resources/views/layouts/partials/account-scripts.blade.php` and `public/css/app.css` |
 | Notification list page or All/Unread filter | `resources/views/notifications/index.blade.php` and `app/Http/Controllers/NotificationController.php` |
 | Notification summary JSON, owned read/dismiss actions, or stale-link handling | `app/Http/Controllers/NotificationController.php` and `routes/features.php` |
@@ -109,6 +112,8 @@ Search behavior: `/search` and `/search/suggest` share `SiteSearch::normalize()`
 Notification behavior: notification endpoints require authentication and completed profiles. Every list, summary, read, read-all, dismiss, and avatar lookup is scoped to the signed-in user's notification relation. The summary returns unread total, unread `published` counts by post type for navigation dots, and the latest ten notifications. The list paginates fifteen and supports `all` or `unread`. Opening a notice marks only that notice read; missing, archived, or no-longer-published content gets a friendly fallback. Read-all and dismiss never affect another user's records. Publication notices are sent only for approved active content; archiving and restoring do not send them.
 
 Sticky navbar gotcha: an ancestor with `overflow: auto`, `overflow: hidden`, or `overflow: scroll` can block or change sticky positioning. Check the shared header's full parent chain before adding overflow rules.
+
+Content card gotcha: transforms create stacking contexts that can trap row menus below adjacent content. Keep the image clipping frame separate from the card, leave list overflow visible, and check card menus against the sticky header, navigation pill, and About gear menu.
 
 ## Officer history
 

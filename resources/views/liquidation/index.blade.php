@@ -27,7 +27,7 @@
 
     <section class="articles-list" aria-label="{{ $tabLabels[$tab] }} liquidation reports">
         @forelse ($liquidations as $liquidation)
-            <article class="article-list-item"><div class="article-list-image" aria-hidden="true" style="display:grid;place-items:center"><svg class="icon" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3.75h6l4 4v12.5H7a2 2 0 0 1-2-2v-12.5a2 2 0 0 1 2-2zM13 3.75v4h4M8 14h8M8 17h8"/></svg><span>PDF</span></div><div class="article-list-content">
+            <article class="article-list-item card-hover"><div class="article-list-image" aria-hidden="true" style="display:grid;place-items:center"><svg class="icon" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3.75h6l4 4v12.5H7a2 2 0 0 1-2-2v-12.5a2 2 0 0 1 2-2zM13 3.75v4h4M8 14h8M8 17h8"/></svg><span>PDF</span></div><div class="article-list-content">
                 <div class="article-badges"><x-ui.status-badge :status="$liquidation->approval_status" />@if ($liquidation->isArchived())<x-ui.status-badge status="archived" />@endif</div>
                 <h2><a href="{{ route('liquidations.show', $liquidation) }}">{{ $liquidation->title }}</a></h2>
                 <div class="article-list-meta"><span>{{ $liquidation->formattedAmount() }}</span><span>{{ $liquidation->report_date?->format('M j, Y') ?? 'No report date' }}</span><span>{{ number_format($liquidation->file_size / 1024, 1) }} KB</span><span>{{ $liquidation->author?->name ?? 'Former member' }}</span><span>{{ $liquidation->created_at?->format('M j, Y') }}</span></div>
