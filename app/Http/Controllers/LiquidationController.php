@@ -31,6 +31,8 @@ class LiquidationController extends Controller
         $user = $request->user();
         $allowedTabs = $user?->isAdviser() ? ['published', 'pending', 'rejected', 'archived', 'all']
             : ($user?->isOfficer() ? ['published', 'mine', 'archived'] : ['published']);
+        // SECURITY: Pending totals are queried only for advisers and never reach public or student views.
+        $pendingCount = $user?->isAdviser() ? Liquidation::pending()->count() : null;
         $tab = $request->query('tab', 'published');
         // SECURITY: Role-specific tab allowlists prevent private workflow states leaking to students.
         if (! in_array($tab, $allowedTabs, true)) $tab = 'published';
@@ -49,7 +51,7 @@ class LiquidationController extends Controller
         // SECURITY: Visiting Liquidation clears only this user's unread publication notices for this tab.
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['liquidation'])->update(['read_at' => now()]);
-        return view('liquidation.index', compact('liquidations', 'allowedTabs', 'tab', 'search'));
+        return view('liquidation.index', compact('liquidations', 'allowedTabs', 'tab', 'search', 'pendingCount'));
     }
 
     public function show(Liquidation $liquidation): View

@@ -1,4 +1,4 @@
-{{-- Desktop and mobile links keep their existing role checks. --}}
+{{-- The pill stays public and role neutral; role shortcuts live in the account menu so each destination appears once. --}}
         {{-- Desktop nav links row --}}
         <nav class="desktop-navigation">
             <ul class="site-nav-list">
@@ -34,45 +34,12 @@
                     </button>
                     <ul class="site-nav-dropdown-menu activities-dropdown-menu">
                         <li><a href="{{ url('/activities') }}" class="site-dropdown-link">All Activities</a></li>
-                        <li><a href="{{ url('/activities') }}" class="site-dropdown-link">Latest Activities</a></li>
-                        <li><a href="{{ url('/activities') }}" class="site-dropdown-link">Featured Activities</a></li>
-                        <li><a href="{{ url('/activities') }}" class="site-dropdown-link">Most Viewed</a></li>
                     </ul>
                 </li>
 
                 <li class="site-nav-item"><a href="{{ url('/achievements') }}" class="site-nav-link">Achievements <span class="nav-unread-dot {{ ($notificationNavCounts['achievement'] ?? 0) ? '' : 'hidden' }}" data-notification-post-type="achievement" aria-label="Unread published achievements"></span></a></li>
                 <li class="site-nav-item"><a href="{{ url('/liquidation') }}" class="site-nav-link">Liquidation <span class="nav-unread-dot {{ ($notificationNavCounts['liquidation'] ?? 0) ? '' : 'hidden' }}" data-notification-post-type="liquidation" aria-label="Unread published liquidations"></span></a></li>
                 <li class="site-nav-item"><a href="{{ url('/documents') }}" class="site-nav-link">Documents <span class="nav-unread-dot {{ ($notificationNavCounts['document'] ?? 0) ? '' : 'hidden' }}" data-notification-post-type="document" aria-label="Unread published documents"></span></a></li>
-                @auth
-                    {{-- SECURITY: This shared dashboard link is limited by the canPost ability to officers and advisers. --}}
-                    @can('view-post-dashboard')
-                        <li class="site-nav-item">
-                            <a href="{{ route(auth()->user()->dashboardRoute()) }}"
-                               class="site-nav-link {{ request()->routeIs('officer.dashboard', 'adviser.dashboard') ? 'is-active' : '' }}">
-                                Dashboard
-                            </a>
-                        </li>
-                        <li class="site-nav-item">
-                            <a href="{{ route('articles.create') }}" class="site-nav-link">New Article</a>
-                        </li>
-                    @endcan
-                    {{-- SECURITY: Review tools are shown only to advisers; route middleware enforces the same rule. --}}
-                    @can('review-posts')
-                        <li class="site-nav-item">
-                            <a href="{{ route('adviser.reviews.index') }}" class="site-nav-link">Review Posts</a>
-                        </li>
-                    @endcan
-                    {{-- SECURITY: User-role management is adviser-only and protected again on its routes. --}}
-                    @can('manage-users')
-                        <li class="site-nav-item">
-                            <a href="{{ route('adviser.users.index') }}" class="site-nav-link">Manage Users</a>
-                        </li>
-                    @endcan
-                    {{-- SECURITY: Only advisers can manage officer-term records. --}}
-                    @can('manage-users')
-                        <li class="site-nav-item"><a href="{{ route('adviser.officers.index') }}" class="site-nav-link">Manage Officers</a></li>
-                    @endcan
-                @endauth
             </ul>
         </nav>
 
@@ -113,9 +80,6 @@
                         </summary>
                         <ul class="mobile-nav-sublist">
                             <li><a href="{{ url('/activities') }}" class="mobile-nav-sublink">All Activities</a></li>
-                            <li><a href="{{ url('/activities') }}" class="mobile-nav-sublink">Latest Activities</a></li>
-                            <li><a href="{{ url('/activities') }}" class="mobile-nav-sublink">Featured Activities</a></li>
-                            <li><a href="{{ url('/activities') }}" class="mobile-nav-sublink">Most Viewed</a></li>
                         </ul>
                     </details>
                 </li>
@@ -123,35 +87,5 @@
                 <li class="mobile-nav-item"><a href="{{ url('/achievements') }}" class="mobile-nav-link">Achievements <span class="nav-unread-dot {{ ($notificationNavCounts['achievement'] ?? 0) ? '' : 'hidden' }}" data-notification-post-type="achievement" aria-label="Unread published achievements"></span></a></li>
                 <li class="mobile-nav-item"><a href="{{ url('/liquidation') }}" class="mobile-nav-link">Liquidation <span class="nav-unread-dot {{ ($notificationNavCounts['liquidation'] ?? 0) ? '' : 'hidden' }}" data-notification-post-type="liquidation" aria-label="Unread published liquidations"></span></a></li>
                 <li class="mobile-nav-item"><a href="{{ url('/documents') }}" class="mobile-nav-link">Documents <span class="nav-unread-dot {{ ($notificationNavCounts['document'] ?? 0) ? '' : 'hidden' }}" data-notification-post-type="document" aria-label="Unread published documents"></span></a></li>
-                @auth
-                    {{-- SECURITY: The mobile dashboard link uses the same officer/adviser Gate as desktop navigation. --}}
-                    @can('view-post-dashboard')
-                        <li class="mobile-nav-item">
-                            <a href="{{ route(auth()->user()->dashboardRoute()) }}"
-                               class="mobile-nav-link {{ request()->routeIs('officer.dashboard', 'adviser.dashboard') ? 'is-active' : '' }}">
-                                Dashboard
-                            </a>
-                        </li>
-                        <li class="mobile-nav-item">
-                            <a href="{{ route('articles.create') }}" class="mobile-nav-link">New Article</a>
-                        </li>
-                    @endcan
-                    {{-- SECURITY: Only advisers see the review queue shortcut. --}}
-                    @can('review-posts')
-                        <li class="mobile-nav-item">
-                            <a href="{{ route('adviser.reviews.index') }}" class="mobile-nav-link">Review Posts</a>
-                        </li>
-                    @endcan
-                    {{-- SECURITY: Only advisers see user-role management. --}}
-                    @can('manage-users')
-                        <li class="mobile-nav-item">
-                            <a href="{{ route('adviser.users.index') }}" class="mobile-nav-link">Manage Users</a>
-                        </li>
-                    @endcan
-                    {{-- SECURITY: Only advisers can manage officer-term records. --}}
-                    @can('manage-users')
-                        <li class="mobile-nav-item"><a href="{{ route('adviser.officers.index') }}" class="mobile-nav-link">Manage Officers</a></li>
-                    @endcan
-                @endauth
             </ul>
         </nav>

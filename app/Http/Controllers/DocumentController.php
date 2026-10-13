@@ -31,6 +31,8 @@ class DocumentController extends Controller
         $user = $request->user();
         $allowedTabs = $user?->isAdviser() ? ['published', 'pending', 'rejected', 'archived', 'all']
             : ($user?->isOfficer() ? ['published', 'mine', 'archived'] : ['published']);
+        // SECURITY: Pending totals are queried only for advisers and never reach public or student views.
+        $pendingCount = $user?->isAdviser() ? Document::pending()->count() : null;
         $tab = $request->query('tab', 'published');
         // SECURITY: A tab whitelist prevents guests and students from requesting private workflow rows.
         if (! in_array($tab, $allowedTabs, true)) $tab = 'published';
@@ -55,7 +57,7 @@ class DocumentController extends Controller
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['document'])->update(['read_at' => now()]);
 
-        return view('documents.index', compact('documents', 'allowedTabs', 'tab', 'search', 'category', 'categories'));
+        return view('documents.index', compact('documents', 'allowedTabs', 'tab', 'search', 'category', 'categories', 'pendingCount'));
     }
 
     public function show(Document $document): View

@@ -115,7 +115,7 @@ Documents and Liquidation store PDFs on Laravel's private `local` disk under `st
 | `app/Notifications/` | Synchronous database notifications for post review and publication | `PostSubmittedForReview.php`, `PostPublished.php`, `PostApproved.php`, `PostRejected.php` |
 | `app/Http/Controllers/` | User-scoped notification list, summary, read, and dismiss endpoints | `NotificationController.php` |
 | `config/` | Environment and school option configuration | `school.php`, `services.php` |
-| `resources/views/` | Public pages, feature pages, dashboards, forms, and UI components | `pages/home.blade.php`; `articles/`, `activities/`, `achievements/`, `documents/`, and `liquidation/` contain feature pages and forms; `layouts/partials/` holds navigation and layout scripts; `layouts/`, `profile/`, `officer/`, `adviser/officers/`, `components/ui/` |
+| `resources/views/` | Public pages, feature pages, dashboards, forms, and UI components | `pages/home.blade.php`; `articles/`, `activities/`, `achievements/`, `documents/`, and `liquidation/` contain feature pages and forms; `layouts/partials/` holds navigation and layout scripts; `layouts/`, `profile/`, `officer/`, `adviser/officers/`, `components/ui/` including `workflow-tabs.blade.php` |
 | `resources/views/search/` | Full search results and filters | `index.blade.php` |
 | `resources/views/notifications/` | Paginated notification history | `index.blade.php` |
 | `bootstrap/` | Framework boot configuration and middleware aliases | `app.php` |
@@ -126,7 +126,7 @@ Documents and Liquidation store PDFs on Laravel's private `local` disk under `st
 
 ## Shared navbar behavior
 
-The shared header in `resources/views/layouts/app.blade.php` stays sticky while scrolling. Desktop and mobile links are in `resources/views/layouts/partials/navigation.blade.php`; search and account scripts are in their matching `layouts/partials/` files. Its measured height sets `--site-header-height` in `public/css/app.css`, which also offsets in-page scroll targets. The layout adds the `is-scrolled` class after the page moves down so the header shadow is absent at the top. The header uses z-index 40; account popovers use z-index 50 inside that header, and native dialogs render above both in the browser top layer.
+The shared header in `resources/views/layouts/app.blade.php` stays sticky while scrolling. Desktop and mobile links are in `resources/views/layouts/partials/navigation.blade.php`; the pill contains the same public destinations for guests, students, officers, and advisers. Signed-in profile and Settings controls are in the avatar dropdown; officers/advisers get a Manage group with Dashboard, and advisers also get Review Posts, Manage Users, and Manage Officers. Search and account scripts are in their matching `layouts/partials/` files. Its measured height sets `--site-header-height` in `public/css/app.css`, which also offsets in-page scroll targets. The layout adds the `is-scrolled` class after the page moves down so the header shadow is absent at the top. The header uses z-index 40; account popovers use z-index 50 inside that header, and native dialogs render above both in the browser top layer.
 
 Search suggestions render inside the sticky header with visible overflow and remain below modal dialogs. The existing mobile search icon opens the same search form and suggestion behavior.
 
@@ -138,6 +138,11 @@ Search suggestions render inside the sticky header with visible overflow and rem
 - If I want to change notification text or stored fields, open the matching class in `app/Notifications/`.
 - If I want to change notification ownership checks, paging, polling data, read behavior, or actor profile pictures, open `app/Http/Controllers/NotificationController.php` and `routes/features.php`.
 - If I want to change desktop/mobile links, open `resources/views/layouts/partials/navigation.blade.php`.
+- If I want to change the avatar dropdown, role link groups, or keyboard behavior, open `resources/views/layouts/app.blade.php`, `resources/views/layouts/partials/account-scripts.blade.php`, and `public/css/app.css`.
+- If I want to change the adviser tabs or the More menu, open `resources/views/components/ui/workflow-tabs.blade.php` and the matching feature index view; the controller owns each role whitelist.
+- If I want to change feature row menus or bulk selection actions, open the matching `resources/views/<feature>/index.blade.php` and `resources/views/components/ui/workflow-tabs.blade.php`.
+- If I want to change dashboard stat cards, open `resources/views/components/ui/stat-card.blade.php` and `resources/views/adviser/dashboard.blade.php` or `resources/views/officer/dashboard.blade.php`.
+- If I want to change About page gear options or edit mode, open `resources/views/pages/about.blade.php`, `public/css/about.css`, and `app/Http/Controllers/Adviser/OfficerTermController.php`.
 - If I want to change search suggestion behavior, open `resources/views/layouts/partials/search-scripts.blade.php`.
 - If I want to change the bell dropdown, badge, polling interval, or tab dots, open `resources/views/layouts/partials/account-scripts.blade.php` and `public/css/app.css`.
 - If I want to change the notifications page layout, open `resources/views/notifications/index.blade.php` and `public/css/app.css`.

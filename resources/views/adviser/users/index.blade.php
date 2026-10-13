@@ -4,6 +4,7 @@
 
 @section('content')
 <div class="dashboard-page">
+    {{-- Role changes remain adviser-only and use the same endpoint, policy checks, and validation. --}}
     <x-ui.page-header title="Manage Users" subtitle="View accounts and assign student or officer roles." />
 
     {{-- Report the result of a completed role update without hiding validation errors. --}}
@@ -31,33 +32,24 @@
                 <input id="users-search" type="search" name="search" value="{{ request('search') }}"
                        maxlength="100" placeholder="Name, email, student number, institute, program, year">
             </div>
-            <div class="dashboard-form-field">
-                <label for="users-role-filter">Filter by role</label>
-                <select id="users-role-filter" name="role">
-                    <option value="">All roles</option>
-                    @foreach (['student', 'officer', 'adviser'] as $role)
-                        <option value="{{ $role }}" @selected(request('role') === $role)>
-                            {{ ucfirst($role) }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+            <details class="dashboard-extra-filters"><summary>Filters</summary>
+                <div class="dashboard-form-field"><label for="users-role-filter">Filter by role</label>
+                    <select id="users-role-filter" name="role"><option value="">All roles</option>
+                        @foreach (['student', 'officer', 'adviser'] as $role)<option value="{{ $role }}" @selected(request('role') === $role)>{{ ucfirst($role) }}</option>@endforeach
+                    </select>
+                </div>
+            </details>
             <button type="submit" class="dashboard-button">Search</button>
         </form>
 
         <x-ui.data-table label="Users">
-            <table class="dashboard-table">
+            <table class="dashboard-table adviser-users-table">
                 <thead>
                     <tr>
                         <th scope="col">Name</th>
-                        <th scope="col">Email</th>
-                        <th scope="col">Student number</th>
-                        <th scope="col">Institute</th>
                         <th scope="col">Program</th>
-                        <th scope="col">Year level</th>
-                        <th scope="col">Current role</th>
-                        <th scope="col">Joined</th>
-                        <th scope="col">Change role</th>
+                        <th scope="col">Role</th>
+                        <th scope="col">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -66,49 +58,36 @@
                         <tr>
                             {{-- Keep the existing user link and identify each account with its shared avatar. --}}
                             <td><a href="{{ route('adviser.users.show', $user) }}" class="adviser-user-link"><x-ui.avatar :user="$user" size="sm" />{{ $user->name }}</a></td>
-                            <td>{{ $user->email }}</td>
-                            <td>{{ $user->student_number ?? '-' }}</td>
-                            <td>{{ $user->institute ?? '-' }}</td>
                             <td>{{ $user->program ?? '-' }}</td>
-                            <td>{{ $user->year_level ?? '-' }}</td>
                             <td><x-ui.status-badge :status="$user->role" /></td>
-                            <td>{{ $user->created_at?->format('M j, Y') ?? '-' }}</td>
                             <td>
                                 {{-- SECURITY: Advisers cannot change their own role or promote/demote another adviser. --}}
                                 @if (auth()->user()->is($user) || $user->isAdviser())
-                                    <span class="dashboard-muted">
-                                        {{ auth()->user()->is($user) ? 'Your role cannot be changed' : 'Adviser role is protected' }}
-                                    </span>
+                                    <span class="dashboard-muted">{{ auth()->user()->is($user) ? 'Your role is protected' : 'Adviser role is protected' }}</span>
                                 @else
-                                    <form method="POST" action="{{ route('adviser.users.update-role', $user) }}"
-                                          class="dashboard-role-form">
-                                        @csrf
-                                        @method('PUT')
-                                        <label class="visually-hidden" for="role-{{ $user->getKey() }}">
-                                            Role for {{ $user->name }}
-                                        </label>
-                                        <select id="role-{{ $user->getKey() }}" name="role"
-                                                data-position-id="position-{{ $user->getKey() }}" required>
-                                            @foreach (['student', 'officer'] as $role)
-                                                <option value="{{ $role }}" @selected($user->role === $role)>
-                                                    {{ ucfirst($role) }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        <label class="visually-hidden" for="position-{{ $user->getKey() }}">
-                                            Officer position for {{ $user->name }}
-                                        </label>
-                                        <input id="position-{{ $user->getKey() }}" type="text" name="officer_position"
-                                               value="{{ $user->officer_position }}" maxlength="100"
-                                               placeholder="Officer position" autocomplete="off">
-                                        <button type="submit" class="dashboard-button dashboard-button-small">Save</button>
-                                    </form>
+                                    <button type="button" class="dashboard-text-button" data-role-dialog-open="role-dialog-{{ $user->user_id }}">Change role</button>
+                                    <dialog id="role-dialog-{{ $user->user_id }}" class="reject-modal" aria-labelledby="role-title-{{ $user->user_id }}">
+                                        <div class="reject-modal-content"><h2 id="role-title-{{ $user->user_id }}">Change role for {{ $user->name }}</h2>
+                                            <form method="POST" action="{{ route('adviser.users.update-role', $user) }}" class="dashboard-role-form">
+                                                @csrf @method('PUT')
+                                                <label for="role-{{ $user->user_id }}">Role</label>
+                                                <select id="role-{{ $user->user_id }}" name="role" data-position-id="position-{{ $user->user_id }}" required>
+                                                    @foreach (['student', 'officer'] as $role)<option value="{{ $role }}" @selected($user->role === $role)>{{ ucfirst($role) }}</option>@endforeach
+                                                </select>
+                                                <div data-position-field="position-{{ $user->user_id }}" @if ($user->role !== 'officer') hidden @endif>
+                                                    <label for="position-{{ $user->user_id }}">Officer position</label>
+                                                    <input id="position-{{ $user->user_id }}" type="text" name="officer_position" value="{{ $user->officer_position }}" maxlength="100" placeholder="Officer position" autocomplete="off">
+                                                </div>
+                                                <div class="reject-modal-actions"><button type="button" class="dashboard-button dashboard-button-secondary" data-role-dialog-close>Cancel</button><button type="submit" class="dashboard-button">Save role</button></div>
+                                            </form>
+                                        </div>
+                                    </dialog>
                                 @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="dashboard-empty-state">No users match these filters.</td>
+                            <td colspan="4" class="dashboard-empty-state">No users match these filters.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -142,14 +121,18 @@
         // Match the position field's browser-required state to the selected role; server validation remains authoritative.
         document.querySelectorAll('[data-position-id]').forEach((roleSelect) => {
             const positionInput = document.getElementById(roleSelect.dataset.positionId);
+            const positionField = document.querySelector(`[data-position-field="${roleSelect.dataset.positionId}"]`);
             const syncPositionRequirement = () => {
                 if (positionInput) {
                     positionInput.required = roleSelect.value === 'officer';
+                    positionField.hidden = roleSelect.value !== 'officer';
                 }
             };
 
             roleSelect.addEventListener('change', syncPositionRequirement);
             syncPositionRequirement();
         });
+        document.querySelectorAll('[data-role-dialog-open]').forEach((button) => button.addEventListener('click', () => document.getElementById(button.dataset.roleDialogOpen)?.showModal()));
+        document.querySelectorAll('[data-role-dialog-close]').forEach((button) => button.addEventListener('click', () => button.closest('dialog')?.close()));
     </script>
 @endpush

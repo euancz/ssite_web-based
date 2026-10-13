@@ -36,6 +36,8 @@ class ArticleController extends Controller
         $allowedTabs = $user?->isAdviser()
             ? ['published', 'pending', 'rejected', 'archived', 'all']
             : ($user?->isOfficer() ? ['published', 'mine', 'archived'] : ['published']);
+        // SECURITY: Pending totals are queried only for advisers and never reach public or student views.
+        $pendingCount = $user?->isAdviser() ? Article::pending()->count() : null;
         $tab = $request->query('tab', 'published');
 
         // SECURITY: Unknown or role-hidden tabs fall back to Published before building the query.
@@ -74,7 +76,7 @@ class ArticleController extends Controller
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['article'])->update(['read_at' => now()]);
 
-        return view('articles.index', compact('articles', 'allowedTabs', 'tab', 'search'));
+        return view('articles.index', compact('articles', 'allowedTabs', 'tab', 'search', 'pendingCount'));
     }
 
     /**

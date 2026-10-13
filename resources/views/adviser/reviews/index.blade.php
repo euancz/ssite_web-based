@@ -46,18 +46,21 @@
                                 @else
                                     <button type="button" class="dashboard-text-button" disabled>Preview</button>
                                 @endif
-                                {{-- SECURITY: Only advisers review pending items; write endpoints are not implemented yet. --}}
+                                {{-- SECURITY: Only advisers see review controls; this legacy page has no write endpoints. --}}
                                 @if ($post->status === 'pending')
-                                    <button type="button" class="dashboard-text-button" disabled>Approve</button>
-                                    <button type="button" class="dashboard-text-button"
-                                            data-modal-open="reject-post-modal">Reject</button>
+                                    <details class="article-row-menu floating-row-menu"><summary aria-label="More review actions">&#8942;</summary>
+                                        <div class="article-row-menu-panel">
+                                        <button type="button" class="dashboard-text-button" disabled>Approve</button>
+                                        <button type="button" class="dashboard-text-button" data-modal-open="reject-post-modal">Reject</button>
+                                        </div>
+                                    </details>
                                 @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="6" class="dashboard-empty-state">
-                                No {{ $activeStatus }} posts. Post storage and review actions are not implemented yet.
+                                No {{ $activeStatus }} posts.
                             </td>
                         </tr>
                     @endforelse

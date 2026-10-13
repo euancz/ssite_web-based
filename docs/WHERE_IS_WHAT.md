@@ -18,6 +18,10 @@ Use this guide to find the file that owns a common change.
 | The measured header height used for anchor offsets | `resources/views/layouts/app.blade.php` and `public/css/app.css` (`--site-header-height`) |
 | The navbar shadow after scrolling | `resources/views/layouts/app.blade.php` and `public/css/app.css` (`.site-header.is-scrolled`) |
 | The desktop/mobile navigation or role-gated links | `resources/views/layouts/partials/navigation.blade.php` |
+| The avatar dropdown, role groups, or keyboard navigation | `resources/views/layouts/app.blade.php`, `resources/views/layouts/partials/account-scripts.blade.php`, and `public/css/app.css` |
+| Adviser tabs or the More menu | `resources/views/components/ui/workflow-tabs.blade.php` and the matching feature `index.blade.php`; role whitelists stay in the feature controllers |
+| Feature row menus or adviser bulk selection bars | The matching `resources/views/<feature>/index.blade.php`, `resources/views/components/ui/workflow-tabs.blade.php`, and `public/css/app.css` |
+| Dashboard stat cards | `resources/views/components/ui/stat-card.blade.php` and the matching adviser/officer dashboard view |
 | The account menus, bell dropdown, unread badge, polling, or tab dots | `resources/views/layouts/partials/account-scripts.blade.php` and `public/css/app.css` |
 | Notification list page or All/Unread filter | `resources/views/notifications/index.blade.php` and `app/Http/Controllers/NotificationController.php` |
 | Notification summary JSON, owned read/dismiss actions, or stale-link handling | `app/Http/Controllers/NotificationController.php` and `routes/features.php` |
@@ -38,6 +42,7 @@ Use this guide to find the file that owns a common change.
 | Where private document and liquidation PDFs are stored | `config/filesystems.php` (`local` disk root) and each module controller |
 | Officer position choices and their About page order | `config/school.php` (`officer_positions`) |
 | Adding next year's officers or copying the previous roster | Adviser page at `/adviser/officers`; controller in `app/Http/Controllers/Adviser/OfficerTermController.php` |
+| About page gear options, edit mode, or officer card controls | `resources/views/pages/about.blade.php`, `public/css/about.css`, and `app/Http/Controllers/Adviser/OfficerTermController.php` |
 | Fixing a typo in a past year's officer | Adviser page at `/adviser/officers`, then select that academic year and edit the row |
 | About page officer card and history layout | `resources/views/pages/about.blade.php` and `public/css/about.css` |
 | The navbar avatar and initials fallback | `resources/views/components/ui/avatar.blade.php` and `app/Models/User.php` |

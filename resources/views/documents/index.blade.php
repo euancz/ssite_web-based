@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Documents')
 
@@ -13,14 +13,9 @@
         </x-slot:actions>
     </x-ui.page-header>
 
-    {{-- SECURITY: Only tabs allowed for this role are rendered; unknown query values fall back in the controller. --}}
-    @php($tabLabels = ['published' => 'Published', 'mine' => 'My Uploads', 'pending' => 'Pending Review', 'rejected' => 'Rejected', 'archived' => 'Archived', 'all' => 'All'])
-    <nav class="dashboard-tabs" aria-label="Document sections">
-        @foreach ($allowedTabs as $allowedTab)
-            <a href="{{ route('documents.index', ['tab' => $allowedTab, 'search' => $search ?: null, 'category' => $category ?: null]) }}"
-               @class(['dashboard-tab', 'is-active' => $tab === $allowedTab]) @if ($tab === $allowedTab) aria-current="page" @endif>{{ $tabLabels[$allowedTab] }}</a>
-        @endforeach
-    </nav>
+    {{-- SECURITY: This display reshapes allowed tabs only; controller whitelists and Published fallback stay authoritative. --}}
+    <x-ui.workflow-tabs route-name="documents.index" :allowed-tabs="$allowedTabs" :active-tab="$tab" :search="$search" :extra-query="['category' => $category ?: null]" :pending-count="$pendingCount" />
+    @php($tabLabels = ['published' => 'Published', 'mine' => 'My Posts', 'pending' => 'Pending Review', 'rejected' => 'Rejected', 'archived' => 'Archived', 'all' => 'All'])
 
     <form method="GET" action="{{ route('documents.index') }}" class="dashboard-filter-form">
         <input type="hidden" name="tab" value="{{ $tab }}">
@@ -35,7 +30,7 @@
     @can('bulkArchive', \App\Models\Document::class)
         @if ($tab !== 'published' && $documents->isNotEmpty())
             <form id="document-bulk-archive" method="POST" action="{{ route('documents.bulk-archive') }}">@csrf</form>
-            <div class="article-bulk-actions"><button type="button" class="dashboard-button dashboard-button-secondary" onclick="document.getElementById('bulk-archive-document-modal').showModal()">Archive selected</button></div>
+            <div class="article-bulk-actions" data-selection-bar hidden><span data-selection-count>0 selected</span><button type="button" class="dashboard-button dashboard-button-secondary" onclick="document.getElementById('bulk-archive-document-modal').showModal()">Archive selected</button></div>
             <dialog id="bulk-archive-document-modal" class="reject-modal"><div class="reject-modal-content"><h2>Archive selected documents?</h2><p>Selected documents leave Published and keep their approval status.</p><div class="reject-modal-actions"><button type="button" class="dashboard-button dashboard-button-secondary" onclick="document.getElementById('bulk-archive-document-modal').close()">Cancel</button><button type="submit" form="document-bulk-archive" class="dashboard-button">Archive selected</button></div></div></dialog>
         @endif
     @endcan
@@ -56,7 +51,11 @@
                         @can('download', $document)<a class="dashboard-text-button" href="{{ route('documents.download', $document) }}">Download</a>@endcan
                         {{-- Guests may follow the authorized file routes, which send them through login first. --}}
                         @guest<a class="dashboard-text-button" href="{{ route('documents.view', $document) }}">View PDF</a><a class="dashboard-text-button" href="{{ route('documents.download', $document) }}">Download</a>@endguest
-                        @can('update', $document)<a class="dashboard-text-button" href="{{ route('documents.edit', $document) }}">Edit</a>@endcan
+                        @can('update', $document)
+                            <details class="article-row-menu"><summary aria-label="More actions for {{ $document->title }}">&#8942;</summary>
+                                <a class="dashboard-text-button" href="{{ route('documents.edit', $document) }}">Edit</a>
+                            </details>
+                        @endcan
                         @can('bulkArchive', \App\Models\Document::class) @if (! $document->isArchived())<label class="dashboard-muted"><input type="checkbox" name="document_ids[]" value="{{ $document->document_id }}" form="document-bulk-archive"> Select</label>@endif @endcan
                     </div>
                 </div>

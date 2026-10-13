@@ -32,6 +32,8 @@ class ActivityController extends Controller
         $allowedTabs = $user?->isAdviser()
             ? ['published', 'pending', 'rejected', 'archived', 'all']
             : ($user?->isOfficer() ? ['published', 'mine', 'archived'] : ['published']);
+        // SECURITY: Pending totals are queried only for advisers and never reach public or student views.
+        $pendingCount = $user?->isAdviser() ? Activity::pending()->count() : null;
         $tab = $request->query('tab', 'published');
 
         // SECURITY: Unknown or role-hidden tabs fall back to Published before querying records.
@@ -71,7 +73,7 @@ class ActivityController extends Controller
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['activity'])->update(['read_at' => now()]);
 
-        return view('activities.index', compact('activities', 'allowedTabs', 'tab', 'search'));
+        return view('activities.index', compact('activities', 'allowedTabs', 'tab', 'search', 'pendingCount'));
     }
 
     /** Show public activities or private records to their author or an adviser. */

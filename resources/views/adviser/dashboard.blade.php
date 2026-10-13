@@ -9,16 +9,14 @@
         subtitle="Adviser dashboard - Review and manage the SSITE community."
     >
         <x-slot:actions>
-            <a href="{{ route('adviser.users.index') }}" class="dashboard-button dashboard-button-secondary">Manage Users</a>
             <a href="{{ route('adviser.reviews.index') }}" class="dashboard-button">Review Posts</a>
         </x-slot:actions>
     </x-ui.page-header>
 
     <section class="dashboard-stat-grid" aria-label="Adviser statistics">
-        <x-ui.stat-card label="Pending Reviews" :value="$pendingPosts->count()" />
-        <x-ui.stat-card label="Approved This Month" :value="$approvedThisMonth" />
-        <x-ui.stat-card label="Total Officers" :value="$totalOfficers" />
-        <x-ui.stat-card label="Total Students" :value="$totalStudents" />
+        <x-ui.stat-card label="Pending Reviews" :value="$pendingPosts->count()" :href="route('adviser.reviews.index', ['status' => 'pending'])" />
+        <x-ui.stat-card label="Total Officers" :value="$totalOfficers" :href="route('adviser.users.index', ['role' => 'officer'])" />
+        <x-ui.stat-card label="Total Students" :value="$totalStudents" :href="route('adviser.users.index', ['role' => 'student'])" />
     </section>
 
     <section class="dashboard-panel">
@@ -47,21 +45,9 @@
                 @endif
             </article>
         @empty
-            <p class="dashboard-empty-state">
-                There are no pending reviews. Post storage and review actions are not implemented yet.
-            </p>
+            <p class="dashboard-empty-state">No posts need your review right now.</p>
         @endforelse
     </section>
 
-    <div class="dashboard-quick-links">
-        <a href="{{ route('adviser.users.index') }}" class="dashboard-panel dashboard-quick-link">
-            <strong>Manage Users</strong>
-            <span>Search accounts and assign student or officer roles.</span>
-        </a>
-        <a href="{{ route('adviser.reviews.index') }}" class="dashboard-panel dashboard-quick-link">
-            <strong>Review Posts</strong>
-            <span>Open the post review queue.</span>
-        </a>
-    </div>
 </div>
 @endsection

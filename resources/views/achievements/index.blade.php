@@ -14,22 +14,9 @@
         </x-slot:actions>
     </x-ui.page-header>
 
-    {{-- Role-whitelisted tabs keep private workflow states out of student and guest navigation. --}}
-    @php
-        $tabLabels = [
-            'published' => 'Published', 'mine' => 'My Posts', 'pending' => 'Pending Review',
-            'rejected' => 'Rejected', 'archived' => 'Archived', 'all' => 'All',
-        ];
-    @endphp
-    <nav class="dashboard-tabs" aria-label="Achievement sections">
-        @foreach ($allowedTabs as $allowedTab)
-            <a href="{{ route('achievements.index', ['tab' => $allowedTab, 'search' => $search ?: null]) }}"
-               @class(['dashboard-tab', 'is-active' => $tab === $allowedTab])
-               @if ($tab === $allowedTab) aria-current="page" @endif>
-                {{ $tabLabels[$allowedTab] }}
-            </a>
-        @endforeach
-    </nav>
+    {{-- SECURITY: This display reshapes allowed tabs only; controller whitelists and Published fallback stay authoritative. --}}
+    <x-ui.workflow-tabs route-name="achievements.index" :allowed-tabs="$allowedTabs" :active-tab="$tab" :search="$search" :pending-count="$pendingCount" />
+    @php($tabLabels = ['published' => 'Published', 'mine' => 'My Posts', 'pending' => 'Pending Review', 'rejected' => 'Rejected', 'archived' => 'Archived', 'all' => 'All'])
 
     {{-- Search stays within the role-approved tab and matches achievement details or author names. --}}
     <form method="GET" action="{{ route('achievements.index') }}" class="dashboard-filter-form">
@@ -51,7 +38,8 @@
             <form id="achievement-bulk-archive" method="POST" action="{{ route('achievements.bulk-archive') }}">
                 @csrf
             </form>
-            <div class="article-bulk-actions">
+            <div class="article-bulk-actions" data-selection-bar hidden>
+                <span data-selection-count>0 selected</span>
                 <button type="button" class="dashboard-button dashboard-button-secondary" onclick="document.getElementById('bulk-archive-achievement-modal').showModal()">
                     Archive selected
                 </button>
@@ -101,7 +89,10 @@
                         @endcan
                         {{-- SECURITY: Only the achievement owner or an adviser can edit; the endpoint repeats this check. --}}
                         @can('update', $achievement)
-                            <a class="dashboard-text-button" href="{{ route('achievements.edit', $achievement) }}">Edit</a>
+                            <details class="article-row-menu">
+                                <summary aria-label="More actions for {{ $achievement->title }}">&#8942;</summary>
+                                <a class="dashboard-text-button" href="{{ route('achievements.edit', $achievement) }}">Edit</a>
+                            </details>
                         @endcan
                         {{-- SECURITY: Only advisers can select achievements for bulk archive. --}}
                         @can('bulkArchive', \App\Models\Achievement::class)

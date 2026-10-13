@@ -67,6 +67,80 @@
     margin-top: 52px;
 }
 
+/* Adviser controls use the existing SSITE colors and stay outside public card-grid flow. */
+.officer-heading-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.officer-heading-row .about-section-title { margin-bottom: 28px; }
+.about-manage-menu { position: relative; z-index: 25; margin: 0 0 28px auto; }
+.about-manage-menu > summary {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    border: 1px solid #cfe6ee;
+    border-radius: 4px;
+    background: #effaff;
+    color: #17324d;
+    cursor: pointer;
+    list-style: none;
+}
+.about-manage-menu > summary::-webkit-details-marker { display: none; }
+.about-manage-menu > summary svg { width: 20px; height: 20px; }
+.about-manage-dropdown {
+    position: absolute;
+    z-index: 35;
+    top: calc(100% + 4px);
+    right: 0;
+    display: grid;
+    min-width: 13rem;
+    padding: 4px;
+    border: 1px solid #cfe6ee;
+    border-radius: 4px;
+    background: #effaff;
+    box-shadow: 0 8px 20px rgb(17 42 55 / 14%);
+}
+.about-manage-dropdown a,
+.about-manage-dropdown button {
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 0;
+    background: transparent;
+    color: #17324d;
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+.about-manage-dropdown a:hover,
+.about-manage-dropdown button:hover,
+.about-manage-menu > summary:focus-visible,
+.about-manage-dropdown a:focus-visible,
+.about-manage-dropdown button:focus-visible { background: #dff3fa; outline: 2px solid #17324d; outline-offset: 1px; }
+.about-history-menu { position: absolute; top: 0; right: 10px; margin: 0; }
+.leadership-item { position: relative; overflow: visible; }
+.leadership-item:has(.about-history-menu) > summary { padding-right: 68px; }
+.about-officer-controls { display: flex; justify-content: center; gap: 8px; margin-top: 8px; }
+.about-officer-controls a,
+.about-officer-controls button { display: grid; min-width: 44px; min-height: 44px; place-items: center; padding: 8px; border: 1px solid #cfe6ee; background: #effaff; color: #17324d; text-decoration: none; cursor: pointer; }
+.about-officer-controls svg { width: 18px; height: 18px; }
+.officer-card h3,
+.officer-card p { overflow: hidden; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.about-officers-empty { grid-column: 1 / -1; text-align: center; }
+.about-officers-empty p { margin: 0 0 12px; }
+.about-officer-controls[hidden] { display: none; }
+
+@media (max-width: 639px) {
+    .officer-heading-row { align-items: flex-start; }
+    .officer-heading-row .about-section-title { flex: 1; font-size: 16px; }
+    .officers-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .about-manage-dropdown { max-width: calc(100vw - 24px); }
+}
+
 .about-section-title {
     margin-bottom: 28px;
 }

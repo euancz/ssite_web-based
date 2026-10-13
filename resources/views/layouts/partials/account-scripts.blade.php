@@ -32,25 +32,47 @@
             const accountMenuToggle = document.getElementById('account-menu-toggle');
             const accountMenu = document.getElementById('account-menu');
 
+            // Role shortcuts live beside profile actions here, so shared navigation stays identical for every role.
+            // SECURITY: Adviser and posting links are rendered only by their existing Gates in the Blade menu.
             if (accountMenuToggle && accountMenu) {
+                const accountMenuItems = () => [...accountMenu.querySelectorAll('[role="menuitem"]')];
+                const closeAccountMenu = (returnFocus = false) => {
+                    accountMenuToggle.setAttribute('aria-expanded', 'false');
+                    accountMenu.classList.add('hidden');
+                    if (returnFocus) accountMenuToggle.focus();
+                };
                 accountMenuToggle.addEventListener('click', () => {
                     const isOpen = accountMenuToggle.getAttribute('aria-expanded') === 'true';
                     accountMenuToggle.setAttribute('aria-expanded', String(!isOpen));
                     accountMenu.classList.toggle('hidden', isOpen);
+                    if (!isOpen) accountMenuItems()[0]?.focus();
                 });
 
                 document.addEventListener('click', (event) => {
                     if (!accountMenu.contains(event.target) && !accountMenuToggle.contains(event.target)) {
-                        accountMenuToggle.setAttribute('aria-expanded', 'false');
-                        accountMenu.classList.add('hidden');
+                        closeAccountMenu();
                     }
                 });
 
-                document.addEventListener('keydown', (event) => {
+                accountMenu.addEventListener('keydown', (event) => {
+                    const items = accountMenuItems();
+                    const index = items.indexOf(document.activeElement);
                     if (event.key === 'Escape') {
-                        accountMenuToggle.setAttribute('aria-expanded', 'false');
-                        accountMenu.classList.add('hidden');
+                        event.preventDefault();
+                        closeAccountMenu(true);
+                    } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                        event.preventDefault();
+                        const direction = event.key === 'ArrowDown' ? 1 : -1;
+                        items[(index + direction + items.length) % items.length]?.focus();
                     }
+                });
+                accountMenuToggle.addEventListener('keydown', (event) => {
+                    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                        event.preventDefault();
+                        accountMenuToggle.click();
+                        const items = accountMenuItems();
+                        (event.key === 'ArrowDown' ? items[0] : items.at(-1))?.focus();
+                    } else if (event.key === 'Escape') closeAccountMenu(true);
                 });
             }
 

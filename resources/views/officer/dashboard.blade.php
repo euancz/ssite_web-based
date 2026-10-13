@@ -4,30 +4,38 @@
 
 @section('content')
 <div class="dashboard-page">
-    {{-- Shared page header identifies the signed-in officer and keeps the unavailable create action visibly disabled. --}}
+    {{-- Role shortcuts stay in the account menu; the page keeps its one primary post action. --}}
     <x-ui.page-header
         title="Welcome, {{ auth()->user()->name }}"
-        subtitle="Officer dashboard · Your role is {{ ucfirst(auth()->user()->role) }}."
     >
         <x-slot:actions>
-            <button type="button" class="dashboard-button" disabled title="Post creation is not implemented yet">
+            <a href="{{ route('articles.create') }}" class="dashboard-button">
                 New Post
-            </button>
+            </a>
         </x-slot:actions>
     </x-ui.page-header>
 
     <section class="dashboard-stat-grid" aria-label="My post statistics">
-        <x-ui.stat-card label="My Posts" :value="$postCounts['total']" />
-        <x-ui.stat-card label="Pending" :value="$postCounts['pending']" />
-        <x-ui.stat-card label="Approved" :value="$postCounts['approved']" />
-        <x-ui.stat-card label="Rejected" :value="$postCounts['rejected']" />
+        <x-ui.stat-card label="My Posts" :value="$postCounts['total']" :href="route('articles.index', ['tab' => 'mine'])" />
+    </section>
+
+    {{-- SECURITY: The dashboard receives only the signed-in officer's records; rejected details stay private. --}}
+    @php($rejectedPosts = $posts->where('status', 'rejected'))
+    <section class="dashboard-panel" aria-labelledby="officer-attention-heading">
+        <div class="dashboard-section-heading"><h2 id="officer-attention-heading">Needs attention</h2></div>
+        @forelse ($rejectedPosts as $post)
+            <article class="dashboard-review-item"><div><h3>{{ $post->title }}</h3><p>Rejected · {{ ucfirst($post->type) }}</p><p class="dashboard-rejection-reason">Rejection reason: {{ $post->rejection_reason }}</p></div>
+                @if ($post->preview_url)<a class="dashboard-text-button" href="{{ $post->preview_url }}">View</a>@endif
+            </article>
+        @empty
+            <p class="dashboard-empty-state">No rejected posts need your attention.</p>
+        @endforelse
     </section>
 
     <section class="dashboard-panel">
         <div class="dashboard-section-heading">
             <div>
                 <h2>My recent posts</h2>
-                <p>Posts submitted by your account will appear here.</p>
             </div>
         </div>
 
@@ -66,7 +74,7 @@
                     @empty
                         <tr>
                             <td colspan="5" class="dashboard-empty-state">
-                                No posts yet. Post creation and storage are not implemented.
+                                No posts yet. Your submissions will appear here.
                             </td>
                         </tr>
                     @endforelse

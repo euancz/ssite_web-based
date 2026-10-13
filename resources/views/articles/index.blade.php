@@ -14,22 +14,9 @@
         </x-slot:actions>
     </x-ui.page-header>
 
-    {{-- Role-whitelisted tabs keep private workflow states out of student and guest navigation. --}}
-    @php
-        $tabLabels = [
-            'published' => 'Published', 'mine' => 'My Posts', 'pending' => 'Pending Review',
-            'rejected' => 'Rejected', 'archived' => 'Archived', 'all' => 'All',
-        ];
-    @endphp
-    <nav class="dashboard-tabs" aria-label="Article sections">
-        @foreach ($allowedTabs as $allowedTab)
-            <a href="{{ route('articles.index', ['tab' => $allowedTab, 'search' => $search ?: null]) }}"
-               @class(['dashboard-tab', 'is-active' => $tab === $allowedTab])
-               @if ($tab === $allowedTab) aria-current="page" @endif>
-                {{ $tabLabels[$allowedTab] }}
-            </a>
-        @endforeach
-    </nav>
+    {{-- SECURITY: This display reshapes allowed tabs only; controller whitelists and Published fallback stay authoritative. --}}
+    <x-ui.workflow-tabs route-name="articles.index" :allowed-tabs="$allowedTabs" :active-tab="$tab" :search="$search" :pending-count="$pendingCount" />
+    @php($tabLabels = ['published' => 'Published', 'mine' => 'My Posts', 'pending' => 'Pending Review', 'rejected' => 'Rejected', 'archived' => 'Archived', 'all' => 'All'])
 
     {{-- Search stays within the active role-approved tab and searches article titles and author names. --}}
     <form method="GET" action="{{ route('articles.index') }}" class="dashboard-filter-form">
@@ -55,7 +42,8 @@
             <form id="article-bulk-archive" method="POST" action="{{ route('articles.bulk-archive') }}">
                 @csrf
             </form>
-            <div class="article-bulk-actions">
+            <div class="article-bulk-actions" data-selection-bar hidden>
+                <span data-selection-count>0 selected</span>
                 <button type="button" class="dashboard-button dashboard-button-secondary"
                         onclick="document.getElementById('bulk-archive-article-modal').showModal()">
                     Archive selected
@@ -107,7 +95,10 @@
                         @endcan
                         {{-- SECURITY: Only an author or adviser can edit; the controller checks the same policy. --}}
                         @can('update', $article)
-                            <a class="dashboard-text-button" href="{{ route('articles.edit', $article) }}">Edit</a>
+                            <details class="article-row-menu">
+                                <summary aria-label="More actions for {{ $article->title }}">&#8942;</summary>
+                                <a class="dashboard-text-button" href="{{ route('articles.edit', $article) }}">Edit</a>
+                            </details>
                         @endcan
                         {{-- SECURITY: Only advisers may select articles for bulk archive. --}}
                         @can('bulkArchive', \App\Models\Article::class)

@@ -16,12 +16,8 @@
     @stack('styles')
 </head>
 <body class="site-body">
-    {{-- Officers/advisers use their role dashboard as Home; students and guests keep the public home link. --}}
-    @php
-        $roleHomeUrl = auth()->check() && auth()->user()->canPost()
-            ? route(auth()->user()->dashboardRoute())
-            : url('/');
-    @endphp
+    {{-- Role shortcuts live in the account menu; the shared Home destination stays public for every role. --}}
+    @php($roleHomeUrl = url('/'))
 
     {{-- ============================= NAVBAR ============================= --}}
     {{-- The completion screen hides site navigation so an incomplete account cannot browse away. --}}
@@ -184,6 +180,7 @@
                         <button type="button"
                                 id="account-menu-toggle"
                                 aria-label="Account menu"
+                                aria-haspopup="menu"
                                 aria-controls="account-menu"
                                 aria-expanded="false"
                                 class="icon-button account-toggle">
@@ -191,28 +188,42 @@
                             <x-ui.avatar :user="auth()->user()" size="sm" />
                         </button>
 
-                        <div id="account-menu" class="account-menu hidden">
-                            <div class="account-menu-name">
+                        <div id="account-menu" class="account-menu hidden" role="menu" aria-label="Account menu">
+                            <div class="account-menu-name" role="presentation">
                                 {{ auth()->user()->name }}
                             </div>
-                            <button type="button" class="account-menu-action">
-                                <svg aria-hidden="true" class="icon-small" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25a3.75 3.75 0 100 7.5 3.75 3.75 0 000-7.5z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06-1.5 2.6-.08-.02a1.65 1.65 0 00-1.78.76l-.04.07h-3l-.02-.08a1.65 1.65 0 00-1.4-1.14 1.65 1.65 0 00-1.73.92l-.04.08-2.84-1.02.02-.08a1.65 1.65 0 00-.76-1.78l-.07-.04v-3l.08-.02a1.65 1.65 0 001.14-1.4 1.65 1.65 0 00-.92-1.73l-.08-.04 1.02-2.84.08.02a1.65 1.65 0 001.78-.76l.04-.07h3l.02.08a1.65 1.65 0 001.4 1.14 1.65 1.65 0 001.73-.92l.04-.08 2.84 1.02-.02.08a1.65 1.65 0 00.76 1.78l.07.04v3l-.08.02A1.65 1.65 0 0019.4 15z"/>
-                                </svg>
-                                <span>Settings</span>
-                            </button>
                             @if (auth()->user()->hasCompletedProfile())
-                                <a href="{{ route('profile.edit') }}" class="account-menu-action">
+                                <a href="{{ route('profile.edit') }}" class="account-menu-action" role="menuitem">
                                     <svg aria-hidden="true" class="icon-small" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.1a7.5 7.5 0 0115 0A17.9 17.9 0 0112 21.75c-2.7 0-5.25-.6-7.5-1.65z"/>
                                     </svg>
                                     <span>My Profile</span>
                                 </a>
                             @endif
+                            <button type="button" class="account-menu-action" role="menuitem">
+                                <svg aria-hidden="true" class="icon-small" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25a3.75 3.75 0 100 7.5 3.75 3.75 0 000-7.5z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06-1.5 2.6-.08-.02a1.65 1.65 0 00-1.78.76l-.04.07h-3l-.02-.08a1.65 1.65 0 00-1.4-1.14 1.65 1.65 0 00-1.73.92l-.04.08-2.84-1.02.02-.08a1.65 1.65 0 00-.76-1.78l-.07-.04v-3l.08-.02a1.65 1.65 0 001.14-1.4 1.65 1.65 0 00-.92-1.73l-.08-.04 1.02-2.84.08.02a1.65 1.65 0 001.78-.76l.04-.07h3l.02.08a1.65 1.65 0 001.4 1.14 1.65 1.65 0 001.73-.92l.04-.08 2.84 1.02-.02.08a1.65 1.65 0 00.76 1.78l.07.04v3l-.08.02A1.65 1.65 0 0019.4 15z"/>
+                                </svg>
+                                <span>Settings</span>
+                            </button>
+                            @if (auth()->user()->canPost())
+                                <div class="account-menu-divider" role="separator"></div>
+                                <p class="account-menu-section-label" role="presentation">Manage</p>
+                                <a href="{{ route(auth()->user()->dashboardRoute()) }}" class="account-menu-action" role="menuitem">Dashboard</a>
+                            @endif
+                            @can('review-posts')
+                                <a href="{{ route('adviser.reviews.index') }}" class="account-menu-action" role="menuitem">Review Posts</a>
+                            @endcan
+                            @can('manage-users')
+                                <a href="{{ route('adviser.users.index') }}" class="account-menu-action" role="menuitem">Manage Users</a>
+                                <a href="{{ route('adviser.officers.index') }}" class="account-menu-action" role="menuitem">Manage Officers</a>
+                            @endcan
+                            {{-- Keep logout last and visually separate for every signed-in role. --}}
+                            <div class="account-menu-divider" role="separator"></div>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="account-menu-logout">
+                                <button type="submit" class="account-menu-logout" role="menuitem">
                                     <svg aria-hidden="true" class="icon-small" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3-3H9m0 0l3-3m-3 3l3 3"/>
                                     </svg>
@@ -258,8 +269,9 @@
             </div>
         </div>
 
-        @include('layouts.partials.navigation')
     </header>
+    {{-- The nav stays in normal page flow so it scrolls away while the site header remains sticky. --}}
+    @include('layouts.partials.navigation')
     @endif
 
     {{-- Keep anchor offsets matched to the rendered header and add its shadow only after scrolling. --}}
@@ -356,7 +368,32 @@
         </div>
     </footer>
 
+    <button type="button" id="back-to-top" class="back-to-top hidden" aria-label="Back to top">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m-7 7 7-7 7 7"/>
+        </svg>
+    </button>
+
     @stack('scripts')
     @include('layouts.partials.account-scripts')
+    <script>
+        (() => {
+            const backToTop = document.getElementById('back-to-top');
+            if (!backToTop) return;
+
+            const updateBackToTop = () => {
+                backToTop.classList.toggle('hidden', window.scrollY <= 300);
+            };
+
+            updateBackToTop();
+            window.addEventListener('scroll', updateBackToTop, { passive: true });
+            backToTop.addEventListener('click', () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+                });
+            });
+        })();
+    </script>
 </body>
 </html>
