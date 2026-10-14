@@ -4,9 +4,10 @@
 
 @section('content')
 <div class="dashboard-page profile-page">
+    {{-- Explain the required task before students reach the profile fields. --}}
     <x-ui.page-header
         title="Welcome, {{ $user->name }}! Please complete your information to continue"
-        subtitle="Your details are stored securely on your SSITE account."
+        subtitle="Complete the required fields below to continue. Your details are stored securely on your SSITE account."
     />
 
     {{-- Keep the required-profile gate clear while field-level errors appear beside their inputs. --}}

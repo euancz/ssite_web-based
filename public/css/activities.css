@@ -1,0 +1,29 @@
+/* Activity-specific presentation stays separate from the shared feed anatomy. */
+.post-feed-activities .activity-post-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    gap: 10px 18px;
+    margin: 0;
+}
+
+.post-feed-activities .activity-post-detail {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: baseline;
+    gap: 8px;
+}
+
+.post-feed-activities .activity-post-detail dt {
+    color: var(--ssite-navy-soft);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.post-feed-activities .activity-post-detail dd {
+    min-width: 0;
+    margin: 0;
+    color: var(--ssite-navy);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}

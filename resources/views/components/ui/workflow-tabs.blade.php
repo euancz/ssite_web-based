@@ -18,8 +18,14 @@
     @endforeach
     @if ($moreTabs)
         <details class="dashboard-tabs-more" @if ($selectedMoreTab) open @endif>
-            <summary class="dashboard-tab {{ $selectedMoreTab ? 'is-active' : '' }}">{{ $selectedMoreTab ?? 'More' }}</summary>
-            <div class="dashboard-tabs-menu">
+            {{-- Keep the current hidden tab visible while exposing the disclosure state to assistive technology. --}}
+            <summary class="dashboard-tab {{ $selectedMoreTab ? 'is-active' : '' }}"
+                     aria-haspopup="true"
+                     aria-expanded="{{ $selectedMoreTab ? 'true' : 'false' }}"
+                     aria-controls="{{ str_replace('.', '-', $routeName) }}-more-options">
+                {{ $selectedMoreTab ?? 'More' }}
+            </summary>
+            <div id="{{ str_replace('.', '-', $routeName) }}-more-options" class="dashboard-tabs-menu">
                 @foreach ($moreTabs as $tab)
                     <a href="{{ route($routeName, array_merge($extraQuery, ['tab' => $tab, 'search' => $search ?: null])) }}"
                        @if ($activeTab === $tab) aria-current="page" @endif>{{ $labels[$tab] }}</a>
@@ -63,6 +69,12 @@
                         menu.querySelector('summary')?.focus();
                     }
                 });
+            });
+            document.querySelectorAll('.dashboard-tabs-more').forEach((menu) => {
+                const summary = menu.querySelector('summary');
+                const syncExpanded = () => summary?.setAttribute('aria-expanded', String(menu.open));
+                menu.addEventListener('toggle', syncExpanded);
+                syncExpanded();
             });
             document.addEventListener('click', (event) => {
                 rowMenus.forEach((menu) => { if (!menu.contains(event.target)) menu.open = false; });

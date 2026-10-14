@@ -2,6 +2,90 @@
    HOME PAGE
 ========================================= */
 
+/* Match the current Blade home view to the shared SSITE spacing, cards, and palette. */
+.home-content {
+    width: min(100% - 32px, 80rem);
+    margin: 32px auto 56px;
+    color: var(--ssite-navy);
+}
+
+.home-heading {
+    margin: 0 0 20px;
+    color: var(--ssite-navy);
+    font-size: clamp(1.7rem, 3vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+}
+
+.featured-article,
+.secondary-article {
+    min-width: 0;
+    border: 1px solid #d3edf7;
+    border-radius: 20px;
+    padding: 20px;
+    background: linear-gradient(180deg, #ffffff 0%, #f7fdff 100%);
+    box-shadow: 0 12px 28px rgb(23 50 77 / 8%);
+}
+
+.featured-article { margin-bottom: 20px; }
+.article-category {
+    margin: 0 0 8px;
+    color: var(--ssite-navy-soft);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+.featured-title {
+    margin: 0 0 8px;
+    font-size: clamp(1.3rem, 2.2vw, 2.1rem);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+.featured-title a,
+.secondary-article-title a { color: inherit; text-decoration: none; }
+.featured-title a:hover,
+.secondary-article-title a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.article-byline {
+    margin: 0;
+    color: var(--ssite-navy-soft);
+    font-size: 13px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+.featured-image-link,
+.secondary-article-image-link { margin-top: 16px; }
+.featured-image-link img,
+.secondary-article-image-link img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 14px;
+    object-fit: cover;
+}
+.home-divider { margin: 24px 0; border: 0; border-top: 1px solid #d7edf8; }
+.secondary-articles {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+.secondary-articles-divider { display: none; }
+.secondary-article-title {
+    margin: 0 0 8px;
+    font-size: 1.15rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+.secondary-article > .article-category { margin-top: 14px; }
+.secondary-article > p:not(.article-category):not(.article-byline) { margin: 0; color: var(--ssite-navy-soft); line-height: 1.5; }
+
+@media (max-width: 600px) {
+    .home-content { width: min(100% - 24px, 80rem); margin-top: 22px; }
+    .featured-article,
+    .secondary-article { padding: 16px; }
+    .secondary-articles { grid-template-columns: 1fr; gap: 14px; }
+}
+
 .home-page {
     width: 100%;
     background: #ffffff;

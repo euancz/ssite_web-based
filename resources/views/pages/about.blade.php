@@ -10,6 +10,7 @@
 <div class="about-page">
 	@if (session('status')) <p class="dashboard-success" role="status">{{ session('status') }}</p> @endif
 	<h1 class="about-page-title">Get to Know SSITE</h1>
+	<p class="about-page-intro">A student-led community built around technology, service, and meaningful creative work.</p>
 
 	<section class="mission-vision-grid" aria-label="SSITE mission and vision">
 		<article class="mission-card">

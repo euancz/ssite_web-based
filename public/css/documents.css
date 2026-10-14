@@ -1,0 +1,16 @@
+/* Documents keep private-file actions grouped with readable PDF metadata. */
+.post-feed-documents .post-card-strip {
+    border: 1px solid #c8e6f2;
+    background: #f4fbfe;
+}
+
+.post-feed-documents .post-feed-pdf-mark {
+    border-color: #9cb5c5;
+    box-shadow: 2px 2px 0 rgb(23 50 77 / 10%);
+}
+
+.post-feed-documents .post-feed-category-chip {
+    margin-left: 4px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}

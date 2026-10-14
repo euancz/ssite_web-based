@@ -2,6 +2,11 @@
 
 @section('title', 'Home')
 
+{{-- Load the home-specific card layout styles for this page. --}}
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/home.css') }}">
+@endpush
+
 @section('content')
 <div class="home-content">
 
@@ -21,8 +26,8 @@
                 By <span class="article-author">{{ $article->author?->name ?? 'Former member' }}</span>
                 @if ($article->created_at) &middot; {{ $article->created_at->format('M j, Y') }} @endif
             </p>
-            <a href="{{ route('articles.show', $article) }}" class="featured-image-link card-media">
-                <img src="{{ $article->imageUrl() }}" alt="" class="article-image">
+            <a href="{{ route('articles.show', $article) }}" class="featured-image-link card-media" aria-label="Read {{ $article->title }}">
+                <img src="{{ $article->imageUrl() }}" alt="Featured article: {{ $article->title }}" class="article-image">
             </a>
         </article>
     @empty
@@ -43,8 +48,8 @@
         {{-- Public Activity cards contain only approved and active records from the home query. --}}
         @forelse ($activities as $activity)
             <article class="secondary-article secondary-article-first card-hover">
-                <a href="{{ route('activities.show', $activity) }}" class="secondary-article-image-link card-media">
-                    <img src="{{ $activity->imageUrl() }}" alt="" class="article-image">
+                <a href="{{ route('activities.show', $activity) }}" class="secondary-article-image-link card-media" aria-label="Read {{ $activity->title }}">
+                        <img src="{{ $activity->imageUrl() }}" alt="Activity: {{ $activity->title }}" class="article-image">
                 </a>
                 <p class="article-category">Activities</p>
                 <h3 class="secondary-article-title">
@@ -65,8 +70,8 @@
         {{-- Public Achievement cards contain only approved and active records from the home query. --}}
         @forelse ($achievements as $achievement)
             <article class="secondary-article secondary-article-second card-hover">
-                <a href="{{ route('achievements.show', $achievement) }}" class="secondary-article-image-link card-media">
-                    <img src="{{ $achievement->imageUrl() }}" alt="" class="article-image">
+                <a href="{{ route('achievements.show', $achievement) }}" class="secondary-article-image-link card-media" aria-label="Read {{ $achievement->title }}">
+                        <img src="{{ $achievement->imageUrl() }}" alt="Achievement: {{ $achievement->title }}" class="article-image">
                 </a>
                 <p class="article-category">Achievements</p>
                 <h3 class="secondary-article-title">

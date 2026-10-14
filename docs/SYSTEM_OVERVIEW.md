@@ -197,3 +197,14 @@ Activities and Achievements use the same role-specific tabs, search, and ten-ite
 ## Documents and Liquidation tabs
 
 Documents and Liquidation use the Article role-specific tabs, title search, and ten-item pagination. Documents also filters by category. Public/student queries must use each model's `publiclyVisible()` scope. PDF view and download handlers authorize before reading from the private local disk; missing files return a friendly message. Change list access and maximum size in `config/school.php`.
+
+## Design tokens
+
+- **Colors:** SSITE blue `#8AD5F4`, pale blue `#C7ECF9`, navy `#17324D`, soft navy `#3E5972`, and line blue `#3DAFEA` are defined in `public/css/app.css`.
+- **Fonts:** Poppins is the global sans in `public/css/app.css`; `resources/css/app.css` sets the matching Tailwind sans token. The layout loads Poppins from Google Fonts in `resources/views/layouts/app.blade.php`.
+- **Spacing:** Shared UI mainly uses 4, 8, 12, 16, and 24px increments. Page-specific layouts may add wider section spacing in `public/css/home.css` and `public/css/about.css`.
+- **Radii:** Shared controls and cards mainly use 4-8px, with pills/circles for compact controls and the alternating 24px corners on About mission/vision cards.
+- **Shadows:** Header and card hover shadows are in the `--hover-card-shadow` and related variables in `public/css/app.css`; the About cards define their quieter static shadow in `public/css/about.css`.
+- **Review record:** `docs/DESIGN_REVIEW.md` records the source review, approved findings, changes, and verification limits.
+
+If I want to change a shared color, open `public/css/app.css` and update the `:root` tokens. If I want to change the font, open `resources/views/layouts/app.blade.php` and `public/css/app.css` (and `resources/css/app.css` for Tailwind). If I want to change shared spacing, open `public/css/app.css`; for page-specific spacing, use the matching page stylesheet. If I want to add a shared component, open `resources/views/components/ui/` and its styles in `public/css/app.css`.

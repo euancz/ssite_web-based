@@ -115,6 +115,17 @@ Sticky navbar gotcha: an ancestor with `overflow: auto`, `overflow: hidden`, or 
 
 Content card gotcha: transforms create stacking contexts that can trap row menus below adjacent content. Keep the image clipping frame separate from the card, leave list overflow visible, and check card menus against the sticky header, navigation pill, and About gear menu.
 
+## Design tokens
+
+- **Colors:** SSITE blue `#8AD5F4`, pale blue `#C7ECF9`, navy `#17324D`, soft navy `#3E5972`, and line blue `#3DAFEA` are in `public/css/app.css` under `:root`.
+- **Fonts:** Poppins is the global sans in `public/css/app.css`; the matching Tailwind sans token is in `resources/css/app.css`; the Poppins stylesheet link is in `resources/views/layouts/app.blade.php`.
+- **Spacing:** Shared spacing uses repeated 4/8/12/16/24px values in `public/css/app.css`; page-specific spacing is in `public/css/home.css` and `public/css/about.css`.
+- **Radii:** Shared card/control radii and pill/circle shapes are in `public/css/app.css`; About's alternating 24px corners are in `public/css/about.css`.
+- **Shadows:** Shared hover shadow variables are in `public/css/app.css`; static About card shadows are in `public/css/about.css`.
+- **Review record:** See `docs/DESIGN_REVIEW.md` for the source review, finding IDs, approved changes, and verification limits.
+
+If I want to change a color, open `public/css/app.css` and update the `:root` token. If I want to change the font, open `resources/views/layouts/app.blade.php`, `public/css/app.css`, and `resources/css/app.css`. If I want to change spacing, open `public/css/app.css` for shared components or the matching page stylesheet. If I want to add a component, open `resources/views/components/ui/` and add or update its styles in `public/css/app.css`.
+
 ## Officer history
 
 The current academic year is calculated from the date and the configured start month. Advisers maintain a separate snapshot for each year; role changes affect only the current year's row. New-year rows are not created automatically. Photos uploaded for officer terms are stored in `storage/app/public/officer-photos`, served through `storage:link`, and old uploaded term photos are removed only when their term is replaced or deleted.

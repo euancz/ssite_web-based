@@ -3,32 +3,22 @@
 @section('title', 'Articles')
 
 @section('content')
-<div class="dashboard-page">
-    {{-- The shared heading follows the existing dashboard card and page spacing. --}}
-    <x-ui.page-header title="Articles" subtitle="Read and manage SSITE articles." >
-        <x-slot:actions>
-            {{-- SECURITY: Posting links are shown only when ArticlePolicy permits article creation. --}}
-            @can('create', \App\Models\Article::class)
-                <a href="{{ route('articles.create') }}" class="dashboard-button">New Article</a>
-            @endcan
-        </x-slot:actions>
-    </x-ui.page-header>
-
-    {{-- SECURITY: This display reshapes allowed tabs only; controller whitelists and Published fallback stay authoritative. --}}
-    <x-ui.workflow-tabs route-name="articles.index" :allowed-tabs="$allowedTabs" :active-tab="$tab" :search="$search" :pending-count="$pendingCount" />
-    @php($tabLabels = ['published' => 'Published', 'mine' => 'My Posts', 'pending' => 'Pending Review', 'rejected' => 'Rejected', 'archived' => 'Archived', 'all' => 'All'])
-
-    {{-- Search stays within the active role-approved tab and searches article titles and author names. --}}
-    <form method="GET" action="{{ route('articles.index') }}" class="dashboard-filter-form">
-        <input type="hidden" name="tab" value="{{ $tab }}">
-        <div class="dashboard-form-field">
-            <label for="article-search">Search articles</label>
-            <input id="article-search" type="search" name="search" value="{{ $search }}" maxlength="100">
-        </div>
-        <button type="submit" class="dashboard-button">Search</button>
-    </form>
-
-    {{-- Flash messages report completed actions and harmless repeat archive/review attempts. --}}
+<x-posts.feed-frame
+    variant="index"
+    stylesheet="articles"
+    title="Articles"
+    description="Read and manage SSITE articles."
+    :policy-class="\App\Models\Article::class"
+    create-route="articles.create"
+    composer-prompt="Post an article…"
+    route-name="articles.index"
+    :allowed-tabs="$allowedTabs"
+    :active-tab="$tab"
+    :search="$search"
+    search-label="Search articles"
+    search-id="article-search"
+    :pending-count="$pendingCount"
+>
     @if (session('status'))
         <p class="dashboard-success" role="status">{{ session('status') }}</p>
     @endif
@@ -36,7 +26,7 @@
         <p class="dashboard-error" role="alert">{{ session('error') }}</p>
     @endif
 
-    {{-- Adviser bulk archive posts selected IDs to a validated, policy-protected endpoint. --}}
+    {{-- Adviser bulk archive remains separate from each card's single-post actions. --}}
     @can('bulkArchive', \App\Models\Article::class)
         @if ($tab !== 'published' && $articles->isNotEmpty())
             <form id="article-bulk-archive" method="POST" action="{{ route('articles.bulk-archive') }}">
@@ -49,11 +39,10 @@
                     Archive selected
                 </button>
             </div>
-            {{-- Confirmation keeps the adviser in control before archiving the selected group. --}}
             <dialog id="bulk-archive-article-modal" class="reject-modal">
                 <div class="reject-modal-content">
                     <h2>Archive selected articles?</h2>
-                    <p>Selected articles leave Published and keep their current approval status.</p>
+                    <p>Selected articles leave Published and keep their approval status.</p>
                     <div class="reject-modal-actions">
                         <button type="button" class="dashboard-button dashboard-button-secondary"
                                 onclick="document.getElementById('bulk-archive-article-modal').close()">Cancel</button>
@@ -64,72 +53,55 @@
         @endif
     @endcan
 
-    {{-- Article cards show only the rows returned for this role and its active tab. --}}
-    <section class="articles-list" aria-label="{{ $tabLabels[$tab] }} articles">
+    <section class="post-feed-list" aria-label="{{ ucfirst($tab) }} articles">
         @forelse ($articles as $article)
-            <article class="article-list-item card-hover">
-                <a class="card-media" href="{{ route('articles.show', $article) }}" aria-label="Read {{ $article->title }}">
-                    <img class="article-list-image" src="{{ $article->imageUrl() }}" alt="">
-                </a>
-                <div class="article-list-content">
-                    <div class="article-badges">
-                        <x-ui.status-badge :status="$article->approval_status" />
-                        @if ($article->isArchived())
-                            <x-ui.status-badge status="archived" />
+            <x-posts.card
+                :post="$article"
+                module="Articles"
+                route-prefix="articles"
+                :show-url="route('articles.show', $article)"
+                :content="$article->content"
+                :tab="$tab"
+                :media-url="$article->imageUrl()"
+                :media-alt="$article->title"
+            >
+                <x-slot:footerActions>
+                    @can('approve', $article)
+                        @if ($tab === 'pending' && $article->isPending())
+                            <form method="POST" action="{{ route('articles.approve', $article) }}">
+                                @csrf
+                                <button type="submit" class="dashboard-button">Approve</button>
+                            </form>
+                            <button type="button" class="dashboard-button dashboard-button-secondary"
+                                    data-modal-open="article-reject-{{ $article->getKey() }}">Reject</button>
+                            <x-ui.reject-modal
+                                id="article-reject-{{ $article->getKey() }}"
+                                :action="route('articles.reject', $article)"
+                            />
                         @endif
-                    </div>
-                    <h2><a href="{{ route('articles.show', $article) }}">{{ $article->title }}</a></h2>
-                    <div class="article-list-meta">
-                        <span>{{ $article->author?->name ?? 'Former member' }}</span>
-                        <span>{{ $article->created_at?->format('M j, Y') }}</span>
-                    </div>
-                    <p>{{ \Illuminate\Support\Str::limit(strip_tags($article->content), 180) }}</p>
-                    {{-- Rejection feedback is limited to the officer's own-posts tab. --}}
-                    @if ($tab === 'mine' && $article->isRejected() && $article->rejection_reason)
-                        <p class="dashboard-rejection-reason">Rejection reason: {{ $article->rejection_reason }}</p>
-                    @endif
-                    <div class="article-actions">
-                        {{-- SECURITY: ArticlePolicy hides private details from visitors who cannot view this record. --}}
-                        @can('view', $article)
-                            <a class="dashboard-text-button" href="{{ route('articles.show', $article) }}">Read article</a>
-                        @endcan
-                        {{-- SECURITY: Only an author or adviser can edit; the controller checks the same policy. --}}
-                        @can('update', $article)
-                            <details class="article-row-menu">
-                                <summary aria-label="More actions for {{ $article->title }}">&#8942;</summary>
-                                <a class="dashboard-text-button" href="{{ route('articles.edit', $article) }}">Edit</a>
-                            </details>
-                        @endcan
-                        {{-- SECURITY: Only advisers may select articles for bulk archive. --}}
-                        @can('bulkArchive', \App\Models\Article::class)
-                            @if (! $article->isArchived())
-                                <label class="dashboard-muted">
-                                    <input type="checkbox" name="article_ids[]" value="{{ $article->article_id }}" form="article-bulk-archive">
-                                    Select
-                                </label>
-                            @endif
-                        @endcan
-                    </div>
-                </div>
-            </article>
+                    @endcan
+
+                    @can('bulkArchive', \App\Models\Article::class)
+                        @if ($tab !== 'published' && ! $article->isArchived())
+                            <label class="dashboard-muted">
+                                <input type="checkbox" name="article_ids[]" value="{{ $article->article_id }}" form="article-bulk-archive">
+                                Select
+                            </label>
+                        @endif
+                    @endcan
+                </x-slot:footerActions>
+            </x-posts.card>
         @empty
-            <section class="dashboard-panel dashboard-empty-state">
-                <h2>{{ $tabLabels[$tab] }}</h2>
-                <p>
-                    @switch($tab)
-                        @case('published') No published articles are available right now. @break
-                        @case('mine') You have not posted any articles yet. @break
-                        @case('pending') No articles are waiting for review. @break
-                        @case('rejected') No rejected articles were found. @break
-                        @case('archived') No archived articles were found. @break
-                        @default No articles were found.
-                    @endswitch
-                </p>
-            </section>
+            @if ($tab === 'published')
+                <x-posts.empty-state title="No published articles yet" message="Check back soon for the latest SSITE articles." />
+            @elseif (auth()->user()?->canPost())
+                <x-posts.empty-state title="No articles in this tab" message="Use the prompt above to create an article." />
+            @else
+                <x-posts.empty-state title="No articles found" message="Try another search or check back later." />
+            @endif
         @endforelse
     </section>
 
-    {{-- Keep search and tab filters while moving through ten article results per page. --}}
     <div class="dashboard-pagination">{{ $articles->links() }}</div>
-</div>
+</x-posts.feed-frame>
 @endsection

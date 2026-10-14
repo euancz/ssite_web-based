@@ -1,6 +1,6 @@
 .about-page {
     width: 100%;
-    max-width: 800px;
+    max-width: 1040px;
     margin: 0 auto;
     padding: 24px 24px 0;
 }
@@ -12,55 +12,66 @@
     padding-bottom: 8px;
     color: var(--ssite-navy);
     font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
-    font-size: 19px;
-    font-weight: 700;
+    font-size: clamp(1.8rem, 3vw, 2.7rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
 }
 
 .about-page-title {
-    margin-bottom: 26px;
+    margin-bottom: 12px;
+}
+
+.about-page-intro {
+    margin: 0 0 28px;
+    color: #425973;
+    font-size: 1.05rem;
+    line-height: 1.6;
 }
 
 .mission-vision-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 44px;
+    gap: 24px;
     padding: 0 15px;
 }
 
 .mission-card,
 .vision-card {
     min-height: 164px;
-    padding: 12px;
-    background: #d2f2fa;
-    box-shadow: 0 1px 5px rgb(23 50 77 / 12%);
+    border: 1px solid #cfeaf5;
+    border-radius: 22px;
+    padding: 22px 20px;
+    background: linear-gradient(180deg, #d9f4fb 0%, #ebfaff 100%);
+    box-shadow: 0 12px 28px rgb(23 50 77 / 10%);
 }
 
 .mission-card {
-    border-radius: 24px 0 24px 0;
+    border-radius: 24px 10px 24px 10px;
 }
 
 .vision-card {
-    border-radius: 0 24px 0 24px;
+    border-radius: 10px 24px 10px 24px;
 }
 
 .mission-card h2,
 .vision-card h2 {
-    margin: 0 0 8px;
+    margin: 0 0 10px;
     border-bottom: 2px solid #64c5df;
     padding-bottom: 7px;
     color: var(--ssite-navy);
     font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 1.05rem;
+    font-weight: 800;
     text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
 .mission-card p,
 .vision-card p {
     margin: 0;
     color: #25394b;
-    font-size: 12px;
-    line-height: 1.36;
+    font-size: 1rem;
+    line-height: 1.7;
 }
 
 .officers-section {

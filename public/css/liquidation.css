@@ -1,0 +1,50 @@
+/* Liquidation reports keep the exact formatted amount with the private PDF metadata. */
+.post-feed-liquidation .post-card-strip {
+    border: 1px solid #c8e6f2;
+    background: #f4fbfe;
+}
+
+.post-feed-liquidation .liquidation-post-details {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(10rem, 0.8fr);
+    align-items: center;
+    gap: 14px 20px;
+}
+
+.post-feed-liquidation .liquidation-post-facts {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+}
+
+.post-feed-liquidation .liquidation-post-fact {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.post-feed-liquidation .liquidation-post-fact dt {
+    color: var(--ssite-navy-soft);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.post-feed-liquidation .liquidation-post-fact dd {
+    min-width: 0;
+    margin: 0;
+    color: var(--ssite-navy);
+    overflow-wrap: anywhere;
+}
+
+.post-feed-liquidation .liquidation-post-amount dd {
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+@media (max-width: 560px) {
+    .post-feed-liquidation .liquidation-post-details {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
