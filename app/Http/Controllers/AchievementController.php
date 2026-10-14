@@ -29,11 +29,11 @@ class AchievementController extends Controller
     {
         $this->authorize('viewAny', Achievement::class);
         $user = $request->user();
-        $allowedTabs = $user?->isAdviser()
+        $allowedTabs = $user?->canReview()
             ? ['published', 'pending', 'rejected', 'archived', 'all']
             : ($user?->isOfficer() ? ['published', 'mine', 'archived'] : ['published']);
-        // SECURITY: Pending totals are queried only for advisers and never reach public or student views.
-        $pendingCount = $user?->isAdviser() ? Achievement::pending()->count() : null;
+        // SECURITY: Pending totals are queried only for review-capable users and never reach public or student views.
+        $pendingCount = $user?->canReview() ? Achievement::pending()->count() : null;
         $tab = $request->query('tab', 'published');
 
         // SECURITY: Unknown or role-hidden tabs fall back to Published before querying records.
@@ -48,7 +48,7 @@ class AchievementController extends Controller
             $achievements->where('created_by_user_id', $user->user_id);
         } elseif ($tab === 'archived') {
             $achievements->archived();
-            if (! $user?->isAdviser()) {
+            if (! $user?->canManageOfficers()) {
                 $achievements->where('created_by_user_id', $user->user_id);
             }
         } elseif ($tab === 'pending') {
@@ -129,7 +129,7 @@ class AchievementController extends Controller
         $achievement = new Achievement($validated);
         $achievement->created_by_user_id = $user->user_id;
         $achievement->content_status = Achievement::CONTENT_ACTIVE;
-        $autoApprove = $user->isAdviser() && config('school.adviser_posts_auto_approved', true);
+        $autoApprove = ($user->isAdviser() || $user->isSuperadmin()) && config('school.adviser_posts_auto_approved', true);
         $achievement->approval_status = $autoApprove ? Achievement::APPROVAL_APPROVED : Achievement::APPROVAL_PENDING;
 
         if ($autoApprove) {

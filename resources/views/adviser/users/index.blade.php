@@ -55,6 +55,9 @@
                 <tbody>
                     {{-- User rows include academic information so advisers can identify the correct account. --}}
                     @forelse ($users as $user)
+                        @php
+                            $assignableRoles = auth()->user()->assignableRoles();
+                        @endphp
                         <tr>
                             {{-- Keep the existing user link and identify each account with its shared avatar. --}}
                             <td><a href="{{ route('adviser.users.show', $user) }}" class="adviser-user-link"><x-ui.avatar :user="$user" size="sm" />{{ $user->name }}</a></td>
@@ -62,8 +65,8 @@
                             <td><x-ui.status-badge :status="$user->role" /></td>
                             <td>
                                 {{-- SECURITY: Advisers cannot change their own role or promote/demote another adviser. --}}
-                                @if (auth()->user()->is($user) || $user->isAdviser())
-                                    <span class="dashboard-muted">{{ auth()->user()->is($user) ? 'Your role is protected' : 'Adviser role is protected' }}</span>
+                                @if (auth()->user()->is($user) || $user->isAdviser() || $user->isSuperadmin())
+                                    <span class="dashboard-muted">{{ auth()->user()->is($user) ? 'Your role is protected' : ($user->isSuperadmin() ? 'Superadmin role is protected' : 'Adviser role is protected') }}</span>
                                 @else
                                     <button type="button" class="dashboard-text-button" data-role-dialog-open="role-dialog-{{ $user->user_id }}">Change role</button>
                                     <dialog id="role-dialog-{{ $user->user_id }}" class="reject-modal" aria-labelledby="role-title-{{ $user->user_id }}">
@@ -72,7 +75,9 @@
                                                 @csrf @method('PUT')
                                                 <label for="role-{{ $user->user_id }}">Role</label>
                                                 <select id="role-{{ $user->user_id }}" name="role" data-position-id="position-{{ $user->user_id }}" required>
-                                                    @foreach (['student', 'officer'] as $role)<option value="{{ $role }}" @selected($user->role === $role)>{{ ucfirst($role) }}</option>@endforeach
+                                                    @foreach ($assignableRoles as $role)
+                                                        <option value="{{ $role }}" @selected($user->role === $role)>{{ ucfirst($role) }}</option>
+                                                    @endforeach
                                                 </select>
                                                 <div data-position-field="position-{{ $user->user_id }}" @if ($user->role !== 'officer') hidden @endif>
                                                     <label for="position-{{ $user->user_id }}">Officer position</label>

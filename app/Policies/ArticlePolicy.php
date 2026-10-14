@@ -25,7 +25,7 @@ class ArticlePolicy
     {
         return ($article->isApproved()
                 && $article->content_status === Article::CONTENT_ACTIVE)
-            || ($user !== null && ($user->isAdviser() || $this->owns($user, $article)));
+            || ($user !== null && ($user->canManageOfficers() || $this->owns($user, $article)));
     }
 
     /**
@@ -41,7 +41,7 @@ class ArticlePolicy
      */
     public function update(User $user, Article $article): bool
     {
-        return $user->isAdviser() || $this->owns($user, $article);
+        return $user->canManageOfficers() || $this->owns($user, $article);
     }
 
     /**
@@ -49,7 +49,7 @@ class ArticlePolicy
      */
     public function archive(User $user, Article $article): bool
     {
-        return $user->isAdviser() || $this->owns($user, $article);
+        return $user->canManageOfficers() || $this->owns($user, $article);
     }
 
     /**
@@ -57,39 +57,39 @@ class ArticlePolicy
      */
     public function restore(User $user, Article $article): bool
     {
-        return $user->isAdviser() || $this->owns($user, $article);
+        return $user->canManageOfficers() || $this->owns($user, $article);
     }
 
     /**
-     * Allow only advisers to approve articles after review.
+     * Allow advisers and configured superadmins to approve articles after review.
      */
     public function approve(User $user, Article $article): bool
     {
-        return $user->isAdviser();
+        return $user->canReview();
     }
 
     /**
-     * Allow only advisers to reject articles and record a reason.
+     * Allow advisers and configured superadmins to reject articles and record a reason.
      */
     public function reject(User $user, Article $article): bool
     {
-        return $user->isAdviser();
+        return $user->canReview();
     }
 
     /**
-     * Allow only advisers to permanently remove an article and its image.
+     * Allow only superadmins to permanently remove an article and its image.
      */
     public function delete(User $user, Article $article): bool
     {
-        return $user->isAdviser();
+        return $user->canPermanentlyDelete();
     }
 
     /**
-     * Allow only advisers to archive a validated selection of articles.
+     * Allow advisers and superadmins to archive a validated selection of articles.
      */
     public function bulkArchive(User $user): bool
     {
-        return $user->isAdviser();
+        return $user->canManageOfficers();
     }
 
     /**

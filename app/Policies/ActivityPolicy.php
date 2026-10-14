@@ -20,7 +20,7 @@ class ActivityPolicy
     public function view(?User $user, Activity $activity): bool
     {
         return ($activity->isApproved() && $activity->content_status === Activity::CONTENT_ACTIVE)
-            || ($user !== null && ($user->isAdviser() || $this->owns($user, $activity)));
+            || ($user !== null && ($user->canManageOfficers() || $this->owns($user, $activity)));
     }
 
     /** Officers and advisers may create activities. */
@@ -32,43 +32,43 @@ class ActivityPolicy
     /** The adviser or owning account may edit activity content. */
     public function update(User $user, Activity $activity): bool
     {
-        return $user->isAdviser() || $this->owns($user, $activity);
+        return $user->canManageOfficers() || $this->owns($user, $activity);
     }
 
     /** The adviser or owning account may archive an activity. */
     public function archive(User $user, Activity $activity): bool
     {
-        return $user->isAdviser() || $this->owns($user, $activity);
+        return $user->canManageOfficers() || $this->owns($user, $activity);
     }
 
     /** The adviser or owning account may restore an activity. */
     public function restore(User $user, Activity $activity): bool
     {
-        return $user->isAdviser() || $this->owns($user, $activity);
+        return $user->canManageOfficers() || $this->owns($user, $activity);
     }
 
     /** Only advisers may approve activities. */
     public function approve(User $user, Activity $activity): bool
     {
-        return $user->isAdviser();
+        return $user->canReview();
     }
 
-    /** Only advisers may reject activities and record a reason. */
+    /** Advisers and configured superadmins may reject activities and record a reason. */
     public function reject(User $user, Activity $activity): bool
     {
-        return $user->isAdviser();
+        return $user->canReview();
     }
 
-    /** Only advisers may permanently remove an activity and its stored image. */
+    /** Only superadmins may permanently remove an activity and its stored image. */
     public function delete(User $user, Activity $activity): bool
     {
-        return $user->isAdviser();
+        return $user->canPermanentlyDelete();
     }
 
-    /** Only advisers may archive a validated group of activities. */
+    /** Advisers and superadmins may archive a validated group of activities. */
     public function bulkArchive(User $user): bool
     {
-        return $user->isAdviser();
+        return $user->canManageOfficers();
     }
 
     /** Compare ownership with users.user_id, never Laravel's conventional id field. */

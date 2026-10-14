@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 // Holds adviser dashboard, user-management, and review routes for advisers with completed profiles.
 Route::prefix('adviser')
     ->name('adviser.')
-    ->middleware(['auth', 'role:adviser', 'profile.complete'])
+    ->middleware(['auth', 'role:adviser,superadmin', 'profile.complete'])
     ->group(function () {
         Route::get('/dashboard', DashboardController::class)
             ->name('dashboard');

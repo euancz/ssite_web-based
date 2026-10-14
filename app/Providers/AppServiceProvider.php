@@ -33,8 +33,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // These abilities control navigation visibility; protected routes enforce access separately.
         Gate::define('view-post-dashboard', fn (User $user): bool => $user->canPost());
-        Gate::define('review-posts', fn (User $user): bool => $user->isAdviser());
-        Gate::define('manage-users', fn (User $user): bool => $user->isAdviser());
+        Gate::define('review-posts', fn (User $user): bool => $user->canReview());
+        Gate::define('manage-users', fn (User $user): bool => $user->canManageOfficers() || $user->canManageAdvisers());
+        Gate::define('manage-advisers', fn (User $user): bool => $user->canManageAdvisers());
 
         View::composer('layouts.app', function ($view): void {
             $user = auth()->user();

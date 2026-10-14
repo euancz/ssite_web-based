@@ -54,8 +54,8 @@ Route::prefix('liquidation')->name('liquidations.')->middleware(['auth', 'profil
     Route::get('/{liquidation}/download', [LiquidationController::class, 'download'])->whereNumber('liquidation')->name('download');
 });
 
-// Officers and advisers can create, update, archive, or restore module content.
-Route::middleware(['auth', 'role:officer,adviser', 'profile.complete'])->group(function () {
+// Officers, advisers, and superadmins can create, update, archive, or restore module content.
+Route::middleware(['auth', 'role:officer,adviser,superadmin', 'profile.complete'])->group(function () {
     Route::resource('articles', ArticleController::class)->only(['create', 'store', 'edit'])->whereNumber('article');
     Route::patch('/articles/{article}', [ArticleController::class, 'update'])->whereNumber('article')->name('articles.update');
     Route::post('/articles/{article}/archive', [ArticleController::class, 'archive'])->whereNumber('article')->name('articles.archive');
@@ -83,8 +83,8 @@ Route::middleware(['auth', 'role:officer,adviser', 'profile.complete'])->group(f
     Route::post('/liquidation/{liquidation}/restore', [LiquidationController::class, 'restore'])->whereNumber('liquidation')->name('liquidations.restore');
 });
 
-// Only advisers review, permanently delete, or bulk archive module content.
-Route::middleware(['auth', 'role:adviser', 'profile.complete'])->group(function () {
+// Advisers and superadmins review, and superadmins alone permanently delete, bulk-archive, or manage approval changes.
+Route::middleware(['auth', 'role:adviser,superadmin', 'profile.complete'])->group(function () {
     Route::post('/articles/bulk-archive', [ArticleController::class, 'bulkArchive'])->name('articles.bulk-archive');
     Route::post('/articles/{article}/approve', [ArticleController::class, 'approve'])->whereNumber('article')->name('articles.approve');
     Route::post('/articles/{article}/reject', [ArticleController::class, 'reject'])->whereNumber('article')->name('articles.reject');

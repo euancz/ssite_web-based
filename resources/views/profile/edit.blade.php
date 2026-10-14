@@ -24,7 +24,7 @@
         {{-- SECURITY: The request is scoped to the authenticated user; role and email are not submitted. --}}
         @csrf
         @method('PUT')
-        @include('profile.partials.fields', ['allowStudentNumber' => $user->isAdviser()])
+        @include('profile.partials.fields', ['allowStudentNumber' => $user->isAdviser() || $user->isSuperadmin()])
         <div class="profile-form-actions">
             <button type="submit" class="dashboard-button">Save changes</button>
         </div>

@@ -14,6 +14,18 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
+    public const ROLE_STUDENT = 'student';
+    public const ROLE_OFFICER = 'officer';
+    public const ROLE_ADVISER = 'adviser';
+    public const ROLE_SUPERADMIN = 'superadmin';
+
+    public const ROLES = [
+        self::ROLE_STUDENT,
+        self::ROLE_OFFICER,
+        self::ROLE_ADVISER,
+        self::ROLE_SUPERADMIN,
+    ];
+
     protected $table = 'users';
 
     // SECURITY: User records use the schema's user_id key, not Laravel's default id.
@@ -145,7 +157,59 @@ class User extends Authenticatable
      */
     public function isAdviser(): bool
     {
-        return $this->role === 'adviser';
+        return $this->role === self::ROLE_ADVISER;
+    }
+
+    /**
+     * Identify superadmins, who supervise advisers while remaining outside the visible role form.
+     */
+    public function isSuperadmin(): bool
+    {
+        return $this->role === self::ROLE_SUPERADMIN;
+    }
+
+    /**
+     * Return the roles the current actor may assign to another user.
+     */
+    public function assignableRoles(): array
+    {
+        return match ($this->role) {
+            self::ROLE_SUPERADMIN => [self::ROLE_STUDENT, self::ROLE_OFFICER, self::ROLE_ADVISER],
+            self::ROLE_ADVISER => [self::ROLE_STUDENT, self::ROLE_OFFICER],
+            default => [],
+        };
+    }
+
+    /**
+     * Determine whether this account can review submitted content.
+     */
+    public function canReview(): bool
+    {
+        return $this->isAdviser() || $this->isSuperadmin();
+    }
+
+    /**
+     * Determine whether this account can manage officer assignments and officer terms.
+     */
+    public function canManageOfficers(): bool
+    {
+        return $this->isAdviser() || $this->isSuperadmin();
+    }
+
+    /**
+     * Determine whether this account can manage adviser assignments.
+     */
+    public function canManageAdvisers(): bool
+    {
+        return $this->isSuperadmin();
+    }
+
+    /**
+     * Determine whether this account can permanently delete content.
+     */
+    public function canPermanentlyDelete(): bool
+    {
+        return $this->isSuperadmin();
     }
 
     /**
@@ -153,7 +217,7 @@ class User extends Authenticatable
      */
     public function canPost(): bool
     {
-        return $this->isOfficer() || $this->isAdviser();
+        return $this->isOfficer() || $this->isAdviser() || $this->isSuperadmin();
     }
 
     /**
@@ -169,8 +233,11 @@ class User extends Authenticatable
      */
     public function dashboardRoute(): string
     {
+        if ($this->isSuperadmin() || $this->isAdviser()) {
+            return 'adviser.dashboard';
+        }
+
         return match (true) {
-            $this->isAdviser() => 'adviser.dashboard',
             $this->isOfficer() => 'officer.dashboard',
             default => 'home',
         };

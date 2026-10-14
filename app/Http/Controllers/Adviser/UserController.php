@@ -3,14 +3,17 @@
 namespace App\Http\Controllers\Adviser;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\OfficerTerm;
+use App\Models\User;
 use App\Support\AcademicYear;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 /*
  * Adviser role assignment is limited to student/officer accounts. Promotion requires an
@@ -28,7 +31,7 @@ class UserController extends Controller
     {
         $filters = $request->validate([
             'search' => ['nullable', 'string', 'max:100'],
-            'role' => ['nullable', Rule::in(['student', 'officer', 'adviser'])],
+            'role' => ['nullable', Rule::in(User::ROLES)],
         ]);
 
         $users = User::query()
@@ -63,43 +66,64 @@ class UserController extends Controller
      */
     public function updateRole(Request $request, User $user): RedirectResponse
     {
-        abort_if($request->user()->is($user) || $user->isAdviser(), 403);
+        $actor = $request->user();
+        Gate::forUser($actor)->authorize('changeRole', $user);
 
         $validated = $request->validate([
-            'role' => ['required', Rule::in(['student', 'officer'])],
+            'role' => ['required', 'string', Rule::in($actor->assignableRoles())],
             'officer_position' => [
-                Rule::requiredIf($request->input('role') === 'officer'),
+                Rule::requiredIf($request->input('role') === User::ROLE_OFFICER),
                 'nullable',
                 'string',
                 'max:100',
             ],
         ]);
 
-        $user->role = $validated['role'];
-        $user->officer_position = $validated['role'] === 'officer'
-            ? trim($validated['officer_position'])
-            : null;
-        $user->save();
+        $oldRole = $user->role;
+        $oldPosition = $user->officer_position;
+        $newRole = $validated['role'];
+        $newPosition = $newRole === User::ROLE_OFFICER ? trim((string) ($validated['officer_position'] ?? '')) : null;
 
-        // Keep only the current term in sync; previous academic years remain historical snapshots.
-        $currentYear = AcademicYear::current();
-        if ($user->role === 'officer') {
-            $term = OfficerTerm::updateOrCreate(
-                ['user_id' => $user->user_id, 'academic_year' => $currentYear],
-                ['name' => $user->name, 'position' => $user->officer_position, 'photo' => $user->profile_picture]
-            );
-            // SECURITY: user_id is assigned from the already-authorized User model, never request input.
-            $term->user_id = $user->user_id;
-            $term->save();
-        } else {
-            $term = OfficerTerm::forYear($currentYear)->where('user_id', $user->user_id)->first();
-            if ($term) {
-                if ($term->photo && str_starts_with($term->photo, 'officer-photos/') && !preg_match('/^https?:\/\//i', $term->photo)) {
-                    Storage::disk('public')->delete($term->photo);
+        DB::transaction(function () use ($actor, $user, $newRole, $newPosition, $oldRole, $oldPosition) {
+            $user->role = $newRole;
+            $user->officer_position = $newRole === User::ROLE_OFFICER ? $newPosition : null;
+            $user->save();
+
+            $currentYear = AcademicYear::current();
+            if ($newRole === User::ROLE_OFFICER) {
+                $term = OfficerTerm::updateOrCreate(
+                    ['user_id' => $user->user_id, 'academic_year' => $currentYear],
+                    ['name' => $user->name, 'position' => $newPosition, 'photo' => $user->profile_picture]
+                );
+                $term->user_id = $user->user_id;
+                $term->save();
+            } elseif ($oldRole === User::ROLE_OFFICER) {
+                $term = OfficerTerm::forYear($currentYear)->where('user_id', $user->user_id)->first();
+                if ($term) {
+                    if ($term->photo && str_starts_with($term->photo, 'officer-photos/') && ! preg_match('/^https?:\/\//i', $term->photo)) {
+                        Storage::disk('public')->delete($term->photo);
+                    }
+                    $term->delete();
                 }
-                $term->delete();
             }
-        }
+
+            if (Schema::hasTable('role_changes')) {
+                try {
+                    DB::table('role_changes')->insert([
+                        'user_id' => $user->user_id,
+                        'changed_by_user_id' => $actor->user_id,
+                        'old_role' => $oldRole,
+                        'new_role' => $newRole,
+                        'old_officer_position' => $oldPosition,
+                        'new_officer_position' => $newPosition,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                } catch (\Throwable $e) {
+                    // Skip logging when the table schema differs from the expected snapshot columns.
+                }
+            }
+        });
 
         return redirect()
             ->route('adviser.users.index', $request->only('search', 'role', 'page'))
