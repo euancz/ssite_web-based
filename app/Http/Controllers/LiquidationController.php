@@ -29,10 +29,10 @@ class LiquidationController extends Controller
     {
         $this->authorize('viewAny', Liquidation::class);
         $user = $request->user();
-        $allowedTabs = $user?->isAdviser() ? ['published', 'pending', 'rejected', 'archived', 'all']
+        $allowedTabs = $user?->canReview() ? ['published', 'pending', 'rejected', 'archived', 'all']
             : ($user?->isOfficer() ? ['published', 'mine', 'archived'] : ['published']);
-        // SECURITY: Pending totals are queried only for advisers and never reach public or student views.
-        $pendingCount = $user?->isAdviser() ? Liquidation::pending()->count() : null;
+        // SECURITY: Pending totals are queried only for review-capable users and never reach public or student views.
+        $pendingCount = $user?->canReview() ? Liquidation::pending()->count() : null;
         $tab = $request->query('tab', 'published');
         // SECURITY: Role-specific tab allowlists prevent private workflow states leaking to students.
         if (! in_array($tab, $allowedTabs, true)) $tab = 'published';
@@ -43,7 +43,7 @@ class LiquidationController extends Controller
         elseif ($tab === 'mine' && $user) $liquidations->where('created_by_user_id', $user->user_id);
         elseif ($tab === 'archived') {
             $liquidations->archived();
-            if (! $user?->isAdviser()) $liquidations->where('created_by_user_id', $user->user_id);
+            if (! $user?->canManageOfficers()) $liquidations->where('created_by_user_id', $user->user_id);
         } elseif ($tab === 'pending') $liquidations->pending();
         elseif ($tab === 'rejected') $liquidations->rejected();
         $liquidations->when($search !== '', fn ($query) => $query->where('title', 'like', '%' . $search . '%'));
@@ -91,7 +91,7 @@ class LiquidationController extends Controller
         $liquidation = new Liquidation($validated);
         $liquidation->created_by_user_id = $request->user()->user_id;
         $liquidation->content_status = Liquidation::CONTENT_ACTIVE;
-        $autoApprove = $request->user()->isAdviser() && config('school.adviser_posts_auto_approved', true);
+        $autoApprove = ($request->user()->isAdviser() || $request->user()->isSuperadmin()) && config('school.adviser_posts_auto_approved', true);
         $liquidation->approval_status = $autoApprove ? Liquidation::APPROVAL_APPROVED : Liquidation::APPROVAL_PENDING;
         if ($autoApprove) {
             $liquidation->reviewed_by_user_id = $request->user()->user_id;

@@ -14,13 +14,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-/** Adviser-only management of yearly officer snapshots; route middleware also blocks other roles. */
+/** Management of yearly officer snapshots; route middleware and capability checks limit access to authorized roles. */
 class OfficerTermController extends Controller
 {
-    /** List one year and return advisers to the filtered index after writes. */
+    /** List one year and return authorized managers to the filtered index after writes. */
     public function index(Request $request): View
     {
-        abort_unless($request->user()->isAdviser(), 403);
+        abort_unless($request->user()?->canManageOfficers(), 403);
         $years = AcademicYear::options();
         $year = $request->query('academic_year', AcademicYear::current());
         if (! AcademicYear::isValid($year)) $year = AcademicYear::current();
@@ -31,7 +31,7 @@ class OfficerTermController extends Controller
 
     public function create(Request $request): View
     {
-        abort_unless($request->user()->isAdviser(), 403);
+        abort_unless($request->user()?->canManageOfficers(), 403);
         $requestedYear = $request->query('academic_year');
         $year = is_string($requestedYear) && AcademicYear::isValid($requestedYear)
             ? $requestedYear
@@ -57,7 +57,7 @@ class OfficerTermController extends Controller
 
     public function edit(Request $request, OfficerTerm $officer): View
     {
-        abort_unless($request->user()->isAdviser(), 403);
+        abort_unless($request->user()?->canManageOfficers(), 403);
         return view('adviser.officers.edit', $this->formData($officer));
     }
 
@@ -85,7 +85,7 @@ class OfficerTermController extends Controller
 
     public function destroy(Request $request, OfficerTerm $officer): RedirectResponse
     {
-        abort_unless($request->user()->isAdviser(), 403);
+        abort_unless($request->user()?->canManageOfficers(), 403);
         $year = $officer->academic_year;
         $photo = $officer->photo;
         $officer->delete();
@@ -100,7 +100,7 @@ class OfficerTermController extends Controller
 
     public function copyPrevious(Request $request): RedirectResponse
     {
-        abort_unless($request->user()->isAdviser(), 403);
+        abort_unless($request->user()?->canManageOfficers(), 403);
         $data = $request->validate(['academic_year' => ['required', 'string', function ($attribute, $value, $fail): void {
             if (! AcademicYear::isValid($value)) $fail('Choose a valid consecutive academic year.');
         }]]);

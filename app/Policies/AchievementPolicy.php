@@ -18,7 +18,7 @@ class AchievementPolicy
     public function view(?User $user, Achievement $achievement): bool
     {
         return ($achievement->isApproved() && $achievement->content_status === Achievement::CONTENT_ACTIVE)
-            || ($user !== null && ($user->isAdviser() || $this->owns($user, $achievement)));
+            || ($user !== null && ($user->canManageOfficers() || $this->owns($user, $achievement)));
     }
 
     /** Officers and advisers may create achievements. */
@@ -30,43 +30,43 @@ class AchievementPolicy
     /** The adviser or owning account may edit achievement content. */
     public function update(User $user, Achievement $achievement): bool
     {
-        return $user->isAdviser() || $this->owns($user, $achievement);
+        return $user->canManageOfficers() || $this->owns($user, $achievement);
     }
 
     /** The adviser or owning account may archive an achievement. */
     public function archive(User $user, Achievement $achievement): bool
     {
-        return $user->isAdviser() || $this->owns($user, $achievement);
+        return $user->canManageOfficers() || $this->owns($user, $achievement);
     }
 
     /** The adviser or owning account may restore an achievement. */
     public function restore(User $user, Achievement $achievement): bool
     {
-        return $user->isAdviser() || $this->owns($user, $achievement);
+        return $user->canManageOfficers() || $this->owns($user, $achievement);
     }
 
-    /** Only advisers may approve achievements. */
+    /** Advisers and configured superadmins may approve achievements. */
     public function approve(User $user, Achievement $achievement): bool
     {
-        return $user->isAdviser();
+        return $user->canReview();
     }
 
-    /** Only advisers may reject achievements and record a reason. */
+    /** Advisers and configured superadmins may reject achievements and record a reason. */
     public function reject(User $user, Achievement $achievement): bool
     {
-        return $user->isAdviser();
+        return $user->canReview();
     }
 
-    /** Only advisers may permanently remove an achievement and its stored image. */
+    /** Only superadmins may permanently remove an achievement and its stored image. */
     public function delete(User $user, Achievement $achievement): bool
     {
-        return $user->isAdviser();
+        return $user->canPermanentlyDelete();
     }
 
-    /** Only advisers may archive a validated group of achievements. */
+    /** Advisers and superadmins may archive a validated group of achievements. */
     public function bulkArchive(User $user): bool
     {
-        return $user->isAdviser();
+        return $user->canManageOfficers();
     }
 
     /** Compare ownership with users.user_id, never Laravel's conventional id field. */

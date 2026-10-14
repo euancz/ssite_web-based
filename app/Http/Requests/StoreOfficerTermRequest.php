@@ -11,7 +11,7 @@ class StoreOfficerTermRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->isAdviser() === true;
+        return $this->user()?->canManageOfficers() === true;
     }
 
     public function rules(): array

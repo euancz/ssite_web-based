@@ -21,7 +21,7 @@ class UpdateProfileRequest extends ProfileRequest
     public function rules(): array
     {
         return [
-            'student_number' => $this->user()->isAdviser()
+            'student_number' => ($this->user()->isAdviser() || $this->user()->isSuperadmin())
                 ? $this->studentNumberRules(false)
                 : ['prohibited'],
             ...$this->commonProfileRules(),

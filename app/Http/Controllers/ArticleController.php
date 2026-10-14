@@ -33,11 +33,11 @@ class ArticleController extends Controller
     {
         $this->authorize('viewAny', Article::class);
         $user = $request->user();
-        $allowedTabs = $user?->isAdviser()
+        $allowedTabs = $user?->canReview()
             ? ['published', 'pending', 'rejected', 'archived', 'all']
             : ($user?->isOfficer() ? ['published', 'mine', 'archived'] : ['published']);
-        // SECURITY: Pending totals are queried only for advisers and never reach public or student views.
-        $pendingCount = $user?->isAdviser() ? Article::pending()->count() : null;
+        // SECURITY: Pending totals are queried only for review-capable accounts and never reach public or student views.
+        $pendingCount = $user?->canReview() ? Article::pending()->count() : null;
         $tab = $request->query('tab', 'published');
 
         // SECURITY: Unknown or role-hidden tabs fall back to Published before building the query.
@@ -52,7 +52,7 @@ class ArticleController extends Controller
             $articles->where('created_by_user_id', $user->user_id);
         } elseif ($tab === 'archived') {
             $articles->archived();
-            if (! $user?->isAdviser()) {
+            if (! $user?->canManageOfficers()) {
                 $articles->where('created_by_user_id', $user->user_id);
             }
         } elseif ($tab === 'pending') {
@@ -131,7 +131,7 @@ class ArticleController extends Controller
         $article = new Article($validated);
         $article->created_by_user_id = $user->user_id;
         $article->content_status = Article::CONTENT_ACTIVE;
-        $autoApprove = $user->isAdviser() && config('school.adviser_posts_auto_approved', true);
+        $autoApprove = ($user->isAdviser() || $user->isSuperadmin()) && config('school.adviser_posts_auto_approved', true);
         $article->approval_status = $autoApprove ? Article::APPROVAL_APPROVED : Article::APPROVAL_PENDING;
 
         if ($autoApprove) {

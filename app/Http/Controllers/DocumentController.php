@@ -29,10 +29,10 @@ class DocumentController extends Controller
     {
         $this->authorize('viewAny', Document::class);
         $user = $request->user();
-        $allowedTabs = $user?->isAdviser() ? ['published', 'pending', 'rejected', 'archived', 'all']
+        $allowedTabs = $user?->canReview() ? ['published', 'pending', 'rejected', 'archived', 'all']
             : ($user?->isOfficer() ? ['published', 'mine', 'archived'] : ['published']);
-        // SECURITY: Pending totals are queried only for advisers and never reach public or student views.
-        $pendingCount = $user?->isAdviser() ? Document::pending()->count() : null;
+        // SECURITY: Pending totals are queried only for review-capable users and never reach public or student views.
+        $pendingCount = $user?->canReview() ? Document::pending()->count() : null;
         $tab = $request->query('tab', 'published');
         // SECURITY: A tab whitelist prevents guests and students from requesting private workflow rows.
         if (! in_array($tab, $allowedTabs, true)) $tab = 'published';
@@ -45,7 +45,7 @@ class DocumentController extends Controller
         elseif ($tab === 'mine' && $user) $documents->where('created_by_user_id', $user->user_id);
         elseif ($tab === 'archived') {
             $documents->archived();
-            if (! $user?->isAdviser()) $documents->where('created_by_user_id', $user->user_id);
+            if (! $user?->canManageOfficers()) $documents->where('created_by_user_id', $user->user_id);
         } elseif ($tab === 'pending') $documents->pending();
         elseif ($tab === 'rejected') $documents->rejected();
 
@@ -93,7 +93,7 @@ class DocumentController extends Controller
         $document = new Document($validated);
         $document->created_by_user_id = $request->user()->user_id;
         $document->content_status = Document::CONTENT_ACTIVE;
-        $autoApprove = $request->user()->isAdviser() && config('school.adviser_posts_auto_approved', true);
+        $autoApprove = ($request->user()->isAdviser() || $request->user()->isSuperadmin()) && config('school.adviser_posts_auto_approved', true);
         $document->approval_status = $autoApprove ? Document::APPROVAL_APPROVED : Document::APPROVAL_PENDING;
         if ($autoApprove) {
             $document->reviewed_by_user_id = $request->user()->user_id;

@@ -29,11 +29,11 @@ class ActivityController extends Controller
     {
         $this->authorize('viewAny', Activity::class);
         $user = $request->user();
-        $allowedTabs = $user?->isAdviser()
+        $allowedTabs = $user?->canReview()
             ? ['published', 'pending', 'rejected', 'archived', 'all']
             : ($user?->isOfficer() ? ['published', 'mine', 'archived'] : ['published']);
-        // SECURITY: Pending totals are queried only for advisers and never reach public or student views.
-        $pendingCount = $user?->isAdviser() ? Activity::pending()->count() : null;
+        // SECURITY: Pending totals are queried only for review-capable users and never reach public or student views.
+        $pendingCount = $user?->canReview() ? Activity::pending()->count() : null;
         $tab = $request->query('tab', 'published');
 
         // SECURITY: Unknown or role-hidden tabs fall back to Published before querying records.
@@ -48,7 +48,7 @@ class ActivityController extends Controller
             $activities->where('created_by_user_id', $user->user_id);
         } elseif ($tab === 'archived') {
             $activities->archived();
-            if (! $user?->isAdviser()) {
+            if (! $user?->canManageOfficers()) {
                 $activities->where('created_by_user_id', $user->user_id);
             }
         } elseif ($tab === 'pending') {
@@ -126,7 +126,7 @@ class ActivityController extends Controller
         $activity = new Activity($validated);
         $activity->created_by_user_id = $user->user_id;
         $activity->content_status = Activity::CONTENT_ACTIVE;
-        $autoApprove = $user->isAdviser() && config('school.adviser_posts_auto_approved', true);
+        $autoApprove = ($user->isAdviser() || $user->isSuperadmin()) && config('school.adviser_posts_auto_approved', true);
         $activity->approval_status = $autoApprove ? Activity::APPROVAL_APPROVED : Activity::APPROVAL_PENDING;
 
         if ($autoApprove) {
