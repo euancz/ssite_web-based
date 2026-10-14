@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Achievement;
+use App\Rules\MaxWords;
 use App\Support\PostNotificationRecipients;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
@@ -108,7 +109,7 @@ class AchievementController extends Controller
         // Validate editable achievement fields and the optional image before writing.
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:200'],
-            'description' => ['required', 'string'],
+            'description' => ['required', 'string', new MaxWords],
             'awardee' => ['nullable', 'string', 'max:200'],
             'category' => ['nullable', 'string', 'max:100'],
             'achievement_date' => ['nullable', 'date'],
@@ -165,7 +166,7 @@ class AchievementController extends Controller
         // Keep replacement images optional and retain the same field validation as creation.
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:200'],
-            'description' => ['required', 'string'],
+            'description' => ['required', 'string', new MaxWords],
             'awardee' => ['nullable', 'string', 'max:200'],
             'category' => ['nullable', 'string', 'max:100'],
             'achievement_date' => ['nullable', 'date'],

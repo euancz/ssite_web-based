@@ -31,6 +31,7 @@
     <div class="dashboard-form-field">
         <label for="document-description">Description</label>
         <textarea id="document-description" name="description" rows="6">{{ old('description', $document?->description) }}</textarea>
+        <span class="profile-field-help">Maximum 300 words.</span>
         @error('description') <span class="profile-field-error">{{ $message }}</span> @enderror
     </div>
 

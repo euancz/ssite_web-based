@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Document;
+use App\Rules\MaxWords;
 use App\Support\PostNotificationRecipients;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
@@ -75,7 +76,7 @@ class DocumentController extends Controller
         // Validate the metadata and configured PDF size before checking the file contents.
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:200'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', new MaxWords],
             'category' => ['nullable', 'string', 'max:100'],
             'file' => ['required', 'file', 'mimes:pdf', 'max:' . config('school.max_pdf_size_kb', 10240)],
         ], [
@@ -119,7 +120,7 @@ class DocumentController extends Controller
         // Keep a replacement PDF optional while validating the same editable metadata.
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:200'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', new MaxWords],
             'category' => ['nullable', 'string', 'max:100'],
             'file' => ['nullable', 'file', 'mimes:pdf', 'max:' . config('school.max_pdf_size_kb', 10240)],
         ], [

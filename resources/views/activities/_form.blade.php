@@ -17,6 +17,7 @@
     <div class="dashboard-form-field">
         <label for="activity-description">Description</label>
         <textarea id="activity-description" name="description" rows="12" required>{{ old('description', $activity?->description) }}</textarea>
+        <span class="profile-field-help">Maximum 300 words.</span>
         @error('description') <span class="profile-field-error">{{ $message }}</span> @enderror
     </div>
     {{-- The optional date maps to activities.activity_date. --}}

@@ -27,6 +27,7 @@
     <div class="dashboard-form-field">
         <label for="article-content">Content</label>
         <textarea id="article-content" name="content" rows="14" required>{{ old('content', $article?->content) }}</textarea>
+        <span class="profile-field-help">Maximum 300 words.</span>
         @error('content') <span class="profile-field-error">{{ $message }}</span> @enderror
     </div>
 

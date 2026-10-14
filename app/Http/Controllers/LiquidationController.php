@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Liquidation;
+use App\Rules\MaxWords;
 use App\Support\PostNotificationRecipients;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
@@ -69,7 +70,7 @@ class LiquidationController extends Controller
         // Validate report fields and the configured PDF limit before checking file contents.
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:200'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', new MaxWords],
             'amount' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
             'report_date' => ['nullable', 'date'],
             'file' => ['required', 'file', 'mimes:pdf', 'max:' . config('school.max_pdf_size_kb', 10240)],
@@ -117,7 +118,7 @@ class LiquidationController extends Controller
         // Keep replacement PDFs optional and validate the same editable report fields.
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:200'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', new MaxWords],
             'amount' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
             'report_date' => ['nullable', 'date'],
             'file' => ['nullable', 'file', 'mimes:pdf', 'max:' . config('school.max_pdf_size_kb', 10240)],

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Activity;
+use App\Rules\MaxWords;
 use App\Support\PostNotificationRecipients;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
@@ -107,7 +108,7 @@ class ActivityController extends Controller
         // Validate editable activity fields and the optional image before writing.
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:200'],
-            'description' => ['required', 'string'],
+            'description' => ['required', 'string', new MaxWords],
             'activity_date' => ['nullable', 'date'],
             'location' => ['nullable', 'string', 'max:200'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
@@ -162,7 +163,7 @@ class ActivityController extends Controller
         // Keep the same optional replacement image and activity field rules as creation.
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:200'],
-            'description' => ['required', 'string'],
+            'description' => ['required', 'string', new MaxWords],
             'activity_date' => ['nullable', 'date'],
             'location' => ['nullable', 'string', 'max:200'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],

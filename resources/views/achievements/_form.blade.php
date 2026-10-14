@@ -17,6 +17,7 @@
     <div class="dashboard-form-field">
         <label for="achievement-description">Description</label>
         <textarea id="achievement-description" name="description" rows="12" required>{{ old('description', $achievement?->description) }}</textarea>
+        <span class="profile-field-help">Maximum 300 words.</span>
         @error('description') <span class="profile-field-error">{{ $message }}</span> @enderror
     </div>
     {{-- The optional date maps to achievements.achievement_date. --}}

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
+use App\Rules\MaxWords;
 use App\Support\PostNotificationRecipients;
 use Illuminate\Contracts\View\View;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -116,7 +117,7 @@ class ArticleController extends Controller
         // Validate only editable article fields; policy checks still protect the write below.
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:200'],
-            'content' => ['required', 'string'],
+            'content' => ['required', 'string', new MaxWords],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ], [
             'title.required' => 'Enter an article title.',
@@ -172,7 +173,7 @@ class ArticleController extends Controller
         // Keep replacement images optional and validate the same editable fields as creation.
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:200'],
-            'content' => ['required', 'string'],
+            'content' => ['required', 'string', new MaxWords],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ], [
             'title.required' => 'Enter an article title.',
