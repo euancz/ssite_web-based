@@ -189,8 +189,12 @@
                         </button>
 
                         <div id="account-menu" class="account-menu hidden" role="menu" aria-label="Account menu">
-                            <div class="account-menu-name" role="presentation">
-                                {{ auth()->user()->name }}
+                            <div class="account-menu-identity" role="presentation">
+                                <x-ui.avatar :user="auth()->user()" size="md" />
+                                <div class="account-menu-identity-copy">
+                                    <strong>{{ auth()->user()->name }}</strong>
+                                    <span>{{ ucfirst(str_replace('_', ' ', auth()->user()->role)) }}</span>
+                                </div>
                             </div>
                             @if (auth()->user()->hasCompletedProfile())
                                 <a href="{{ route('profile.edit') }}" class="account-menu-action" role="menuitem">
@@ -207,18 +211,20 @@
                                 </svg>
                                 <span>Settings</span>
                             </button>
-                            @if (auth()->user()->canPost())
+                            @if (auth()->user()->canPost() || auth()->user()->can('review-posts') || auth()->user()->can('manage-users'))
                                 <div class="account-menu-divider" role="separator"></div>
                                 <p class="account-menu-section-label" role="presentation">Manage</p>
-                                <a href="{{ route(auth()->user()->dashboardRoute()) }}" class="account-menu-action" role="menuitem">Dashboard</a>
+                                @if (auth()->user()->canPost())
+                                    <a href="{{ route(auth()->user()->dashboardRoute()) }}" class="account-menu-action" role="menuitem">Dashboard</a>
+                                @endif
+                                @can('review-posts')
+                                    <a href="{{ route('adviser.reviews.index') }}" class="account-menu-action" role="menuitem">Review Posts</a>
+                                @endcan
+                                @can('manage-users')
+                                    <a href="{{ route('adviser.users.index') }}" class="account-menu-action" role="menuitem">Manage Users</a>
+                                    <a href="{{ route('adviser.officers.index') }}" class="account-menu-action" role="menuitem">Manage Officers</a>
+                                @endcan
                             @endif
-                            @can('review-posts')
-                                <a href="{{ route('adviser.reviews.index') }}" class="account-menu-action" role="menuitem">Review Posts</a>
-                            @endcan
-                            @can('manage-users')
-                                <a href="{{ route('adviser.users.index') }}" class="account-menu-action" role="menuitem">Manage Users</a>
-                                <a href="{{ route('adviser.officers.index') }}" class="account-menu-action" role="menuitem">Manage Officers</a>
-                            @endcan
                             {{-- Keep logout last and visually separate for every signed-in role. --}}
                             <div class="account-menu-divider" role="separator"></div>
                             <form method="POST" action="{{ route('logout') }}">

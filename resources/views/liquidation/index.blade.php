@@ -56,25 +56,36 @@
     @php($tabLabels = ['published' => 'Published', 'mine' => 'My Posts', 'pending' => 'Pending Review', 'rejected' => 'Rejected', 'archived' => 'Archived', 'all' => 'All'])
     <section class="post-feed-list" aria-label="{{ $tabLabels[$tab] }} liquidation reports">
         @forelse ($liquidations as $liquidation)
-            <x-posts.card
-                :post="$liquidation"
-                module="Liquidation"
-                route-prefix="liquidations"
-                :show-url="route('liquidations.show', $liquidation)"
-                :content="$liquidation->description ?? ''"
-                :tab="$tab"
-            >
-                <x-slot:attachment>
-                    <x-posts.strips.liquidation :liquidation="$liquidation">
-                        <x-posts.attachment
-                            :post="$liquidation"
-                            route-prefix="liquidations"
-                            guest-can-see-list
-                        />
-                    </x-posts.strips.liquidation>
-                </x-slot:attachment>
-
-                <x-slot:footerActions>
+            <article class="liquidation-report-row">
+                <div class="liquidation-report-main">
+                    <div class="liquidation-report-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3.75h6l4 4v12.5H7a2 2 0 0 1-2-2v-12.5a2 2 0 0 1 2-2zM13 3.75v4h4M8 14h8M8 17h8"/></svg>
+                        <span>PDF</span>
+                    </div>
+                    <div class="liquidation-report-copy">
+                        <h2><a href="{{ route('liquidations.show', $liquidation) }}">{{ $liquidation->title }}</a></h2>
+                        <p class="liquidation-report-file">{{ $liquidation->original_name }} <span>·</span> {{ number_format($liquidation->file_size / 1024, 1) }} KB</p>
+                        @if ($liquidation->description)<p class="liquidation-report-description">{{ \Illuminate\Support\Str::limit(strip_tags($liquidation->description), 180) }}</p>@endif
+                        <p class="liquidation-report-byline">{{ $liquidation->author?->name ?? 'Former member' }} <span>·</span> {{ $liquidation->created_at?->diffForHumans() ?? 'Date unavailable' }}</p>
+                    </div>
+                    <div class="liquidation-report-facts">
+                        <span>Report date</span>
+                        <strong>{{ $liquidation->report_date?->format('M j, Y') ?? 'Not provided' }}</strong>
+                        <span>Amount</span>
+                        <strong class="liquidation-report-amount">{{ $liquidation->formattedAmount() }}</strong>
+                    </div>
+                    <x-posts.row-menu :post="$liquidation" route-prefix="liquidations" />
+                </div>
+                <div class="liquidation-report-actions">
+                    @can('viewFile', $liquidation)<a href="{{ route('liquidations.view', $liquidation) }}">Preview PDF</a>@endcan
+                    @can('download', $liquidation)<a href="{{ route('liquidations.download', $liquidation) }}" class="liquidation-download-link">Download PDF</a>@endcan
+                    @guest<a href="{{ route('liquidations.show', $liquidation) }}">View report</a>@endguest
+                </div>
+                <div class="liquidation-report-review">
+                    @if ($tab !== 'published' || $liquidation->isArchived())<x-ui.status-badge :status="$liquidation->approval_status" />@endif
+                    @if ($liquidation->isArchived())<x-ui.status-badge status="archived" />@endif
+                </div>
+                <div class="liquidation-report-admin">
                     @can('approve', $liquidation)
                         @if ($tab === 'pending' && $liquidation->isPending())
                             <form method="POST" action="{{ route('liquidations.approve', $liquidation) }}">
@@ -99,8 +110,8 @@
                             </label>
                         @endif
                     @endcan
-                </x-slot:footerActions>
-            </x-posts.card>
+                </div>
+            </article>
         @empty
             @if ($tab === 'published')
                 <x-posts.empty-state title="No published reports yet" message="Check back soon for the latest liquidation reports." />

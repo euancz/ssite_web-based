@@ -449,6 +449,7 @@ ol {
 }
 
 .site-nav-link {
+    position: relative;
     min-height: 24px;
     gap: 4px;
     border: 0;
@@ -468,6 +469,17 @@ ol {
 
 .site-nav-link.is-active {
     font-weight: 600;
+}
+
+.site-nav-link.is-active::after {
+    position: absolute;
+    right: 0;
+    bottom: -8px;
+    left: 0;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--ssite-navy);
+    content: "";
 }
 
 .dropdown-chevron,
@@ -564,6 +576,21 @@ ol {
 
 .mobile-nav-link.is-active {
     font-weight: 600;
+    color: var(--ssite-navy);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 5px;
+}
+
+.mobile-nav-summary.is-active { font-weight: 700; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 5px; }
+
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: page-leave 150ms ease-in both; }
+::view-transition-new(root) { animation: page-arrive 260ms cubic-bezier(.2,.75,.25,1) both; }
+@keyframes page-leave { to { opacity: .72; transform: translateY(-4px); } }
+@keyframes page-arrive { from { opacity: .72; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 1ms; }
 }
 
 .mobile-nav-dropdown-item {
@@ -2456,4 +2483,138 @@ ol {
     .dashboard-stat-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* Account menu: give identity, shortcuts, and sign-out distinct visual groups. */
+.account-menu {
+    top: calc(100% + 12px);
+    width: min(296px, calc(100vw - 24px));
+    max-height: min(70vh, 520px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    border: 1px solid #d3e1e8;
+    border-radius: 12px;
+    padding: 6px;
+    background: #fff;
+    box-shadow: 0 14px 34px rgb(23 50 77 / 18%), 0 2px 6px rgb(23 50 77 / 7%);
+}
+
+.account-menu-identity {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    margin: -6px -6px 6px;
+    padding: 16px;
+    border-bottom: 1px solid #e2ebef;
+    background: #f4f8fa;
+}
+
+.account-menu-identity .ui-avatar { flex: 0 0 auto; }
+.account-menu-identity-copy { display: grid; min-width: 0; gap: 3px; }
+.account-menu-identity-copy strong { overflow: hidden; color: #17324d; font-size: .94rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.account-menu-identity-copy span { color: #476174; font-size: .78rem; font-weight: 500; text-transform: capitalize; }
+.account-menu-action,
+.account-menu-logout {
+    min-height: 42px;
+    gap: 11px;
+    border: 0;
+    border-radius: 7px;
+    padding: 0 11px;
+    color: #243f52;
+    font-size: .875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color 140ms ease, color 140ms ease;
+}
+.account-menu-action:hover { background: #edf5f8; color: #17324d; }
+.account-menu-logout { color: #9b342d; }
+.account-menu-logout:hover { background: #fff1ef; color: #842a24; }
+.account-menu-divider { margin: 6px 4px; background: #e2ebef; }
+.account-menu-section-label { padding: 8px 11px 4px; color: #476174; font-size: .68rem; letter-spacing: .07em; }
+.account-menu [role="menuitem"]:focus-visible,
+#account-menu-toggle:focus-visible { outline: 2px solid #24536e; outline-offset: 2px; }
+
+/* Keep the uploaded portrait edge-to-edge inside the account control. */
+.account-toggle .ui-avatar-sm img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 28%;
+    transform: scale(1.12);
+}
+
+/* Notification popover shares the account menu's clean white surface and control rhythm. */
+.notification-dropdown {
+    top: calc(100% + 12px);
+    width: min(360px, calc(100vw - 24px));
+    max-height: min(70vh, 520px);
+    overflow: hidden;
+    border: 1px solid #d3e1e8;
+    border-radius: 12px;
+    padding: 6px;
+    background: #fff;
+    box-shadow: 0 14px 34px rgb(23 50 77 / 18%), 0 2px 6px rgb(23 50 77 / 7%);
+}
+.notification-dropdown-heading {
+    min-height: 48px;
+    margin: -6px -6px 0;
+    padding: 0 14px;
+    border-bottom: 1px solid #e2ebef;
+    background: #f4f8fa;
+}
+.notification-dropdown-heading strong { color: #17324d; font-size: .9rem; font-weight: 700; }
+.notification-mark-all { border-radius: 5px; padding: 6px 8px; color: #24536e; font-size: .75rem; font-weight: 600; }
+.notification-mark-all:hover { background: #e8f1f5; color: #17324d; }
+.notification-list { max-height: min(60vh, 420px); }
+.notification-entry-form { border-color: #e8eef1; }
+.notification-entry { gap: 11px; padding: 12px 10px; border-radius: 7px; transition: background-color 140ms ease; }
+.notification-entry:hover { background: #edf5f8; }
+.notification-entry-message { color: #243f52; font-size: .8rem; line-height: 1.4; }
+.notification-entry-title { color: #476174; font-size: .75rem; }
+.notification-entry-meta { color: #476174; font-size: .7rem; }
+.notification-empty { padding: 24px 14px; color: #476174; font-size: .82rem; }
+.notification-view-all {
+    min-height: 42px;
+    margin: 0 -6px -6px;
+    border-top: 1px solid #e2ebef;
+    border-radius: 0 0 11px 11px;
+    color: #24536e;
+    font-size: .8rem;
+    font-weight: 650;
+}
+.notification-view-all:hover { background: #f4f8fa; color: #17324d; }
+.notification-dropdown :focus-visible { outline: 2px solid #24536e; outline-offset: -2px; }
+@media (max-width: 639px) {
+    .notification-dropdown { right: -72px; width: min(360px, calc(100vw - 24px)); }
+}
+@media (prefers-reduced-motion: reduce) { .notification-entry { transition: none; } }
+
+/* Keep status tabs compact and consistent across feeds and adviser review screens. */
+.dashboard-tabs {
+    min-width: 0;
+    gap: 3px;
+    margin-bottom: 10px;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+}
+.dashboard-tab {
+    min-height: 40px;
+    flex: 0 0 auto;
+    padding: 8px 11px;
+    white-space: nowrap;
+}
+.dashboard-tabs-more { flex: 0 0 auto; }
+.dashboard-tabs-menu { border-color: #d3e1e8; border-radius: 9px; padding: 5px; background: #fff; }
+.dashboard-tabs-menu a { border-radius: 6px; padding: 8px 10px; }
+.dashboard-tabs-menu a:hover,
+.dashboard-tabs-menu a:focus-visible { background: #edf5f8; }
+@media (max-width: 600px) {
+    .dashboard-tabs { margin-inline: -2px; }
+    .dashboard-tab { min-height: 38px; padding-inline: 9px; font-size: .88rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .account-menu-action, .account-menu-logout { transition: none; }
 }

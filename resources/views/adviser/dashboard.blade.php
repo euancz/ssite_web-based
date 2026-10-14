@@ -7,11 +7,7 @@
     <x-ui.page-header
         title="Welcome, {{ auth()->user()->name }}"
         subtitle="Adviser dashboard - Review and manage the SSITE community."
-    >
-        <x-slot:actions>
-            <a href="{{ route('adviser.reviews.index') }}" class="dashboard-button">Review Posts</a>
-        </x-slot:actions>
-    </x-ui.page-header>
+    />
 
     <section class="dashboard-stat-grid" aria-label="Adviser statistics">
         <x-ui.stat-card label="Pending Reviews" :value="$pendingPosts->count()" :href="route('adviser.reviews.index', ['status' => 'pending'])" />

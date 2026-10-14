@@ -1,50 +1,71 @@
-/* Liquidation reports keep the exact formatted amount with the private PDF metadata. */
-.post-feed-liquidation .post-card-strip {
-    border: 1px solid #c8e6f2;
-    background: #f4fbfe;
+/* Liquidation is presented as an accountable document register, not a social feed. */
+.post-feed-liquidation .post-feed-list { gap: 12px; }
+.liquidation-report-row {
+    overflow: hidden;
+    border: 1px solid #cbdde8;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgb(23 50 77 / 5%);
+    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
-
-.post-feed-liquidation .liquidation-post-details {
-    display: grid;
-    grid-template-columns: minmax(0, 1.4fr) minmax(10rem, 0.8fr);
-    align-items: center;
-    gap: 14px 20px;
+.liquidation-report-row:hover { border-color: #8eb5c8; box-shadow: 0 8px 20px rgb(23 50 77 / 9%); transform: translateY(-1px); }
+.liquidation-report-main { display: grid; grid-template-columns: 52px minmax(0, 1fr) minmax(150px, 210px) auto; align-items: center; gap: 18px; padding: 20px 22px; }
+.liquidation-report-icon { display: grid; justify-items: center; gap: 1px; width: 48px; padding: 7px 5px 5px; border: 1px solid #d3e2e9; border-radius: 8px; background: #f3f8fa; color: #36596d; }
+.liquidation-report-icon svg { width: 25px; height: 25px; }
+.liquidation-report-icon span { color: #9c3f36; font-size: 9px; font-weight: 800; letter-spacing: .08em; }
+.liquidation-report-copy { min-width: 0; }
+.liquidation-report-copy h2 { margin: 0; color: var(--ssite-navy); font-size: 1.02rem; font-weight: 700; line-height: 1.4; }
+.liquidation-report-copy h2 a { color: inherit; text-decoration: none; }
+.liquidation-report-copy h2 a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.liquidation-report-file, .liquidation-report-byline, .liquidation-report-description { margin: 5px 0 0; overflow-wrap: anywhere; color: #476174; font-size: .82rem; }
+.liquidation-report-file { font-weight: 600; }
+.liquidation-report-file span, .liquidation-report-byline span { margin: 0 4px; color: #668293; }
+.liquidation-report-byline { color: #476174; }
+.liquidation-report-facts { display: grid; grid-template-columns: 1fr; gap: 3px; padding-left: 18px; border-left: 1px solid #dce7ec; }
+.liquidation-report-facts span { color: #476174; font-size: .72rem; font-weight: 600; }
+.liquidation-report-facts strong { margin-bottom: 6px; color: var(--ssite-navy); font-size: .88rem; font-variant-numeric: tabular-nums; }
+.liquidation-report-facts strong:last-child { margin-bottom: 0; }
+.liquidation-report-facts .liquidation-report-amount { font-size: 1.05rem; }
+.liquidation-report-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 11px 22px; border-top: 1px solid #e2ebef; background: #f7fafb; }
+.liquidation-report-actions a { display: inline-flex; align-items: center; min-height: 34px; border: 1px solid #c4d6df; border-radius: 6px; padding: 6px 11px; color: #203f53; font-size: .8rem; font-weight: 650; text-decoration: none; }
+.liquidation-report-actions a:hover { border-color: #517f96; background: #edf5f8; }
+.liquidation-report-actions .liquidation-download-link { border-color: #173b55; background: #173b55; color: #fff; }
+.liquidation-report-actions .liquidation-download-link:hover { background: #24536e; }
+.liquidation-report-review, .liquidation-report-admin { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 0 22px 12px; }
+.liquidation-report-admin:empty { display: none; }
+.liquidation-document-detail { overflow: hidden; border: 1px solid #cbdde8; border-radius: 12px; background: #fff; box-shadow: 0 3px 12px rgb(23 50 77 / 6%); }
+.liquidation-detail-heading { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; gap: 18px; padding: 26px; }
+.liquidation-detail-heading h1 { margin: 0; color: var(--ssite-navy); font-size: clamp(1.35rem, 3vw, 1.9rem); line-height: 1.2; }
+.liquidation-detail-heading p { margin: 8px 0 0; color: #476174; font-size: .9rem; }
+.liquidation-detail-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; border-top: 1px solid #e2ebef; border-bottom: 1px solid #e2ebef; background: #f7fafb; }
+.liquidation-detail-facts > div { display: grid; align-content: start; gap: 8px; min-width: 0; padding: 18px 22px; }
+.liquidation-detail-facts > div + div { border-left: 1px solid #dce7ec; }
+.liquidation-detail-facts dt { color: #476174; font-size: .76rem; font-weight: 650; }
+.liquidation-detail-facts dd { margin: 0; color: var(--ssite-navy); font-size: 1rem; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.liquidation-detail-description { padding: 22px 26px; }
+.liquidation-detail-description h2 { margin: 0 0 8px; color: var(--ssite-navy); font-size: .95rem; }
+.liquidation-detail-description p { max-width: 72ch; margin: 0; color: #334e60; line-height: 1.65; white-space: pre-line; }
+.liquidation-detail-file { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; margin: 0 26px 22px; border: 1px solid #d5e2e8; border-radius: 9px; padding: 14px; background: #f7fafb; }
+.liquidation-detail-file > div:first-child { display: grid; gap: 4px; min-width: 0; }
+.liquidation-detail-file strong { color: var(--ssite-navy); overflow-wrap: anywhere; }
+.liquidation-detail-file span { color: #476174; font-size: .8rem; }
+.liquidation-detail-admin { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 26px 22px; }
+.liquidation-detail-admin:empty { display: none; }
+@media (max-width: 680px) {
+    .liquidation-detail-heading { grid-template-columns: 42px minmax(0, 1fr) auto; gap: 12px; padding: 18px 16px; }
+    .liquidation-detail-facts > div { padding: 14px 12px; }
+    .liquidation-detail-description { padding: 18px 16px; }
+    .liquidation-detail-file { margin-inline: 16px; }
+    .liquidation-detail-admin { padding-inline: 16px; }
+    .liquidation-report-main { grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; padding: 16px; }
+    .liquidation-report-icon { width: 42px; }
+    .liquidation-report-facts { grid-column: 2 / 4; grid-template-columns: auto 1fr auto 1fr; align-items: baseline; gap: 6px 10px; padding: 10px 0 0; border-top: 1px solid #dce7ec; border-left: 0; }
+    .liquidation-report-facts strong { margin: 0; }
+    .liquidation-report-facts .liquidation-report-amount { font-size: .9rem; }
+    .liquidation-report-actions { padding-inline: 16px; }
 }
-
-.post-feed-liquidation .liquidation-post-facts {
-    display: grid;
-    gap: 12px;
-    margin: 0;
+@media (max-width: 390px) {
+    .liquidation-report-main { grid-template-columns: 40px minmax(0, 1fr); }
+    .liquidation-report-facts { grid-column: 1 / -1; grid-template-columns: auto 1fr; }
 }
-
-.post-feed-liquidation .liquidation-post-fact {
-    display: grid;
-    gap: 4px;
-    min-width: 0;
-}
-
-.post-feed-liquidation .liquidation-post-fact dt {
-    color: var(--ssite-navy-soft);
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-}
-
-.post-feed-liquidation .liquidation-post-fact dd {
-    min-width: 0;
-    margin: 0;
-    color: var(--ssite-navy);
-    overflow-wrap: anywhere;
-}
-
-.post-feed-liquidation .liquidation-post-amount dd {
-    font-size: 1.15rem;
-    font-weight: 700;
-}
-
-@media (max-width: 560px) {
-    .post-feed-liquidation .liquidation-post-details {
-        grid-template-columns: minmax(0, 1fr);
-    }
-}
+@media (prefers-reduced-motion: reduce) { .liquidation-report-row { transition: none; } }
