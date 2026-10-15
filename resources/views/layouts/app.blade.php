@@ -194,6 +194,9 @@
                                 <div class="account-menu-identity-copy">
                                     <strong>{{ auth()->user()->name }}</strong>
                                     <span>{{ ucfirst(str_replace('_', ' ', auth()->user()->role)) }}</span>
+                                    @if (auth()->user()->position())
+                                        <span>{{ auth()->user()->position() }}</span>
+                                    @endif
                                 </div>
                             </div>
                             @if (auth()->user()->hasCompletedProfile())
@@ -214,15 +217,14 @@
                             @if (auth()->user()->canPost() || auth()->user()->can('review-posts') || auth()->user()->can('manage-users'))
                                 <div class="account-menu-divider" role="separator"></div>
                                 <p class="account-menu-section-label" role="presentation">Manage</p>
-                                @if (auth()->user()->canPost())
+                                @if (auth()->user()->canPost() || auth()->user()->isAdviser() || auth()->user()->isSuperadmin())
                                     <a href="{{ route(auth()->user()->dashboardRoute()) }}" class="account-menu-action" role="menuitem">Dashboard</a>
                                 @endif
                                 @can('review-posts')
-                                    <a href="{{ route('adviser.reviews.index') }}" class="account-menu-action" role="menuitem">Review Posts</a>
+                                    <a href="{{ route('adviser.reviews.index') }}" class="account-menu-action" role="menuitem">Review Posts ({{ $pendingReviewCount }})</a>
                                 @endcan
                                 @can('manage-users')
-                                    <a href="{{ route('adviser.users.index') }}" class="account-menu-action" role="menuitem">Manage Users</a>
-                                    <a href="{{ route('adviser.officers.index') }}" class="account-menu-action" role="menuitem">Manage Officers</a>
+                                    <a href="{{ route('adviser.users.index') }}" class="account-menu-action" role="menuitem">{{ auth()->user()->isSuperadmin() ? 'Manage Advisers' : 'Manage Users' }}</a>
                                 @endcan
                             @endif
                             {{-- Keep logout last and visually separate for every signed-in role. --}}

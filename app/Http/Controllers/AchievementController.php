@@ -14,25 +14,22 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
-/*
- * Officer achievements start pending; advisers approve or reject with a reason. Only approved
- * AND active achievements appear publicly; archive shelves content without changing review state,
- * and restore returns it to active while preserving pending or rejected approval state. Archive,
- * restore, and delete stay silent; only review and publication transitions send notifications.
+/* Position-based submissions start pending; the President reviews and may publish directly.
+ * Public queries require approved and active state; archive and restore preserve review state.
  */
-/** Lists, edits, reviews, and archives achievements with server-side role and state checks. */
+/** Lists and manages achievements while enforcing position capabilities and review state server-side. */
 class AchievementController extends Controller
 {
     use AuthorizesRequests;
 
-    /** Show each role only the achievement tabs and records available to that role. */
+    /** Show the tabs and records available to the current capability. */
     public function index(Request $request): View
     {
         $this->authorize('viewAny', Achievement::class);
         $user = $request->user();
         $allowedTabs = $user?->canReview()
             ? ['published', 'pending', 'rejected', 'archived', 'all']
-            : ($user?->isOfficer() ? ['published', 'mine', 'archived'] : ['published']);
+            : ($user?->canPostIn('achievements') ? ['published', 'mine', 'archived'] : ['published']);
         // SECURITY: Pending totals are queried only for review-capable users and never reach public or student views.
         $pendingCount = $user?->canReview() ? Achievement::pending()->count() : null;
         $tab = $request->query('tab', 'published');
@@ -49,7 +46,7 @@ class AchievementController extends Controller
             $achievements->where('created_by_user_id', $user->user_id);
         } elseif ($tab === 'archived') {
             $achievements->archived();
-            if (! $user?->canManageOfficers()) {
+            if (! $user?->isPresident()) {
                 $achievements->where('created_by_user_id', $user->user_id);
             }
         } elseif ($tab === 'pending') {
@@ -78,7 +75,7 @@ class AchievementController extends Controller
         return view('achievements.index', compact('achievements', 'allowedTabs', 'tab', 'search', 'pendingCount'));
     }
 
-    /** Show public achievements or private records to their author or an adviser. */
+    /** Show public achievements or private records to their author or the President. */
     public function show(Achievement $achievement): View
     {
         // SECURITY: Return 404 for policy denials so private record existence is not disclosed.
@@ -95,7 +92,7 @@ class AchievementController extends Controller
         return view('achievements.show', compact('achievement'));
     }
 
-    /** Show the achievement form to officers and advisers. */
+    /** Show the achievement form only when the current position can post here. */
     public function create(): View
     {
         $this->authorize('create', Achievement::class);
@@ -103,7 +100,7 @@ class AchievementController extends Controller
         return view('achievements.create');
     }
 
-    /** Store officer submissions as pending and adviser submissions according to school settings. */
+    /** Store position-based submissions as pending or President posts as configured. */
     public function store(Request $request): RedirectResponse
     {
         // Validate editable achievement fields and the optional image before writing.
@@ -130,7 +127,7 @@ class AchievementController extends Controller
         $achievement = new Achievement($validated);
         $achievement->created_by_user_id = $user->user_id;
         $achievement->content_status = Achievement::CONTENT_ACTIVE;
-        $autoApprove = ($user->isAdviser() || $user->isSuperadmin()) && config('school.adviser_posts_auto_approved', true);
+        $autoApprove = $user->postsAutoApproved();
         $achievement->approval_status = $autoApprove ? Achievement::APPROVAL_APPROVED : Achievement::APPROVAL_PENDING;
 
         if ($autoApprove) {
@@ -144,15 +141,15 @@ class AchievementController extends Controller
         }
 
         $achievement->save();
-        // Pending submissions go to advisers only; adviser auto-approved posts are already published.
+        // SECURITY: Pending submissions notify configured reviewers; President posts follow the school toggle.
         $notifications = app(PostNotificationRecipients::class);
         if ($autoApprove && $achievement->content_status === Achievement::CONTENT_ACTIVE) $notifications->published('achievement', $achievement, $user);
-        elseif ($user->isOfficer()) $notifications->submitted('achievement', $achievement, $user);
+        else $notifications->submitted('achievement', $achievement, $user);
 
         return redirect()->route('achievements.show', $achievement)->with('status', 'The achievement was created.');
     }
 
-    /** Show the edit form to the achievement owner or an adviser. */
+    /** Show the edit form to the owner with a current capability or the President. */
     public function edit(Achievement $achievement): View
     {
         $this->authorize('update', $achievement);
@@ -160,7 +157,7 @@ class AchievementController extends Controller
         return view('achievements.edit', compact('achievement'));
     }
 
-    /** Update achievement fields and return rejected or configured approved officer edits to review. */
+    /** Update achievement fields and return rejected or configured approved edits to review. */
     public function update(Request $request, Achievement $achievement): RedirectResponse
     {
         // Keep replacement images optional and retain the same field validation as creation.
@@ -203,7 +200,7 @@ class AchievementController extends Controller
         }
 
         $achievement->save();
-        // SECURITY: Only officer edits returned to pending trigger a review notice; failures never block saving.
+        // SECURITY: Edits returned to pending notify configured reviewers; failures never block saving.
         if ($request->user()->isOfficer() && ($wasRejected || ($wasApproved && config('school.reset_approval_on_edit', true)))) {
             app(PostNotificationRecipients::class)->submitted('achievement', $achievement, $request->user(), true);
         }
@@ -214,7 +211,7 @@ class AchievementController extends Controller
         return redirect()->route('achievements.show', $achievement)->with('status', 'The achievement was updated.');
     }
 
-    /** Archive an achievement for its owner or an adviser without changing approval state. */
+    /** Archive an achievement for its owner or the President without changing approval state. */
     public function archive(Achievement $achievement): RedirectResponse
     {
         $this->authorize('archive', $achievement);
@@ -262,10 +259,10 @@ class AchievementController extends Controller
         return back()->with('status', 'The achievement was approved.');
     }
 
-    /** Reject only pending achievements after the adviser reason has been validated. */
+    /** Reject only pending achievements after the President reason has been validated. */
     public function reject(Request $request, Achievement $achievement): RedirectResponse
     {
-        // Keep adviser rejection reasons required and within the database limit.
+        // Keep President rejection reasons required and within the database limit.
         $validated = $request->validate(['rejection_reason' => ['required', 'string', 'max:255']], [
             'rejection_reason.required' => 'Enter a reason before rejecting this achievement.',
             'rejection_reason.max' => 'The rejection reason may not be longer than 255 characters.',
@@ -299,7 +296,7 @@ class AchievementController extends Controller
         return redirect()->route('achievements.index', ['tab' => 'all'])->with('status', 'The achievement was deleted.');
     }
 
-    /** Archive adviser-selected achievements after validating and authorizing every submitted ID. */
+    /** Archive President-selected achievements after validating and authorizing every submitted ID. */
     public function bulkArchive(Request $request): RedirectResponse
     {
         $this->authorize('bulkArchive', Achievement::class);

@@ -17,10 +17,8 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-/*
- * Officer PDFs start pending; advisers approve or reject with a reason. Only approved AND active
- * items are public; files stay on the private disk and every file response authorizes before reading.
- * Archive, restore, and delete stay silent; only review and publication transitions send notifications.
+/* Position-based submissions start pending; the President reviews and may publish directly.
+ * PDF bytes stay private behind authorized routes; archive and restore preserve review state.
  */
 class DocumentController extends Controller
 {
@@ -31,7 +29,7 @@ class DocumentController extends Controller
         $this->authorize('viewAny', Document::class);
         $user = $request->user();
         $allowedTabs = $user?->canReview() ? ['published', 'pending', 'rejected', 'archived', 'all']
-            : ($user?->isOfficer() ? ['published', 'mine', 'archived'] : ['published']);
+            : ($user?->canPostIn('documents') ? ['published', 'mine', 'archived'] : ['published']);
         // SECURITY: Pending totals are queried only for review-capable users and never reach public or student views.
         $pendingCount = $user?->canReview() ? Document::pending()->count() : null;
         $tab = $request->query('tab', 'published');
@@ -46,7 +44,7 @@ class DocumentController extends Controller
         elseif ($tab === 'mine' && $user) $documents->where('created_by_user_id', $user->user_id);
         elseif ($tab === 'archived') {
             $documents->archived();
-            if (! $user?->canManageOfficers()) $documents->where('created_by_user_id', $user->user_id);
+            if (! $user?->isPresident()) $documents->where('created_by_user_id', $user->user_id);
         } elseif ($tab === 'pending') $documents->pending();
         elseif ($tab === 'rejected') $documents->rejected();
 
@@ -94,7 +92,7 @@ class DocumentController extends Controller
         $document = new Document($validated);
         $document->created_by_user_id = $request->user()->user_id;
         $document->content_status = Document::CONTENT_ACTIVE;
-        $autoApprove = ($request->user()->isAdviser() || $request->user()->isSuperadmin()) && config('school.adviser_posts_auto_approved', true);
+        $autoApprove = $request->user()->postsAutoApproved();
         $document->approval_status = $autoApprove ? Document::APPROVAL_APPROVED : Document::APPROVAL_PENDING;
         if ($autoApprove) {
             $document->reviewed_by_user_id = $request->user()->user_id;
@@ -102,10 +100,10 @@ class DocumentController extends Controller
         }
         [$document->file_path, $document->original_name, $document->file_size] = $this->storePdf($file);
         $document->save();
-        // Pending submissions go to advisers only; adviser auto-approved posts are already published.
+        // SECURITY: Pending submissions notify configured reviewers; President posts follow the school toggle.
         $notifications = app(PostNotificationRecipients::class);
         if ($autoApprove && $document->content_status === Document::CONTENT_ACTIVE) $notifications->published('document', $document, $request->user());
-        elseif ($request->user()->isOfficer()) $notifications->submitted('document', $document, $request->user());
+        else $notifications->submitted('document', $document, $request->user());
         return redirect()->route('documents.show', $document)->with('status', 'The document was uploaded.');
     }
 
@@ -141,7 +139,7 @@ class DocumentController extends Controller
             $this->assertPdf($file);
             [$document->file_path, $document->original_name, $document->file_size] = $this->storePdf($file);
         }
-        // SECURITY: An officer's edit to approved content returns it to review when configured.
+        // SECURITY: A configured edit to approved content returns it to President review.
         if ($wasRejected || ($wasApproved && $request->user()->isOfficer() && config('school.reset_approval_on_edit', true))) {
             $document->approval_status = Document::APPROVAL_PENDING;
             $document->rejection_reason = null;
@@ -149,7 +147,7 @@ class DocumentController extends Controller
             $document->reviewed_at = null;
         }
         $document->save();
-        // SECURITY: Only officer edits returned to pending trigger a review notice; failures never block saving.
+        // SECURITY: Edits returned to pending notify configured reviewers; failures never block saving.
         if ($request->user()->isOfficer() && ($wasRejected || ($wasApproved && config('school.reset_approval_on_edit', true)))) {
             app(PostNotificationRecipients::class)->submitted('document', $document, $request->user(), true);
         }
@@ -241,7 +239,7 @@ class DocumentController extends Controller
 
     public function download(Document $document): StreamedResponse|RedirectResponse
     {
-        // SECURITY: A private document is a 404 to anyone who is not its owner or an adviser.
+        // SECURITY: A private document is a 404 to anyone other than its owner or the President.
         try { $this->authorize('download', $document); }
         catch (AuthorizationException) { abort(404); }
         return $this->fileResponse($document, false);

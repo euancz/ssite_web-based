@@ -8,7 +8,7 @@
         <div class="notification-page-heading">
             <div>
                 <h1>Notifications</h1>
-                <p>Updates about posts and adviser review.</p>
+                <p>Updates about posts and President review.</p>
             </div>
             <form method="POST" action="{{ route('notifications.read-all') }}">
                 @csrf

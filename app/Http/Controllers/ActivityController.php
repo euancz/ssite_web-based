@@ -14,13 +14,10 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
-/*
- * Officer activities start pending; advisers approve or reject with a reason. Only approved
- * AND active activities appear publicly; archive shelves content without changing review state,
- * and restore returns it to active while preserving pending or rejected approval state. Archive,
- * restore, and delete stay silent; only review and publication transitions send notifications.
+/* Officer submissions follow position capabilities and start pending. The President reviews;
+ * public queries require approved and active state, while archive and restore preserve review state.
  */
-/** Lists, edits, reviews, and archives activities with server-side role and state checks. */
+/** Lists and manages activities while enforcing position capabilities and review state server-side. */
 class ActivityController extends Controller
 {
     use AuthorizesRequests;
@@ -32,7 +29,7 @@ class ActivityController extends Controller
         $user = $request->user();
         $allowedTabs = $user?->canReview()
             ? ['published', 'pending', 'rejected', 'archived', 'all']
-            : ($user?->isOfficer() ? ['published', 'mine', 'archived'] : ['published']);
+            : ($user?->canPostIn('activities') ? ['published', 'mine', 'archived'] : ['published']);
         // SECURITY: Pending totals are queried only for review-capable users and never reach public or student views.
         $pendingCount = $user?->canReview() ? Activity::pending()->count() : null;
         $tab = $request->query('tab', 'published');
@@ -49,7 +46,7 @@ class ActivityController extends Controller
             $activities->where('created_by_user_id', $user->user_id);
         } elseif ($tab === 'archived') {
             $activities->archived();
-            if (! $user?->canManageOfficers()) {
+            if (! $user?->isPresident()) {
                 $activities->where('created_by_user_id', $user->user_id);
             }
         } elseif ($tab === 'pending') {
@@ -77,7 +74,7 @@ class ActivityController extends Controller
         return view('activities.index', compact('activities', 'allowedTabs', 'tab', 'search', 'pendingCount'));
     }
 
-    /** Show public activities or private records to their author or an adviser. */
+    /** Show public activities or private records to their author or the President. */
     public function show(Activity $activity): View
     {
         // SECURITY: Return 404 for policy denials so private record existence is not disclosed.
@@ -94,7 +91,7 @@ class ActivityController extends Controller
         return view('activities.show', compact('activity'));
     }
 
-    /** Show the activity form to officers and advisers. */
+    /** Show the activity form only when the current position can post here. */
     public function create(): View
     {
         $this->authorize('create', Activity::class);
@@ -102,7 +99,7 @@ class ActivityController extends Controller
         return view('activities.create');
     }
 
-    /** Store officer submissions as pending and adviser submissions according to school settings. */
+    /** Store position-based submissions as pending or President posts as configured. */
     public function store(Request $request): RedirectResponse
     {
         // Validate editable activity fields and the optional image before writing.
@@ -127,7 +124,7 @@ class ActivityController extends Controller
         $activity = new Activity($validated);
         $activity->created_by_user_id = $user->user_id;
         $activity->content_status = Activity::CONTENT_ACTIVE;
-        $autoApprove = ($user->isAdviser() || $user->isSuperadmin()) && config('school.adviser_posts_auto_approved', true);
+        $autoApprove = $user->postsAutoApproved();
         $activity->approval_status = $autoApprove ? Activity::APPROVAL_APPROVED : Activity::APPROVAL_PENDING;
 
         if ($autoApprove) {
@@ -141,15 +138,15 @@ class ActivityController extends Controller
         }
 
         $activity->save();
-        // Pending submissions go to advisers only; adviser auto-approved posts are already published.
+        // SECURITY: Pending submissions notify configured reviewers; President posts follow the school toggle.
         $notifications = app(PostNotificationRecipients::class);
         if ($autoApprove && $activity->content_status === Activity::CONTENT_ACTIVE) $notifications->published('activity', $activity, $user);
-        elseif ($user->isOfficer()) $notifications->submitted('activity', $activity, $user);
+        else $notifications->submitted('activity', $activity, $user);
 
         return redirect()->route('activities.show', $activity)->with('status', 'The activity was created.');
     }
 
-    /** Show the edit form to the activity owner or an adviser. */
+    /** Show the edit form to the owner with a current capability or the President. */
     public function edit(Activity $activity): View
     {
         $this->authorize('update', $activity);
@@ -157,7 +154,7 @@ class ActivityController extends Controller
         return view('activities.edit', compact('activity'));
     }
 
-    /** Update activity fields and return rejected or configured approved officer edits to review. */
+    /** Update activity fields and return rejected or configured approved edits to review. */
     public function update(Request $request, Activity $activity): RedirectResponse
     {
         // Keep the same optional replacement image and activity field rules as creation.
@@ -209,7 +206,7 @@ class ActivityController extends Controller
         return redirect()->route('activities.show', $activity)->with('status', 'The activity was updated.');
     }
 
-    /** Archive an activity for its owner or an adviser without changing approval state. */
+    /** Archive an activity for its owner or the President without changing approval state. */
     public function archive(Activity $activity): RedirectResponse
     {
         $this->authorize('archive', $activity);
@@ -257,10 +254,10 @@ class ActivityController extends Controller
         return back()->with('status', 'The activity was approved.');
     }
 
-    /** Reject only pending activities after the adviser reason has been validated. */
+    /** Reject only pending activities after the President reason has been validated. */
     public function reject(Request $request, Activity $activity): RedirectResponse
     {
-        // Keep adviser rejection reasons required and within the database limit.
+        // Keep President rejection reasons required and within the database limit.
         $validated = $request->validate(['rejection_reason' => ['required', 'string', 'max:255']], [
             'rejection_reason.required' => 'Enter a reason before rejecting this activity.',
             'rejection_reason.max' => 'The rejection reason may not be longer than 255 characters.',
@@ -294,7 +291,7 @@ class ActivityController extends Controller
         return redirect()->route('activities.index', ['tab' => 'all'])->with('status', 'The activity was deleted.');
     }
 
-    /** Archive adviser-selected activities after validating and authorizing every submitted ID. */
+    /** Archive President-selected activities after validating and authorizing every submitted ID. */
     public function bulkArchive(Request $request): RedirectResponse
     {
         $this->authorize('bulkArchive', Activity::class);

@@ -54,59 +54,56 @@ Route::prefix('liquidation')->name('liquidations.')->middleware(['auth', 'profil
     Route::get('/{liquidation}/download', [LiquidationController::class, 'download'])->whereNumber('liquidation')->name('download');
 });
 
-// Officers, advisers, and superadmins can create, update, archive, or restore module content.
-Route::middleware(['auth', 'role:officer,adviser,superadmin', 'profile.complete'])->group(function () {
-    Route::resource('articles', ArticleController::class)->only(['create', 'store', 'edit'])->whereNumber('article');
-    Route::patch('/articles/{article}', [ArticleController::class, 'update'])->whereNumber('article')->name('articles.update');
-    Route::post('/articles/{article}/archive', [ArticleController::class, 'archive'])->whereNumber('article')->name('articles.archive');
-    Route::post('/articles/{article}/restore', [ArticleController::class, 'restore'])->whereNumber('article')->name('articles.restore');
+// SECURITY: Route middleware exposes each module capability in route:list; policies repeat authorization in controllers.
+Route::middleware(['auth', 'profile.complete'])->group(function () {
+    Route::resource('articles', ArticleController::class)->only(['create', 'store'])->whereNumber('article')->middleware('can:create,App\\Models\\Article');
+    Route::get('/articles/{article}/edit', [ArticleController::class, 'edit'])->whereNumber('article')->name('articles.edit')->middleware('can:update,article');
+    Route::patch('/articles/{article}', [ArticleController::class, 'update'])->whereNumber('article')->name('articles.update')->middleware('can:update,article');
+    Route::post('/articles/{article}/archive', [ArticleController::class, 'archive'])->whereNumber('article')->name('articles.archive')->middleware('can:archive,article');
+    Route::post('/articles/{article}/restore', [ArticleController::class, 'restore'])->whereNumber('article')->name('articles.restore')->middleware('can:restore,article');
+    Route::post('/articles/bulk-archive', [ArticleController::class, 'bulkArchive'])->name('articles.bulk-archive')->middleware('can:bulkArchive,App\\Models\\Article');
+    Route::post('/articles/{article}/approve', [ArticleController::class, 'approve'])->whereNumber('article')->name('articles.approve')->middleware('can:approve,article');
+    Route::post('/articles/{article}/reject', [ArticleController::class, 'reject'])->whereNumber('article')->name('articles.reject')->middleware('can:reject,article');
+    Route::delete('/articles/{article}', [ArticleController::class, 'destroy'])->whereNumber('article')->name('articles.destroy')->middleware('can:delete,article');
 
-    Route::resource('activities', ActivityController::class)->only(['create', 'store', 'edit'])->whereNumber('activity');
-    Route::patch('/activities/{activity}', [ActivityController::class, 'update'])->whereNumber('activity')->name('activities.update');
-    Route::post('/activities/{activity}/archive', [ActivityController::class, 'archive'])->whereNumber('activity')->name('activities.archive');
-    Route::post('/activities/{activity}/restore', [ActivityController::class, 'restore'])->whereNumber('activity')->name('activities.restore');
+    Route::resource('activities', ActivityController::class)->only(['create', 'store'])->whereNumber('activity')->middleware('can:create,App\\Models\\Activity');
+    Route::get('/activities/{activity}/edit', [ActivityController::class, 'edit'])->whereNumber('activity')->name('activities.edit')->middleware('can:update,activity');
+    Route::patch('/activities/{activity}', [ActivityController::class, 'update'])->whereNumber('activity')->name('activities.update')->middleware('can:update,activity');
+    Route::post('/activities/{activity}/archive', [ActivityController::class, 'archive'])->whereNumber('activity')->name('activities.archive')->middleware('can:archive,activity');
+    Route::post('/activities/{activity}/restore', [ActivityController::class, 'restore'])->whereNumber('activity')->name('activities.restore')->middleware('can:restore,activity');
+    Route::post('/activities/bulk-archive', [ActivityController::class, 'bulkArchive'])->name('activities.bulk-archive')->middleware('can:bulkArchive,App\\Models\\Activity');
+    Route::post('/activities/{activity}/approve', [ActivityController::class, 'approve'])->whereNumber('activity')->name('activities.approve')->middleware('can:approve,activity');
+    Route::post('/activities/{activity}/reject', [ActivityController::class, 'reject'])->whereNumber('activity')->name('activities.reject')->middleware('can:reject,activity');
+    Route::delete('/activities/{activity}', [ActivityController::class, 'destroy'])->whereNumber('activity')->name('activities.destroy')->middleware('can:delete,activity');
 
-    Route::resource('achievements', AchievementController::class)->only(['create', 'store', 'edit'])->whereNumber('achievement');
-    Route::patch('/achievements/{achievement}', [AchievementController::class, 'update'])->whereNumber('achievement')->name('achievements.update');
-    Route::post('/achievements/{achievement}/archive', [AchievementController::class, 'archive'])->whereNumber('achievement')->name('achievements.archive');
-    Route::post('/achievements/{achievement}/restore', [AchievementController::class, 'restore'])->whereNumber('achievement')->name('achievements.restore');
+    Route::resource('achievements', AchievementController::class)->only(['create', 'store'])->whereNumber('achievement')->middleware('can:create,App\\Models\\Achievement');
+    Route::get('/achievements/{achievement}/edit', [AchievementController::class, 'edit'])->whereNumber('achievement')->name('achievements.edit')->middleware('can:update,achievement');
+    Route::patch('/achievements/{achievement}', [AchievementController::class, 'update'])->whereNumber('achievement')->name('achievements.update')->middleware('can:update,achievement');
+    Route::post('/achievements/{achievement}/archive', [AchievementController::class, 'archive'])->whereNumber('achievement')->name('achievements.archive')->middleware('can:archive,achievement');
+    Route::post('/achievements/{achievement}/restore', [AchievementController::class, 'restore'])->whereNumber('achievement')->name('achievements.restore')->middleware('can:restore,achievement');
+    Route::post('/achievements/bulk-archive', [AchievementController::class, 'bulkArchive'])->name('achievements.bulk-archive')->middleware('can:bulkArchive,App\\Models\\Achievement');
+    Route::post('/achievements/{achievement}/approve', [AchievementController::class, 'approve'])->whereNumber('achievement')->name('achievements.approve')->middleware('can:approve,achievement');
+    Route::post('/achievements/{achievement}/reject', [AchievementController::class, 'reject'])->whereNumber('achievement')->name('achievements.reject')->middleware('can:reject,achievement');
+    Route::delete('/achievements/{achievement}', [AchievementController::class, 'destroy'])->whereNumber('achievement')->name('achievements.destroy')->middleware('can:delete,achievement');
 
-    Route::resource('documents', DocumentController::class)->only(['create', 'store', 'edit'])->whereNumber('document');
-    Route::patch('/documents/{document}', [DocumentController::class, 'update'])->whereNumber('document')->name('documents.update');
-    Route::post('/documents/{document}/archive', [DocumentController::class, 'archive'])->whereNumber('document')->name('documents.archive');
-    Route::post('/documents/{document}/restore', [DocumentController::class, 'restore'])->whereNumber('document')->name('documents.restore');
+    Route::resource('documents', DocumentController::class)->only(['create', 'store'])->whereNumber('document')->middleware('can:create,App\\Models\\Document');
+    Route::get('/documents/{document}/edit', [DocumentController::class, 'edit'])->whereNumber('document')->name('documents.edit')->middleware('can:update,document');
+    Route::patch('/documents/{document}', [DocumentController::class, 'update'])->whereNumber('document')->name('documents.update')->middleware('can:update,document');
+    Route::post('/documents/{document}/archive', [DocumentController::class, 'archive'])->whereNumber('document')->name('documents.archive')->middleware('can:archive,document');
+    Route::post('/documents/{document}/restore', [DocumentController::class, 'restore'])->whereNumber('document')->name('documents.restore')->middleware('can:restore,document');
+    Route::post('/documents/bulk-archive', [DocumentController::class, 'bulkArchive'])->name('documents.bulk-archive')->middleware('can:bulkArchive,App\\Models\\Document');
+    Route::post('/documents/{document}/approve', [DocumentController::class, 'approve'])->whereNumber('document')->name('documents.approve')->middleware('can:approve,document');
+    Route::post('/documents/{document}/reject', [DocumentController::class, 'reject'])->whereNumber('document')->name('documents.reject')->middleware('can:reject,document');
+    Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])->whereNumber('document')->name('documents.destroy')->middleware('can:delete,document');
 
-    Route::resource('liquidation', LiquidationController::class)->names('liquidations')
-        ->parameters(['liquidation' => 'liquidation'])->only(['create', 'store', 'edit'])->whereNumber('liquidation');
-    Route::patch('/liquidation/{liquidation}', [LiquidationController::class, 'update'])->whereNumber('liquidation')->name('liquidations.update');
-    Route::post('/liquidation/{liquidation}/archive', [LiquidationController::class, 'archive'])->whereNumber('liquidation')->name('liquidations.archive');
-    Route::post('/liquidation/{liquidation}/restore', [LiquidationController::class, 'restore'])->whereNumber('liquidation')->name('liquidations.restore');
-});
-
-// Advisers and superadmins review, and superadmins alone permanently delete, bulk-archive, or manage approval changes.
-Route::middleware(['auth', 'role:adviser,superadmin', 'profile.complete'])->group(function () {
-    Route::post('/articles/bulk-archive', [ArticleController::class, 'bulkArchive'])->name('articles.bulk-archive');
-    Route::post('/articles/{article}/approve', [ArticleController::class, 'approve'])->whereNumber('article')->name('articles.approve');
-    Route::post('/articles/{article}/reject', [ArticleController::class, 'reject'])->whereNumber('article')->name('articles.reject');
-    Route::delete('/articles/{article}', [ArticleController::class, 'destroy'])->whereNumber('article')->name('articles.destroy');
-
-    Route::post('/activities/bulk-archive', [ActivityController::class, 'bulkArchive'])->name('activities.bulk-archive');
-    Route::post('/activities/{activity}/approve', [ActivityController::class, 'approve'])->whereNumber('activity')->name('activities.approve');
-    Route::post('/activities/{activity}/reject', [ActivityController::class, 'reject'])->whereNumber('activity')->name('activities.reject');
-    Route::delete('/activities/{activity}', [ActivityController::class, 'destroy'])->whereNumber('activity')->name('activities.destroy');
-
-    Route::post('/achievements/bulk-archive', [AchievementController::class, 'bulkArchive'])->name('achievements.bulk-archive');
-    Route::post('/achievements/{achievement}/approve', [AchievementController::class, 'approve'])->whereNumber('achievement')->name('achievements.approve');
-    Route::post('/achievements/{achievement}/reject', [AchievementController::class, 'reject'])->whereNumber('achievement')->name('achievements.reject');
-    Route::delete('/achievements/{achievement}', [AchievementController::class, 'destroy'])->whereNumber('achievement')->name('achievements.destroy');
-
-    Route::post('/documents/bulk-archive', [DocumentController::class, 'bulkArchive'])->name('documents.bulk-archive');
-    Route::post('/documents/{document}/approve', [DocumentController::class, 'approve'])->whereNumber('document')->name('documents.approve');
-    Route::post('/documents/{document}/reject', [DocumentController::class, 'reject'])->whereNumber('document')->name('documents.reject');
-    Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])->whereNumber('document')->name('documents.destroy');
-
-    Route::post('/liquidation/bulk-archive', [LiquidationController::class, 'bulkArchive'])->name('liquidations.bulk-archive');
-    Route::post('/liquidation/{liquidation}/approve', [LiquidationController::class, 'approve'])->whereNumber('liquidation')->name('liquidations.approve');
-    Route::post('/liquidation/{liquidation}/reject', [LiquidationController::class, 'reject'])->whereNumber('liquidation')->name('liquidations.reject');
-    Route::delete('/liquidation/{liquidation}', [LiquidationController::class, 'destroy'])->whereNumber('liquidation')->name('liquidations.destroy');
+    Route::resource('liquidation', LiquidationController::class)->names('liquidations')->parameters(['liquidation' => 'liquidation'])
+        ->only(['create', 'store'])->whereNumber('liquidation')->middleware('can:create,App\\Models\\Liquidation');
+    Route::get('/liquidation/{liquidation}/edit', [LiquidationController::class, 'edit'])->whereNumber('liquidation')->name('liquidations.edit')->middleware('can:update,liquidation');
+    Route::patch('/liquidation/{liquidation}', [LiquidationController::class, 'update'])->whereNumber('liquidation')->name('liquidations.update')->middleware('can:update,liquidation');
+    Route::post('/liquidation/{liquidation}/archive', [LiquidationController::class, 'archive'])->whereNumber('liquidation')->name('liquidations.archive')->middleware('can:archive,liquidation');
+    Route::post('/liquidation/{liquidation}/restore', [LiquidationController::class, 'restore'])->whereNumber('liquidation')->name('liquidations.restore')->middleware('can:restore,liquidation');
+    Route::post('/liquidation/bulk-archive', [LiquidationController::class, 'bulkArchive'])->name('liquidations.bulk-archive')->middleware('can:bulkArchive,App\\Models\\Liquidation');
+    Route::post('/liquidation/{liquidation}/approve', [LiquidationController::class, 'approve'])->whereNumber('liquidation')->name('liquidations.approve')->middleware('can:approve,liquidation');
+    Route::post('/liquidation/{liquidation}/reject', [LiquidationController::class, 'reject'])->whereNumber('liquidation')->name('liquidations.reject')->middleware('can:reject,liquidation');
+    Route::delete('/liquidation/{liquidation}', [LiquidationController::class, 'destroy'])->whereNumber('liquidation')->name('liquidations.destroy')->middleware('can:delete,liquidation');
 });

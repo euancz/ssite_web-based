@@ -4,7 +4,7 @@ namespace App\Notifications;
 
 use Illuminate\Notifications\Notification;
 
-/** Database-only notice; pending items go only to advisers and are never announced as published. */
+/** Database-only notice; pending items go only to configured reviewers and are never announced as published. */
 class PostSubmittedForReview extends Notification
 {
     public function __construct(private readonly array $payload, private readonly bool $needsReviewAgain = false) {}

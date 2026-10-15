@@ -4,7 +4,7 @@ return [
     // The A.Y. changes automatically in this month; no scheduled rollover is needed.
     'academic_year_start_month' => 6,
 
-    // TODO: Confirm and fill this list with the official officer positions in display order.
+    // Display order includes historical titles; only keys in positions are assignable capabilities.
     'officer_positions' => [
         'Adviser', 'Student Adviser', 'President', 'Vice President (Internal)',
         'Vice President (External)', 'Secretary', 'Treasurer', 'Auditor',
@@ -12,13 +12,42 @@ return [
         'Multimedia (Creative)', 'Multimedia (Documentation)',
         'IT Representative I', 'IT Representative II',
     ],
+    // SECURITY: Officer permissions come from canonical config keys, never free-text positions.
+    'positions' => [
+        'President' => [
+            'modules' => ['articles', 'activities', 'achievements', 'documents', 'liquidations'],
+            'can_review' => true,
+            'auto_approved' => true,
+            'single_holder' => true,
+        ],
+        'Secretary' => [
+            'modules' => ['documents'],
+            'can_review' => false,
+            'auto_approved' => false,
+            'single_holder' => false,
+        ],
+        'Auditor' => [
+            'modules' => ['liquidations'],
+            'can_review' => false,
+            'auto_approved' => false,
+            'single_holder' => false,
+        ],
+        'Multimedia' => [
+            'modules' => ['articles', 'achievements', 'activities'],
+            'can_review' => false,
+            'auto_approved' => false,
+            'single_holder' => false,
+        ],
+    ],
+    // Enforced during adviser role assignments; config can allow multiple holders later.
+    'single_holder_positions' => ['President'],
     // Advisers may be exempted; other signed-in roles must complete their profile by default.
     'require_profile_for_all_roles' => (bool) env('SCHOOL_REQUIRE_PROFILE_FOR_ALL_ROLES', true),
 
-    // Adviser-created articles are published immediately unless this setting is disabled.
-    'adviser_posts_auto_approved' => (bool) env('SCHOOL_ADVISER_POSTS_AUTO_APPROVED', true),
+    // President posts publish immediately by default; set false to send them through review.
+    'president_posts_auto_approved' => (bool) env('SCHOOL_PRESIDENT_POSTS_AUTO_APPROVED', true),
 
-    // Editing an approved officer article sends the changed content back for adviser review.
+    // Editing approved officer content sends the changed content back for President review.
     'reset_approval_on_edit' => (bool) env('SCHOOL_RESET_APPROVAL_ON_EDIT', true),
 
     // PDF lists may be public; stored files remain private and are delivered through authorized routes.

@@ -1,23 +1,27 @@
 # SSITE System Overview
 
-SSITE is a Laravel Blade application for the Student Society in Information Technology Education at Mabalacat City College. Users sign in with Microsoft or the existing password login, then complete required student information before using protected pages. The app stores identity, role, and student information on one `users` table with `user_id` as its primary key. Articles, Activities, and Achievements use the same separate posting, review, and archiving workflow.
+SSITE is a Laravel Blade application for the Student Society in Information Technology Education at Mabalacat City College. Users sign in with Microsoft or the existing password login, then complete required student information before using protected pages. The app stores identity, role, and student information on one `users` table with `user_id` as its primary key. Articles, Activities, Achievements, Documents, and Liquidation use a shared posting, review, and archiving workflow.
 
 ## Roles
 
-| Role | Upload PDFs | Approve or reject | View or download PDFs | Other capabilities |
+| Role / position | Upload PDFs | Approve or reject | View or download PDFs | Other capabilities |
 | --- | --- | --- | --- | --- |
-| Student | No | No | Published PDFs after login and profile completion | View published Articles, Activities, Achievements, Documents, and Liquidation; edit allowed personal information. |
-| Officer | Documents and Liquidation | No | Published PDFs and own non-public PDFs after login and profile completion | Post the other content types; edit and archive/restore own posts. New submissions start pending. |
-| Adviser | Documents and Liquidation | Yes; pending items only | Published PDFs and non-public records they manage | Post the other content types; archive/restore any post, permanently delete, bulk archive, and manage non-adviser user roles. Adviser-created PDFs are auto-approved by the school setting. |
+| Student | No | No | Published PDFs after login and profile completion | View public posts and edit allowed personal information. |
+| President officer | Documents and Liquidation | Yes; all pending modules | Published and all non-public PDFs after login and profile completion | Post in all modules; posts auto-approve by default (`school.president_posts_auto_approved`); manage, bulk archive, and permanently delete posts. |
+| Secretary officer | Documents | No | Published and own non-public PDFs | Post Documents; manage only own posts. Submissions await President review. |
+| Auditor officer | Liquidation | No | Published and own non-public reports | Post Liquidation; manage only own reports. Submissions await President review. |
+| Multimedia officer | No | No | Published content and own non-public posts | Post Articles, Activities, and Achievements; manage only own posts. Submissions await President review. |
+| Adviser | No | No | Published content only | Assign student/officer roles and canonical officer positions; see pending counts only. Cannot review posts or manage the About roster. |
+| Superadmin | No | No | Published content only | Assign or revoke adviser roles; view role history when its optional table is available. Cannot assign officer positions, review posts, or manage the About roster. |
 
-The current code enforces dashboard and adviser route roles, and adviser role changes are implemented. About page leadership is stored as annual officer snapshots managed by advisers. Article, Activity, and Achievement posting, ownership checks, approval, rejection, archive/restore, and approved-only queries use their existing SQL-managed tables.
+Position capabilities apply only while the account has the officer role. Adviser and superadmin assignments are separate. About page leadership remains annual officer snapshots; role assignment synchronizes only the current year's snapshot. Content access is enforced by route middleware, policies, and position-aware queries.
 
 ## Request flow example
 
-An adviser opening `/adviser/users` follows this path:
+An adviser assigning an officer role at `/adviser/users` follows this path:
 
 1. `routes/adviser.php` matches the named `adviser.users.index` route.
-2. Laravel runs `auth`, `role:adviser`, and `profile.complete` middleware.
+2. Laravel runs `auth`, `role:adviser,superadmin`, and `profile.complete` middleware; the policy restricts each actor to their assignment scope.
 3. `App\Http\Controllers\Adviser\UserController::index` validates filters and queries users through the `User` model.
 4. The controller renders `resources/views/adviser/users/index.blade.php`, which uses shared components from `resources/views/components/ui`.
 
@@ -26,7 +30,7 @@ Profile editing uses the same authenticated-user pattern: the profile controller
 An officer viewing their own pending Articles follows this path:
 
 1. `routes/features.php` matches `articles.index` at `/articles` with the `tab=pending` query value.
-2. The route applies `profile.complete`, which lets guests pass and redirects incomplete signed-in accounts; write routes separately require `auth`, `role:officer,adviser`, and `profile.complete`.
+2. The route applies `profile.complete`, which lets guests pass and redirects incomplete signed-in accounts; write routes separately require authentication and the module policy capability.
 3. `ArticleController::index` validates the tab against the signed-in role, scopes the query, and searches/paginates only those rows.
 4. `Article` maps `article_id`, relates authors through `users.user_id`, and `ArticlePolicy` governs private article viewing.
 5. `resources/views/articles/index.blade.php` renders the role's tabs and results with the shared Blade components.
@@ -44,19 +48,19 @@ An officer viewing their own pending Articles follows this path:
 
 ## Officer history
 
-`AcademicYear::current()` calculates the current A.Y. using `school.academic_year_start_month` (June by default), so the changeover happens from the calendar date without a scheduled task. Adviser-managed `officer_terms` rows are snapshots: name, position, and photo stay with that year even if a linked account changes or is deleted. Role changes synchronize only the current year's row. New officers are not copied forward automatically; an adviser can use the explicit copy action as a starting point. The public About page shows current-year rows above newest-first history rows.
+`AcademicYear::current()` calculates the current A.Y. using `school.academic_year_start_month` (June by default), so the changeover happens from the calendar date without a scheduled task. `officer_terms` rows are snapshots: name, position, and photo stay with that year even if a linked account changes or is deleted. Role assignment synchronizes only the current year's row. New officers are not copied forward automatically. The public About page shows current-year rows above newest-first history rows; roster editing routes are retained but denied.
 
 ## Post approval flow
 
 Articles, Activities, Achievements, Documents, and Liquidation share this workflow and keep approval and content status separate:
 
-1. An officer creates a post owned by that officer. The server sets `approval_status=pending` and `content_status=active`; advisers can post directly approved by the school setting.
-2. The adviser reviews pending posts and either approves them or rejects them with a required reason.
+1. A configured posting officer creates a post owned by that officer. The server sets `approval_status=pending` and `content_status=active`. President posts publish immediately by default; the school setting can send them through review.
+2. The President reviews pending posts and either approves them or rejects them with a required reason. Review notifications go only to configured reviewers; if no President exists, submissions remain pending without a fallback or review notice.
 3. Public/student-facing queries return only `approval_status=approved` AND `content_status=active` records.
 4. Archiving changes only `content_status` to `archived`; restoring changes it to `active` and preserves approval state, so a pending or rejected post does not become published.
-5. Officers can edit and archive/restore only their own posts; advisers can manage all posts, bulk archive, and permanently delete.
+5. Posting officers can edit and archive/restore only their own posts while their position grants that module. The President can manage all posts, bulk archive, and permanently delete.
 
-The Articles, Activities, Achievements, Documents, and Liquidation tables were created with SQL outside this repository's migrations. Adviser review is provided by each module's tabs; the legacy adviser dashboard review page still contains placeholder content for other post types.
+The Articles, Activities, Achievements, Documents, and Liquidation tables were created with SQL outside this repository's migrations. The President review queue combines the five module tables; advisers see pending counts only and receive a warning when no President is assigned.
 
 ## Simplified CRUD pattern
 
@@ -66,9 +70,9 @@ Before changing a module, keep this protection checklist:
 
 - Public lists, details, search, home sections, notification links, and downloads expose only `publiclyVisible()` content to students and guests. Return 404 for private records to viewers who may not see them.
 - Write routes keep their role and `profile.complete` middleware. Policies continue to authorize each action.
-- Officers may manage only their own content by comparing `created_by_user_id` with `auth()->user()->user_id`; advisers may manage any item.
+- Position capabilities decide which module an officer may post in. Non-President officers may manage only their own content by comparing `created_by_user_id` with `auth()->user()->user_id`; the President may manage any item.
 - Model keys and route keys stay custom (`article_id`, `activity_id`, `achievement_id`, `document_id`, `liquidation_id`, `term_id`, and `user_id`). Fillable fields stay limited to domain data; workflow, ownership, and file metadata are set by trusted controller code.
-- Review changes only pending records; rejection needs its bounded reason; restore preserves approval. Permanent deletion stays adviser-only and confirmed in the view.
+- Review changes only pending records; rejection needs its bounded reason; restore preserves approval. Permanent deletion is President-only and confirmed in the view.
 - Upload checks, generated names, private PDF storage and authorized delivery, deletion boundaries, notification recipients and failure handling, search escaping and limits, profile completion, and login redirects stay unchanged.
 - State-changing forms keep CSRF and the correct HTTP method. Blade output remains escaped.
 
@@ -84,16 +88,16 @@ To change the minimum query length, dropdown limits, relevance order, or searche
 
 | Event | Recipients | Notification |
 | --- | --- | --- |
-| Officer submits a pending post | All advisers | `submitted`; a new post needs review |
-| Officer edit returns approved/rejected post to pending | All advisers | `submitted`; needs review again |
-| Adviser approves a pending post | Author, then everyone except author and adviser if active | Author receives `approved`; others receive `published` |
-| Adviser rejects a pending post | Author only, when the account exists | `rejected` with the reason |
-| Adviser creates an auto-approved active post | Everyone except that adviser | `published` |
+| Officer submits a pending post | All users who can review (the President) | `submitted`; a new post needs review |
+| Officer edit returns approved/rejected post to pending | All users who can review (the President) | `submitted`; needs review again |
+| President approves a pending post | Author, then everyone except author and President if active | Author receives `approved`; others receive `published` |
+| President rejects a pending post | Author only, when the account exists | `rejected` with the reason |
+| President creates an auto-approved active post | Everyone except that President | `published` |
 | Archive, restore, permanent delete | Nobody | Silent; restore never republishes |
 
 Displayed messages are “A new post was submitted for review.”, “A post needs review again.”, “Your post was approved.”, “Your post was rejected.”, and “A new post was published.” Rejection notices also include the saved reason, limited to 255 characters in the stored payload. Notices carry the post type/id, title, actor name, and named show-page URL; they do not include PDF paths.
 
-Notifications are synchronous database notifications. Pending items are announced only to advisers, and the author is excluded from the separate publication broadcast to prevent duplicate notices. Recipients are processed in batches of 100, and notification exceptions are logged without failing the post action. Users with incomplete profiles are included because this app has no inactive-account flag; the profile gate controls page access instead. The bell summary returns the latest 10 items and unread total; `/notifications` paginates by 15 and supports All/Unread. Only unread `published` notices contribute to navigation tab dots; approval, rejection, and submission notices do not. Visiting the matching index clears only that user's published notices for that type. Read, read-all, dismiss, and avatar routes are scoped to the signed-in user's records. A notice for an archived, deleted, or otherwise unavailable post redirects with a friendly message. Archive and restore are silent and restore never republishes.
+Notifications are synchronous database notifications. Pending items are announced only to President reviewers; when none is assigned, no review notice is sent. The author is excluded from the separate publication broadcast to prevent duplicate notices. Recipients are processed in batches of 100, and notification exceptions are logged without failing the post action. Users with incomplete profiles are included because this app has no inactive-account flag; the profile gate controls page access instead. The bell summary returns the latest 10 items and unread total; `/notifications` paginates by 15 and supports All/Unread. Only unread `published` notices contribute to navigation tab dots; approval, rejection, and submission notices do not. Visiting the matching index clears only that user's published notices for that type. Read, read-all, dismiss, and avatar routes are scoped to the signed-in user's records. A notice for an archived, deleted, or otherwise unavailable post redirects with a friendly message. Archive and restore are silent and restore never republishes.
 
 Documents and Liquidation store PDFs on Laravel's private `local` disk under `storage/app/private/documents` and `storage/app/private/liquidation`. Authorized controller routes stream or download files after policy checks; the files are not exposed through `storage:link`. Documents may have a public listing (`school.documents_list_public`, default true), but PDF access requires login and a completed profile. Liquidation listing access follows `school.liquidation_list_public` (default false). Both use `school.max_pdf_size_kb` (default 10240).
 
@@ -122,11 +126,11 @@ Documents and Liquidation store PDFs on Laravel's private `local` disk under `st
 
 ## Route organization
 
-`routes/web.php` maps `/` and `/home` to `HomeController`; it contains route declarations only. `routes/auth.php`, `routes/profile.php`, `routes/officer.php`, and `routes/adviser.php` keep their focused entry points. `routes/features.php` groups public pages, signed-in notification and PDF routes, officer/adviser CRUD routes, and adviser review routes by middleware. CRUD resources expose only the methods present in the route snapshot; `PATCH` updates and special actions remain explicit.
+`routes/web.php` maps `/` and `/home` to `HomeController`; it contains route declarations only. `routes/auth.php`, `routes/profile.php`, `routes/officer.php`, and `routes/adviser.php` keep their focused entry points. `routes/features.php` groups public pages, signed-in notification and PDF routes, capability-authorized feature actions, and the President-only review route. CRUD resources expose only the methods present in the route snapshot; `PATCH` updates and special actions remain explicit.
 
 ## Shared navbar behavior
 
-The shared header in `resources/views/layouts/app.blade.php` stays sticky while scrolling. Desktop and mobile links are in `resources/views/layouts/partials/navigation.blade.php`; the pill contains the same public destinations for guests, students, officers, and advisers. Signed-in profile and Settings controls are in the avatar dropdown; officers/advisers get a Manage group with Dashboard, and advisers also get Review Posts, Manage Users, and Manage Officers. Search and account scripts are in their matching `layouts/partials/` files. Its measured height sets `--site-header-height` in `public/css/app.css`, which also offsets in-page scroll targets. The layout adds the `is-scrolled` class after the page moves down so the header shadow is absent at the top. The header uses z-index 40; account popovers use z-index 50 inside that header, and native dialogs render above both in the browser top layer.
+The shared header in `resources/views/layouts/app.blade.php` stays sticky while scrolling. Desktop and mobile links are in `resources/views/layouts/partials/navigation.blade.php`; the pill contains the same public destinations for signed-in and guest users. The account dropdown shows the canonical officer position beneath identity and exposes capability-gated dashboard, President review, and role-assignment links. Search and account scripts are in their matching `layouts/partials/` files. Its measured height sets `--site-header-height` in `public/css/app.css`, which also offsets in-page scroll targets. The layout adds the `is-scrolled` class after the page moves down so the header shadow is absent at the top. The header uses z-index 40; account popovers use z-index 50 inside that header, and native dialogs render above both in the browser top layer.
 
 Search suggestions render inside the sticky header with visible overflow and remain below modal dialogs. The existing mobile search icon opens the same search form and suggestion behavior.
 
@@ -139,7 +143,7 @@ Search suggestions render inside the sticky header with visible overflow and rem
 - If I want to change notification ownership checks, paging, polling data, read behavior, or actor profile pictures, open `app/Http/Controllers/NotificationController.php` and `routes/features.php`.
 - If I want to change desktop/mobile links, open `resources/views/layouts/partials/navigation.blade.php`.
 - If I want to change the avatar dropdown, role link groups, or keyboard behavior, open `resources/views/layouts/app.blade.php`, `resources/views/layouts/partials/account-scripts.blade.php`, and `public/css/app.css`.
-- If I want to change the adviser tabs or the More menu, open `resources/views/components/ui/workflow-tabs.blade.php` and the matching feature index view; the controller owns each role whitelist.
+- If I want to change workflow tabs or the More menu, open `resources/views/components/ui/workflow-tabs.blade.php` and the matching feature index view; the controller owns each capability whitelist.
 - If I want to change feature row menus or bulk selection actions, open the matching `resources/views/<feature>/index.blade.php` and `resources/views/components/ui/workflow-tabs.blade.php`.
 - If I want to change dashboard stat cards, open `resources/views/components/ui/stat-card.blade.php` and `resources/views/adviser/dashboard.blade.php` or `resources/views/officer/dashboard.blade.php`.
 - If I want to change About page gear options or edit mode, open `resources/views/pages/about.blade.php`, `public/css/about.css`, and `app/Http/Controllers/Adviser/OfficerTermController.php`.
@@ -168,14 +172,15 @@ Search suggestions render inside the sticky header with visible overflow and rem
 - **Activity and Achievement schemas:** Both tables were created with SQL and have no create/alter migrations in this repository. Check the live schema before changing the database.
 - **Article tabs:** The `tab` query value is checked against role-specific allowlists; invalid or hidden tabs fall back to Published. Keep query scopes role-safe when adding a tab.
 - **Article images:** Images live on the public disk under `articles/` with generated names. Run `php artisan storage:link` so stored images can be served; missing files use the existing placeholder.
-- **Article status rule:** `approval_status` (pending/approved/rejected) records adviser review; `content_status` (active/archived) controls shelving. Restoring never changes approval, and neither field is mass-assignable.
+- **Article status rule:** `approval_status` (pending/approved/rejected) records President review; `content_status` (active/archived) controls shelving. Restoring never changes approval, and neither field is mass-assignable.
 - **Articles schema:** The supplied Articles table is external to the repository migrations; confirm it has the documented columns before deployment.
 - **Documents and Liquidation schemas:** These tables are SQL-managed and have no create/alter migrations here. Confirm the live schemas before deployment; the application does not alter them.
 - **Private PDF storage:** Document and liquidation PDFs live under `storage/app/private/documents` and `storage/app/private/liquidation` on the local disk. Do not run `storage:link` for these files. Backups and deployments must preserve the private storage directory.
 - **PDF upload limits:** `school.max_pdf_size_kb` is the application limit. PHP's `upload_max_filesize` and `post_max_size` in `php.ini` must also be large enough for the desired upload.
 - **PDF access:** `school.documents_list_public` controls whether document metadata lists are public; `school.liquidation_list_public` controls liquidation listing access. PDF view/download routes always require login and a completed profile.
 - **Role checks:** Blade `@can` checks only hide navigation. Keep middleware or authorization checks on every protected route and write action.
-- **Adding a role:** Update the role values and helpers in `User`, the `role` middleware route declarations, Gate definitions, role-specific dashboard redirect, and tests. Review all existing user-management validation before making a new role assignable.
+- **Officer positions:** `config/school.php` defines canonical assignable positions and module capabilities. Positions grant no capabilities unless the account role is `officer`; `User` centralizes checks. Adviser assigns student/officer roles and officer positions; superadmin assigns or revokes adviser roles only.
+- **Adding a role:** Update the role values and helpers in `User`, middleware route declarations, Gate definitions, role-specific dashboard redirect, assignment policies, and documentation. Review all user-management validation before making a new role assignable.
 - **Adding an approval-required feature:** Add its schema/model and ownership relationship, policies or equivalent authorization, validated create/update/review endpoints, and status transitions. Set initial status in the server, require a rejection reason, and scope public/student queries to approved and active records only.
 - **School options:** Fill the TODO institute and program arrays in `config/school.php`; empty lists intentionally do not allow a student to submit arbitrary values.
 - **Officer terms:** The current A.Y. is computed from today's date. Officer name, title, and photo are copied per year; role changes never edit past years. Photos live on the public disk at `storage/app/public/officer-photos` and need `php artisan storage:link`. Officers are never copied forward automatically; use the adviser action when a starting point is wanted.
@@ -188,7 +193,7 @@ Search suggestions render inside the sticky header with visible overflow and rem
 
 ## Articles tab
 
-Students and guests see Published articles only. Officers also see My Posts and their own Archived articles; advisers see Pending Review, Rejected, Archived, and All. `approval_status` tracks review while `content_status` tracks active or archived visibility. When adding a tab, add it to the role allowlist in `ArticleController::index`, query with the Article scopes, and keep public/student results approved AND active.
+Students, advisers, superadmins, and officers without Article capability see Published articles only. President sees Pending Review, Rejected, Archived, and All; other Article posters see My Posts and their own Archived articles. `approval_status` tracks President review while `content_status` tracks active or archived visibility. When adding a tab, add it to the capability allowlist in `ArticleController::index`, query with Article scopes, and keep public results approved AND active.
 
 ## Activities and Achievements tabs
 

@@ -29,7 +29,7 @@
         <p class="dashboard-error" role="alert">{{ session('error') }}</p>
     @endif
 
-    {{-- Adviser bulk archive remains separate from each card's single-post actions. --}}
+    {{-- President bulk archive remains separate from each card's single-post actions. --}}
     @can('bulkArchive', \App\Models\Document::class)
         @if ($tab !== 'published' && $documents->isNotEmpty())
             <form id="document-bulk-archive" method="POST" action="{{ route('documents.bulk-archive') }}">
@@ -106,7 +106,7 @@
         @empty
             @if ($tab === 'published')
                 <x-posts.empty-state title="No published documents yet" message="Check back soon for the latest SSITE documents." />
-            @elseif (auth()->user()?->canPost())
+            @elseif (auth()->user()?->canPostIn('documents'))
                 <x-posts.empty-state title="No documents in this tab" message="Use the prompt above to upload a document." />
             @else
                 <x-posts.empty-state title="No documents found" message="Try another search or check back later." />

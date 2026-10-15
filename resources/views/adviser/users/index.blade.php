@@ -4,8 +4,8 @@
 
 @section('content')
 <div class="dashboard-page">
-    {{-- Role changes remain adviser-only and use the same endpoint, policy checks, and validation. --}}
-    <x-ui.page-header title="Manage Users" subtitle="View accounts and assign student or officer roles." />
+    {{-- Adviser and superadmin role assignments use actor-specific server authorization. --}}
+    <x-ui.page-header title="{{ auth()->user()->isSuperadmin() ? 'Manage Advisers' : 'Manage Users' }}" subtitle="View accounts and assign only the roles available to your account." />
 
     {{-- Report the result of a completed role update without hiding validation errors. --}}
     @if (session('status'))
@@ -35,7 +35,7 @@
             <details class="dashboard-extra-filters"><summary>Filters</summary>
                 <div class="dashboard-form-field"><label for="users-role-filter">Filter by role</label>
                     <select id="users-role-filter" name="role"><option value="">All roles</option>
-                        @foreach (['student', 'officer', 'adviser'] as $role)<option value="{{ $role }}" @selected(request('role') === $role)>{{ ucfirst($role) }}</option>@endforeach
+                        @foreach ($targetRoles as $role)<option value="{{ $role }}" @selected(request('role') === $role)>{{ ucfirst($role) }}</option>@endforeach
                     </select>
                 </div>
             </details>
@@ -56,17 +56,24 @@
                     {{-- User rows include academic information so advisers can identify the correct account. --}}
                     @forelse ($users as $user)
                         @php
-                            $assignableRoles = auth()->user()->assignableRoles();
+                            $actor = auth()->user();
+                            $assignableRoles = $actor->canAssignOfficers()
+                                ? [\App\Models\User::ROLE_STUDENT, \App\Models\User::ROLE_OFFICER]
+                                : ($user->isAdviser() ? [\App\Models\User::ROLE_STUDENT] : [\App\Models\User::ROLE_ADVISER]);
                         @endphp
                         <tr>
                             {{-- Keep the existing user link and identify each account with its shared avatar. --}}
                             <td><a href="{{ route('adviser.users.show', $user) }}" class="adviser-user-link"><x-ui.avatar :user="$user" size="sm" />{{ $user->name }}</a></td>
                             <td>{{ $user->program ?? '-' }}</td>
-                            <td><x-ui.status-badge :status="$user->role" /></td>
+                            <td><x-ui.status-badge :status="$user->role" />
+                                @if ($user->isOfficer() && ! $user->position())
+                                    <p class="dashboard-error" role="status">Unrecognized position. Assign a configured title to restore posting access.</p>
+                                @endif
+                            </td>
                             <td>
                                 {{-- SECURITY: Advisers cannot change their own role or promote/demote another adviser. --}}
-                                @if (auth()->user()->is($user) || $user->isAdviser() || $user->isSuperadmin())
-                                    <span class="dashboard-muted">{{ auth()->user()->is($user) ? 'Your role is protected' : ($user->isSuperadmin() ? 'Superadmin role is protected' : 'Adviser role is protected') }}</span>
+                                @if (auth()->user()->is($user) || $user->isSuperadmin())
+                                    <span class="dashboard-muted">{{ auth()->user()->is($user) ? 'Your role is protected' : 'Superadmin role is protected' }}</span>
                                 @else
                                     <button type="button" class="dashboard-text-button" data-role-dialog-open="role-dialog-{{ $user->user_id }}">Change role</button>
                                     <dialog id="role-dialog-{{ $user->user_id }}" class="reject-modal" aria-labelledby="role-title-{{ $user->user_id }}">
@@ -81,7 +88,12 @@
                                                 </select>
                                                 <div data-position-field="position-{{ $user->user_id }}" @if ($user->role !== 'officer') hidden @endif>
                                                     <label for="position-{{ $user->user_id }}">Officer position</label>
-                                                    <input id="position-{{ $user->user_id }}" type="text" name="officer_position" value="{{ $user->officer_position }}" maxlength="100" placeholder="Officer position" autocomplete="off">
+                                                    <select id="position-{{ $user->user_id }}" name="officer_position">
+                                                        <option value="">Choose position</option>
+                                                        @foreach ($positions as $position)
+                                                            <option value="{{ $position }}" @selected($user->position() === $position)>{{ $position }}</option>
+                                                        @endforeach
+                                                    </select>
                                                 </div>
                                                 <div class="reject-modal-actions"><button type="button" class="dashboard-button dashboard-button-secondary" data-role-dialog-close>Cancel</button><button type="submit" class="dashboard-button">Save role</button></div>
                                             </form>

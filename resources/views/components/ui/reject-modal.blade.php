@@ -1,31 +1,20 @@
 {{-- The default subject preserves Article wording when other modules pass their own label. --}}
-@props(['id', 'action' => null, 'subject' => 'article'])
+@props(['id', 'action', 'subject' => 'article'])
 
 <dialog id="{{ $id }}" class="reject-modal" aria-labelledby="{{ $id }}-title">
     <div class="reject-modal-content">
         <h2 id="{{ $id }}-title">Reject {{ $action ? $subject : 'post' }}</h2>
         <p>A rejection reason is required.</p>
-        @if ($action)
-            {{-- SECURITY: The server validates the reason and rechecks adviser authorization. --}}
-            <form method="POST" action="{{ $action }}">
-                @csrf
-                <label for="{{ $id }}-reason">Reason</label>
-                <textarea id="{{ $id }}-reason" name="rejection_reason" rows="4" maxlength="255" required></textarea>
-                <div class="reject-modal-actions">
-                    <button type="button" class="dashboard-button dashboard-button-secondary" data-modal-close="{{ $id }}">Cancel</button>
-                    <button type="submit" class="dashboard-button">Reject {{ $subject }}</button>
-                </div>
-            </form>
-        @else
-            {{-- TODO: The adviser review placeholder has no post endpoint until that feature is implemented. --}}
+        {{-- SECURITY: The server validates the reason and rechecks President authorization. --}}
+        <form method="POST" action="{{ $action }}">
+            @csrf
             <label for="{{ $id }}-reason">Reason</label>
-            <textarea id="{{ $id }}-reason" rows="4" required></textarea>
-            <p class="dashboard-notice">Post review is unavailable until post storage and review actions are implemented.</p>
+            <textarea id="{{ $id }}-reason" name="rejection_reason" rows="4" maxlength="255" required></textarea>
             <div class="reject-modal-actions">
                 <button type="button" class="dashboard-button dashboard-button-secondary" data-modal-close="{{ $id }}">Cancel</button>
-                <button type="button" class="dashboard-button" disabled>Reject post</button>
+                <button type="submit" class="dashboard-button">Reject {{ $subject }}</button>
             </div>
-        @endif
+        </form>
     </div>
 </dialog>
 

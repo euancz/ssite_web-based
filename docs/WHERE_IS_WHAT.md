@@ -19,7 +19,7 @@ Use this guide to find the file that owns a common change.
 | The navbar shadow after scrolling | `resources/views/layouts/app.blade.php` and `public/css/app.css` (`.site-header.is-scrolled`) |
 | The desktop/mobile navigation or role-gated links | `resources/views/layouts/partials/navigation.blade.php` |
 | The avatar dropdown, role groups, or keyboard navigation | `resources/views/layouts/app.blade.php`, `resources/views/layouts/partials/account-scripts.blade.php`, and `public/css/app.css` |
-| Adviser tabs or the More menu | `resources/views/components/ui/workflow-tabs.blade.php` and the matching feature `index.blade.php`; role whitelists stay in the feature controllers |
+| Workflow tabs or the More menu | `resources/views/components/ui/workflow-tabs.blade.php` and the matching feature `index.blade.php`; capability whitelists stay in the feature controllers |
 | Feature row menus or adviser bulk selection bars | The matching `resources/views/<feature>/index.blade.php`, `resources/views/components/ui/workflow-tabs.blade.php`, and `public/css/app.css` |
 | Dashboard stat cards | `resources/views/components/ui/stat-card.blade.php` and the matching adviser/officer dashboard view |
 | Content card zoom amount, speed, or easing | `public/css/app.css` (`--hover-scale`, `--hover-duration`, `--hover-card-duration`, `--hover-easing`) |
@@ -44,6 +44,9 @@ Use this guide to find the file that owns a common change.
 | Liquidation form fields, PDF validation, or file delivery | `app/Http/Controllers/LiquidationController.php` and `resources/views/liquidation/` |
 | Where private document and liquidation PDFs are stored | `config/filesystems.php` (`local` disk root) and each module controller |
 | Officer position choices and their About page order | `config/school.php` (`officer_positions`) |
+| Assignable officer positions, module permissions, and President auto-approval | `config/school.php` (`positions`, `single_holder_positions`, `president_posts_auto_approved`) and `app/Models/User.php` |
+| Assign officer/adviser roles and canonical officer positions | `/adviser/users`; `app/Http/Controllers/Adviser/UserController.php` and `resources/views/adviser/users/index.blade.php` |
+| President review queue and review buttons | `app/Http/Controllers/Adviser/ReviewController.php`, `resources/views/adviser/reviews/index.blade.php`, and the five feature controllers |
 | Adding next year's officers or copying the previous roster | Adviser page at `/adviser/officers`; controller in `app/Http/Controllers/Adviser/OfficerTermController.php` |
 | About page gear options, edit mode, or officer card controls | `resources/views/pages/about.blade.php`, `public/css/about.css`, and `app/Http/Controllers/Adviser/OfficerTermController.php` |
 | Fixing a typo in a past year's officer | Adviser page at `/adviser/officers`, then select that academic year and edit the row |
@@ -86,7 +89,9 @@ Use this guide to find the file that owns a common change.
 | Officer Term validation and custom academic-year checks | `app/Http/Requests/StoreOfficerTermRequest.php` and `UpdateOfficerTermRequest.php` |
 | Role checks and profile-completion middleware | `app/Http/Middleware/` and `bootstrap/app.php` |
 | Officer dashboard | `app/Http/Controllers/Officer/DashboardController.php` and `resources/views/officer/dashboard.blade.php` |
-| Adviser dashboard, review placeholder, or user management | `app/Http/Controllers/Adviser/` and `resources/views/adviser/` |
+| Adviser/superadmin dashboards, pending counts, or role history | `app/Http/Controllers/Adviser/DashboardController.php` and `resources/views/adviser/dashboard.blade.php` |
+| Position-based officer dashboard and own post counts | `app/Http/Controllers/Officer/DashboardController.php` and `resources/views/officer/dashboard.blade.php` |
+| Adviser/superadmin user assignment manager | `app/Http/Controllers/Adviser/UserController.php` and `resources/views/adviser/users/` |
 | Public home or about page content | `resources/views/pages/` |
 | Activity, achievement, document, or liquidation page content | The matching `resources/views/<feature>/` directory |
 | Shared page headers, badges, tables, statistic cards, or reject modal | `resources/views/components/ui/` |

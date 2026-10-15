@@ -17,10 +17,8 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-/*
- * Officer reports start pending; advisers approve or reject with a reason. Only approved AND active
- * reports are public; files stay on the private disk and every file response authorizes before reading.
- * Archive, restore, and delete stay silent; only review and publication transitions send notifications.
+/* Position-based submissions start pending; the President reviews and may publish directly.
+ * PDF bytes stay private behind authorized routes; archive and restore preserve review state.
  */
 class LiquidationController extends Controller
 {
@@ -31,7 +29,7 @@ class LiquidationController extends Controller
         $this->authorize('viewAny', Liquidation::class);
         $user = $request->user();
         $allowedTabs = $user?->canReview() ? ['published', 'pending', 'rejected', 'archived', 'all']
-            : ($user?->isOfficer() ? ['published', 'mine', 'archived'] : ['published']);
+            : ($user?->canPostIn('liquidations') ? ['published', 'mine', 'archived'] : ['published']);
         // SECURITY: Pending totals are queried only for review-capable users and never reach public or student views.
         $pendingCount = $user?->canReview() ? Liquidation::pending()->count() : null;
         $tab = $request->query('tab', 'published');
@@ -44,7 +42,7 @@ class LiquidationController extends Controller
         elseif ($tab === 'mine' && $user) $liquidations->where('created_by_user_id', $user->user_id);
         elseif ($tab === 'archived') {
             $liquidations->archived();
-            if (! $user?->canManageOfficers()) $liquidations->where('created_by_user_id', $user->user_id);
+            if (! $user?->isPresident()) $liquidations->where('created_by_user_id', $user->user_id);
         } elseif ($tab === 'pending') $liquidations->pending();
         elseif ($tab === 'rejected') $liquidations->rejected();
         $liquidations->when($search !== '', fn ($query) => $query->where('title', 'like', '%' . $search . '%'));
@@ -92,7 +90,7 @@ class LiquidationController extends Controller
         $liquidation = new Liquidation($validated);
         $liquidation->created_by_user_id = $request->user()->user_id;
         $liquidation->content_status = Liquidation::CONTENT_ACTIVE;
-        $autoApprove = ($request->user()->isAdviser() || $request->user()->isSuperadmin()) && config('school.adviser_posts_auto_approved', true);
+        $autoApprove = $request->user()->postsAutoApproved();
         $liquidation->approval_status = $autoApprove ? Liquidation::APPROVAL_APPROVED : Liquidation::APPROVAL_PENDING;
         if ($autoApprove) {
             $liquidation->reviewed_by_user_id = $request->user()->user_id;
@@ -100,10 +98,10 @@ class LiquidationController extends Controller
         }
         [$liquidation->file_path, $liquidation->original_name, $liquidation->file_size] = $this->storePdf($file);
         $liquidation->save();
-        // Pending submissions go to advisers only; adviser auto-approved posts are already published.
+        // SECURITY: Pending submissions notify configured reviewers; President posts follow the school toggle.
         $notifications = app(PostNotificationRecipients::class);
         if ($autoApprove && $liquidation->content_status === Liquidation::CONTENT_ACTIVE) $notifications->published('liquidation', $liquidation, $request->user());
-        elseif ($request->user()->isOfficer()) $notifications->submitted('liquidation', $liquidation, $request->user());
+        else $notifications->submitted('liquidation', $liquidation, $request->user());
         return redirect()->route('liquidations.show', $liquidation)->with('status', 'The liquidation report was uploaded.');
     }
 
@@ -143,7 +141,7 @@ class LiquidationController extends Controller
             $this->assertPdf($file);
             [$liquidation->file_path, $liquidation->original_name, $liquidation->file_size] = $this->storePdf($file);
         }
-        // SECURITY: Edited rejected reports and configured officer edits return to adviser review.
+        // SECURITY: Edited rejected reports and configured approved edits return to President review.
         if ($wasRejected || ($wasApproved && $request->user()->isOfficer() && config('school.reset_approval_on_edit', true))) {
             $liquidation->approval_status = Liquidation::APPROVAL_PENDING;
             $liquidation->rejection_reason = null;
@@ -151,7 +149,7 @@ class LiquidationController extends Controller
             $liquidation->reviewed_at = null;
         }
         $liquidation->save();
-        // SECURITY: Only officer edits returned to pending trigger a review notice; failures never block saving.
+        // SECURITY: Edits returned to pending notify configured reviewers; failures never block saving.
         if ($request->user()->isOfficer() && ($wasRejected || ($wasApproved && config('school.reset_approval_on_edit', true)))) {
             app(PostNotificationRecipients::class)->submitted('liquidation', $liquidation, $request->user(), true);
         }
@@ -243,7 +241,7 @@ class LiquidationController extends Controller
 
     public function download(Liquidation $liquidation): StreamedResponse|RedirectResponse
     {
-        // SECURITY: A private report is a 404 to anyone who is not its owner or an adviser.
+        // SECURITY: A private report is a 404 to anyone other than its owner or the President.
         try { $this->authorize('download', $liquidation); }
         catch (AuthorizationException) { abort(404); }
         return $this->fileResponse($liquidation, false);

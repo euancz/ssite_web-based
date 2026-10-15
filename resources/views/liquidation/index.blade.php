@@ -26,7 +26,7 @@
         <p class="dashboard-error" role="alert">{{ session('error') }}</p>
     @endif
 
-    {{-- Adviser bulk archive remains separate from each card's single-post actions. --}}
+    {{-- President bulk archive remains separate from each card's single-post actions. --}}
     @can('bulkArchive', \App\Models\Liquidation::class)
         @if ($tab !== 'published' && $liquidations->isNotEmpty())
             <form id="liquidation-bulk-archive" method="POST" action="{{ route('liquidations.bulk-archive') }}">
@@ -115,7 +115,7 @@
         @empty
             @if ($tab === 'published')
                 <x-posts.empty-state title="No published reports yet" message="Check back soon for the latest liquidation reports." />
-            @elseif (auth()->user()?->canPost())
+            @elseif (auth()->user()?->canPostIn('liquidations'))
                 <x-posts.empty-state title="No reports in this tab" message="Use the prompt above to upload a report." />
             @else
                 <x-posts.empty-state title="No reports found" message="Try another search or check back later." />
