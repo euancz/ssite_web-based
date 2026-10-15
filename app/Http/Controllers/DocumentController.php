@@ -70,7 +70,7 @@ class DocumentController extends Controller
         // SECURITY: Sort keys select fixed column/direction pairs; request text is never an SQL identifier.
         $sortMap = ['recent' => ['created_at', 'desc'], 'oldest' => ['created_at', 'asc'], 'title' => ['title', 'asc']];
         if ($viewCountsEnabled) $sortMap['viewed'] = ['view_count', 'desc'];
-        if ($likesEnabled) $sortMap['liked'] = ['likes_count', 'desc'];
+        if ($likesEnabled) $sortMap['liked'] = ['like_count', 'desc'];
         $sort = $request->query('sort');
         $sort = is_string($sort) && array_key_exists($sort, $sortMap) ? $sort : 'recent';
         $sortOptions = ['recent' => 'Most recent', 'oldest' => 'Oldest', 'title' => 'Title (A to Z)'];
@@ -95,6 +95,7 @@ class DocumentController extends Controller
         catch (AuthorizationException) { abort(404); }
         // SECURITY: Count only after show authorization; the service excludes authors, bots, and nonpublic posts.
         $engagement->recordView($document, $request);
+        $engagement->loadLikeState($document, $request);
         $document->load(['author', 'reviewer']);
         return view('documents.show', compact('document'));
     }

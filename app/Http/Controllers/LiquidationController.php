@@ -59,7 +59,7 @@ class LiquidationController extends Controller
             $sortMap['report_latest'] = ['report_date', 'desc'];
             $sortMap['amount_high'] = ['amount', 'desc'];
             if ($viewCountsEnabled) $sortMap['viewed'] = ['view_count', 'desc'];
-            if ($likesEnabled) $sortMap['liked'] = ['likes_count', 'desc'];
+            if ($likesEnabled) $sortMap['liked'] = ['like_count', 'desc'];
         }
         $sort = $request->query('sort');
         $sort = is_string($sort) && array_key_exists($sort, $sortMap) ? $sort : 'recent';
@@ -92,6 +92,7 @@ class LiquidationController extends Controller
         catch (AuthorizationException) { abort(404); }
         // SECURITY: Count only after show authorization; the service excludes authors, bots, and nonpublic posts.
         $engagement->recordView($liquidation, $request);
+        $engagement->loadLikeState($liquidation, $request);
         $liquidation->load(['author', 'reviewer']);
         return view('liquidation.show', compact('liquidation'));
     }

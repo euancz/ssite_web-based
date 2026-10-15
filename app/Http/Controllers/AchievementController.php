@@ -82,7 +82,7 @@ class AchievementController extends Controller
         // SECURITY: Sort keys map to fixed column/direction pairs and never reach raw SQL.
         $sortMap = ['recent' => ['created_at', 'desc'], 'oldest' => ['created_at', 'asc'], 'title' => ['title', 'asc']];
         if ($viewCountsEnabled) $sortMap['viewed'] = ['view_count', 'desc'];
-        if ($likesEnabled) $sortMap['liked'] = ['likes_count', 'desc'];
+        if ($likesEnabled) $sortMap['liked'] = ['like_count', 'desc'];
         $sort = $request->query('sort');
         $sort = is_string($sort) && array_key_exists($sort, $sortMap) ? $sort : 'recent';
         $sortOptions = ['recent' => 'Most recent', 'oldest' => 'Oldest', 'title' => 'Title (A to Z)'];
@@ -115,6 +115,7 @@ class AchievementController extends Controller
         }
         // SECURITY: Count only after show authorization; the service excludes authors, bots, and nonpublic posts.
         $engagement->recordView($achievement, $request);
+        $engagement->loadLikeState($achievement, $request);
         $achievement->load(['author', 'reviewer']);
 
         return view('achievements.show', compact('achievement'));

@@ -205,7 +205,7 @@ Documents and Liquidation use the Article role-specific tabs and ten-item pagina
 
 ## Optional post engagement
 
-`config/school.php` disables view counts and likes by default. `PostEngagement` checks each feature flag and the external SQL schema before attempting engagement queries or writes. The current database has no `view_count` column on the five post tables and no `post_likes` table, so the UI and engagement sort choices stay hidden, views are not recorded, and `posts.like` returns 404. Enabling these features requires the owner to add the expected schema outside the app; this repository adds no migration. View counts skip authors and configured bot agents and are deduplicated per session for the configured window. Likes are scoped by post type and custom post key, and permanent post deletion removes associated likes.
+`config/school.php` enables view counts and likes by default, with environment flags available to disable either feature. `PostEngagement` checks the externally managed post columns before writing counters. Signed-in users count once per post through the app-managed `post_views` table; guests are deduplicated by browser session for the configured window and bot agents are skipped. Like actions also require the app-managed `post_likes` table created by migration, and like/unlike updates the corresponding stored counter in the same transaction as the like row. Likes and views are scoped by post type and custom post key; permanent post deletion removes associated engagement records.
 
 ## Design tokens
 

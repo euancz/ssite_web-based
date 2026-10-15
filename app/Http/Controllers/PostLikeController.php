@@ -52,10 +52,11 @@ class PostLikeController extends Controller
         $desiredLike = $desiredLike === '1';
 
         // SECURITY: Locking the public post serializes two tabs before they check or create its unique user like.
-        DB::transaction(function () use ($modelClass, $keyName, $post, $type, $user, $desiredLike): void {
+        DB::transaction(function () use ($modelClass, $keyName, $post, $type, $user, $desiredLike, $engagement): void {
             $lockedPost = $modelClass::query()->where($keyName, $post)->lockForUpdate()->firstOrFail();
             abort_unless($lockedPost->isApproved() && $lockedPost->content_status === 'active', 404);
             $this->authorize('view', $lockedPost);
+            abort_unless($engagement->likeCountsAvailable($lockedPost), 404);
 
             $like = PostLike::query()->where('post_type', $type)
                 ->where('post_id', $lockedPost->getKey())
@@ -70,8 +71,11 @@ class PostLikeController extends Controller
                 $like->user_id = $user->user_id;
                 $like->created_at = now();
                 $like->save();
+                DB::table($lockedPost->getTable())->where($keyName, $lockedPost->getKey())->increment('like_count');
             } elseif (! $desiredLike && $like) {
                 $like->delete();
+                DB::table($lockedPost->getTable())->where($keyName, $lockedPost->getKey())
+                    ->where('like_count', '>', 0)->decrement('like_count');
             }
         });
 

@@ -1,9 +1,9 @@
 <?php
 
 return [
-    // Engagement features stay disabled until their SQL columns and table are created.
-    'enable_view_counts' => (bool) env('SCHOOL_ENABLE_VIEW_COUNTS', false),
-    'enable_likes' => (bool) env('SCHOOL_ENABLE_LIKES', false),
+    // Engagement features require their externally managed columns/table; runtime checks keep missing schema inert.
+    'enable_view_counts' => (bool) env('SCHOOL_ENABLE_VIEW_COUNTS', true),
+    'enable_likes' => (bool) env('SCHOOL_ENABLE_LIKES', true),
     'view_dedupe_hours' => (int) env('SCHOOL_VIEW_DEDUPE_HOURS', 12),
     'view_bot_user_agents' => ['bot', 'crawler', 'spider', 'slurp', 'facebookexternalhit', 'preview'],
 
