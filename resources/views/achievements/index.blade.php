@@ -26,7 +26,7 @@
         <p class="dashboard-error" role="alert">{{ session('error') }}</p>
     @endif
 
-    {{-- Adviser bulk archive remains separate from each card's single-post actions. --}}
+    {{-- President bulk archive remains separate from each card's single-post actions. --}}
     @can('bulkArchive', \App\Models\Achievement::class)
         @if ($tab !== 'published' && $achievements->isNotEmpty())
             <form id="achievement-bulk-archive" method="POST" action="{{ route('achievements.bulk-archive') }}">
@@ -100,7 +100,7 @@
         @empty
             @if ($tab === 'published')
                 <x-posts.empty-state title="No published achievements yet" message="Check back soon for the latest SSITE achievements." />
-            @elseif (auth()->user()?->canPost())
+            @elseif (auth()->user()?->canPostIn('achievements'))
                 <x-posts.empty-state title="No achievements in this tab" message="Use the prompt above to create an achievement." />
             @else
                 <x-posts.empty-state title="No achievements found" message="Try another search or check back later." />

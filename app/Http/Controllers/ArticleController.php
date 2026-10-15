@@ -14,14 +14,11 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
-/*
- * Officer articles start pending; advisers approve or reject with a reason. Only approved
- * AND active articles appear publicly; archive shelves content without changing review state,
- * and restore returns it to active while preserving pending or rejected approval state. Archive,
- * restore, and delete stay silent; only review and publication transitions send notifications.
+/* Officer submissions follow position capabilities and start pending. The President reviews;
+ * public queries require approved and active state, while archive and restore preserve review state.
  */
 /**
- * Lists, edits, reviews, and archives Articles while keeping role and state rules server-side.
+ * Lists and manages Articles while enforcing position capabilities and review state server-side.
  */
 class ArticleController extends Controller
 {
@@ -36,7 +33,7 @@ class ArticleController extends Controller
         $user = $request->user();
         $allowedTabs = $user?->canReview()
             ? ['published', 'pending', 'rejected', 'archived', 'all']
-            : ($user?->isOfficer() ? ['published', 'mine', 'archived'] : ['published']);
+            : ($user?->canPostIn('articles') ? ['published', 'mine', 'archived'] : ['published']);
         // SECURITY: Pending totals are queried only for review-capable accounts and never reach public or student views.
         $pendingCount = $user?->canReview() ? Article::pending()->count() : null;
         $tab = $request->query('tab', 'published');
@@ -53,7 +50,7 @@ class ArticleController extends Controller
             $articles->where('created_by_user_id', $user->user_id);
         } elseif ($tab === 'archived') {
             $articles->archived();
-            if (! $user?->canManageOfficers()) {
+            if (! $user?->isPresident()) {
                 $articles->where('created_by_user_id', $user->user_id);
             }
         } elseif ($tab === 'pending') {
@@ -81,7 +78,7 @@ class ArticleController extends Controller
     }
 
     /**
-     * Show a public article or a private article to its author or an adviser.
+     * Show a public article or a private article to its author or the President.
      */
     public function show(Article $article): View
     {
@@ -100,7 +97,7 @@ class ArticleController extends Controller
     }
 
     /**
-     * Show the create form to officers and advisers.
+     * Show the create form only when the current position can post here.
      */
     public function create(): View
     {
@@ -110,7 +107,7 @@ class ArticleController extends Controller
     }
 
     /**
-     * Store officer submissions as pending and adviser submissions per the school setting.
+     * Store position-based submissions as pending or President posts as configured.
      */
     public function store(Request $request): RedirectResponse
     {
@@ -132,7 +129,7 @@ class ArticleController extends Controller
         $article = new Article($validated);
         $article->created_by_user_id = $user->user_id;
         $article->content_status = Article::CONTENT_ACTIVE;
-        $autoApprove = ($user->isAdviser() || $user->isSuperadmin()) && config('school.adviser_posts_auto_approved', true);
+        $autoApprove = $user->postsAutoApproved();
         $article->approval_status = $autoApprove ? Article::APPROVAL_APPROVED : Article::APPROVAL_PENDING;
 
         if ($autoApprove) {
@@ -147,16 +144,16 @@ class ArticleController extends Controller
 
         $article->save();
 
-        // Pending submissions go to advisers only; adviser auto-approved posts are already published.
+        // SECURITY: Pending submissions notify configured reviewers; President posts follow the school toggle.
         $notifications = app(PostNotificationRecipients::class);
         if ($autoApprove && $article->content_status === Article::CONTENT_ACTIVE) $notifications->published('article', $article, $user);
-        elseif ($user->isOfficer()) $notifications->submitted('article', $article, $user);
+        else $notifications->submitted('article', $article, $user);
 
         return redirect()->route('articles.show', $article)->with('status', 'The article was created.');
     }
 
     /**
-     * Show the edit form to the article owner or an adviser.
+     * Show the edit form to the owner with a current capability or the President.
      */
     public function edit(Article $article): View
     {
@@ -166,7 +163,7 @@ class ArticleController extends Controller
     }
 
     /**
-     * Update article content and reset review when a rejected or approved officer post changes.
+     * Update article content and reset review when a rejected or approved post changes.
      */
     public function update(Request $request, Article $article): RedirectResponse
     {
@@ -196,7 +193,7 @@ class ArticleController extends Controller
 
         if ($wasRejected || ($wasApproved && $request->user()->isOfficer()
             && config('school.reset_approval_on_edit', true))) {
-            // Edited content needs a fresh adviser decision; approval and visibility stay separate.
+            // Edited content needs a fresh President decision; approval and visibility stay separate.
             $article->approval_status = Article::APPROVAL_PENDING;
             $article->rejection_reason = null;
             $article->reviewed_by_user_id = null;
@@ -216,7 +213,7 @@ class ArticleController extends Controller
     }
 
     /**
-     * Archive an article for its owner or an adviser without changing review state.
+     * Archive an article for its owner or the President without changing review state.
      */
     public function archive(Article $article): RedirectResponse
     {
@@ -232,7 +229,7 @@ class ArticleController extends Controller
     }
 
     /**
-     * Restore an article for its owner or an adviser while preserving its review state.
+     * Restore an article for its owner or the President while preserving its review state.
      */
     public function restore(Article $article): RedirectResponse
     {
@@ -270,11 +267,11 @@ class ArticleController extends Controller
     }
 
     /**
-     * Reject only pending articles after validating an adviser reason.
+     * Reject only pending articles after validating a President reason.
      */
     public function reject(Request $request, Article $article): RedirectResponse
     {
-        // A rejection always includes the reason shown to the officer.
+        // A rejection always includes the reason shown to the author.
         $validated = $request->validate(['rejection_reason' => ['required', 'string', 'max:255']], [
             'rejection_reason.required' => 'Enter a reason before rejecting this article.',
             'rejection_reason.max' => 'The rejection reason may not be longer than 255 characters.',
@@ -297,7 +294,7 @@ class ArticleController extends Controller
     }
 
     /**
-     * Permanently delete an article and its stored image for advisers only.
+     * Permanently delete an article and its stored image for the President.
      */
     public function destroy(Article $article): RedirectResponse
     {
@@ -311,7 +308,7 @@ class ArticleController extends Controller
     }
 
     /**
-     * Archive adviser-selected articles after validating and authorizing every submitted ID.
+     * Archive President-selected articles after validating and authorizing every submitted ID.
      */
     public function bulkArchive(Request $request): RedirectResponse
     {

@@ -26,8 +26,8 @@
 	<section class="officers-section" aria-labelledby="officers-heading">
 		<div class="officer-heading-row">
 			<h2 id="officers-heading" class="about-section-title">SSITE Officers A.Y. {{ $current }}</h2>
-			{{-- SECURITY: Management markup and URLs are rendered only for advisers; manager routes enforce the same role. --}}
-			@can('manage-users')
+			{{-- SECURITY: Adviser and superadmin roles do not grant About roster editing. --}}
+			@can('manage-officers')
 				<details class="about-manage-menu"><summary aria-label="Manage officers"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06-1.5 2.6-.08-.02a1.65 1.65 0 0 0-1.78.76l-.04.07h-3l-.02-.08a1.65 1.65 0 0 0-1.4-1.14 1.65 1.65 0 0 0-1.73.92l-.04.08-2.84-1.02.02-.08a1.65 1.65 0 0 0-.76-1.78l-.07-.04v-3l.08-.02a1.65 1.65 0 0 0 1.14-1.4 1.65 1.65 0 0 0-.92-1.73l-.08-.04 1.02-2.84.08.02a1.65 1.65 0 0 0 1.78-.76l.04-.07h3l.02.08a1.65 1.65 0 0 0 1.4 1.14 1.65 1.65 0 0 0 1.73-.92l.04-.08 2.84 1.02-.02.08a1.65 1.65 0 0 0 .76 1.78l.07.04v3l-.08.02a1.65 1.65 0 0 0-.72 1.58z"/></svg></summary>
 					<div class="about-manage-dropdown">
 						<a href="{{ route('adviser.officers.create', ['academic_year' => $current, 'from' => 'about']) }}">Add officer</a>
@@ -57,8 +57,8 @@
 					@endif
 					<h3>{{ $officer->name }}</h3>
 					<p>{{ $officer->position }}</p>
-					{{-- Edit mode is temporary and only adds adviser controls; the existing manager remains the no-JavaScript fallback. --}}
-					@can('manage-users')
+					{{-- SECURITY: Roster controls stay absent because officer assignments use the users manager. --}}
+					@can('manage-officers')
 						<div class="about-officer-controls" data-about-edit-controls hidden>
 							<a href="{{ route('adviser.officers.edit', ['officer' => $officer, 'from' => 'about']) }}" aria-label="Edit {{ $officer->name }}"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m16 4 4 4L8 20H4v-4L16 4zM14 6l4 4"/></svg></a>
 							<button type="button" aria-label="Delete {{ $officer->name }}" data-delete-confirm-open="delete-officer-{{ $officer->term_id }}"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3"/></svg></button>
@@ -74,7 +74,7 @@
 				</article>
 			@empty
 				<div class="about-officers-empty"><p>Officers for A.Y. {{ $current }} will be announced soon.</p>
-					@can('manage-users')<a class="dashboard-button" href="{{ route('adviser.officers.create', ['academic_year' => $current, 'from' => 'about']) }}">Add officer</a>@endcan
+					@can('manage-officers')<a class="dashboard-button" href="{{ route('adviser.officers.create', ['academic_year' => $current, 'from' => 'about']) }}">Add officer</a>@endcan
 				</div>
 			@endforelse
 		</div>
@@ -93,7 +93,7 @@
 							<path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/>
 						</svg>
 					</summary>
-					@can('manage-users')
+					@can('manage-officers')
 						<details class="about-manage-menu about-history-menu"><summary aria-label="Manage officers for A.Y. {{ $year }}"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06-1.5 2.6-.08-.02a1.65 1.65 0 0 0-1.78.76l-.04.07h-3l-.02-.08a1.65 1.65 0 0 0-1.4-1.14 1.65 1.65 0 0 0-1.73.92l-.04.08-2.84-1.02.02-.08a1.65 1.65 0 0 0-.76-1.78l-.07-.04v-3l.08-.02a1.65 1.65 0 0 0 1.14-1.4 1.65 1.65 0 0 0-.92-1.73l-.08-.04 1.02-2.84.08.02a1.65 1.65 0 0 0 1.78-.76l.04-.07h3l.02.08a1.65 1.65 0 0 0 1.4 1.14 1.65 1.65 0 0 0 1.73-.92l.04-.08 2.84 1.02-.02.08a1.65 1.65 0 0 0 .76 1.78l.07.04v3l-.08.02a1.65 1.65 0 0 0-.72 1.58z"/></svg></summary>
 							<div class="about-manage-dropdown">
 								<a href="{{ route('adviser.officers.create', ['academic_year' => $year, 'from' => 'about']) }}">Add officer to this year</a>
@@ -112,7 +112,7 @@
 									<div class="officer-photo officer-photo-placeholder" role="img" aria-label="Photo unavailable">Photo</div>
 								@endif
 								<h3>{{ $officer->name }}</h3><p>{{ $officer->position }}</p>
-								@can('manage-users')
+								@can('manage-officers')
 									<div class="about-officer-controls" data-about-edit-controls hidden>
 										<a href="{{ route('adviser.officers.edit', ['officer' => $officer, 'from' => 'about']) }}" aria-label="Edit {{ $officer->name }}"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m16 4 4 4L8 20H4v-4L16 4zM14 6l4 4"/></svg></a>
 										<button type="button" aria-label="Delete {{ $officer->name }}" data-delete-confirm-open="delete-officer-{{ $officer->term_id }}"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3"/></svg></button>
@@ -130,7 +130,7 @@
 </div>
 @endsection
 
-@can('manage-users')
+@can('manage-officers')
 @push('scripts')
 <script>
     // Edit mode is page-local; disabling it hides all card controls without changing the public card grid.

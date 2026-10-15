@@ -6,7 +6,7 @@
 <div class="dashboard-page">
     <x-ui.page-header title="Review Posts" subtitle="Review submitted posts by status." />
 
-    {{-- Keep the selected status in the URL so advisers can share or refresh a filtered queue. --}}
+    {{-- Keep the selected status in the URL so the President can share or refresh a filtered queue. --}}
     <nav class="dashboard-tabs" aria-label="Filter posts by status">
         @foreach (['pending' => 'Pending', 'approved' => 'Approved', 'rejected' => 'Rejected'] as $status => $label)
             <a href="{{ route('adviser.reviews.index', ['status' => $status]) }}"
@@ -31,7 +31,6 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{-- TODO: Query only the selected status; students must never receive non-approved posts. --}}
                     @forelse ($posts as $post)
                         <tr>
                             <td>{{ $post->title }}</td>
@@ -41,19 +40,11 @@
                             <td><x-ui.status-badge :status="$post->status" /></td>
                             <td class="dashboard-table-actions">
                                 {{-- Preview and review actions depend on URLs supplied by the post backend. --}}
-                                @if ($post->preview_url)
-                                    <a href="{{ $post->preview_url }}" class="dashboard-text-button">Preview</a>
-                                @else
-                                    <button type="button" class="dashboard-text-button" disabled>Preview</button>
-                                @endif
-                                {{-- SECURITY: Only advisers see review controls; this legacy page has no write endpoints. --}}
+                                <a href="{{ $post->preview_url }}" class="dashboard-text-button">Preview</a>
                                 @if ($post->status === 'pending')
-                                    <details class="article-row-menu floating-row-menu"><summary aria-label="More review actions">&#8942;</summary>
-                                        <div class="article-row-menu-panel">
-                                        <button type="button" class="dashboard-text-button" disabled>Approve</button>
-                                        <button type="button" class="dashboard-text-button" data-modal-open="reject-post-modal">Reject</button>
-                                        </div>
-                                    </details>
+                                    <form method="POST" action="{{ $post->approve_url }}">@csrf<button type="submit" class="dashboard-button">Approve</button></form>
+                                    <button type="button" class="dashboard-button dashboard-button-secondary" data-modal-open="reject-post-{{ $post->post_type }}-{{ $post->post_id }}">Reject</button>
+                                    <x-ui.reject-modal id="reject-post-{{ $post->post_type }}-{{ $post->post_id }}" :action="$post->reject_url" :subject="strtolower($post->type)" />
                                 @endif
                             </td>
                         </tr>
@@ -67,8 +58,7 @@
                 </tbody>
             </table>
         </x-ui.data-table>
+        <div class="dashboard-pagination">{{ $posts->links() }}</div>
     </section>
-
-    <x-ui.reject-modal id="reject-post-modal" />
 </div>
 @endsection

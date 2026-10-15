@@ -51,7 +51,7 @@
             <p class="post-card-state">This post is archived and does not appear in Published.</p>
         @endif
         @if ($full && $post->isPending())
-            <p class="post-card-state">This post is pending adviser review.</p>
+            <p class="post-card-state">This post is awaiting President review.</p>
         @endif
         @can('update', $post)
             @if ($post->isRejected() && $post->rejection_reason)

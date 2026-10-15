@@ -15,7 +15,7 @@ class UserPolicy
             return false;
         }
 
-        if (! $actor->canManageOfficers() && ! $actor->canManageAdvisers()) {
+        if (! $actor->canAssignOfficers() && ! $actor->canAssignAdvisers()) {
             return false;
         }
 
@@ -23,11 +23,15 @@ class UserPolicy
             return false;
         }
 
-        if (! in_array($target->role, $actor->assignableRoles(), true)) {
+        $targetRoles = $actor->canAssignAdvisers()
+            ? [User::ROLE_STUDENT, User::ROLE_OFFICER, User::ROLE_ADVISER]
+            : [User::ROLE_STUDENT, User::ROLE_OFFICER];
+
+        if (! in_array($target->role, $targetRoles, true)) {
             return false;
         }
 
-        if ($target->isAdviser() && ! $actor->canManageAdvisers()) {
+        if ($target->isAdviser() && ! $actor->canAssignAdvisers()) {
             return false;
         }
 

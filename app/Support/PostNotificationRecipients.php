@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Throwable;
 
-/** Builds role-based recipients and sends synchronous, failure-isolated post notifications. */
+/** Resolves position-based reviewers and sends synchronous, failure-isolated post notifications. */
 class PostNotificationRecipients
 {
     private const POST_ROUTES = [
@@ -26,7 +26,7 @@ class PostNotificationRecipients
     public function submitted(string $postType, Model $post, User $actor, bool $needsReviewAgain = false): void
     {
         $this->safely(function () use ($postType, $post, $actor, $needsReviewAgain): void {
-            $this->sendToRole('adviser', $actor,
+            $this->sendToReviewers(
                 new PostSubmittedForReview($this->payload($postType, $post, $actor), $needsReviewAgain));
         }, $postType, $post);
     }
@@ -83,17 +83,21 @@ class PostNotificationRecipients
         return $authorId ? User::query()->find($authorId) : null;
     }
 
-    private function sendToRole(string $role, User $actor, object $notification): void
+    private function sendToReviewers(object $notification): void
     {
-        User::query()->where('role', $role)->where('user_id', '<>', $actor->user_id)
+        User::query()->where('role', User::ROLE_OFFICER)
             ->chunkById(100, function ($users) use ($notification): void {
-                foreach ($users as $user) $this->safely(fn () => $user->notify($notification), 'post', null);
+                foreach ($users as $user) {
+                    if ($user->canReview()) {
+                        $this->safely(fn () => $user->notify($notification), 'post', null);
+                    }
+                }
             }, 'user_id');
     }
 
     private function sendToEveryoneExcept(array $excludedIds, object $notification): void
     {
-        User::query()->whereIn('role', ['student', 'officer', 'adviser'])
+        User::query()->whereIn('role', User::ROLES)
             ->when($excludedIds !== [], fn ($query) => $query->whereNotIn('user_id', array_unique($excludedIds)))
             // SECURITY: The broadcast is chunked by the custom user_id key to bound memory use.
             ->chunkById(100, function ($users) use ($notification): void {

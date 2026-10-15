@@ -14,13 +14,13 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /*
- * Adviser role assignment is limited to student/officer accounts. Promotion requires an
- * officer position, demotion clears it, and advisers cannot change their own or peer roles.
+ * Adviser and superadmin assignment paths are separated; configured positions are never free text.
  */
 /**
- * Lists user information and provides adviser-only role assignment and read-only details.
+ * Lists user information and provides actor-scoped role assignment and read-only details.
  */
 class UserController extends Controller
 {
@@ -29,12 +29,17 @@ class UserController extends Controller
      */
     public function index(Request $request): View
     {
+        $actor = $request->user();
+        abort_unless($actor?->canAssignOfficers() || $actor?->canAssignAdvisers(), 403);
+        $targetRoles = $actor->canAssignAdvisers()
+            ? [User::ROLE_STUDENT, User::ROLE_OFFICER, User::ROLE_ADVISER]
+            : [User::ROLE_STUDENT, User::ROLE_OFFICER];
         $filters = $request->validate([
             'search' => ['nullable', 'string', 'max:100'],
-            'role' => ['nullable', Rule::in(User::ROLES)],
+            'role' => ['nullable', Rule::in($targetRoles)],
         ]);
 
-        $users = User::query()
+        $users = User::query()->whereIn('role', $targetRoles)
             ->when($filters['search'] ?? null, function ($query, string $search): void {
                 $query->where(function ($query) use ($search): void {
                     $query->where('name', 'like', '%' . $search . '%')
@@ -50,80 +55,116 @@ class UserController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('adviser.users.index', compact('users'));
+        $positions = array_keys(config('school.positions', []));
+
+        return view('adviser.users.index', compact('users', 'targetRoles', 'positions'));
     }
 
     /**
-     * Show an account's full profile to an authorized adviser without edit controls.
+     * Show a target account's profile to a manager permitted to change its role.
      */
     public function show(User $user): View
     {
+        $this->authorize('changeRole', $user);
         return view('adviser.users.show', compact('user'));
     }
 
     /**
-     * Change a non-adviser user's role and keep officer position consistent with that role.
+     * Change an assignable user's role and keep officer position consistent with that role.
      */
     public function updateRole(Request $request, User $user): RedirectResponse
     {
         $actor = $request->user();
         Gate::forUser($actor)->authorize('changeRole', $user);
-
+        $allowedRoles = $actor->canAssignOfficers()
+            ? [User::ROLE_STUDENT, User::ROLE_OFFICER]
+            : match ($user->role) {
+                User::ROLE_ADVISER => [User::ROLE_STUDENT],
+                User::ROLE_STUDENT, User::ROLE_OFFICER => [User::ROLE_ADVISER],
+                default => [],
+            };
         $validated = $request->validate([
-            'role' => ['required', 'string', Rule::in($actor->assignableRoles())],
+            'role' => ['required', 'string', Rule::in(array_intersect($actor->assignableRoles(), $allowedRoles))],
             'officer_position' => [
                 Rule::requiredIf($request->input('role') === User::ROLE_OFFICER),
-                'nullable',
-                'string',
-                'max:100',
+                'nullable', 'string', 'max:100',
+                Rule::in(array_keys(config('school.positions', []))),
             ],
         ]);
-
-        $oldRole = $user->role;
-        $oldPosition = $user->officer_position;
         $newRole = $validated['role'];
-        $newPosition = $newRole === User::ROLE_OFFICER ? trim((string) ($validated['officer_position'] ?? '')) : null;
+        $newPosition = $newRole === User::ROLE_OFFICER ? $validated['officer_position'] : null;
 
-        DB::transaction(function () use ($actor, $user, $newRole, $newPosition, $oldRole, $oldPosition) {
-            $user->role = $newRole;
-            $user->officer_position = $newRole === User::ROLE_OFFICER ? $newPosition : null;
-            $user->save();
+        $removedPhoto = null;
+        DB::transaction(function () use ($actor, $user, $newRole, $newPosition, &$removedPhoto): void {
+            // SECURITY: Lock assignment rows together so concurrent requests cannot create two Presidents.
+            $lockedUsers = User::query()->orderBy('user_id')->lockForUpdate()->get();
+            $lockedActor = $lockedUsers->firstWhere('user_id', $actor->user_id);
+            $target = $lockedUsers->firstWhere('user_id', $user->user_id);
+            abort_unless($lockedActor && $target, 404);
+            Gate::forUser($lockedActor)->authorize('changeRole', $target);
+
+            $allowedRoles = $lockedActor->canAssignOfficers()
+                ? [User::ROLE_STUDENT, User::ROLE_OFFICER]
+                : match ($target->role) {
+                    User::ROLE_ADVISER => [User::ROLE_STUDENT],
+                    User::ROLE_STUDENT, User::ROLE_OFFICER => [User::ROLE_ADVISER],
+                    default => [],
+                };
+            abort_unless(in_array($newRole, array_intersect($lockedActor->assignableRoles(), $allowedRoles), true), 422);
+
+            $oldRole = $target->role;
+            $oldPosition = $target->officer_position;
+            $singleHolderPositions = config('school.single_holder_positions', []);
+            if ($newRole === User::ROLE_OFFICER && in_array($newPosition, $singleHolderPositions, true)) {
+                $alreadyAssigned = $lockedUsers->contains(function (User $candidate) use ($target, $newPosition): bool {
+                    return (int) $candidate->user_id !== (int) $target->user_id
+                        && $candidate->isOfficer()
+                        && $candidate->position() === $newPosition;
+                });
+                if ($alreadyAssigned) {
+                    throw ValidationException::withMessages([
+                        'officer_position' => "A {$newPosition} is already assigned. Reassign the current holder first.",
+                    ]);
+                }
+            }
+
+            $target->role = $newRole;
+            $target->officer_position = $newRole === User::ROLE_OFFICER ? $newPosition : null;
+            $target->save();
 
             $currentYear = AcademicYear::current();
             if ($newRole === User::ROLE_OFFICER) {
                 $term = OfficerTerm::updateOrCreate(
-                    ['user_id' => $user->user_id, 'academic_year' => $currentYear],
-                    ['name' => $user->name, 'position' => $newPosition, 'photo' => $user->profile_picture]
+                    ['user_id' => $target->user_id, 'academic_year' => $currentYear],
+                    ['name' => $target->name, 'position' => $newPosition, 'photo' => $target->profile_picture]
                 );
-                $term->user_id = $user->user_id;
+                $term->user_id = $target->user_id;
                 $term->save();
             } elseif ($oldRole === User::ROLE_OFFICER) {
-                $term = OfficerTerm::forYear($currentYear)->where('user_id', $user->user_id)->first();
+                $term = OfficerTerm::forYear($currentYear)->where('user_id', $target->user_id)->first();
                 if ($term) {
-                    if ($term->photo && str_starts_with($term->photo, 'officer-photos/') && ! preg_match('/^https?:\/\//i', $term->photo)) {
-                        Storage::disk('public')->delete($term->photo);
-                    }
+                    $removedPhoto = $term->photo;
                     $term->delete();
                 }
             }
 
             if (Schema::hasTable('role_changes')) {
-                try {
-                    DB::table('role_changes')->insert([
-                        'user_id' => $user->user_id,
-                        'changed_by_user_id' => $actor->user_id,
-                        'old_role' => $oldRole,
-                        'new_role' => $newRole,
-                        'old_officer_position' => $oldPosition,
-                        'new_officer_position' => $newPosition,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                } catch (\Throwable $e) {
-                    // Skip logging when the table schema differs from the expected snapshot columns.
-                }
+                DB::table('role_changes')->insert([
+                    'user_id' => $target->user_id,
+                    'changed_by_user_id' => $lockedActor->user_id,
+                    'old_role' => $oldRole,
+                    'new_role' => $newRole,
+                    'old_officer_position' => $oldPosition,
+                    'new_officer_position' => $newPosition,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
             }
         });
+
+        if ($removedPhoto && str_starts_with($removedPhoto, 'officer-photos/') && ! preg_match('/^https?:\/\//i', $removedPhoto)) {
+            Storage::disk('public')->delete($removedPhoto);
+        }
 
         return redirect()
             ->route('adviser.users.index', $request->only('search', 'role', 'page'))

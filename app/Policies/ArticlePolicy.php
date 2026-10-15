@@ -5,99 +5,29 @@ namespace App\Policies;
 use App\Models\Article;
 use App\Models\User;
 
-/**
- * Keeps article visibility and state changes tied to roles and article ownership.
- */
+/** Article permissions follow configured officer positions; advisers and superadmins never manage content. */
 class ArticlePolicy
 {
-    /**
-     * Allow anyone to open the listing; the controller filters its rows by role and tab.
-     */
-    public function viewAny(?User $user): bool
-    {
-        return true;
-    }
+    public function viewAny(?User $user): bool { return true; }
 
-    /**
-     * Allow public articles to everyone and private articles only to their author or adviser.
-     */
     public function view(?User $user, Article $article): bool
     {
-        return ($article->isApproved()
-                && $article->content_status === Article::CONTENT_ACTIVE)
-            || ($user !== null && ($user->canManageOfficers() || $this->owns($user, $article)));
+        return ($article->isApproved() && $article->content_status === Article::CONTENT_ACTIVE)
+            || ($user !== null && ($user->isPresident() || $this->owns($user, $article)));
     }
 
-    /**
-     * Allow officers and advisers to create articles for organizational communication.
-     */
-    public function create(User $user): bool
-    {
-        return $user->canPost();
-    }
+    public function create(User $user): bool { return $user->canPostIn('articles'); }
+    public function update(User $user, Article $article): bool { return $user->isPresident() || ($user->canPostIn('articles') && $this->owns($user, $article)); }
+    public function archive(User $user, Article $article): bool { return $this->update($user, $article); }
+    public function restore(User $user, Article $article): bool { return $this->update($user, $article); }
+    public function approve(User $user, Article $article): bool { return $user->canReview(); }
+    public function reject(User $user, Article $article): bool { return $user->canReview(); }
+    public function delete(User $user, Article $article): bool { return $user->canPermanentlyDelete(); }
+    public function bulkArchive(User $user): bool { return $user->isPresident(); }
 
-    /**
-     * Allow the adviser or the owning account to change article text and image.
-     */
-    public function update(User $user, Article $article): bool
-    {
-        return $user->canManageOfficers() || $this->owns($user, $article);
-    }
-
-    /**
-     * Allow the adviser or the owning account to shelve an article.
-     */
-    public function archive(User $user, Article $article): bool
-    {
-        return $user->canManageOfficers() || $this->owns($user, $article);
-    }
-
-    /**
-     * Allow the adviser or the owning account to restore an article.
-     */
-    public function restore(User $user, Article $article): bool
-    {
-        return $user->canManageOfficers() || $this->owns($user, $article);
-    }
-
-    /**
-     * Allow advisers and configured superadmins to approve articles after review.
-     */
-    public function approve(User $user, Article $article): bool
-    {
-        return $user->canReview();
-    }
-
-    /**
-     * Allow advisers and configured superadmins to reject articles and record a reason.
-     */
-    public function reject(User $user, Article $article): bool
-    {
-        return $user->canReview();
-    }
-
-    /**
-     * Allow only superadmins to permanently remove an article and its image.
-     */
-    public function delete(User $user, Article $article): bool
-    {
-        return $user->canPermanentlyDelete();
-    }
-
-    /**
-     * Allow advisers and superadmins to archive a validated selection of articles.
-     */
-    public function bulkArchive(User $user): bool
-    {
-        return $user->canManageOfficers();
-    }
-
-    /**
-     * Compare ownership with the users table's user_id key, never the conventional id field.
-     */
+    // SECURITY: Compare post ownership with the custom users.user_id key.
     private function owns(User $user, Article $article): bool
     {
-        return $article->created_by_user_id !== null
-            && (int) $article->created_by_user_id === (int) $user->user_id;
+        return $article->created_by_user_id !== null && (int) $article->created_by_user_id === (int) $user->user_id;
     }
 }

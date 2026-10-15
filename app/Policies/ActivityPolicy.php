@@ -5,76 +5,29 @@ namespace App\Policies;
 use App\Models\Activity;
 use App\Models\User;
 
-/**
- * Keeps activity visibility and state changes tied to roles and activity ownership.
- */
+/** Activity permissions follow configured officer positions; advisers and superadmins never manage content. */
 class ActivityPolicy
 {
-    /** Anyone may open the list; the controller filters rows by role and tab. */
-    public function viewAny(?User $user): bool
-    {
-        return true;
-    }
+    public function viewAny(?User $user): bool { return true; }
 
-    /** Public activities are visible to all; private activities are limited to their author or adviser. */
     public function view(?User $user, Activity $activity): bool
     {
         return ($activity->isApproved() && $activity->content_status === Activity::CONTENT_ACTIVE)
-            || ($user !== null && ($user->canManageOfficers() || $this->owns($user, $activity)));
+            || ($user !== null && ($user->isPresident() || $this->owns($user, $activity)));
     }
 
-    /** Officers and advisers may create activities. */
-    public function create(User $user): bool
-    {
-        return $user->canPost();
-    }
+    public function create(User $user): bool { return $user->canPostIn('activities'); }
+    public function update(User $user, Activity $activity): bool { return $user->isPresident() || ($user->canPostIn('activities') && $this->owns($user, $activity)); }
+    public function archive(User $user, Activity $activity): bool { return $this->update($user, $activity); }
+    public function restore(User $user, Activity $activity): bool { return $this->update($user, $activity); }
+    public function approve(User $user, Activity $activity): bool { return $user->canReview(); }
+    public function reject(User $user, Activity $activity): bool { return $user->canReview(); }
+    public function delete(User $user, Activity $activity): bool { return $user->canPermanentlyDelete(); }
+    public function bulkArchive(User $user): bool { return $user->isPresident(); }
 
-    /** The adviser or owning account may edit activity content. */
-    public function update(User $user, Activity $activity): bool
-    {
-        return $user->canManageOfficers() || $this->owns($user, $activity);
-    }
-
-    /** The adviser or owning account may archive an activity. */
-    public function archive(User $user, Activity $activity): bool
-    {
-        return $user->canManageOfficers() || $this->owns($user, $activity);
-    }
-
-    /** The adviser or owning account may restore an activity. */
-    public function restore(User $user, Activity $activity): bool
-    {
-        return $user->canManageOfficers() || $this->owns($user, $activity);
-    }
-
-    /** Only advisers may approve activities. */
-    public function approve(User $user, Activity $activity): bool
-    {
-        return $user->canReview();
-    }
-
-    /** Advisers and configured superadmins may reject activities and record a reason. */
-    public function reject(User $user, Activity $activity): bool
-    {
-        return $user->canReview();
-    }
-
-    /** Only superadmins may permanently remove an activity and its stored image. */
-    public function delete(User $user, Activity $activity): bool
-    {
-        return $user->canPermanentlyDelete();
-    }
-
-    /** Advisers and superadmins may archive a validated group of activities. */
-    public function bulkArchive(User $user): bool
-    {
-        return $user->canManageOfficers();
-    }
-
-    /** Compare ownership with users.user_id, never Laravel's conventional id field. */
+    // SECURITY: Compare post ownership with the custom users.user_id key.
     private function owns(User $user, Activity $activity): bool
     {
-        return $activity->created_by_user_id !== null
-            && (int) $activity->created_by_user_id === (int) $user->user_id;
+        return $activity->created_by_user_id !== null && (int) $activity->created_by_user_id === (int) $user->user_id;
     }
 }

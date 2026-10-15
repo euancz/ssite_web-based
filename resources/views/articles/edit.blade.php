@@ -7,7 +7,7 @@
     {{-- The shared page heading and form panel follow existing dashboard spacing. --}}
     <x-ui.page-header title="Edit Article" subtitle="Update the article content or replace its image." />
     <section class="dashboard-panel">
-        {{-- SECURITY: ArticlePolicy and the update endpoint both check ownership or adviser role. --}}
+        {{-- SECURITY: ArticlePolicy and the update endpoint check ownership or President capability. --}}
         @include('articles._form', [
             'article' => $article,
             'action' => route('articles.update', $article),

@@ -144,28 +144,72 @@ class User extends Authenticatable
         return $this->role === 'student';
     }
 
-    /**
-     * Identify officers, who may create posts and use the officer dashboard.
-     */
+    /** Identify officer accounts; position capabilities are checked separately. */
     public function isOfficer(): bool
     {
         return $this->role === 'officer';
     }
 
-    /**
-     * Identify advisers, who can review posts and manage user roles.
-     */
+    /** Identify adviser accounts for role assignment. */
     public function isAdviser(): bool
     {
         return $this->role === self::ROLE_ADVISER;
     }
 
-    /**
-     * Identify superadmins, who supervise advisers while remaining outside the visible role form.
-     */
+    /** Identify superadmin accounts for adviser role assignment. */
     public function isSuperadmin(): bool
     {
         return $this->role === self::ROLE_SUPERADMIN;
+    }
+
+    /** Return the configured position only when this account currently has the officer role. */
+    public function position(): ?string
+    {
+        if (! $this->isOfficer()) {
+            return null;
+        }
+
+        $stored = mb_strtolower(trim((string) $this->officer_position));
+        foreach (array_keys(config('school.positions', [])) as $position) {
+            if ($stored !== '' && mb_strtolower(trim((string) $position)) === $stored) {
+                return $position;
+            }
+        }
+
+        return null;
+    }
+
+    /** President authority follows the configured canonical position, not the stored label alone. */
+    public function isPresident(): bool
+    {
+        return $this->position() === 'President';
+    }
+
+    /** Return whether this officer position may submit to the requested module. */
+    public function canPostIn(string $module): bool
+    {
+        $position = $this->position();
+
+        return $position !== null
+            && in_array($module, config('school.positions.' . $position . '.modules', []), true);
+    }
+
+    /** Return only the modules granted by the current canonical officer position. */
+    public function postableModules(): array
+    {
+        $position = $this->position();
+
+        return $position === null ? [] : config('school.positions.' . $position . '.modules', []);
+    }
+
+    /** Apply the configured auto-approval flag only to positions marked for direct publication. */
+    public function postsAutoApproved(): bool
+    {
+        $position = $this->position();
+
+        return $position !== null
+            && (bool) config('school.positions.' . $position . '.auto_approved', false)
+            && (! $this->isPresident() || (bool) config('school.president_posts_auto_approved', true));
     }
 
     /**
@@ -173,11 +217,21 @@ class User extends Authenticatable
      */
     public function assignableRoles(): array
     {
-        return match ($this->role) {
-            self::ROLE_SUPERADMIN => [self::ROLE_STUDENT, self::ROLE_OFFICER, self::ROLE_ADVISER],
-            self::ROLE_ADVISER => [self::ROLE_STUDENT, self::ROLE_OFFICER],
-            default => [],
-        };
+        return $this->canAssignOfficers()
+            ? [self::ROLE_STUDENT, self::ROLE_OFFICER]
+            : ($this->canAssignAdvisers() ? [self::ROLE_STUDENT, self::ROLE_ADVISER] : []);
+    }
+
+    /** Only advisers assign student and officer roles and officer positions. */
+    public function canAssignOfficers(): bool
+    {
+        return $this->isAdviser();
+    }
+
+    /** Only superadmins assign or revoke adviser roles. */
+    public function canAssignAdvisers(): bool
+    {
+        return $this->isSuperadmin();
     }
 
     /**
@@ -185,15 +239,15 @@ class User extends Authenticatable
      */
     public function canReview(): bool
     {
-        return $this->isAdviser() || $this->isSuperadmin();
+        return $this->isPresident()
+            && (bool) config('school.positions.' . $this->position() . '.can_review', false);
     }
 
-    /**
-     * Determine whether this account can manage officer assignments and officer terms.
-     */
+    /** Officer-term roster editing is intentionally unavailable under role-assignment-only duties. */
     public function canManageOfficers(): bool
     {
-        return $this->isAdviser() || $this->isSuperadmin();
+        // Roster management is outside the approved role-assignment responsibilities.
+        return false;
     }
 
     /**
@@ -201,7 +255,7 @@ class User extends Authenticatable
      */
     public function canManageAdvisers(): bool
     {
-        return $this->isSuperadmin();
+        return $this->canAssignAdvisers();
     }
 
     /**
@@ -209,15 +263,13 @@ class User extends Authenticatable
      */
     public function canPermanentlyDelete(): bool
     {
-        return $this->isSuperadmin();
+        return $this->isPresident();
     }
 
-    /**
-     * Return whether this role is allowed to submit organization posts.
-     */
+    /** Return whether the current officer position can submit to any module. */
     public function canPost(): bool
     {
-        return $this->isOfficer() || $this->isAdviser() || $this->isSuperadmin();
+        return $this->postableModules() !== [];
     }
 
     /**
@@ -238,7 +290,7 @@ class User extends Authenticatable
         }
 
         return match (true) {
-            $this->isOfficer() => 'officer.dashboard',
+            $this->canPost() => 'officer.dashboard',
             default => 'home',
         };
     }
