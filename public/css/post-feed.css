@@ -1,19 +1,19 @@
 /* Feed surfaces reuse the existing SSITE tokens and keep every selector local to post pages. */
 :root {
-    --post-feed-width: 45rem;
-    --post-feed-gap: 1rem;
+    --post-feed-width: 54rem;
+    --post-feed-gap: 0.875rem;
     --post-feed-card-radius: 14px;
     --post-feed-image-ratio: 16 / 9;
 }
 
 .post-feed-shell {
-    width: min(100% - 1.25rem, var(--post-feed-width));
-    margin: 22px auto 56px;
+    width: min(100% - 2rem, var(--post-feed-width));
+    margin: 16px auto 36px;
     color: var(--ssite-navy);
 }
 
 .post-feed-heading {
-    margin: 0 0 18px;
+    margin: 0 0 14px;
 }
 
 .post-feed-heading h1 {
@@ -32,16 +32,16 @@
 
 .post-feed-composer {
     display: flex;
-    min-height: 64px;
+    min-height: 56px;
     align-items: center;
     gap: 12px;
-    margin: 0 0 16px;
+    margin: 0 0 12px;
     border: 1px solid var(--ssite-line);
     border-radius: 999px;
     padding: 8px 14px;
     background: #fff;
     color: var(--ssite-navy-soft);
-    box-shadow: 4px 4px 0 rgb(61 175 234 / 18%);
+    box-shadow: 0 3px 10px rgb(23 50 77 / 6%);
     text-decoration: none;
 }
 
@@ -65,7 +65,7 @@
     min-width: 0;
     align-items: center;
     gap: 8px;
-    margin: 14px 0 18px;
+    margin: 10px 0 14px;
 }
 
 .post-feed-search-input {

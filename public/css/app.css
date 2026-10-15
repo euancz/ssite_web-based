@@ -1327,7 +1327,7 @@ ol {
 
 .dashboard-page {
     width: min(100% - 32px, 80rem);
-    margin: 32px auto 56px;
+    margin: 20px auto 36px;
     color: var(--ssite-navy);
 }
 
@@ -1348,12 +1348,12 @@ ol {
 }
 
 .dashboard-page-header {
-    margin-bottom: 24px;
+    margin-bottom: 16px;
     border: 1px solid #d7edf3;
-    border-radius: 18px;
+    border-radius: 14px;
     background: linear-gradient(135deg, #effaff 0%, #f9fdff 100%);
-    padding: 20px 22px;
-    box-shadow: 0 10px 20px rgb(23 50 77 / 8%);
+    padding: 16px 20px;
+    box-shadow: 0 5px 14px rgb(23 50 77 / 7%);
 }
 
 .dashboard-page-header h1,
@@ -1422,8 +1422,8 @@ ol {
 .dashboard-stat-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
+    gap: 12px;
+    margin-bottom: 16px;
 }
 
 .dashboard-stat-card,
@@ -1472,13 +1472,13 @@ ol {
 }
 
 .dashboard-panel {
-    margin-bottom: 20px;
-    padding: 22px;
+    margin-bottom: 16px;
+    padding: 18px;
     background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
 }
 
 .dashboard-section-heading {
-    margin-bottom: 18px;
+    margin-bottom: 14px;
 }
 
 .dashboard-section-heading h2 {
@@ -1966,7 +1966,8 @@ ol {
 @media (max-width: 720px) {
     .dashboard-page {
         width: min(100% - 20px, 80rem);
-        margin-top: 20px;
+        margin-top: 14px;
+        margin-bottom: 28px;
     }
 
     .dashboard-page-header,
@@ -1976,7 +1977,7 @@ ol {
     }
 
     .dashboard-page-header {
-        padding: 18px 18px 20px;
+        padding: 14px 16px;
     }
 
     .dashboard-page-header-actions {
@@ -2594,8 +2595,8 @@ ol {
 /* Keep status tabs compact and consistent across feeds and adviser review screens. */
 .dashboard-tabs {
     min-width: 0;
-    gap: 3px;
-    margin-bottom: 10px;
+    gap: 5px;
+    margin-bottom: 8px;
     overflow-x: auto;
     overscroll-behavior-inline: contain;
     scrollbar-width: thin;
@@ -2603,7 +2604,8 @@ ol {
 .dashboard-tab {
     min-height: 40px;
     flex: 0 0 auto;
-    padding: 8px 11px;
+    border-radius: 7px 7px 0 0;
+    padding: 7px 10px;
     white-space: nowrap;
 }
 .dashboard-tabs-more { flex: 0 0 auto; }
@@ -2611,6 +2613,11 @@ ol {
 .dashboard-tabs-menu a { border-radius: 6px; padding: 8px 10px; }
 .dashboard-tabs-menu a:hover,
 .dashboard-tabs-menu a:focus-visible { background: #edf5f8; }
+.dashboard-tab.is-active {
+    background: #effaff;
+    color: var(--ssite-navy);
+    font-weight: 600;
+}
 @media (max-width: 600px) {
     .dashboard-tabs { margin-inline: -2px; }
     .dashboard-tab { min-height: 38px; padding-inline: 9px; font-size: .88rem; }
