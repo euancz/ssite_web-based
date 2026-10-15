@@ -97,6 +97,27 @@
         @unless ($full)
             <a class="post-card-read-link" href="{{ $showUrl }}">Read full post</a>
         @endunless
+        @if (! $full && $tab === 'published')
+            {{-- SECURITY: Counts and Like controls render only on Published cards with schema-backed attributes. --}}
+            <div class="post-card-engagement" aria-label="Post activity">
+                @if (config('school.enable_view_counts', false) && isset($post->view_count) && (int) $post->view_count > 0)
+                    <span>{{ number_format((int) $post->view_count) }} {{ \Illuminate\Support\Str::plural('view', (int) $post->view_count) }}</span>
+                @endif
+                @if (config('school.enable_likes', false) && isset($post->likes_count))
+                    @php($liked = (int) ($post->liked_by_viewer ?? 0) > 0)
+                    @if ((int) $post->likes_count > 0)
+                        <span>{{ number_format((int) $post->likes_count) }} {{ \Illuminate\Support\Str::plural('like', (int) $post->likes_count) }}</span>
+                    @endif
+                    <form method="POST" action="{{ route('posts.like', ['type' => $post::POST_TYPE, 'post' => $post->getKey()]) }}">
+                        @csrf
+                        <input type="hidden" name="liked" value="{{ $liked ? '0' : '1' }}">
+                        <button type="submit" class="post-like-button" aria-pressed="{{ $liked ? 'true' : 'false' }}">
+                            {{ $liked ? 'Unlike' : 'Like' }}
+                        </button>
+                    </form>
+                @endif
+            </div>
+        @endif
         <x-posts.share-link :post="$post" :url="$showUrl" />
         @if (isset($footerActions))
             <div class="post-card-footer-actions">{{ $footerActions }}</div>

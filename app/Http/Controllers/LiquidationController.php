@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Liquidation;
 use App\Rules\MaxWords;
 use App\Support\PostNotificationRecipients;
+use App\Support\PostEngagement;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -24,7 +25,7 @@ class LiquidationController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index(Request $request): View
+    public function index(Request $request, PostEngagement $engagement): View
     {
         $this->authorize('viewAny', Liquidation::class);
         $user = $request->user();
@@ -35,8 +36,6 @@ class LiquidationController extends Controller
         $tab = $request->query('tab', 'published');
         // SECURITY: Role-specific tab allowlists prevent private workflow states leaking to students.
         if (! in_array($tab, $allowedTabs, true)) $tab = 'published';
-        $filters = $request->validate(['search' => ['nullable', 'string', 'max:100']]);
-        $search = trim($filters['search'] ?? '');
         $liquidations = Liquidation::query()->with('author');
         if ($tab === 'published') $liquidations->publiclyVisible();
         elseif ($tab === 'mine' && $user) $liquidations->where('created_by_user_id', $user->user_id);
@@ -45,18 +44,54 @@ class LiquidationController extends Controller
             if (! $user?->isPresident()) $liquidations->where('created_by_user_id', $user->user_id);
         } elseif ($tab === 'pending') $liquidations->pending();
         elseif ($tab === 'rejected') $liquidations->rejected();
-        $liquidations->when($search !== '', fn ($query) => $query->where('title', 'like', '%' . $search . '%'));
-        $liquidations = $liquidations->latest('created_at')->paginate(10)->withQueryString();
+        // SECURITY: Engagement queries are limited to Published and require both the feature flag and schema.
+        $viewCountsEnabled = $tab === 'published' && $engagement->viewCountsAvailable($liquidations->getModel());
+        $likesEnabled = $tab === 'published' && $engagement->likesAvailable();
+        if ($likesEnabled) {
+            $liquidations->withCount('likes');
+            if ($user) $liquidations->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->user_id)]);
+        }
+
+        // SECURITY: Only fixed sort keys reach ordering; report amounts remain confined to authorized list viewers.
+        $sortMap = ['recent' => ['created_at', 'desc'], 'oldest' => ['created_at', 'asc'], 'title' => ['title', 'asc']];
+        if ($tab === 'published') {
+            $sortMap['report_soonest'] = ['report_date', 'asc'];
+            $sortMap['report_latest'] = ['report_date', 'desc'];
+            $sortMap['amount_high'] = ['amount', 'desc'];
+            if ($viewCountsEnabled) $sortMap['viewed'] = ['view_count', 'desc'];
+            if ($likesEnabled) $sortMap['liked'] = ['likes_count', 'desc'];
+        }
+        $sort = $request->query('sort');
+        $sort = is_string($sort) && array_key_exists($sort, $sortMap) ? $sort : 'recent';
+        $sortOptions = ['recent' => 'Most recent', 'oldest' => 'Oldest', 'title' => 'Title (A to Z)'];
+        if ($tab === 'published') {
+            $sortOptions += [
+                'report_soonest' => 'Report date (soonest)',
+                'report_latest' => 'Report date (latest)',
+                'amount_high' => 'Amount (high to low)',
+            ];
+            if ($viewCountsEnabled) $sortOptions['viewed'] = 'Most viewed';
+            if ($likesEnabled) $sortOptions['liked'] = 'Most liked';
+        }
+        [$sortColumn, $sortDirection] = $sortMap[$sort];
+        if ($sortColumn === 'report_date') $liquidations->orderByRaw('report_date IS NULL ASC');
+        $liquidations->orderBy($sortColumn, $sortDirection);
+        if (in_array($sort, ['viewed', 'liked'], true)) $liquidations->orderBy('created_at', 'desc');
+        $liquidations = $liquidations->orderBy('liquidation_id', 'asc')
+            ->paginate(10)
+            ->appends(['tab' => $tab, 'sort' => $sort]);
         // SECURITY: Visiting Liquidation clears only this user's unread publication notices for this tab.
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['liquidation'])->update(['read_at' => now()]);
-        return view('liquidation.index', compact('liquidations', 'allowedTabs', 'tab', 'search', 'pendingCount'));
+        return view('liquidation.index', compact('liquidations', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'pendingCount'));
     }
 
-    public function show(Liquidation $liquidation): View
+    public function show(Liquidation $liquidation, Request $request, PostEngagement $engagement): View
     {
         try { $this->authorize('view', $liquidation); }
         catch (AuthorizationException) { abort(404); }
+        // SECURITY: Count only after show authorization; the service excludes authors, bots, and nonpublic posts.
+        $engagement->recordView($liquidation, $request);
         $liquidation->load(['author', 'reviewer']);
         return view('liquidation.show', compact('liquidation'));
     }
@@ -214,6 +249,8 @@ class LiquidationController extends Controller
     {
         $this->authorize('delete', $liquidation);
         $this->deletePrivatePath($liquidation->file_path);
+        // SECURITY: Remove module-scoped likes before permanently deleting their parent post.
+        app(PostEngagement::class)->deleteLikesForPost($liquidation);
         $liquidation->delete();
         return redirect()->route('liquidations.index', ['tab' => 'all'])->with('status', 'The report was deleted.');
     }

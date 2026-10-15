@@ -10,6 +10,11 @@ Use this guide to find the file that owns a common change.
 | Full search results, filtering, and pagination | `app/Http/Controllers/SearchController.php` and `resources/views/search/index.blade.php` |
 | Add a searchable type | `app/Support/SiteSearch.php` (type method, visibility, fields, route, and metadata) and `app/Http/Controllers/SearchController.php` (type label) |
 | Change searched columns | `app/Support/SiteSearch.php` (per-type method) |
+| Change feed sorting or filters | The matching `app/Http/Controllers/<PostType>Controller.php`, `resources/views/<feature>/index.blade.php`, and shared `resources/views/components/posts/sort-row.blade.php` |
+| Change shared sort/filter controls or their styling | `resources/views/components/posts/sort-row.blade.php` and `public/css/post-feed.css` |
+| Change view counting, session deduplication, or bot exclusions | `app/Support/PostEngagement.php` and `config/school.php` (`enable_view_counts`, `view_dedupe_hours`, `view_bot_user_agents`) |
+| Change like toggling or the shared like route | `app/Http/Controllers/PostLikeController.php`, `app/Models/PostLike.php`, and `routes/features.php` (`posts.like`) |
+| Change engagement feature availability | `config/school.php` (`enable_view_counts`, `enable_likes`); confirm external SQL columns/table exist before enabling |
 | Change minimum query length or word/character limits | `app/Support/SiteSearch.php` (`normalize`) |
 | Change guest search access | `config/school.php` (`search_include_documents_for_guests`, `search_include_liquidation_for_guests`) |
 | Change the dropdown result caps | `app/Http/Controllers/SearchController.php` (`suggest`) and `resources/views/layouts/partials/search-scripts.blade.php` |
@@ -38,9 +43,9 @@ Use this guide to find the file that owns a common change.
 | Maximum PDF upload size | `config/school.php` (`max_pdf_size_kb`) and PHP `php.ini` upload limits |
 | Whether document or liquidation lists are public | `config/school.php` (`documents_list_public`, `liquidation_list_public`) |
 | Who can view and download PDFs | `app/Policies/DocumentPolicy.php`, `app/Policies/LiquidationPolicy.php`, and each module controller's file handlers |
-| Documents tabs, search, category filter, or public query | `app/Http/Controllers/DocumentController.php` and `resources/views/documents/index.blade.php` |
+| Documents tabs, sort, category filter, or public query | `app/Http/Controllers/DocumentController.php` and `resources/views/documents/index.blade.php` |
 | Document form fields, PDF validation, or file delivery | `app/Http/Controllers/DocumentController.php` and `resources/views/documents/` |
-| Liquidation tabs, search, or public query | `app/Http/Controllers/LiquidationController.php` and `resources/views/liquidation/index.blade.php` |
+| Liquidation tabs, sort, or public query | `app/Http/Controllers/LiquidationController.php` and `resources/views/liquidation/index.blade.php` |
 | Liquidation form fields, PDF validation, or file delivery | `app/Http/Controllers/LiquidationController.php` and `resources/views/liquidation/` |
 | Where private document and liquidation PDFs are stored | `config/filesystems.php` (`local` disk root) and each module controller |
 | Officer position choices and their About page order | `config/school.php` (`officer_positions`) |
@@ -60,7 +65,7 @@ Use this guide to find the file that owns a common change.
 | Password login/logout behavior | `app/Http/Controllers/Auth/AuthController.php` |
 | Microsoft login and post-login redirect | `app/Http/Controllers/Auth/MicrosoftAuthController.php` |
 | Which roles an Article action allows | `app/Policies/ArticlePolicy.php` and `routes/features.php` |
-| Article tabs, filters, or visibility queries | `app/Http/Controllers/ArticleController.php` |
+| Article tabs, sort, or visibility queries | `app/Http/Controllers/ArticleController.php` and `resources/views/articles/index.blade.php` |
 | Article approve, reject, archive, or restore behavior | `app/Http/Controllers/ArticleController.php` |
 | Article action buttons and confirmation dialogs | `resources/views/articles/show.blade.php` |
 | Article list cards, tabs, or bulk archive selection | `resources/views/articles/index.blade.php` |
@@ -68,7 +73,7 @@ Use this guide to find the file that owns a common change.
 | Article input validation | `app/Http/Controllers/ArticleController.php` (`store`, `update`, `reject`) |
 | Article table mapping, status scopes, or image URLs | `app/Models/Article.php` |
 | Activity roles and allowed actions | `app/Policies/ActivityPolicy.php` and `routes/features.php` |
-| Activity tabs, search, or visibility queries | `app/Http/Controllers/ActivityController.php` |
+| Activity tabs, sort, timeframe filter, or visibility queries | `app/Http/Controllers/ActivityController.php` and `resources/views/activities/index.blade.php` |
 | Activity approve, reject, archive, or restore behavior | `app/Http/Controllers/ActivityController.php` |
 | Activity action buttons and confirmation dialogs | `resources/views/activities/show.blade.php` |
 | Activity list cards, tabs, or bulk archive selection | `resources/views/activities/index.blade.php` |
@@ -76,7 +81,7 @@ Use this guide to find the file that owns a common change.
 | Activity input validation | `app/Http/Controllers/ActivityController.php` (`store`, `update`, `reject`) |
 | Activity table mapping, status scopes, or image URLs | `app/Models/Activity.php` |
 | Achievement roles and allowed actions | `app/Policies/AchievementPolicy.php` and `routes/features.php` |
-| Achievement tabs, search, or visibility queries | `app/Http/Controllers/AchievementController.php` |
+| Achievement tabs, sort, category filter, or visibility queries | `app/Http/Controllers/AchievementController.php` and `resources/views/achievements/index.blade.php` |
 | Achievement approve, reject, archive, or restore behavior | `app/Http/Controllers/AchievementController.php` |
 | Achievement action buttons and confirmation dialogs | `resources/views/achievements/show.blade.php` |
 | Achievement list cards, tabs, or bulk archive selection | `resources/views/achievements/index.blade.php` |

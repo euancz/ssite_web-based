@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Document;
 use App\Rules\MaxWords;
 use App\Support\PostNotificationRecipients;
+use App\Support\PostEngagement;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -24,7 +25,7 @@ class DocumentController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index(Request $request): View
+    public function index(Request $request, PostEngagement $engagement): View
     {
         $this->authorize('viewAny', Document::class);
         $user = $request->user();
@@ -36,9 +37,6 @@ class DocumentController extends Controller
         // SECURITY: A tab whitelist prevents guests and students from requesting private workflow rows.
         if (! in_array($tab, $allowedTabs, true)) $tab = 'published';
 
-        $filters = $request->validate(['search' => ['nullable', 'string', 'max:100'], 'category' => ['nullable', 'string', 'max:100']]);
-        $search = trim($filters['search'] ?? '');
-        $category = $filters['category'] ?? '';
         $documents = Document::query()->with('author');
         if ($tab === 'published') $documents->publiclyVisible();
         elseif ($tab === 'mine' && $user) $documents->where('created_by_user_id', $user->user_id);
@@ -48,21 +46,55 @@ class DocumentController extends Controller
         } elseif ($tab === 'pending') $documents->pending();
         elseif ($tab === 'rejected') $documents->rejected();
 
-        $documents->when($search !== '', fn ($query) => $query->where('title', 'like', '%' . $search . '%'))
-            ->when($category !== '', fn ($query) => $query->where('category', $category));
-        $categories = Document::query()->publiclyVisible()->whereNotNull('category')->distinct()->orderBy('category')->pluck('category');
-        $documents = $documents->latest('created_at')->paginate(10)->withQueryString();
+        // SECURITY: Category choices are derived from the already visibility-scoped query for this tab.
+        $categories = (clone $documents)->whereNotNull('category')->where('category', '<>', '')
+            ->distinct()->orderBy('category')->pluck('category')->all();
+        $requestedCategory = $request->query('category');
+        $category = is_string($requestedCategory) && in_array($requestedCategory, $categories, true)
+            ? $requestedCategory
+            : '';
+        $categoryOptions = ['' => 'All categories'];
+        foreach ($categories as $option) {
+            $categoryOptions[$option] = $option;
+        }
+        if ($category !== '') $documents->where('category', $category);
+
+        // SECURITY: Engagement queries are limited to Published and require both the feature flag and schema.
+        $viewCountsEnabled = $tab === 'published' && $engagement->viewCountsAvailable($documents->getModel());
+        $likesEnabled = $tab === 'published' && $engagement->likesAvailable();
+        if ($likesEnabled) {
+            $documents->withCount('likes');
+            if ($user) $documents->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->user_id)]);
+        }
+
+        // SECURITY: Sort keys select fixed column/direction pairs; request text is never an SQL identifier.
+        $sortMap = ['recent' => ['created_at', 'desc'], 'oldest' => ['created_at', 'asc'], 'title' => ['title', 'asc']];
+        if ($viewCountsEnabled) $sortMap['viewed'] = ['view_count', 'desc'];
+        if ($likesEnabled) $sortMap['liked'] = ['likes_count', 'desc'];
+        $sort = $request->query('sort');
+        $sort = is_string($sort) && array_key_exists($sort, $sortMap) ? $sort : 'recent';
+        $sortOptions = ['recent' => 'Most recent', 'oldest' => 'Oldest', 'title' => 'Title (A to Z)'];
+        if ($viewCountsEnabled) $sortOptions['viewed'] = 'Most viewed';
+        if ($likesEnabled) $sortOptions['liked'] = 'Most liked';
+        [$sortColumn, $sortDirection] = $sortMap[$sort];
+        $documents->orderBy($sortColumn, $sortDirection);
+        if (in_array($sort, ['viewed', 'liked'], true)) $documents->orderBy('created_at', 'desc');
+        $documents = $documents->orderBy('document_id', 'asc')
+            ->paginate(10)
+            ->appends(['tab' => $tab, 'sort' => $sort, 'category' => $category]);
         // SECURITY: Visiting Documents clears only this user's unread publication notices for this tab.
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['document'])->update(['read_at' => now()]);
 
-        return view('documents.index', compact('documents', 'allowedTabs', 'tab', 'search', 'category', 'categories', 'pendingCount'));
+        return view('documents.index', compact('documents', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'category', 'categoryOptions', 'pendingCount'));
     }
 
-    public function show(Document $document): View
+    public function show(Document $document, Request $request, PostEngagement $engagement): View
     {
         try { $this->authorize('view', $document); }
         catch (AuthorizationException) { abort(404); }
+        // SECURITY: Count only after show authorization; the service excludes authors, bots, and nonpublic posts.
+        $engagement->recordView($document, $request);
         $document->load(['author', 'reviewer']);
         return view('documents.show', compact('document'));
     }
@@ -212,6 +244,8 @@ class DocumentController extends Controller
     {
         $this->authorize('delete', $document);
         $this->deletePrivatePath($document->file_path);
+        // SECURITY: Remove module-scoped likes before permanently deleting their parent post.
+        app(PostEngagement::class)->deleteLikesForPost($document);
         $document->delete();
         return redirect()->route('documents.index', ['tab' => 'all'])->with('status', 'The document was deleted.');
     }

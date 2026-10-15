@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Article;
 use App\Rules\MaxWords;
 use App\Support\PostNotificationRecipients;
+use App\Support\PostEngagement;
 use Illuminate\Contracts\View\View;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -27,7 +28,7 @@ class ArticleController extends Controller
     /**
      * Show each role only the article tabs and rows that role may access.
      */
-    public function index(Request $request): View
+    public function index(Request $request, PostEngagement $engagement): View
     {
         $this->authorize('viewAny', Article::class);
         $user = $request->user();
@@ -59,28 +60,45 @@ class ArticleController extends Controller
             $articles->rejected();
         }
 
-        $filters = $request->validate(['search' => ['nullable', 'string', 'max:100']]);
-        $search = trim($filters['search'] ?? '');
-        $articles->when($search !== '', function ($query) use ($search): void {
-            $query->where(function ($query) use ($search): void {
-                $query->where('title', 'like', '%' . $search . '%')
-                    ->orWhereHas('author', fn ($author) => $author->where('name', 'like', '%' . $search . '%'));
-            });
-        });
+        // SECURITY: Engagement queries are limited to Published and require both the feature flag and schema.
+        $viewCountsEnabled = $tab === 'published' && $engagement->viewCountsAvailable($articles->getModel());
+        $likesEnabled = $tab === 'published' && $engagement->likesAvailable();
+        if ($likesEnabled) {
+            $articles->withCount('likes');
+            if ($user) $articles->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->user_id)]);
+        }
 
-        $articles = $articles->latest('created_at')->paginate(10)->withQueryString();
+        // SECURITY: Request values select a fixed column/direction pair; they never become SQL identifiers.
+        $sortMap = [
+            'recent' => ['created_at', 'desc'],
+            'oldest' => ['created_at', 'asc'],
+            'title' => ['title', 'asc'],
+        ];
+        if ($viewCountsEnabled) $sortMap['viewed'] = ['view_count', 'desc'];
+        if ($likesEnabled) $sortMap['liked'] = ['likes_count', 'desc'];
+        $sort = $request->query('sort');
+        $sort = is_string($sort) && array_key_exists($sort, $sortMap) ? $sort : 'recent';
+        $sortOptions = ['recent' => 'Most recent', 'oldest' => 'Oldest', 'title' => 'Title (A to Z)'];
+        if ($viewCountsEnabled) $sortOptions['viewed'] = 'Most viewed';
+        if ($likesEnabled) $sortOptions['liked'] = 'Most liked';
+        [$sortColumn, $sortDirection] = $sortMap[$sort];
+        $articles->orderBy($sortColumn, $sortDirection);
+        if (in_array($sort, ['viewed', 'liked'], true)) $articles->orderBy('created_at', 'desc');
+        $articles = $articles->orderBy('article_id', 'asc')
+            ->paginate(10)
+            ->appends(['tab' => $tab, 'sort' => $sort]);
 
         // SECURITY: Visiting Articles clears only this user's unread publication notices for this tab.
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['article'])->update(['read_at' => now()]);
 
-        return view('articles.index', compact('articles', 'allowedTabs', 'tab', 'search', 'pendingCount'));
+        return view('articles.index', compact('articles', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'pendingCount'));
     }
 
     /**
      * Show a public article or a private article to its author or the President.
      */
-    public function show(Article $article): View
+    public function show(Article $article, Request $request, PostEngagement $engagement): View
     {
         // SECURITY: Convert policy denial to 404 so private article existence is not disclosed.
         try {
@@ -91,6 +109,8 @@ class ArticleController extends Controller
         if (! auth()->check() && ! $this->publiclyVisible($article)) {
             abort(404);
         }
+        // SECURITY: Count only after show authorization; the service excludes authors, bots, and nonpublic posts.
+        $engagement->recordView($article, $request);
         $article->load(['author', 'reviewer']);
 
         return view('articles.show', compact('article'));
@@ -302,6 +322,8 @@ class ArticleController extends Controller
         if ($article->image) {
             Storage::disk('public')->delete($article->image);
         }
+        // SECURITY: Remove module-scoped likes before permanently deleting their parent post.
+        app(PostEngagement::class)->deleteLikesForPost($article);
         $article->delete();
 
         return redirect()->route('articles.index', ['tab' => 'all'])->with('status', 'The article was deleted.');

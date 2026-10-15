@@ -14,10 +14,14 @@
     route-name="activities.index"
     :allowed-tabs="$allowedTabs"
     :active-tab="$tab"
-    :search="$search"
-    search-label="Search activities"
-    search-id="activity-search"
     :pending-count="$pendingCount"
+    :sort="$sort"
+    :sort-options="$sortOptions"
+    filter-name="timeframe"
+    :filter="$timeframe"
+    :filter-options="$timeframeOptions"
+    filter-label="Filter by timeframe"
+    filter-default="all"
 >
     @if (session('status'))
         <p class="dashboard-success" role="status">{{ session('status') }}</p>
@@ -98,12 +102,16 @@
                 </x-slot:footerActions>
             </x-posts.card>
         @empty
-            @if ($tab === 'published')
+            @if ($sort !== 'recent' || $timeframe !== 'all')
+                <div class="post-feed-empty">
+                    <p>No activities match these settings. <a href="{{ route('activities.index', ['tab' => $tab]) }}">Reset</a></p>
+                </div>
+            @elseif ($tab === 'published')
                 <x-posts.empty-state title="No published activities yet" message="Check back soon for the latest SSITE activities." />
             @elseif (auth()->user()?->canPostIn('activities'))
                 <x-posts.empty-state title="No activities in this tab" message="Use the prompt above to create an activity." />
             @else
-                <x-posts.empty-state title="No activities found" message="Try another search or check back later." />
+                <x-posts.empty-state title="No activities found" message="Check back later for new activities." />
             @endif
         @endforelse
     </section>

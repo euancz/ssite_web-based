@@ -1,4 +1,4 @@
-@props(['routeName', 'allowedTabs', 'activeTab', 'search' => null, 'extraQuery' => [], 'pendingCount' => null])
+@props(['routeName', 'allowedTabs', 'activeTab', 'pendingCount' => null])
 
 {{-- SECURITY: Render only controller-whitelisted tabs; the server keeps the same role checks and fallback. --}}
 @php
@@ -10,7 +10,7 @@
 @endphp
 <nav class="dashboard-tabs" aria-label="Filter posts">
     @foreach ($inlineTabs as $tab)
-        <a href="{{ route($routeName, array_merge($extraQuery, ['tab' => $tab, 'search' => $search ?: null])) }}"
+        <a href="{{ route($routeName, ['tab' => $tab]) }}"
            @class(['dashboard-tab', 'is-active' => $activeTab === $tab])
            @if ($activeTab === $tab) aria-current="page" @endif>
             {{ $labels[$tab] }} @if ($tab === 'pending' && $pendingCount !== null)<span class="dashboard-tab-count">{{ $pendingCount }}</span>@endif
@@ -27,7 +27,7 @@
             </summary>
             <div id="{{ str_replace('.', '-', $routeName) }}-more-options" class="dashboard-tabs-menu">
                 @foreach ($moreTabs as $tab)
-                    <a href="{{ route($routeName, array_merge($extraQuery, ['tab' => $tab, 'search' => $search ?: null])) }}"
+                    <a href="{{ route($routeName, ['tab' => $tab]) }}"
                        @if ($activeTab === $tab) aria-current="page" @endif>{{ $labels[$tab] }}</a>
                 @endforeach
             </div>

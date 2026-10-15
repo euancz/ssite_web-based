@@ -7,6 +7,7 @@ use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\LiquidationController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PostLikeController;
 use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,6 +36,12 @@ Route::resource('documents', DocumentController::class)->only(['index', 'show'])
 Route::resource('liquidation', LiquidationController::class)->names('liquidations')
     ->parameters(['liquidation' => 'liquidation'])->only(['index', 'show'])
     ->middleware($liquidationListMiddleware)->whereNumber('liquidation');
+
+// SECURITY: One endpoint maps fixed post types and the controller rechecks feature, visibility, and policy.
+Route::post('/posts/{type}/{post}/like', [PostLikeController::class, 'toggle'])
+    ->where('type', 'article|activity|achievement|document|liquidation')
+    ->whereNumber('post')
+    ->name('posts.like');
 
 // Signed-in users with completed profiles can use notifications and PDF delivery routes.
 Route::prefix('notifications')->name('notifications.')->middleware(['auth', 'profile.complete'])->group(function () {

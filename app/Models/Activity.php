@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
  */
 class Activity extends Model
 {
+    public const POST_TYPE = 'activity';
     public const APPROVAL_PENDING = 'pending';
     public const APPROVAL_APPROVED = 'approved';
     public const APPROVAL_REJECTED = 'rejected';
@@ -31,7 +33,7 @@ class Activity extends Model
     /** Cast optional event dates for consistent formatting in lists and detail pages. */
     protected function casts(): array
     {
-        return ['activity_date' => 'date'];
+        return ['activity_date' => 'date', 'view_count' => 'integer'];
     }
 
     /**
@@ -56,6 +58,12 @@ class Activity extends Model
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by_user_id', 'user_id');
+    }
+
+    /** Keep likes scoped to this module and its custom activity_id key. */
+    public function likes(): HasMany
+    {
+        return $this->hasMany(PostLike::class, 'post_id', 'activity_id')->where('post_type', self::POST_TYPE);
     }
 
     /** Limit activities to those awaiting adviser review. */

@@ -14,13 +14,14 @@
     route-name="documents.index"
     :allowed-tabs="$allowedTabs"
     :active-tab="$tab"
-    :search="$search"
-    search-label="Search document titles"
-    search-id="document-search"
-    :category="$category"
-    :categories="$categories"
-    :extra-query="['category' => $category ?: null]"
     :pending-count="$pendingCount"
+    :sort="$sort"
+    :sort-options="$sortOptions"
+    filter-name="category"
+    :filter="$category"
+    :filter-options="$categoryOptions"
+    filter-label="Filter by category"
+    filter-default=""
 >
     @if (session('status'))
         <p class="dashboard-success" role="status">{{ session('status') }}</p>
@@ -104,12 +105,16 @@
                 </x-slot:footerActions>
             </x-posts.card>
         @empty
-            @if ($tab === 'published')
+            @if ($sort !== 'recent' || $category !== '')
+                <div class="post-feed-empty">
+                    <p>No documents match these settings. <a href="{{ route('documents.index', ['tab' => $tab]) }}">Reset</a></p>
+                </div>
+            @elseif ($tab === 'published')
                 <x-posts.empty-state title="No published documents yet" message="Check back soon for the latest SSITE documents." />
             @elseif (auth()->user()?->canPostIn('documents'))
                 <x-posts.empty-state title="No documents in this tab" message="Use the prompt above to upload a document." />
             @else
-                <x-posts.empty-state title="No documents found" message="Try another search or check back later." />
+                <x-posts.empty-state title="No documents found" message="Check back later for new documents." />
             @endif
         @endforelse
     </section>

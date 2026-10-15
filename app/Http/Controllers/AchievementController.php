@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Achievement;
 use App\Rules\MaxWords;
 use App\Support\PostNotificationRecipients;
+use App\Support\PostEngagement;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -23,7 +24,7 @@ class AchievementController extends Controller
     use AuthorizesRequests;
 
     /** Show the tabs and records available to the current capability. */
-    public function index(Request $request): View
+    public function index(Request $request, PostEngagement $engagement): View
     {
         $this->authorize('viewAny', Achievement::class);
         $user = $request->user();
@@ -55,28 +56,53 @@ class AchievementController extends Controller
             $achievements->rejected();
         }
 
-        $filters = $request->validate(['search' => ['nullable', 'string', 'max:100']]);
-        $search = trim($filters['search'] ?? '');
-        $achievements->when($search !== '', function ($query) use ($search): void {
-            $query->where(function ($query) use ($search): void {
-                $query->where('title', 'like', '%' . $search . '%')
-                    ->orWhere('description', 'like', '%' . $search . '%')
-                    ->orWhere('awardee', 'like', '%' . $search . '%')
-                    ->orWhere('category', 'like', '%' . $search . '%')
-                    ->orWhereHas('author', fn ($author) => $author->where('name', 'like', '%' . $search . '%'));
-            });
-        });
+        // SECURITY: Categories come only from this already visibility-scoped tab query.
+        $categories = (clone $achievements)->whereNotNull('category')->where('category', '<>', '')
+            ->distinct()->orderBy('category')->pluck('category')->all();
+        $requestedCategory = $request->query('category');
+        $category = is_string($requestedCategory) && in_array($requestedCategory, $categories, true)
+            ? $requestedCategory
+            : '';
+        $categoryOptions = ['' => 'All categories'];
+        foreach ($categories as $option) {
+            $categoryOptions[$option] = $option;
+        }
+        if ($category !== '') {
+            $achievements->where('category', $category);
+        }
 
-        $achievements = $achievements->latest('created_at')->paginate(10)->withQueryString();
+        // SECURITY: Engagement queries are limited to Published and require both the feature flag and schema.
+        $viewCountsEnabled = $tab === 'published' && $engagement->viewCountsAvailable($achievements->getModel());
+        $likesEnabled = $tab === 'published' && $engagement->likesAvailable();
+        if ($likesEnabled) {
+            $achievements->withCount('likes');
+            if ($user) $achievements->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->user_id)]);
+        }
+
+        // SECURITY: Sort keys map to fixed column/direction pairs and never reach raw SQL.
+        $sortMap = ['recent' => ['created_at', 'desc'], 'oldest' => ['created_at', 'asc'], 'title' => ['title', 'asc']];
+        if ($viewCountsEnabled) $sortMap['viewed'] = ['view_count', 'desc'];
+        if ($likesEnabled) $sortMap['liked'] = ['likes_count', 'desc'];
+        $sort = $request->query('sort');
+        $sort = is_string($sort) && array_key_exists($sort, $sortMap) ? $sort : 'recent';
+        $sortOptions = ['recent' => 'Most recent', 'oldest' => 'Oldest', 'title' => 'Title (A to Z)'];
+        if ($viewCountsEnabled) $sortOptions['viewed'] = 'Most viewed';
+        if ($likesEnabled) $sortOptions['liked'] = 'Most liked';
+        [$sortColumn, $sortDirection] = $sortMap[$sort];
+        $achievements->orderBy($sortColumn, $sortDirection);
+        if (in_array($sort, ['viewed', 'liked'], true)) $achievements->orderBy('created_at', 'desc');
+        $achievements = $achievements->orderBy('achievement_id', 'asc')
+            ->paginate(10)
+            ->appends(['tab' => $tab, 'sort' => $sort, 'category' => $category]);
         // SECURITY: Visiting Achievements clears only this user's unread publication notices for this tab.
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['achievement'])->update(['read_at' => now()]);
 
-        return view('achievements.index', compact('achievements', 'allowedTabs', 'tab', 'search', 'pendingCount'));
+        return view('achievements.index', compact('achievements', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'category', 'categoryOptions', 'pendingCount'));
     }
 
     /** Show public achievements or private records to their author or the President. */
-    public function show(Achievement $achievement): View
+    public function show(Achievement $achievement, Request $request, PostEngagement $engagement): View
     {
         // SECURITY: Return 404 for policy denials so private record existence is not disclosed.
         try {
@@ -87,6 +113,8 @@ class AchievementController extends Controller
         if (! auth()->check() && ! $this->publiclyVisible($achievement)) {
             abort(404);
         }
+        // SECURITY: Count only after show authorization; the service excludes authors, bots, and nonpublic posts.
+        $engagement->recordView($achievement, $request);
         $achievement->load(['author', 'reviewer']);
 
         return view('achievements.show', compact('achievement'));
@@ -291,6 +319,8 @@ class AchievementController extends Controller
         if ($achievement->image) {
             $this->deleteStoredImage($achievement->image);
         }
+        // SECURITY: Remove module-scoped likes before permanently deleting their parent post.
+        app(PostEngagement::class)->deleteLikesForPost($achievement);
         $achievement->delete();
 
         return redirect()->route('achievements.index', ['tab' => 'all'])->with('status', 'The achievement was deleted.');

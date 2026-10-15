@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Activity;
 use App\Rules\MaxWords;
 use App\Support\PostNotificationRecipients;
+use App\Support\PostEngagement;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -23,7 +24,7 @@ class ActivityController extends Controller
     use AuthorizesRequests;
 
     /** Show each role only the activity tabs and records available to that role. */
-    public function index(Request $request): View
+    public function index(Request $request, PostEngagement $engagement): View
     {
         $this->authorize('viewAny', Activity::class);
         $user = $request->user();
@@ -55,27 +56,56 @@ class ActivityController extends Controller
             $activities->rejected();
         }
 
-        $filters = $request->validate(['search' => ['nullable', 'string', 'max:100']]);
-        $search = trim($filters['search'] ?? '');
-        $activities->when($search !== '', function ($query) use ($search): void {
-            $query->where(function ($query) use ($search): void {
-                $query->where('title', 'like', '%' . $search . '%')
-                    ->orWhere('description', 'like', '%' . $search . '%')
-                    ->orWhere('location', 'like', '%' . $search . '%')
-                    ->orWhereHas('author', fn ($author) => $author->where('name', 'like', '%' . $search . '%'));
-            });
-        });
+        // SECURITY: Engagement queries are limited to Published and require both the feature flag and schema.
+        $viewCountsEnabled = $tab === 'published' && $engagement->viewCountsAvailable($activities->getModel());
+        $likesEnabled = $tab === 'published' && $engagement->likesAvailable();
+        if ($likesEnabled) {
+            $activities->withCount('likes');
+            if ($user) $activities->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->user_id)]);
+        }
 
-        $activities = $activities->latest('created_at')->paginate(10)->withQueryString();
+        // SECURITY: Sort keys map to fixed columns; date sorts keep records without an event date last.
+        $sortMap = ['recent' => ['created_at', 'desc'], 'oldest' => ['created_at', 'asc'], 'title' => ['title', 'asc']];
+        if ($tab === 'published') {
+            $sortMap['event_soonest'] = ['activity_date', 'asc'];
+            $sortMap['event_latest'] = ['activity_date', 'desc'];
+            if ($viewCountsEnabled) $sortMap['viewed'] = ['view_count', 'desc'];
+            if ($likesEnabled) $sortMap['liked'] = ['likes_count', 'desc'];
+        }
+        $sort = $request->query('sort');
+        $sort = is_string($sort) && array_key_exists($sort, $sortMap) ? $sort : 'recent';
+        $sortOptions = ['recent' => 'Most recent', 'oldest' => 'Oldest', 'title' => 'Title (A to Z)'];
+        if ($tab === 'published') {
+            $sortOptions += ['event_soonest' => 'Event date (soonest)', 'event_latest' => 'Event date (latest)'];
+            if ($viewCountsEnabled) $sortOptions['viewed'] = 'Most viewed';
+            if ($likesEnabled) $sortOptions['liked'] = 'Most liked';
+        }
+        $timeframe = $request->query('timeframe');
+        $timeframeOptions = ['all' => 'All dates', 'upcoming' => 'Upcoming', 'past' => 'Past'];
+        $timeframe = is_string($timeframe) && array_key_exists($timeframe, $timeframeOptions) ? $timeframe : 'all';
+        if ($timeframe === 'upcoming') {
+            $activities->whereNotNull('activity_date')->whereDate('activity_date', '>=', today());
+        } elseif ($timeframe === 'past') {
+            $activities->whereNotNull('activity_date')->whereDate('activity_date', '<', today());
+        }
+        [$sortColumn, $sortDirection] = $sortMap[$sort];
+        if ($sortColumn === 'activity_date') {
+            $activities->orderByRaw('activity_date IS NULL ASC');
+        }
+        $activities->orderBy($sortColumn, $sortDirection);
+        if (in_array($sort, ['viewed', 'liked'], true)) $activities->orderBy('created_at', 'desc');
+        $activities = $activities->orderBy('activity_id', 'asc')
+            ->paginate(10)
+            ->appends(['tab' => $tab, 'sort' => $sort, 'timeframe' => $timeframe]);
         // SECURITY: Visiting Activities clears only this user's unread publication notices for this tab.
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['activity'])->update(['read_at' => now()]);
 
-        return view('activities.index', compact('activities', 'allowedTabs', 'tab', 'search', 'pendingCount'));
+        return view('activities.index', compact('activities', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'timeframe', 'timeframeOptions', 'pendingCount'));
     }
 
     /** Show public activities or private records to their author or the President. */
-    public function show(Activity $activity): View
+    public function show(Activity $activity, Request $request, PostEngagement $engagement): View
     {
         // SECURITY: Return 404 for policy denials so private record existence is not disclosed.
         try {
@@ -86,6 +116,8 @@ class ActivityController extends Controller
         if (! auth()->check() && ! $this->publiclyVisible($activity)) {
             abort(404);
         }
+        // SECURITY: Count only after show authorization; the service excludes authors, bots, and nonpublic posts.
+        $engagement->recordView($activity, $request);
         $activity->load(['author', 'reviewer']);
 
         return view('activities.show', compact('activity'));
@@ -286,6 +318,8 @@ class ActivityController extends Controller
         if ($activity->image) {
             $this->deleteStoredImage($activity->image);
         }
+        // SECURITY: Remove module-scoped likes before permanently deleting their parent post.
+        app(PostEngagement::class)->deleteLikesForPost($activity);
         $activity->delete();
 
         return redirect()->route('activities.index', ['tab' => 'all'])->with('status', 'The activity was deleted.');

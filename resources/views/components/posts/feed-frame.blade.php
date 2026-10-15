@@ -9,13 +9,14 @@
     'routeName' => null,
     'allowedTabs' => [],
     'activeTab' => 'published',
-    'search' => '',
-    'searchLabel' => 'Search posts',
-    'searchId' => 'post-search',
-    'category' => null,
-    'categories' => [],
-    'extraQuery' => [],
     'pendingCount' => null,
+    'sort' => 'recent',
+    'sortOptions' => [],
+    'filterName' => null,
+    'filter' => null,
+    'filterOptions' => [],
+    'filterLabel' => 'Filter posts',
+    'filterDefault' => null,
 ])
 
 {{-- Keep one centered feed frame while each page supplies its existing role-filtered content. --}}
@@ -39,24 +40,35 @@
             <x-posts.composer :href="route($createRoute)" :prompt="$composerPrompt" :user="auth()->user()" />
         @endcan
 
-        <x-ui.workflow-tabs
-            :route-name="$routeName"
-            :allowed-tabs="$allowedTabs"
-            :active-tab="$activeTab"
-            :search="$search"
-            :extra-query="$extraQuery"
-            :pending-count="$pendingCount"
-        />
-
-        <x-posts.search-row
-            :action="route($routeName)"
-            :tab="$activeTab"
-            :search="$search"
-            :label="$searchLabel"
-            :id="$searchId"
-            :category="$category"
-            :categories="$categories"
-        />
+        @if ($sortOptions)
+            <div class="post-feed-tab-row">
+                <x-ui.workflow-tabs
+                    :route-name="$routeName"
+                    :allowed-tabs="$allowedTabs"
+                    :active-tab="$activeTab"
+                    :pending-count="$pendingCount"
+                />
+                <x-posts.sort-row
+                    :action="route($routeName)"
+                    :route-name="$routeName"
+                    :tab="$activeTab"
+                    :sort="$sort"
+                    :options="$sortOptions"
+                    :filter-name="$filterName"
+                    :filter="$filter"
+                    :filter-options="$filterOptions"
+                    :filter-label="$filterLabel"
+                    :filter-default="$filterDefault"
+                />
+            </div>
+        @else
+            <x-ui.workflow-tabs
+                :route-name="$routeName"
+                :allowed-tabs="$allowedTabs"
+                :active-tab="$activeTab"
+                :pending-count="$pendingCount"
+            />
+        @endif
     @endif
 
     {{ $slot }}

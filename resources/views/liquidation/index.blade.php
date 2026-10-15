@@ -14,10 +14,9 @@
     route-name="liquidations.index"
     :allowed-tabs="$allowedTabs"
     :active-tab="$tab"
-    :search="$search"
-    search-label="Search reports"
-    search-id="liquidation-search"
     :pending-count="$pendingCount"
+    :sort="$sort"
+    :sort-options="$sortOptions"
 >
     @if (session('status'))
         <p class="dashboard-success" role="status">{{ session('status') }}</p>
@@ -74,6 +73,27 @@
                         <span>Amount</span>
                         <strong class="liquidation-report-amount">{{ $liquidation->formattedAmount() }}</strong>
                     </div>
+                    @if ($tab === 'published')
+                        {{-- SECURITY: Engagement controls render only for Published rows with schema-backed attributes. --}}
+                        <div class="post-card-engagement" aria-label="Post activity">
+                            @if (config('school.enable_view_counts', false) && isset($liquidation->view_count) && (int) $liquidation->view_count > 0)
+                                <span>{{ number_format((int) $liquidation->view_count) }} {{ \Illuminate\Support\Str::plural('view', (int) $liquidation->view_count) }}</span>
+                            @endif
+                            @if (config('school.enable_likes', false) && isset($liquidation->likes_count))
+                                @php($liked = (int) ($liquidation->liked_by_viewer ?? 0) > 0)
+                                @if ((int) $liquidation->likes_count > 0)
+                                    <span>{{ number_format((int) $liquidation->likes_count) }} {{ \Illuminate\Support\Str::plural('like', (int) $liquidation->likes_count) }}</span>
+                                @endif
+                                <form method="POST" action="{{ route('posts.like', ['type' => $liquidation::POST_TYPE, 'post' => $liquidation->getKey()]) }}">
+                                    @csrf
+                                    <input type="hidden" name="liked" value="{{ $liked ? '0' : '1' }}">
+                                    <button type="submit" class="post-like-button" aria-pressed="{{ $liked ? 'true' : 'false' }}">
+                                        {{ $liked ? 'Unlike' : 'Like' }}
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    @endif
                     <x-posts.row-menu :post="$liquidation" route-prefix="liquidations" />
                 </div>
                 <div class="liquidation-report-actions">
@@ -113,12 +133,16 @@
                 </div>
             </article>
         @empty
-            @if ($tab === 'published')
+            @if ($sort !== 'recent')
+                <div class="post-feed-empty">
+                    <p>No reports match this sort. <a href="{{ route('liquidations.index', ['tab' => $tab]) }}">Reset</a></p>
+                </div>
+            @elseif ($tab === 'published')
                 <x-posts.empty-state title="No published reports yet" message="Check back soon for the latest liquidation reports." />
             @elseif (auth()->user()?->canPostIn('liquidations'))
                 <x-posts.empty-state title="No reports in this tab" message="Use the prompt above to upload a report." />
             @else
-                <x-posts.empty-state title="No reports found" message="Try another search or check back later." />
+                <x-posts.empty-state title="No reports found" message="Check back later for new reports." />
             @endif
         @endforelse
     </section>

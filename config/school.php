@@ -1,6 +1,12 @@
 <?php
 
 return [
+    // Engagement features stay disabled until their SQL columns and table are created.
+    'enable_view_counts' => (bool) env('SCHOOL_ENABLE_VIEW_COUNTS', false),
+    'enable_likes' => (bool) env('SCHOOL_ENABLE_LIKES', false),
+    'view_dedupe_hours' => (int) env('SCHOOL_VIEW_DEDUPE_HOURS', 12),
+    'view_bot_user_agents' => ['bot', 'crawler', 'spider', 'slurp', 'facebookexternalhit', 'preview'],
+
     // The A.Y. changes automatically in this month; no scheduled rollover is needed.
     'academic_year_start_month' => 6,
 

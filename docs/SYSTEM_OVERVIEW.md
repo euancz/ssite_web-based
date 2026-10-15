@@ -108,10 +108,10 @@ Documents and Liquidation store PDFs on Laravel's private `local` disk under `st
 | `routes/` | URL definitions grouped by feature and access role | `web.php`, `auth.php`, `profile.php`, `officer.php`, `adviser.php`, `features.php` |
 | `app/Http/Controllers/` | Home, login, profile, dashboard, adviser, About, and post request handling | `HomeController.php`, `AboutController.php`, `ArticleController.php`, `ActivityController.php`, `AchievementController.php`, `DocumentController.php`, `LiquidationController.php`, `Auth/`, `Profile/`, `Officer/`, `Adviser/OfficerTermController.php` |
 | `app/Http/Controllers/` | Public full-page and live suggestion search endpoints | `SearchController.php` |
-| `app/Support/` | Shared site-wide search normalization, matching, result mapping, and highlighting | `SiteSearch.php` |
+| `app/Support/` | Shared site-wide search and optional post engagement behavior | `SiteSearch.php`, `PostEngagement.php` |
 | `app/Http/Middleware/` | Authentication, role, and profile-completion gates | `EnsureProfileCompleted.php`, `RoleMiddleware.php` |
 | `app/Http/Requests/` | Validation with shared or custom logic | `Profile/`, `StoreOfficerTermRequest.php`, `UpdateOfficerTermRequest.php`; short content validation is inline in each feature controller |
-| `app/Models/` | User, post, and officer term persistence | `User.php`, `Article.php`, `Activity.php`, `Achievement.php`, `Document.php`, `Liquidation.php`, `OfficerTerm.php` |
+| `app/Models/` | User, post, like, and officer term persistence | `User.php`, `Article.php`, `Activity.php`, `Achievement.php`, `Document.php`, `Liquidation.php`, `PostLike.php`, `OfficerTerm.php` |
 | `app/Policies/` | Per-record authorization for post visibility and actions | `ArticlePolicy.php`, `ActivityPolicy.php`, `AchievementPolicy.php`, `DocumentPolicy.php`, `LiquidationPolicy.php` |
 | `database/migrations/` | Database schema changes | `2026_10_06_010000_make_user_profile_picture_nullable.php`, `2026_10_06_020000_create_officer_terms_table.php`; custom Microsoft, role, and profile migrations; no Articles-table migration exists in this repository |
 | `database/seeders/` | Explicit data seeders | `OfficerTermSeeder.php` (run manually after migration) |
@@ -126,7 +126,7 @@ Documents and Liquidation store PDFs on Laravel's private `local` disk under `st
 
 ## Route organization
 
-`routes/web.php` maps `/` and `/home` to `HomeController`; it contains route declarations only. `routes/auth.php`, `routes/profile.php`, `routes/officer.php`, and `routes/adviser.php` keep their focused entry points. `routes/features.php` groups public pages, signed-in notification and PDF routes, capability-authorized feature actions, and the President-only review route. CRUD resources expose only the methods present in the route snapshot; `PATCH` updates and special actions remain explicit.
+`routes/web.php` maps `/` and `/home` to `HomeController`; it contains route declarations only. `routes/auth.php`, `routes/profile.php`, `routes/officer.php`, and `routes/adviser.php` keep their focused entry points. `routes/features.php` groups public pages, signed-in notification and PDF routes, capability-authorized feature actions, the President-only review route, and the shared `posts.like` endpoint. CRUD resources expose only the methods present in the route snapshot; `PATCH` updates and special actions remain explicit.
 
 ## Shared navbar behavior
 
@@ -193,15 +193,19 @@ Search suggestions render inside the sticky header with visible overflow and rem
 
 ## Articles tab
 
-Students, advisers, superadmins, and officers without Article capability see Published articles only. President sees Pending Review, Rejected, Archived, and All; other Article posters see My Posts and their own Archived articles. `approval_status` tracks President review while `content_status` tracks active or archived visibility. When adding a tab, add it to the capability allowlist in `ArticleController::index`, query with Article scopes, and keep public results approved AND active.
+Students, advisers, superadmins, and officers without Article capability see Published articles only. President sees Pending Review, Rejected, Archived, and All; other Article posters see My Posts and their own Archived articles. `approval_status` tracks President review while `content_status` tracks active or archived visibility. Lists use a module-specific sort control; Articles support recent, oldest, and title ordering, with optional view/like ordering only when enabled and backed by schema. Per-tab text search has been removed; the header and `/search` global search remain separate. When adding a tab, add it to the capability allowlist in `ArticleController::index`, query with Article scopes, and keep public results approved AND active.
 
 ## Activities and Achievements tabs
 
-Activities and Achievements use the same role-specific tabs, search, and ten-item pagination as Articles. Change their tab rules in `ActivityController::index` or `AchievementController::index`; public lists and home cards must use each model's `publiclyVisible()` scope. Their date, location, awardee, and category fields are feature-specific domain data.
+Activities and Achievements use the same role-specific tabs and ten-item pagination as Articles. Activities support event-date ordering and an All/Upcoming/Past filter; Achievements support category filtering. Both have recent, oldest, and title ordering, plus optional schema-backed engagement ordering. Per-tab text search is removed; global header search remains. Change their tab, sort, and filter rules in their controllers; public lists and home cards must use each model's `publiclyVisible()` scope. Their date, location, awardee, and category fields are feature-specific domain data.
 
 ## Documents and Liquidation tabs
 
-Documents and Liquidation use the Article role-specific tabs, title search, and ten-item pagination. Documents also filters by category. Public/student queries must use each model's `publiclyVisible()` scope. PDF view and download handlers authorize before reading from the private local disk; missing files return a friendly message. Change list access and maximum size in `config/school.php`.
+Documents and Liquidation use the Article role-specific tabs and ten-item pagination. Documents support category filtering. Liquidation supports report-date and amount ordering. Both have recent, oldest, and title ordering, plus optional schema-backed engagement ordering. Per-tab text search is removed; global header search remains. Public/student queries must use each model's `publiclyVisible()` scope. PDF view and download handlers authorize before reading from the private local disk; missing files return a friendly message. Change list access and maximum size in `config/school.php`.
+
+## Optional post engagement
+
+`config/school.php` disables view counts and likes by default. `PostEngagement` checks each feature flag and the external SQL schema before attempting engagement queries or writes. The current database has no `view_count` column on the five post tables and no `post_likes` table, so the UI and engagement sort choices stay hidden, views are not recorded, and `posts.like` returns 404. Enabling these features requires the owner to add the expected schema outside the app; this repository adds no migration. View counts skip authors and configured bot agents and are deduplicated per session for the configured window. Likes are scoped by post type and custom post key, and permanent post deletion removes associated likes.
 
 ## Design tokens
 

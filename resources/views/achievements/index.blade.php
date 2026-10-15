@@ -14,10 +14,14 @@
     route-name="achievements.index"
     :allowed-tabs="$allowedTabs"
     :active-tab="$tab"
-    :search="$search"
-    search-label="Search achievements"
-    search-id="achievement-search"
     :pending-count="$pendingCount"
+    :sort="$sort"
+    :sort-options="$sortOptions"
+    filter-name="category"
+    :filter="$category"
+    :filter-options="$categoryOptions"
+    filter-label="Filter by category"
+    filter-default=""
 >
     @if (session('status'))
         <p class="dashboard-success" role="status">{{ session('status') }}</p>
@@ -98,12 +102,16 @@
                 </x-slot:footerActions>
             </x-posts.card>
         @empty
-            @if ($tab === 'published')
+            @if ($sort !== 'recent' || $category !== '')
+                <div class="post-feed-empty">
+                    <p>No achievements match these settings. <a href="{{ route('achievements.index', ['tab' => $tab]) }}">Reset</a></p>
+                </div>
+            @elseif ($tab === 'published')
                 <x-posts.empty-state title="No published achievements yet" message="Check back soon for the latest SSITE achievements." />
             @elseif (auth()->user()?->canPostIn('achievements'))
                 <x-posts.empty-state title="No achievements in this tab" message="Use the prompt above to create an achievement." />
             @else
-                <x-posts.empty-state title="No achievements found" message="Try another search or check back later." />
+                <x-posts.empty-state title="No achievements found" message="Check back later for new achievements." />
             @endif
         @endforelse
     </section>

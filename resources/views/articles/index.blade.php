@@ -14,10 +14,9 @@
     route-name="articles.index"
     :allowed-tabs="$allowedTabs"
     :active-tab="$tab"
-    :search="$search"
-    search-label="Search articles"
-    search-id="article-search"
     :pending-count="$pendingCount"
+    :sort="$sort"
+    :sort-options="$sortOptions"
 >
     @if (session('status'))
         <p class="dashboard-success" role="status">{{ session('status') }}</p>
@@ -92,12 +91,16 @@
                 </x-slot:footerActions>
             </x-posts.card>
         @empty
-            @if ($tab === 'published')
+            @if ($sort !== 'recent')
+                <div class="post-feed-empty">
+                    <p>No articles match this sort. <a href="{{ route('articles.index', ['tab' => $tab]) }}">Reset</a></p>
+                </div>
+            @elseif ($tab === 'published')
                 <x-posts.empty-state title="No published articles yet" message="Check back soon for the latest SSITE articles." />
             @elseif (auth()->user()?->canPostIn('articles'))
                 <x-posts.empty-state title="No articles in this tab" message="Use the prompt above to create an article." />
             @else
-                <x-posts.empty-state title="No articles found" message="Try another search or check back later." />
+                <x-posts.empty-state title="No articles found" message="Check back later for new articles." />
             @endif
         @endforelse
     </section>

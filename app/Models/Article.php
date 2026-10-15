@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
  */
 class Article extends Model
 {
+    public const POST_TYPE = 'article';
     public const APPROVAL_PENDING = 'pending';
     public const APPROVAL_APPROVED = 'approved';
     public const APPROVAL_REJECTED = 'rejected';
@@ -27,6 +29,12 @@ class Article extends Model
 
     // SECURITY: Status, ownership, and review fields can only be changed by trusted controller actions.
     protected $fillable = ['title', 'content', 'image'];
+
+    /** Cast the optional SQL-managed counter without making it mass assignable. */
+    protected function casts(): array
+    {
+        return ['view_count' => 'integer'];
+    }
 
     /**
      * Return the schema key used for article URLs.
@@ -50,6 +58,12 @@ class Article extends Model
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by_user_id', 'user_id');
+    }
+
+    /** Keep likes scoped to this module and its custom article_id key. */
+    public function likes(): HasMany
+    {
+        return $this->hasMany(PostLike::class, 'post_id', 'article_id')->where('post_type', self::POST_TYPE);
     }
 
     /**

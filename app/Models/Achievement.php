@@ -5,11 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 /** Stores achievements with separate adviser-review and public-visibility states. */
 class Achievement extends Model
 {
+    public const POST_TYPE = 'achievement';
     public const APPROVAL_PENDING = 'pending';
     public const APPROVAL_APPROVED = 'approved';
     public const APPROVAL_REJECTED = 'rejected';
@@ -29,7 +31,7 @@ class Achievement extends Model
     /** Cast optional achievement dates for consistent formatting in lists and detail pages. */
     protected function casts(): array
     {
-        return ['achievement_date' => 'date'];
+        return ['achievement_date' => 'date', 'view_count' => 'integer'];
     }
 
     /** Return the database key used in achievement URLs. */
@@ -48,6 +50,12 @@ class Achievement extends Model
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by_user_id', 'user_id');
+    }
+
+    /** Keep likes scoped to this module and its custom achievement_id key. */
+    public function likes(): HasMany
+    {
+        return $this->hasMany(PostLike::class, 'post_id', 'achievement_id')->where('post_type', self::POST_TYPE);
     }
 
     /** Limit achievements to those awaiting adviser review. */

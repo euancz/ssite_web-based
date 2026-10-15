@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /** Stores private liquidation PDFs with independent review and publication states. */
 class Liquidation extends Model
 {
+    public const POST_TYPE = 'liquidation';
     public const APPROVAL_PENDING = 'pending';
     public const APPROVAL_APPROVED = 'approved';
     public const APPROVAL_REJECTED = 'rejected';
@@ -23,12 +25,14 @@ class Liquidation extends Model
 
     protected function casts(): array
     {
-        return ['amount' => 'decimal:2', 'report_date' => 'date', 'reviewed_at' => 'datetime', 'created_at' => 'datetime', 'updated_at' => 'datetime'];
+        return ['amount' => 'decimal:2', 'report_date' => 'date', 'reviewed_at' => 'datetime', 'created_at' => 'datetime', 'updated_at' => 'datetime', 'view_count' => 'integer'];
     }
 
     public function getRouteKeyName(): string { return 'liquidation_id'; }
     public function author(): BelongsTo { return $this->belongsTo(User::class, 'created_by_user_id', 'user_id'); }
     public function reviewer(): BelongsTo { return $this->belongsTo(User::class, 'reviewed_by_user_id', 'user_id'); }
+    /** Keep likes scoped to this module and its custom liquidation_id key. */
+    public function likes(): HasMany { return $this->hasMany(PostLike::class, 'post_id', 'liquidation_id')->where('post_type', self::POST_TYPE); }
     public function scopePending(Builder $query): Builder { return $query->where('approval_status', self::APPROVAL_PENDING); }
     public function scopeApproved(Builder $query): Builder { return $query->where('approval_status', self::APPROVAL_APPROVED); }
     public function scopeRejected(Builder $query): Builder { return $query->where('approval_status', self::APPROVAL_REJECTED); }
