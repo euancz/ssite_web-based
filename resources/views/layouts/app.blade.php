@@ -382,6 +382,26 @@
         </svg>
     </button>
 
+    <div id="page-loading-skeleton" class="page-loading-skeleton hidden" role="status" aria-label="Loading page">
+        <div class="page-loading-skeleton-header" aria-hidden="true">
+            <span class="skeleton-block skeleton-brand-mark"></span>
+            <span class="skeleton-block skeleton-brand-name"></span>
+            <span class="skeleton-block skeleton-header-action"></span>
+        </div>
+        <div class="page-loading-skeleton-content" aria-hidden="true">
+            <span class="skeleton-block skeleton-title"></span>
+            <span class="skeleton-block skeleton-subtitle"></span>
+            <div class="skeleton-card-grid">
+                <span class="skeleton-block skeleton-card"></span>
+                <span class="skeleton-block skeleton-card"></span>
+                <span class="skeleton-block skeleton-card"></span>
+            </div>
+            <span class="skeleton-block skeleton-row"></span>
+            <span class="skeleton-block skeleton-row"></span>
+            <span class="skeleton-block skeleton-row"></span>
+        </div>
+    </div>
+
     @stack('scripts')
     @include('layouts.partials.account-scripts')
     <script>
@@ -401,6 +421,44 @@
                     behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
                 });
             });
+        })();
+    </script>
+    <script>
+        (() => {
+            const skeleton = document.getElementById('page-loading-skeleton');
+            if (!skeleton) return;
+
+            let showTimer;
+            const show = () => {
+                window.clearTimeout(showTimer);
+                showTimer = window.setTimeout(() => skeleton.classList.remove('hidden'), 140);
+            };
+            const hide = () => {
+                window.clearTimeout(showTimer);
+                skeleton.classList.add('hidden');
+            };
+
+            document.addEventListener('click', (event) => {
+                if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                const clickedElement = event.target instanceof Element ? event.target : null;
+                const link = clickedElement?.closest('a[href]');
+                if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
+
+                const destination = new URL(link.href, window.location.href);
+                if (destination.origin !== window.location.origin) return;
+                if (destination.pathname === window.location.pathname && destination.search === window.location.search && destination.hash) return;
+                if (destination.href !== window.location.href) show();
+            });
+
+            document.addEventListener('submit', (event) => {
+                const form = event.target;
+                if (!(form instanceof HTMLFormElement) || form.target && form.target !== '_self' || form.method.toLowerCase() === 'dialog') return;
+                const destination = new URL(form.action || window.location.href, window.location.href);
+                if (destination.origin === window.location.origin) show();
+            });
+
+            window.addEventListener('pageshow', hide);
+            window.addEventListener('pagehide', () => window.clearTimeout(showTimer));
         })();
     </script>
 </body>

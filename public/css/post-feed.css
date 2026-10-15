@@ -7,8 +7,8 @@
 }
 
 .post-feed-shell {
-    width: min(100% - 2rem, var(--post-feed-width));
-    margin: 16px auto 36px;
+    width: min(calc(100% - var(--layout-page-gutter) - var(--layout-page-gutter)), var(--post-feed-width));
+    margin: var(--layout-page-top) auto var(--layout-page-bottom);
     color: var(--ssite-navy);
 }
 
@@ -17,11 +17,18 @@
 }
 
 .post-feed-heading h1 {
+    width: fit-content;
+    max-width: 100%;
     margin: 0;
+    border-bottom: 3px solid var(--ssite-line);
+    padding-bottom: 6px;
     color: var(--ssite-navy);
     font-size: clamp(1.55rem, 5vw, 2rem);
+    font-weight: 800;
     line-height: 1.15;
+    letter-spacing: -0.02em;
     overflow-wrap: anywhere;
+    text-wrap: balance;
 }
 
 .post-feed-heading p {
@@ -542,7 +549,7 @@
 
 @media (max-width: 420px) {
     .post-feed-shell {
-        width: calc(100% - 20px);
+        width: min(calc(100% - var(--layout-page-gutter) - var(--layout-page-gutter)), var(--post-feed-width));
     }
 
     .post-feed-sort select {

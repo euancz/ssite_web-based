@@ -118,10 +118,19 @@
                 if (query.length < 2) { close(shell); return; }
 
                 list.replaceChildren();
-                const loading = document.createElement('p');
-                loading.className = 'search-suggestion-message';
+                const loading = document.createElement('div');
+                loading.className = 'search-suggestion-loading';
                 loading.setAttribute('role', 'status');
-                loading.textContent = 'Searching…';
+                const loadingLabel = document.createElement('span');
+                loadingLabel.className = 'visually-hidden';
+                loadingLabel.textContent = 'Searching';
+                loading.append(loadingLabel);
+                for (let row = 0; row < 3; row++) {
+                    const skeletonRow = document.createElement('span');
+                    skeletonRow.className = 'skeleton-block search-suggestion-skeleton-row';
+                    skeletonRow.setAttribute('aria-hidden', 'true');
+                    loading.append(skeletonRow);
+                }
                 list.append(loading);
                 list.classList.remove('hidden');
                 input.setAttribute('aria-expanded', 'true');

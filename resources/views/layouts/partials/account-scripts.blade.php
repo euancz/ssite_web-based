@@ -95,11 +95,30 @@
                 return `${Math.floor(seconds / 86400)}d ago`;
             };
 
+            const showNotificationSkeleton = () => {
+                notificationList.replaceChildren();
+                const status = document.createElement('div');
+                status.className = 'notification-loading-skeleton';
+                status.setAttribute('role', 'status');
+                const label = document.createElement('span');
+                label.className = 'visually-hidden';
+                label.textContent = 'Loading notifications';
+                status.append(label);
+                for (let row = 0; row < 3; row++) {
+                    const skeletonRow = document.createElement('span');
+                    skeletonRow.className = 'skeleton-block notification-skeleton-row';
+                    skeletonRow.setAttribute('aria-hidden', 'true');
+                    status.append(skeletonRow);
+                }
+                notificationList.append(status);
+            };
+
             const updateNotificationSummary = async (forceOpen = false) => {
                 if (!notificationWrapper || document.hidden || (!forceOpen && notificationToggle?.getAttribute('aria-expanded') === 'true')) return;
+                if (forceOpen) showNotificationSkeleton();
                 try {
                     const response = await fetch(notificationWrapper.dataset.summaryUrl, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
-                    if (!response.ok) return;
+                    if (!response.ok) throw new Error('Notification request failed.');
                     const summary = await response.json();
                     const count = Number(summary.unread_count || 0);
                     notificationBadge.textContent = count > 99 ? '99+' : String(count);
@@ -155,6 +174,12 @@
                     });
                 } catch (_) {
                     // Polling failures after logout or session expiry stay silent and leave the page usable.
+                    if (forceOpen) {
+                        const unavailable = document.createElement('p');
+                        unavailable.className = 'notification-empty';
+                        unavailable.textContent = 'Could not load notifications. Open the menu to try again.';
+                        notificationList.replaceChildren(unavailable);
+                    }
                 }
             };
 

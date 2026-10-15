@@ -4,17 +4,21 @@
 
 /* Match the current Blade home view to the shared SSITE spacing, cards, and palette. */
 .home-content {
-    width: min(100% - 32px, 80rem);
-    margin: 32px auto 56px;
+    width: min(calc(100% - var(--layout-page-gutter) - var(--layout-page-gutter)), var(--layout-width-wide));
+    margin: var(--layout-page-top) auto var(--layout-page-bottom);
+    padding: 0;
     color: var(--ssite-navy);
 }
 
 .home-heading {
     margin: 0 0 20px;
+    border-bottom: 3px solid var(--ssite-line);
+    padding-bottom: 8px;
     color: var(--ssite-navy);
     font-size: clamp(1.7rem, 3vw, 2.5rem);
     font-weight: 800;
-    letter-spacing: -0.04em;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
 }
 
 .featured-article,
@@ -80,7 +84,7 @@
 .secondary-article > p:not(.article-category):not(.article-byline) { margin: 0; color: var(--ssite-navy-soft); line-height: 1.5; }
 
 @media (max-width: 600px) {
-    .home-content { width: min(100% - 24px, 80rem); margin-top: 22px; }
+    .home-content { width: min(calc(100% - var(--layout-page-gutter) - var(--layout-page-gutter)), var(--layout-width-wide)); }
     .featured-article,
     .secondary-article { padding: 16px; }
     .secondary-articles { grid-template-columns: 1fr; gap: 14px; }
@@ -160,7 +164,7 @@
     border-radius: 5px;
 
     background: #ffffff;
-    color: #0876c9;
+    color: var(--ssite-navy);
 
     font-size: 14px;
     font-weight: 700;
@@ -196,7 +200,7 @@
 .section-heading h2 {
     margin-bottom: 10px;
 
-    color: #0876c9;
+    color: var(--ssite-navy);
 
     font-size: 32px;
     font-weight: 700;
@@ -288,7 +292,7 @@
 
     margin-bottom: 8px;
 
-    color: #0876c9;
+    color: var(--ssite-navy);
 
     font-size: 12px;
     font-weight: 600;
@@ -297,7 +301,7 @@
 .news-card-content h3 {
     margin-bottom: 10px;
 
-    color: #222222;
+    color: var(--ssite-navy);
 
     font-size: 19px;
     line-height: 1.35;
@@ -313,7 +317,7 @@
 }
 
 .read-more {
-    color: #0876c9;
+    color: var(--ssite-navy);
 
     font-size: 13px;
     font-weight: 700;
@@ -362,7 +366,7 @@
 }
 
 .quick-card:hover {
-    border-color: #0876c9;
+    border-color: var(--ssite-line);
 
     transform: translateY(-4px);
 
@@ -382,8 +386,8 @@
 
     border-radius: 50%;
 
-    background: #e8f5ff;
-    color: #0876c9;
+    background: var(--ssite-blue-light);
+    color: var(--ssite-navy);
 
     font-size: 23px;
 }
@@ -391,13 +395,13 @@
 .quick-card h3 {
     margin-bottom: 7px;
 
-    color: #222222;
+    color: var(--ssite-navy);
 
     font-size: 16px;
 }
 
 .quick-card p {
-    color: #777777;
+    color: var(--ssite-navy-soft);
 
     font-size: 12px;
     line-height: 1.5;
@@ -438,7 +442,7 @@
 .about-text h2 {
     margin-bottom: 15px;
 
-    color: #0876c9;
+    color: var(--ssite-navy);
 
     font-size: 32px;
 }
@@ -461,7 +465,7 @@
 
     border-radius: 5px;
 
-    background: #0876c9;
+    background: var(--ssite-navy);
     color: #ffffff;
 
     font-size: 13px;
@@ -486,7 +490,7 @@
 
     text-align: center;
 
-    background: #0876c9;
+    background: var(--ssite-navy);
     color: #ffffff;
 }
 
@@ -520,7 +524,7 @@
     border-radius: 5px;
 
     background: #ffffff;
-    color: #0876c9;
+    color: var(--ssite-navy);
 
     font-size: 13px;
     font-weight: 700;

@@ -1,20 +1,20 @@
 .about-page {
-    width: 100%;
-    max-width: 1040px;
-    margin: 0 auto;
-    padding: 24px 24px 0;
+    width: min(calc(100% - var(--layout-page-gutter) - var(--layout-page-gutter)), var(--layout-width-reading));
+    margin: var(--layout-page-top) auto var(--layout-page-bottom);
+    padding: 0;
 }
 
 .about-page-title,
 .about-section-title {
     margin: 0;
-    border-bottom: 2px solid var(--ssite-navy);
+    border-bottom: 3px solid var(--ssite-line);
     padding-bottom: 8px;
     color: var(--ssite-navy);
     font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
     font-size: clamp(1.8rem, 3vw, 2.7rem);
     font-weight: 800;
     letter-spacing: -0.03em;
+    text-wrap: balance;
 }
 
 .about-page-title {
@@ -23,7 +23,7 @@
 
 .about-page-intro {
     margin: 0 0 28px;
-    color: #425973;
+    color: var(--ssite-navy-soft);
     font-size: 1.05rem;
     line-height: 1.6;
 }
@@ -259,7 +259,7 @@
 
 @media (max-width: 560px) {
     .about-page {
-        padding: 24px 20px 0;
+        width: min(calc(100% - var(--layout-page-gutter) - var(--layout-page-gutter)), var(--layout-width-reading));
     }
 
     .mission-vision-grid {
