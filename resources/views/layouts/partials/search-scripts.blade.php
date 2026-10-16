@@ -4,7 +4,6 @@
         (() => {
             const inputs = [...document.querySelectorAll('.search-form [role="combobox"]')];
             const suggestionsUrl = @json(route('search.suggest'));
-            const resultsUrl = @json(route('search.index'));
             const typeLabels = { articles: 'Articles', activities: 'Activities', achievements: 'Achievements', documents: 'Documents', liquidation: 'Liquidation', officers: 'Officers' };
             const typeIcons = { articles: '▤', activities: '◷', achievements: '★', documents: '▧', liquidation: '◫', officers: '♙' };
             let timer = null;
@@ -94,20 +93,12 @@
                     empty.textContent = `No suggestions for “${query}”.`;
                     list.append(empty);
                 }
-                const all = document.createElement('a');
-                all.className = 'search-suggestion-all';
-                all.href = `${resultsUrl}?${new URLSearchParams({ q: query })}`;
-                all.setAttribute('role', 'option');
-                all.id = `search-option-${sequence}-all`;
-                all.setAttribute('aria-selected', 'false');
-                all.textContent = `See all results for “${query}”`;
-                list.append(all);
                 list.classList.remove('hidden');
                 shell.querySelector('[role="combobox"]').setAttribute('aria-expanded', 'true');
                 activeIndex = -1;
             };
 
-            const fetchSuggestions = (input) => {
+            const fetchSuggestions = (input, immediate = false) => {
                 const shell = input.closest('.search-shell');
                 const list = shell.querySelector('[role="listbox"]');
                 const query = input.value.trim().replace(/\s+/g, ' ');
@@ -151,11 +142,16 @@
                         // SECURITY: Network and session failures leave the form usable and expose no response data.
                         if (currentSequence === sequence) close(shell);
                     }
-                }, 250);
+                }, immediate ? 0 : 250);
             };
 
             inputs.forEach((input) => {
                 input.addEventListener('input', () => fetchSuggestions(input));
+                input.closest('form')?.addEventListener('submit', (event) => {
+                    event.preventDefault();
+                    fetchSuggestions(input, true);
+                    input.focus();
+                });
                 input.addEventListener('keydown', (event) => {
                     const shell = input.closest('.search-shell');
                     const list = shell.querySelector('[role="listbox"]');

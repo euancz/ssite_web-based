@@ -47,7 +47,7 @@
             </a>
 
             <div class="site-header-actions">
-                {{-- SECURITY: Both search forms submit the same public query; suggestions contain visible content only. --}}
+                {{-- SECURITY: Both search forms use the public suggestions endpoint; suggestions contain visible content only. --}}
                 <div class="site-search-desktop search-shell">
                     <form method="GET" action="{{ route('search.index') }}" class="search-form">
                         <input type="text" name="q" value="{{ request()->routeIs('search.index') && isset($query) ? $query : (is_string(request()->query('q')) ? mb_substr(request()->query('q'), 0, 100) : '') }}" placeholder="Discover something from SSITE..."
