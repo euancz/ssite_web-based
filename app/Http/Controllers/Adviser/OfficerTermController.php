@@ -48,10 +48,6 @@ class OfficerTermController extends Controller
         $term->photo = $request->hasFile('photo') ? $this->storePhoto($request) : $this->linkedPhoto($term->user_id);
         $term->save();
 
-        // SECURITY: Only the exact fixed flag selects the About destination; input is never treated as a redirect URL.
-        if ($request->input('from') === 'about') {
-            return redirect()->route('about')->with('status', 'Officer added.');
-        }
         return redirect()->route('adviser.officers.index', ['academic_year' => $term->academic_year])->with('status', 'Officer added.');
     }
 
@@ -76,10 +72,6 @@ class OfficerTermController extends Controller
         $officer->save();
         if ($oldPhoto !== $officer->photo) $this->deleteManagedPhoto($oldPhoto);
 
-        // SECURITY: Only the exact fixed flag selects the About destination; input is never treated as a redirect URL.
-        if ($request->input('from') === 'about') {
-            return redirect()->route('about')->with('status', 'Officer updated.');
-        }
         return redirect()->route('adviser.officers.index', ['academic_year' => $officer->academic_year])->with('status', 'Officer updated.');
     }
 
@@ -91,10 +83,6 @@ class OfficerTermController extends Controller
         $officer->delete();
         $this->deleteManagedPhoto($photo);
 
-        // SECURITY: Only the exact fixed flag selects the About destination; input is never treated as a redirect URL.
-        if ($request->input('from') === 'about') {
-            return redirect()->route('about')->with('status', 'Officer deleted.');
-        }
         return redirect()->route('adviser.officers.index', ['academic_year' => $year])->with('status', 'Officer deleted.');
     }
 

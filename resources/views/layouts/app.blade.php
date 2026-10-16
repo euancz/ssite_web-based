@@ -214,7 +214,7 @@
                                 </svg>
                                 <span>Settings</span>
                             </button>
-                            @if (auth()->user()->canPost() || auth()->user()->can('review-posts') || auth()->user()->can('manage-users'))
+                            @if (auth()->user()->canPost() || auth()->user()->can('review-posts') || auth()->user()->can('manage-users') || auth()->user()->can('manage-officers'))
                                 <div class="account-menu-divider" role="separator"></div>
                                 <p class="account-menu-section-label" role="presentation">Manage</p>
                                 @if (auth()->user()->canPost() || auth()->user()->isAdviser() || auth()->user()->isSuperadmin())
@@ -225,6 +225,9 @@
                                 @endcan
                                 @can('manage-users')
                                     <a href="{{ route('adviser.users.index') }}" class="account-menu-action" role="menuitem">{{ auth()->user()->isSuperadmin() ? 'Manage Advisers' : 'Manage Users' }}</a>
+                                @endcan
+                                @can('manage-officers')
+                                    <a href="{{ route('adviser.officers.index') }}" class="account-menu-action" role="menuitem">Manage About Us</a>
                                 @endcan
                             @endif
                             {{-- Keep logout last and visually separate for every signed-in role. --}}
