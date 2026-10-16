@@ -71,5 +71,28 @@
         @endif
     @endif
 
-    {{ $slot }}
+    <p class="dashboard-error post-feed-update-error" role="alert" data-feed-error hidden>
+        Posts could not be updated. Check your connection and try again.
+    </p>
+    <p class="visually-hidden" role="status" aria-live="polite" data-feed-status></p>
+    <div data-feed-results aria-busy="false">
+        <div class="post-feed-skeleton" data-feed-skeleton aria-hidden="true" hidden>
+            @for ($skeletonCard = 0; $skeletonCard < 3; $skeletonCard++)
+                <article class="post-feed-skeleton-card">
+                    <div class="post-feed-skeleton-author">
+                        <span class="post-feed-skeleton-block post-feed-skeleton-avatar"></span>
+                        <span class="post-feed-skeleton-lines">
+                            <span class="post-feed-skeleton-block post-feed-skeleton-line post-feed-skeleton-name"></span>
+                            <span class="post-feed-skeleton-block post-feed-skeleton-line post-feed-skeleton-meta"></span>
+                        </span>
+                    </div>
+                    <span class="post-feed-skeleton-block post-feed-skeleton-line post-feed-skeleton-title"></span>
+                    <span class="post-feed-skeleton-block post-feed-skeleton-line"></span>
+                    <span class="post-feed-skeleton-block post-feed-skeleton-line post-feed-skeleton-copy"></span>
+                    <span class="post-feed-skeleton-block post-feed-skeleton-footer"></span>
+                </article>
+            @endfor
+        </div>
+        <div data-feed-content>{{ $slot }}</div>
+    </div>
 </div>

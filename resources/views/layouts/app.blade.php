@@ -492,6 +492,7 @@
             });
 
             document.addEventListener('submit', (event) => {
+                if (event.defaultPrevented) return;
                 const form = event.target;
                 if (!(form instanceof HTMLFormElement) || form.target && form.target !== '_self' || form.method.toLowerCase() === 'dialog') return;
                 const destination = new URL(form.action || window.location.href, window.location.href);
