@@ -82,7 +82,7 @@ class DocumentController extends Controller
         $documents->orderBy($sortColumn, $sortDirection);
         if (in_array($sort, ['viewed', 'liked'], true)) $documents->orderBy('created_at', 'desc');
         $documents = $documents->orderBy('document_id', 'asc')
-            ->paginate(10)
+            ->paginate(5)
             ->appends(['tab' => $tab, 'sort' => $sort, 'category' => $category]);
         // SECURITY: Visiting Documents clears only this user's unread publication notices for this tab.
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])

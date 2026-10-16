@@ -100,7 +100,7 @@ class ActivityController extends Controller
         $activities->orderBy($sortColumn, $sortDirection);
         if (in_array($sort, ['viewed', 'liked'], true)) $activities->orderBy('created_at', 'desc');
         $activities = $activities->orderBy('activity_id', 'asc')
-            ->paginate(10)
+            ->paginate(5)
             ->appends(['tab' => $tab, 'sort' => $sort, 'timeframe' => $timeframe]);
         // SECURITY: Visiting Activities clears only this user's unread publication notices for this tab.
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])

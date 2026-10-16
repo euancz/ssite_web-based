@@ -80,7 +80,7 @@ class LiquidationController extends Controller
         $liquidations->orderBy($sortColumn, $sortDirection);
         if (in_array($sort, ['viewed', 'liked'], true)) $liquidations->orderBy('created_at', 'desc');
         $liquidations = $liquidations->orderBy('liquidation_id', 'asc')
-            ->paginate(10)
+            ->paginate(5)
             ->appends(['tab' => $tab, 'sort' => $sort]);
         // SECURITY: Visiting Liquidation clears only this user's unread publication notices for this tab.
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])

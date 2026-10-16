@@ -62,7 +62,7 @@
                 </tbody>
             </table>
         </x-ui.data-table>
-        <div class="dashboard-pagination">{{ $posts->links() }}</div>
+        <div class="dashboard-pagination">{{ $posts->links('vendor.pagination.ssite') }}</div>
     </section>
 </div>
 @endsection

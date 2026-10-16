@@ -90,7 +90,7 @@ class ArticleController extends Controller
         $articles->orderBy($sortColumn, $sortDirection);
         if (in_array($sort, ['viewed', 'liked'], true)) $articles->orderBy('created_at', 'desc');
         $articles = $articles->orderBy('article_id', 'asc')
-            ->paginate(10)
+            ->paginate(5)
             ->appends(['tab' => $tab, 'sort' => $sort]);
 
         // SECURITY: Visiting Articles clears only this user's unread publication notices for this tab.

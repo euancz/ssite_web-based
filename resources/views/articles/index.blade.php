@@ -105,6 +105,6 @@
         @endforelse
     </section>
 
-    <div class="dashboard-pagination">{{ $articles->links() }}</div>
+    <div class="dashboard-pagination">{{ $articles->links('vendor.pagination.ssite') }}</div>
 </x-posts.feed-frame>
 @endsection
