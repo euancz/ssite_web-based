@@ -27,6 +27,7 @@
                         <th scope="col">Type</th>
                         <th scope="col">Submitted</th>
                         <th scope="col">Status</th>
+                        @if ($activeStatus === 'rejected')<th scope="col">Rejection reason</th>@endif
                         <th scope="col">Actions</th>
                     </tr>
                 </thead>
@@ -35,9 +36,12 @@
                         <tr>
                             <td>{{ $post->title }}</td>
                             <td>{{ $post->author?->name ?? 'Unknown author' }}</td>
-                            <td>{{ ucfirst($post->type) }}</td>
-                            <td>{{ $post->created_at?->format('M j, Y') }}</td>
+                            <td>{{ $post->type_label }}</td>
+                            <td>{{ $post->created_at ? \Illuminate\Support\Carbon::parse($post->created_at)->format('M j, Y') : '—' }}</td>
                             <td><x-ui.status-badge :status="$post->status" /></td>
+                            @if ($activeStatus === 'rejected')
+                                <td>{{ $post->rejection_reason ?: 'No reason was recorded.' }}</td>
+                            @endif
                             <td class="dashboard-table-actions">
                                 {{-- Preview and review actions depend on URLs supplied by the post backend. --}}
                                 <a href="{{ $post->preview_url }}" class="dashboard-text-button">Preview</a>
@@ -50,7 +54,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="dashboard-empty-state">
+                            <td colspan="{{ $activeStatus === 'rejected' ? 7 : 6 }}" class="dashboard-empty-state">
                                 No {{ $activeStatus }} posts.
                             </td>
                         </tr>

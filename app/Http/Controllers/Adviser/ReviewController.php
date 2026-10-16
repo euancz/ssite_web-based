@@ -24,15 +24,20 @@ class ReviewController extends Controller
             ['table' => 'documents', 'key' => 'document_id', 'type' => 'document', 'label' => 'Document', 'route' => 'documents'],
             ['table' => 'liquidations', 'key' => 'liquidation_id', 'type' => 'liquidation', 'label' => 'Liquidation', 'route' => 'liquidations'],
         ];
-        $queries = array_map(fn (array $module): Builder => DB::table($module['table'])->selectRaw(
-            '? as post_type, ? as type_label, ? as route_prefix, ' . $module['key'] . ' as post_id, title, created_by_user_id, created_at, approval_status as status, rejection_reason',
-            [$module['type'], $module['label'], $module['route']]
-        ), $modules);
+        // Filter each module before combining it so each status tab reflects the same saved review state.
+        $queries = array_map(function (array $module) use ($status): Builder {
+            return DB::table($module['table'])
+                ->selectRaw(
+                    '? as post_type, ? as type_label, ? as route_prefix, ' . $module['key'] . ' as post_id, title, created_by_user_id, created_at, approval_status as status, rejection_reason',
+                    [$module['type'], $module['label'], $module['route']]
+                )
+                ->where('approval_status', $status);
+        }, $modules);
         $union = array_shift($queries);
         foreach ($queries as $query) $union->unionAll($query);
 
-        $posts = DB::query()->fromSub($union, 'review_posts')->where('status', $status)
-            ->orderByDesc('created_at')->paginate(20)->withQueryString();
+        $posts = DB::query()->fromSub($union, 'review_posts')
+            ->orderByDesc('created_at')->paginate(5)->withQueryString();
         $authors = User::query()->whereIn('user_id', $posts->getCollection()->pluck('created_by_user_id')->filter()->unique())
             ->get(['user_id', 'name'])->keyBy('user_id');
         foreach ($posts as $post) {
