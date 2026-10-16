@@ -1,7 +1,7 @@
 <?php
 
 return [
-    // Engagement features require their externally managed columns/table; runtime checks keep missing schema inert.
+    // SECURITY: Engagement defaults on but each module checks its required schema before use.
     'enable_view_counts' => (bool) env('SCHOOL_ENABLE_VIEW_COUNTS', true),
     'enable_likes' => (bool) env('SCHOOL_ENABLE_LIKES', true),
     'view_dedupe_hours' => (int) env('SCHOOL_VIEW_DEDUPE_HOURS', 12),

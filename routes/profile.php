@@ -20,8 +20,11 @@ Route::middleware([RequireAuthentication::class, EnsureProfileCompleted::class])
         ->name('profile.update');
 
     // SECURITY: Picture actions use the authenticated account and never accept a user ID.
+    // SECURITY: Picture uploads are bounded even when a client repeatedly replaces the same file.
     Route::post('/profile/picture', [ProfileController::class, 'updatePicture'])
+        ->middleware('throttle:uploads')
         ->name('profile.picture.update');
     Route::delete('/profile/picture', [ProfileController::class, 'removePicture'])
+        ->middleware('throttle:uploads')
         ->name('profile.picture.remove');
 });

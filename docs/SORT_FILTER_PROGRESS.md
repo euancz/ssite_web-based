@@ -25,6 +25,8 @@
 
 ## Step 4 — Documentation
 
+- 2026-10-16 — R-01 review follow-up: engagement flags default on per the owner's direction. Each module offers like sorting only when both `post_likes` and that module's `like_count` column exist; the manual schema checklist remains owner-run. No database or route changes were made. Compared with the 102-route BEFORE snapshot, the existing `posts.like` route is the sole delta and was unchanged in this batch.
+
 - Updated `docs/SYSTEM_OVERVIEW.md` with current feed sort/filter behavior, removal of per-tab search (while retaining global search), shared engagement route, feature flags, and the external-schema requirement.
 - Updated `docs/WHERE_IS_WHAT.md` with pointers for feed controls, each module's sort/filter behavior, view tracking, and likes.
 - The initial route snapshot is `audit/SORT_FILTER_ROUTES_BEFORE.json`; the only addition is `posts.like`.

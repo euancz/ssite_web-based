@@ -46,6 +46,8 @@ An officer viewing their own pending Articles follows this path:
 
 `config/school.php` controls the school email domain, profile enforcement flag, allowed gender/year values, student-number format, and TODO institute/program lists.
 
+The application clock defaults to `Asia/Manila` through `APP_TIMEZONE` in `config/app.php`. Laravel-generated timestamps, relative-time labels, and the automatic academic-year boundary use this timezone. Changing the setting does not rewrite MySQL rows; review representative older timestamp displays after deployment, especially if historical values were recorded under a different timezone. Date-only event and report fields remain the dates entered for those records.
+
 ## Officer history
 
 `AcademicYear::current()` calculates the current A.Y. using `school.academic_year_start_month` (June by default), so the changeover happens from the calendar date without a scheduled task. `officer_terms` rows are snapshots: name, position, and photo stay with that year even if a linked account changes or is deleted. Role assignment synchronizes only the current year's row. New officers are not copied forward automatically. The public About page shows current-year rows above newest-first history rows; roster editing routes are retained but denied.
@@ -76,6 +78,12 @@ Before changing a module, keep this protection checklist:
 - Upload checks, generated names, private PDF storage and authorized delivery, deletion boundaries, notification recipients and failure handling, search escaping and limits, profile completion, and login redirects stay unchanged.
 - State-changing forms keep CSRF and the correct HTTP method. Blade output remains escaped.
 
+Authorization regression checks live in `tests/Unit/ContentAuthorizationTest.php`. PHPUnit forces `DB_CONNECTION=sqlite` and `DB_DATABASE=:memory:` so test runs cannot inherit the local MySQL database from `.env`; normal application requests continue using the configured XAMPP MySQL connection.
+
+Production release, backup, restore, health-check, and logging guidance is in `docs/DEPLOYMENT_RUNBOOK.md`. Private PDFs live on the local disk under `storage/app/private`; that directory must persist and be backed up separately from the MySQL database. The runbook is host-neutral, and its restore rehearsal remains pending a non-production host and destination.
+
+Framework error responses for 403, 404, 419, and 500 use standalone branded views in `resources/views/errors/`. They avoid the database-backed site navigation, give a route back to the public home page, and the 500 message does not expose exception details.
+
 ## Site search
 
 Header suggestions and the `/search` page use `app/Support/SiteSearch.php`; `SearchController` serves both the page and JSON suggestion endpoint. Both endpoints are throttled to 60 requests per minute and share the same normalization: control characters become spaces, repeated whitespace is collapsed, input is capped at 100 characters and five words, and queries shorter than two characters return no matches before feature queries run. Every word must match at least one allowed field using bound LIKE patterns with escaped wildcard characters. Results rank title prefixes first, title substrings second, and other-field matches third; newest date breaks ties. The search is LIKE-based and may need FULLTEXT indexes if the data grows large.
@@ -83,6 +91,10 @@ Header suggestions and the `/search` page use `app/Support/SiteSearch.php`; `Sea
 Search never queries users or profile fields. Articles, Activities, Achievements, Documents, and Liquidation reuse each model's `publiclyVisible()` scope, so only approved and active records appear. Search fields are feature-specific: Articles use title/body; Activities title/description/location; Achievements title/description/awardee/category; Documents title/description/category; Liquidation title/description; officer snapshots name/position/academic year. Guests can be restricted from Documents or Liquidation by `search_include_documents_for_guests` and `search_include_liquidation_for_guests`, which default to the matching list-public settings. Documents and Liquidation respect those visibility settings; file paths, PDFs, liquidation amounts, and user records are never returned from search. Results link to the feature's show page (officer matches link to About). The suggestion endpoint returns at most three matches per type and ten overall; the results page offers type filters and ten results per page.
 
 To change the minimum query length, dropdown limits, relevance order, or searched columns, edit `app/Support/SiteSearch.php` and `resources/views/layouts/partials/search-scripts.blade.php` as applicable.
+
+## Request limits
+
+`AppServiceProvider` registers named request limits for password login (5 per normalized email/IP and 20 per IP per minute), likes (30 per user and 60 per IP), content writes (30 per user and 60 per IP), and uploads (6 per user and 12 per IP). Login POST, like toggles, post mutations, and profile-picture/store/update upload actions use these limits; upload GET forms are not throttled. Limit responses use HTTP 429 with a short retry message. Search retains its separate 60-per-minute route limit. These ceilings are conservative starting points and should be adjusted if shared-campus-IP traffic triggers legitimate 429 responses.
 
 ### In-app notifications
 
@@ -113,7 +125,7 @@ Documents and Liquidation store PDFs on Laravel's private `local` disk under `st
 | `app/Http/Requests/` | Validation with shared or custom logic | `Profile/`, `StoreOfficerTermRequest.php`, `UpdateOfficerTermRequest.php`; short content validation is inline in each feature controller |
 | `app/Models/` | User, post, like, and officer term persistence | `User.php`, `Article.php`, `Activity.php`, `Achievement.php`, `Document.php`, `Liquidation.php`, `PostLike.php`, `OfficerTerm.php` |
 | `app/Policies/` | Per-record authorization for post visibility and actions | `ArticlePolicy.php`, `ActivityPolicy.php`, `AchievementPolicy.php`, `DocumentPolicy.php`, `LiquidationPolicy.php` |
-| `database/migrations/` | Database schema changes | `2026_10_06_010000_make_user_profile_picture_nullable.php`, `2026_10_06_020000_create_officer_terms_table.php`; custom Microsoft, role, and profile migrations; no Articles-table migration exists in this repository |
+| `database/migrations/` | Database schema changes | `0001_01_01_000000_create_users_table.php` creates the custom integer user key; `2026_10_06_020000_create_officer_terms_table.php` creates the yearly roster; `2026_10_16_000000_add_officer_term_user_year_unique.php` guards its composite unique key; no content-table migrations exist in this repository |
 | `database/seeders/` | Explicit data seeders | `OfficerTermSeeder.php` (run manually after migration) |
 | `app/Support/` | Focused school-year calculation and post notification recipient selection | `AcademicYear.php`, `PostNotificationRecipients.php` |
 | `app/Notifications/` | Synchronous database notifications for post review and publication | `PostSubmittedForReview.php`, `PostPublished.php`, `PostApproved.php`, `PostRejected.php` |
@@ -163,6 +175,8 @@ Search suggestions render inside the sticky header with visible overflow and rem
 ## Gotchas and extension notes
 
 - **Custom user key:** `User` uses `user_id`, not Laravel's conventional `id`. Use the model key or explicitly target `user_id` in validation and relationships.
+- **Fresh-install key types:** The baseline migration creates `users.user_id` as `INT UNSIGNED`, matching the integer foreign keys used by officer terms and engagement rows. Officer terms enforce one linked user per academic year with a composite unique key; the additive guard migration preserves that rule for pre-existing tables.
+- **External post schemas:** Articles, Activities, Achievements, Documents, and Liquidation remain SQL-managed outside Laravel migrations. `audit/live-schema-before.txt` is an older snapshot, not proof of the current schema; compare a current schema-only export before changing those tables.
 - **Profile pictures:** `profile_picture` is nullable and never mass-assignable. Uploads use generated names in `storage/app/public/profile-pictures`; run `php artisan storage:link`. Missing files fall back to initials. Microsoft login does not fetch photos; existing picture values are never overwritten by the callback.
 - **Article primary key:** Articles use `article_id`; user ownership and reviewer relationships target `users.user_id`, not `id`.
 - **Article mass assignment:** `Article::$fillable` contains only `title`, `content`, and `image`. Set owner, approval/content status, rejection reason, and review fields in authorized controller actions.
@@ -205,7 +219,7 @@ Documents and Liquidation use the Article role-specific tabs and ten-item pagina
 
 ## Optional post engagement
 
-`config/school.php` enables view counts and likes by default, with environment flags available to disable either feature. `PostEngagement` checks the externally managed post columns before writing counters. Signed-in users count once per post through the app-managed `post_views` table; guests are deduplicated by browser session for the configured window and bot agents are skipped. Like actions also require the app-managed `post_likes` table created by migration, and like/unlike updates the corresponding stored counter in the same transaction as the like row. Likes and views are scoped by post type and custom post key; permanent post deletion removes associated engagement records.
+`config/school.php` enables view counts and likes by default, with environment flags available to disable either feature. Runtime checks keep each module's controls and queries unavailable unless its required schema exists: views need `view_count` on the module table and signed-in tracking also needs `post_views`; likes need `post_likes` and the module's `like_count` column. Signed-in users count once per post through `post_views`; guests are deduplicated by browser session for the configured window and bot agents are skipped. Like/unlike updates the stored counter in the same transaction as the like row. Likes and views are scoped by post type and custom post key; permanent post deletion removes associated engagement records.
 
 ## Design tokens
 

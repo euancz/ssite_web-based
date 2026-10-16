@@ -26,6 +26,8 @@ return new class extends Migration
             $table->unsignedTinyInteger('sort_order')->default(0);
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->nullable();
+            // SECURITY: One account can hold only one roster entry per academic year.
+            $table->unique(['user_id', 'academic_year'], 'uq_terms_user_year');
             $table->foreign('user_id')->references('user_id')->on('users')
                 ->nullOnDelete()->cascadeOnUpdate();
         });

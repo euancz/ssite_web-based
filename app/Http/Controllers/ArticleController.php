@@ -62,7 +62,9 @@ class ArticleController extends Controller
 
         // SECURITY: Engagement queries are limited to Published and require both the feature flag and schema.
         $viewCountsEnabled = $tab === 'published' && $engagement->viewCountsAvailable($articles->getModel());
-        $likesEnabled = $tab === 'published' && $engagement->likesAvailable();
+        // SECURITY: Like controls and ordering require the likes table and this module's counter column.
+        $likesEnabled = $tab === 'published' && $engagement->likesAvailable()
+            && $engagement->likeCountsAvailable($articles->getModel());
         if ($likesEnabled) {
             $articles->withCount('likes');
             if ($user) $articles->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->user_id)]);

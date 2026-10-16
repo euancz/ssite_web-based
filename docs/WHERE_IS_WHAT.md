@@ -14,11 +14,12 @@ Use this guide to find the file that owns a common change.
 | Change shared sort/filter controls or their styling | `resources/views/components/posts/sort-row.blade.php` and `public/css/post-feed.css` |
 | Change view counting, session deduplication, or bot exclusions | `app/Support/PostEngagement.php` and `config/school.php` (`enable_view_counts`, `view_dedupe_hours`, `view_bot_user_agents`) |
 | Change like toggling or the shared like route | `app/Http/Controllers/PostLikeController.php`, `app/Models/PostLike.php`, and `routes/features.php` (`posts.like`) |
-| Change engagement feature availability | `config/school.php` (`enable_view_counts`, `enable_likes`); confirm external SQL columns/table exist before enabling |
+| Change engagement feature availability | `config/school.php` (`enable_view_counts`, `enable_likes`); both default on, with runtime checks for each module's counter column and required engagement table |
 | Change minimum query length or word/character limits | `app/Support/SiteSearch.php` (`normalize`) |
 | Change guest search access | `config/school.php` (`search_include_documents_for_guests`, `search_include_liquidation_for_guests`) |
 | Change the dropdown result caps | `app/Http/Controllers/SearchController.php` (`suggest`) and `resources/views/layouts/partials/search-scripts.blade.php` |
 | Change the relevance order | `app/Support/SiteSearch.php` (`applyTitleOrder`, `relevanceRank`, and result sorting) |
+| Request limits for login, likes, content writes, and uploads | `app/Providers/AppServiceProvider.php` (named limits) plus `routes/auth.php`, `routes/features.php`, and `routes/profile.php` (route attachments) |
 | Search routes and throttling | `routes/features.php` (`search.index`, `search.suggest`) |
 | The measured header height used for anchor offsets | `resources/views/layouts/app.blade.php` and `public/css/app.css` (`--site-header-height`) |
 | The navbar shadow after scrolling | `resources/views/layouts/app.blade.php` and `public/css/app.css` (`.site-header.is-scrolled`) |
@@ -40,6 +41,7 @@ Use this guide to find the file that owns a common change.
 | Notification actor profile pictures | `app/Http/Controllers/NotificationController.php` (`avatar`) and `resources/views/layouts/partials/account-scripts.blade.php` |
 | How unread tab dots are counted | `app/Providers/AppServiceProvider.php` (one grouped query for the shared layout) |
 | The month when the academic year starts | `config/school.php` (`academic_year_start_month`) |
+| Application date and time zone | `config/app.php` (`APP_TIMEZONE`, defaults to `Asia/Manila`) and `.env.example` |
 | Maximum PDF upload size | `config/school.php` (`max_pdf_size_kb`) and PHP `php.ini` upload limits |
 | Whether document or liquidation lists are public | `config/school.php` (`documents_list_public`, `liquidation_list_public`) |
 | Who can view and download PDFs | `app/Policies/DocumentPolicy.php`, `app/Policies/LiquidationPolicy.php`, and each module controller's file handlers |
@@ -107,7 +109,10 @@ Use this guide to find the file that owns a common change.
 | Profile program-to-institute option mapping | `app/Http/Controllers/Profile/ProfileController.php` (`formData`) and `resources/views/profile/partials/fields.blade.php` |
 | About page current officers and history ordering | `app/Http/Controllers/AboutController.php` and `resources/views/pages/about.blade.php` |
 | School profile options or shared Article, Activity, and Achievement post settings | `config/school.php` |
-| Database schema migrations | `database/migrations/` (keep filenames already run unchanged) |
+| Database schema migrations | `database/migrations/` (fresh `users.user_id` type and officer-term uniqueness; never run migrations against the live database during review) |
+| Authorization regression checks and isolated test database | `tests/Unit/ContentAuthorizationTest.php` and `phpunit.xml` (forced SQLite `:memory:`; application MySQL settings are unchanged) |
+| Production deployment, backup, restore, and health checks | `docs/DEPLOYMENT_RUNBOOK.md` (host-neutral; rehearsal requires an isolated non-production destination) |
+| Branded 403, 404, 419, and 500 error responses | `resources/views/errors/` and `public/css/errors.css` (standalone layout, home recovery link) |
 
 Route URLs, route names, middleware, and role checks are defined separately from the Blade pages. Moving a view changes its `view(...)` path, while the URL is controlled by its route file.
 

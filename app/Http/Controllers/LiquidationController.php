@@ -46,7 +46,9 @@ class LiquidationController extends Controller
         elseif ($tab === 'rejected') $liquidations->rejected();
         // SECURITY: Engagement queries are limited to Published and require both the feature flag and schema.
         $viewCountsEnabled = $tab === 'published' && $engagement->viewCountsAvailable($liquidations->getModel());
-        $likesEnabled = $tab === 'published' && $engagement->likesAvailable();
+        // SECURITY: Like controls and ordering require the likes table and this module's counter column.
+        $likesEnabled = $tab === 'published' && $engagement->likesAvailable()
+            && $engagement->likeCountsAvailable($liquidations->getModel());
         if ($likesEnabled) {
             $liquidations->withCount('likes');
             if ($user) $liquidations->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->user_id)]);

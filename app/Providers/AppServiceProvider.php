@@ -6,6 +6,10 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use App\Models\User;
 use App\Models\Achievement;
 use App\Models\Activity;
@@ -36,6 +40,47 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // SECURITY: Apply account-and-IP limits with a short plain-text response when clients exceed them.
+        $rateLimitedResponse = static fn (Request $request, array $headers) =>
+            response('Too many requests. Please wait a minute before trying again.', 429, $headers);
+        RateLimiter::for('login', function (Request $request) use ($rateLimitedResponse): array {
+            $email = $request->input('email');
+            $emailKey = hash('sha256', is_string($email) ? Str::lower(trim($email)) : '');
+            $ip = $request->ip() ?: 'unknown';
+
+            return [
+                Limit::perMinute(5)->by('login:account:' . $emailKey . ':' . $ip)->response($rateLimitedResponse),
+                Limit::perMinute(20)->by('login:ip:' . $ip)->response($rateLimitedResponse),
+            ];
+        });
+        RateLimiter::for('likes', function (Request $request) use ($rateLimitedResponse): array {
+            $ip = $request->ip() ?: 'unknown';
+            $userKey = $request->user()?->user_id;
+
+            return [
+                Limit::perMinute(30)->by('likes:user:' . ($userKey ?? $ip))->response($rateLimitedResponse),
+                Limit::perMinute(60)->by('likes:ip:' . $ip)->response($rateLimitedResponse),
+            ];
+        });
+        RateLimiter::for('content-writes', function (Request $request) use ($rateLimitedResponse): array {
+            $ip = $request->ip() ?: 'unknown';
+            $userKey = $request->user()?->user_id;
+
+            return [
+                Limit::perMinute(30)->by('content:user:' . ($userKey ?? $ip))->response($rateLimitedResponse),
+                Limit::perMinute(60)->by('content:ip:' . $ip)->response($rateLimitedResponse),
+            ];
+        });
+        RateLimiter::for('uploads', function (Request $request) use ($rateLimitedResponse): array {
+            $ip = $request->ip() ?: 'unknown';
+            $userKey = $request->user()?->user_id;
+
+            return [
+                Limit::perMinute(6)->by('uploads:user:' . ($userKey ?? $ip))->response($rateLimitedResponse),
+                Limit::perMinute(12)->by('uploads:ip:' . $ip)->response($rateLimitedResponse),
+            ];
+        });
+
         // These abilities control navigation visibility; protected routes enforce access separately.
         Gate::define('view-post-dashboard', fn (User $user): bool => $user->canPost());
         Gate::define('review-posts', fn (User $user): bool => $user->canReview());

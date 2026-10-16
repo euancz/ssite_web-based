@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'redirectToHome'])->name('login');
 
-    Route::post('/login', [AuthController::class, 'login']);
+    // SECURITY: Bound password attempts per account/IP and per IP to slow credential guessing.
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
 
     Route::get('/auth/microsoft', [MicrosoftAuthController::class, 'redirect'])
         ->name('microsoft.login');
