@@ -12,7 +12,7 @@ class ActivityPolicy
 
     public function view(?User $user, Activity $activity): bool
     {
-        return ($activity->isApproved() && $activity->content_status === Activity::CONTENT_ACTIVE)
+        return ($activity->isApproved() && in_array($activity->content_status, [Activity::CONTENT_ACTIVE, Activity::CONTENT_ARCHIVED], true))
             || ($user !== null && ($user->isPresident() || $this->owns($user, $activity)));
     }
 

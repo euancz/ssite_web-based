@@ -12,7 +12,7 @@ class AchievementPolicy
 
     public function view(?User $user, Achievement $achievement): bool
     {
-        return ($achievement->isApproved() && $achievement->content_status === Achievement::CONTENT_ACTIVE)
+        return ($achievement->isApproved() && in_array($achievement->content_status, [Achievement::CONTENT_ACTIVE, Achievement::CONTENT_ARCHIVED], true))
             || ($user !== null && ($user->isPresident() || $this->owns($user, $achievement)));
     }
 

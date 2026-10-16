@@ -70,20 +70,41 @@
                     }
                 });
             });
-            document.querySelectorAll('.dashboard-tabs-more').forEach((menu) => {
+            const workflowMenus = [...document.querySelectorAll('.dashboard-tabs-more')];
+            workflowMenus.forEach((menu) => {
                 const summary = menu.querySelector('summary');
+                const panel = menu.querySelector('.dashboard-tabs-menu');
                 const syncExpanded = () => summary?.setAttribute('aria-expanded', String(menu.open));
-                menu.addEventListener('toggle', syncExpanded);
+                const positionPanel = () => {
+                    if (!menu.open || !summary || !panel) return;
+                    const anchor = summary.getBoundingClientRect();
+                    const panelBounds = panel.getBoundingClientRect();
+                    const left = Math.max(8, Math.min(anchor.right - panelBounds.width, window.innerWidth - panelBounds.width - 8));
+                    const below = window.innerHeight - anchor.bottom;
+                    const top = below >= panelBounds.height + 12
+                        ? anchor.bottom + 4
+                        : Math.max(8, anchor.top - panelBounds.height - 4);
+                    panel.style.left = `${left}px`;
+                    panel.style.top = `${top}px`;
+                };
+                menu.addEventListener('toggle', () => { syncExpanded(); positionPanel(); });
+                menu.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape') {
+                        menu.open = false;
+                        summary?.focus();
+                    }
+                });
                 syncExpanded();
             });
             document.addEventListener('click', (event) => {
                 rowMenus.forEach((menu) => { if (!menu.contains(event.target)) menu.open = false; });
-                document.querySelectorAll('.dashboard-tabs-more').forEach((menu) => { if (!menu.contains(event.target)) menu.open = false; });
+                workflowMenus.forEach((menu) => { if (!menu.contains(event.target)) menu.open = false; });
             });
-            document.querySelectorAll('.dashboard-tabs-more').forEach((menu) => menu.addEventListener('keydown', (event) => {
-                if (event.key === 'Escape') { menu.open = false; menu.querySelector('summary')?.focus(); }
-            }));
-            window.addEventListener('resize', () => rowMenus.forEach((menu) => menu.dispatchEvent(new Event('toggle'))));
+            window.addEventListener('resize', () => {
+                rowMenus.forEach((menu) => menu.dispatchEvent(new Event('toggle')));
+                workflowMenus.forEach((menu) => { if (menu.open) menu.dispatchEvent(new Event('toggle')); });
+            });
+            window.addEventListener('scroll', () => workflowMenus.forEach((menu) => { if (menu.open) menu.dispatchEvent(new Event('toggle')); }), true);
             window.addEventListener('scroll', () => rowMenus.filter((menu) => menu.classList.contains('floating-row-menu')).forEach((menu) => {
                 if (menu.open) menu.dispatchEvent(new Event('toggle'));
             }), true);

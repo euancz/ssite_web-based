@@ -30,7 +30,7 @@ class ActivityController extends Controller
         $user = $request->user();
         $allowedTabs = $user?->canReview()
             ? ['published', 'pending', 'rejected', 'archived', 'all']
-            : ($user?->canPostIn('activities') ? ['published', 'mine', 'archived'] : ['published']);
+            : ($user?->canPostIn('activities') ? ['published', 'mine', 'archived'] : ['published', 'archived']);
         // SECURITY: Pending totals are queried only for review-capable users and never reach public or student views.
         $pendingCount = $user?->canReview() ? Activity::pending()->count() : null;
         $tab = $request->query('tab', 'published');
@@ -48,7 +48,10 @@ class ActivityController extends Controller
         } elseif ($tab === 'archived') {
             $activities->archived();
             if (! $user?->isPresident()) {
-                $activities->where('created_by_user_id', $user->user_id);
+                $activities->where(function ($query) use ($user): void {
+                    $query->approved();
+                    if ($user) $query->orWhere('created_by_user_id', $user->user_id);
+                });
             }
         } elseif ($tab === 'pending') {
             $activities->pending();
@@ -351,7 +354,7 @@ class ActivityController extends Controller
     /** Check public state for guests, who have no user policy context. */
     private function publiclyVisible(Activity $activity): bool
     {
-        return $activity->isApproved() && $activity->content_status === Activity::CONTENT_ACTIVE;
+        return $activity->isApproved() && in_array($activity->content_status, [Activity::CONTENT_ACTIVE, Activity::CONTENT_ARCHIVED], true);
     }
 
     /** Save a validated upload under this module's public-disk image directory. */

@@ -12,7 +12,7 @@ class ArticlePolicy
 
     public function view(?User $user, Article $article): bool
     {
-        return ($article->isApproved() && $article->content_status === Article::CONTENT_ACTIVE)
+        return ($article->isApproved() && in_array($article->content_status, [Article::CONTENT_ACTIVE, Article::CONTENT_ARCHIVED], true))
             || ($user !== null && ($user->isPresident() || $this->owns($user, $article)));
     }
 

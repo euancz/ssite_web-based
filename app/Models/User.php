@@ -243,11 +243,10 @@ class User extends Authenticatable
             && (bool) config('school.positions.' . $this->position() . '.can_review', false);
     }
 
-    /** Officer-term roster editing is intentionally unavailable under role-assignment-only duties. */
+    /** The President manages the public officer roster; advisers assign account roles separately. */
     public function canManageOfficers(): bool
     {
-        // Roster management is outside the approved role-assignment responsibilities.
-        return false;
+        return $this->isPresident();
     }
 
     /**

@@ -30,7 +30,7 @@ class AchievementController extends Controller
         $user = $request->user();
         $allowedTabs = $user?->canReview()
             ? ['published', 'pending', 'rejected', 'archived', 'all']
-            : ($user?->canPostIn('achievements') ? ['published', 'mine', 'archived'] : ['published']);
+            : ($user?->canPostIn('achievements') ? ['published', 'mine', 'archived'] : ['published', 'archived']);
         // SECURITY: Pending totals are queried only for review-capable users and never reach public or student views.
         $pendingCount = $user?->canReview() ? Achievement::pending()->count() : null;
         $tab = $request->query('tab', 'published');
@@ -48,7 +48,10 @@ class AchievementController extends Controller
         } elseif ($tab === 'archived') {
             $achievements->archived();
             if (! $user?->isPresident()) {
-                $achievements->where('created_by_user_id', $user->user_id);
+                $achievements->where(function ($query) use ($user): void {
+                    $query->approved();
+                    if ($user) $query->orWhere('created_by_user_id', $user->user_id);
+                });
             }
         } elseif ($tab === 'pending') {
             $achievements->pending();
@@ -352,7 +355,7 @@ class AchievementController extends Controller
     /** Check public state for guests, who have no user policy context. */
     private function publiclyVisible(Achievement $achievement): bool
     {
-        return $achievement->isApproved() && $achievement->content_status === Achievement::CONTENT_ACTIVE;
+        return $achievement->isApproved() && in_array($achievement->content_status, [Achievement::CONTENT_ACTIVE, Achievement::CONTENT_ARCHIVED], true);
     }
 
     /** Save a validated upload under this module's public-disk image directory. */

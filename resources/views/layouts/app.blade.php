@@ -398,7 +398,7 @@
                         <svg class="footer-contact-icon" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M22 12a10 10 0 10-11.5 9.87v-6.99H7.9V12h2.6V9.8c0-2.57 1.53-3.99 3.87-3.99 1.12 0 2.3.2 2.3.2v2.53h-1.3c-1.28 0-1.68.8-1.68 1.62V12h2.86l-.46 2.88h-2.4v6.99A10 10 0 0022 12z"/>
                         </svg>
-                        <span>Student Society in Information Technology Education</span>
+                        <a href="https://www.facebook.com/ICSSSITE" class="footer-facebook-link" target="_blank" rel="noopener noreferrer">Student Society in Information Technology Education</a>
                     </li>
                     <li class="footer-contact-item">
                         <svg class="footer-contact-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

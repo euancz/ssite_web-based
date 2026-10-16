@@ -22,7 +22,7 @@ Route::get('/adviser/reviews', [App\Http\Controllers\Adviser\ReviewController::c
     ->middleware(['auth', 'role:officer', 'profile.complete', 'can:review-posts'])
     ->name('adviser.reviews.index');
 
-// SECURITY: Roster routes retain their URLs but remain inaccessible because roster editing is not an approved role duty.
+// SECURITY: Officer roster routes are limited to the President through the manage-officers ability.
 Route::prefix('adviser')->name('adviser.')->middleware(['auth', 'profile.complete', 'can:manage-officers'])->group(function () {
     Route::resource('officers', OfficerTermController::class)
         ->parameters(['officers' => 'officer'])->only(['index', 'create', 'store', 'edit', 'destroy']);

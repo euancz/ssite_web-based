@@ -3,16 +3,13 @@
 namespace App\Http\Controllers\Adviser;
 
 use App\Http\Controllers\Controller;
-use App\Models\OfficerTerm;
 use App\Models\User;
-use App\Support\AcademicYear;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -94,8 +91,7 @@ class UserController extends Controller
         $newRole = $validated['role'];
         $newPosition = $newRole === User::ROLE_OFFICER ? $validated['officer_position'] : null;
 
-        $removedPhoto = null;
-        DB::transaction(function () use ($actor, $user, $newRole, $newPosition, &$removedPhoto): void {
+        DB::transaction(function () use ($actor, $user, $newRole, $newPosition): void {
             // SECURITY: Lock assignment rows together so concurrent requests cannot create two Presidents.
             $lockedUsers = User::query()->orderBy('user_id')->lockForUpdate()->get();
             $lockedActor = $lockedUsers->firstWhere('user_id', $actor->user_id);
@@ -132,22 +128,6 @@ class UserController extends Controller
             $target->officer_position = $newRole === User::ROLE_OFFICER ? $newPosition : null;
             $target->save();
 
-            $currentYear = AcademicYear::current();
-            if ($newRole === User::ROLE_OFFICER) {
-                $term = OfficerTerm::updateOrCreate(
-                    ['user_id' => $target->user_id, 'academic_year' => $currentYear],
-                    ['name' => $target->name, 'position' => $newPosition, 'photo' => $target->profile_picture]
-                );
-                $term->user_id = $target->user_id;
-                $term->save();
-            } elseif ($oldRole === User::ROLE_OFFICER) {
-                $term = OfficerTerm::forYear($currentYear)->where('user_id', $target->user_id)->first();
-                if ($term) {
-                    $removedPhoto = $term->photo;
-                    $term->delete();
-                }
-            }
-
             if (Schema::hasTable('role_changes')) {
                 DB::table('role_changes')->insert([
                     'user_id' => $target->user_id,
@@ -161,10 +141,6 @@ class UserController extends Controller
                 ]);
             }
         });
-
-        if ($removedPhoto && str_starts_with($removedPhoto, 'officer-photos/') && ! preg_match('/^https?:\/\//i', $removedPhoto)) {
-            Storage::disk('public')->delete($removedPhoto);
-        }
 
         return redirect()
             ->route('adviser.users.index', $request->only('search', 'role', 'page'))

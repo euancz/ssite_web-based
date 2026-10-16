@@ -819,6 +819,14 @@ ol {
     text-decoration: underline;
 }
 
+.footer-facebook-link {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.footer-facebook-link:hover { color: var(--ssite-blue); }
+
 .footer-bottom {
     display: flex;
     justify-content: center;
@@ -2462,12 +2470,11 @@ ol {
 .dashboard-tabs-more > summary::-webkit-details-marker { display: none; }
 
 .dashboard-tabs-menu {
-    position: absolute;
+    position: fixed;
     z-index: 30;
-    top: calc(100% + 4px);
-    right: 0;
     display: grid;
     min-width: 10rem;
+    max-width: min(18rem, calc(100vw - 16px));
     padding: 4px;
     border: 1px solid #cfe6ee;
     border-radius: 4px;
@@ -2476,6 +2483,9 @@ ol {
 }
 
 .dashboard-tabs-menu a {
+    min-height: 40px;
+    display: flex;
+    align-items: center;
     padding: 10px 12px;
     color: #17324d;
     text-decoration: none;

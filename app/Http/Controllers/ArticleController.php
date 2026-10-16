@@ -34,7 +34,7 @@ class ArticleController extends Controller
         $user = $request->user();
         $allowedTabs = $user?->canReview()
             ? ['published', 'pending', 'rejected', 'archived', 'all']
-            : ($user?->canPostIn('articles') ? ['published', 'mine', 'archived'] : ['published']);
+            : ($user?->canPostIn('articles') ? ['published', 'mine', 'archived'] : ['published', 'archived']);
         // SECURITY: Pending totals are queried only for review-capable accounts and never reach public or student views.
         $pendingCount = $user?->canReview() ? Article::pending()->count() : null;
         $tab = $request->query('tab', 'published');
@@ -52,7 +52,10 @@ class ArticleController extends Controller
         } elseif ($tab === 'archived') {
             $articles->archived();
             if (! $user?->isPresident()) {
-                $articles->where('created_by_user_id', $user->user_id);
+                $articles->where(function ($query) use ($user): void {
+                    $query->approved();
+                    if ($user) $query->orWhere('created_by_user_id', $user->user_id);
+                });
             }
         } elseif ($tab === 'pending') {
             $articles->pending();
@@ -359,7 +362,7 @@ class ArticleController extends Controller
      */
     private function publiclyVisible(Article $article): bool
     {
-        return $article->isApproved() && $article->content_status === Article::CONTENT_ACTIVE;
+        return $article->isApproved() && in_array($article->content_status, [Article::CONTENT_ACTIVE, Article::CONTENT_ARCHIVED], true);
     }
 
     /**
