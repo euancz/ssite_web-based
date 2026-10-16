@@ -15,9 +15,11 @@
         @method('PATCH')
     @endif
 
+    <p class="post-form-requirements"><span class="post-form-required-mark" aria-hidden="true">*</span> Fields marked with an asterisk are required.</p>
+
     {{-- Keep each label, field, and error together for quick form scanning. --}}
     <div class="dashboard-form-field">
-        <label for="liquidation-title">Title</label>
+        <label for="liquidation-title">Title <span class="post-form-required-mark" aria-hidden="true">*</span></label>
         <input id="liquidation-title" name="title" maxlength="200" required value="{{ old('title', $liquidation?->title) }}">
         @error('title') <span class="profile-field-error">{{ $message }}</span> @enderror
     </div>
@@ -47,7 +49,7 @@
 
     {{-- SECURITY: Server verifies finfo MIME and the %PDF header, then generates a private stored filename. --}}
     <div class="dashboard-form-field">
-        <label for="liquidation-file">{{ $liquidation ? 'Replace PDF (optional)' : 'PDF file' }}</label>
+        <label for="liquidation-file">{{ $liquidation ? 'Replace PDF (optional)' : 'PDF file' }}@unless ($liquidation) <span class="post-form-required-mark" aria-hidden="true">*</span>@endunless</label>
         <input id="liquidation-file" name="file" type="file" accept=".pdf,application/pdf" @required(! $liquidation)>
         <span class="profile-field-help">PDF only; maximum {{ config('school.max_pdf_size_kb', 10240) }} KB.</span>
         <span id="liquidation-file-info" class="profile-field-help"></span>

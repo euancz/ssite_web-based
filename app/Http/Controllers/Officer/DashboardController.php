@@ -15,6 +15,33 @@ class DashboardController extends Controller
 {
     public function __invoke(): View
     {
+        $user = request()->user();
+
+        if ($user->isPresident()) {
+            $workspaceModules = [
+                'articles' => ['label' => 'Article', 'icon' => 'file', 'model' => Article::class],
+                'activities' => ['label' => 'Activity', 'icon' => 'calendar', 'model' => Activity::class],
+                'achievements' => ['label' => 'Achievement', 'icon' => 'award', 'model' => Achievement::class],
+                'documents' => ['label' => 'Document', 'icon' => 'file', 'model' => Document::class],
+                'liquidations' => ['label' => 'Liquidation report', 'icon' => 'chart', 'model' => Liquidation::class],
+            ];
+            $postableModules = collect($user->postableModules())->filter(fn (string $key): bool => isset($workspaceModules[$key]));
+            $availableModules = $postableModules->map(fn (string $key): array => ['key' => $key] + $workspaceModules[$key] + [
+                'index' => $key . '.index',
+                'create' => $key . '.create',
+            ])->values();
+            $dashboardStatus = ['pending' => 0, 'published' => 0, 'archived' => 0];
+
+            foreach ($workspaceModules as $module) {
+                $model = $module['model'];
+                $dashboardStatus['pending'] += $model::pending()->count();
+                $dashboardStatus['published'] += $model::publiclyVisible()->count();
+                $dashboardStatus['archived'] += $model::archived()->count();
+            }
+
+            return view('workspace.dashboard', compact('availableModules', 'dashboardStatus'));
+        }
+
         $modules = [
             'articles' => ['label' => 'Articles', 'model' => Article::class, 'index' => 'articles.index', 'create' => 'articles.create', 'show' => 'articles.show'],
             'activities' => ['label' => 'Activities', 'model' => Activity::class, 'index' => 'activities.index', 'create' => 'activities.create', 'show' => 'activities.show'],

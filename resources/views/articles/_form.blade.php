@@ -16,16 +16,18 @@
         @method('PATCH')
     @endif
 
+    <p class="post-form-requirements"><span class="post-form-required-mark" aria-hidden="true">*</span> Fields marked with an asterisk are required.</p>
+
     {{-- Title validation matches the articles table's 200-character limit. --}}
     <div class="dashboard-form-field">
-        <label for="article-title">Title</label>
+        <label for="article-title">Title <span class="post-form-required-mark" aria-hidden="true">*</span></label>
         <input id="article-title" name="title" type="text" maxlength="200" required value="{{ old('title', $article?->title) }}">
         @error('title') <span class="profile-field-error">{{ $message }}</span> @enderror
     </div>
 
     {{-- Blade escapes article content on redisplay and the server validates it as required text. --}}
     <div class="dashboard-form-field">
-        <label for="article-content">Content</label>
+        <label for="article-content">Content <span class="post-form-required-mark" aria-hidden="true">*</span></label>
         <textarea id="article-content" name="content" rows="14" required>{{ old('content', $article?->content) }}</textarea>
         <span class="profile-field-help">Maximum 300 words.</span>
         @error('content') <span class="profile-field-error">{{ $message }}</span> @enderror

@@ -28,11 +28,12 @@ class AchievementController extends Controller
     {
         $this->authorize('viewAny', Achievement::class);
         $user = $request->user();
-        $allowedTabs = $user?->canReview()
+        $isEditorial = $request->routeIs('editorial.achievements.index');
+        $allowedTabs = $isEditorial
             ? ['published', 'pending', 'rejected', 'archived', 'all']
-            : ($user?->canPostIn('achievements') ? ['published', 'mine', 'archived'] : ['published', 'archived']);
+            : ($user?->isPresident() ? ['published'] : ($user?->canPostIn('achievements') ? ['published', 'mine', 'archived'] : ['published', 'archived']));
         // SECURITY: Pending totals are queried only for review-capable users and never reach public or student views.
-        $pendingCount = $user?->canReview() ? Achievement::pending()->count() : null;
+        $pendingCount = $isEditorial && $user?->canReview() ? Achievement::pending()->count() : null;
         $tab = $request->query('tab', 'published');
 
         // SECURITY: Unknown or role-hidden tabs fall back to Published before querying records.
@@ -103,7 +104,9 @@ class AchievementController extends Controller
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['achievement'])->update(['read_at' => now()]);
 
-        return view('achievements.index', compact('achievements', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'category', 'categoryOptions', 'pendingCount'));
+        $view = $request->routeIs('editorial.achievements.index') ? 'workspace.posts.achievements.index' : 'achievements.index';
+
+        return view($view, compact('achievements', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'category', 'categoryOptions', 'pendingCount'));
     }
 
     /** Show public achievements or private records to their author or the President. */

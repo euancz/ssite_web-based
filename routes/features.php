@@ -37,6 +37,15 @@ Route::resource('liquidation', LiquidationController::class)->names('liquidation
     ->parameters(['liquidation' => 'liquidation'])->only(['index', 'show'])
     ->middleware($liquidationListMiddleware)->whereNumber('liquidation');
 
+// SECURITY: The President's editorial lists use separate workspace views; public URLs keep the student-facing views.
+Route::prefix('editorial')->name('editorial.')->middleware(['auth', 'role:officer', 'profile.complete', 'can:review-posts'])->group(function () {
+    Route::get('/articles', [ArticleController::class, 'index'])->name('articles.index');
+    Route::get('/activities', [ActivityController::class, 'index'])->name('activities.index');
+    Route::get('/achievements', [AchievementController::class, 'index'])->name('achievements.index');
+    Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
+    Route::get('/liquidations', [LiquidationController::class, 'index'])->name('liquidations.index');
+});
+
 // SECURITY: One endpoint maps fixed post types and the controller rechecks feature, visibility, and policy.
 Route::post('/posts/{type}/{post}/like', [PostLikeController::class, 'toggle'])
     ->where('type', 'article|activity|achievement|document|liquidation')

@@ -12,10 +12,27 @@
 
     <!-- App styles -->
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    @php
+        $workspaceUser = auth()->user();
+        $workspaceRole = $workspaceUser && $workspaceUser->isPresident();
+        $workspaceRoute = request()->routeIs(
+            'officer.*', 'adviser.*', 'editorial.*',
+            'articles.create', 'articles.edit', 'activities.create', 'activities.edit',
+            'achievements.create', 'achievements.edit', 'documents.create', 'documents.edit',
+            'liquidations.create', 'liquidations.edit'
+        );
+        $workspaceEnabled = $workspaceRole && $workspaceRoute;
+    @endphp
+    @if ($workspaceEnabled)
+        <link rel="stylesheet" href="{{ asset('css/workspace.css') }}">
+    @endif
 
     @stack('styles')
 </head>
-<body class="site-body">
+<body class="{{ $workspaceEnabled ? 'site-body workspace-site-body' : 'site-body' }}">
+    @if ($workspaceEnabled)
+        @include('layouts.partials.workspace')
+    @else
     {{-- Role shortcuts live in the account menu; the shared Home destination stays public for every role. --}}
     @php($roleHomeUrl = url('/'))
 
@@ -419,6 +436,7 @@
             </p>
         </div>
     </footer>
+    @endif
 
     <button type="button" id="back-to-top" class="back-to-top hidden" aria-label="Back to top">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -487,6 +505,8 @@
                 const clickedElement = event.target instanceof Element ? event.target : null;
                 const link = clickedElement?.closest('a[href]');
                 if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
+                // Feed tabs and pagination replace only their own result region and show its local skeleton.
+                if (link.closest('.post-feed-shell .dashboard-tabs, .post-feed-shell .dashboard-pagination')) return;
 
                 const destination = new URL(link.href, window.location.href);
                 if (destination.origin !== window.location.origin) return;
@@ -498,6 +518,8 @@
                 if (event.defaultPrevented) return;
                 const form = event.target;
                 if (!(form instanceof HTMLFormElement) || form.target && form.target !== '_self' || form.method.toLowerCase() === 'dialog') return;
+                // Feed sort and filter controls use the same result-only loading state as tab changes.
+                if (form.matches('.post-feed-sort')) return;
                 const destination = new URL(form.action || window.location.href, window.location.href);
                 if (destination.origin === window.location.origin) show();
             });

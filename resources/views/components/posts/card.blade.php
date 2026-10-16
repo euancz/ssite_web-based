@@ -43,7 +43,9 @@
                 @endif
             </p>
         </div>
-        <x-posts.row-menu :post="$post" :route-prefix="$routePrefix" />
+        @unless (auth()->user()?->isPresident())
+            <x-posts.row-menu :post="$post" :route-prefix="$routePrefix" />
+        @endunless
     </header>
 
     <div class="post-card-copy">

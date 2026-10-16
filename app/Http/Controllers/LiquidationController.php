@@ -29,10 +29,12 @@ class LiquidationController extends Controller
     {
         $this->authorize('viewAny', Liquidation::class);
         $user = $request->user();
-        $allowedTabs = $user?->canReview() ? ['published', 'pending', 'rejected', 'archived', 'all']
-            : ($user?->canPostIn('liquidations') ? ['published', 'mine', 'archived'] : ['published']);
+        $isEditorial = $request->routeIs('editorial.liquidations.index');
+        $allowedTabs = $isEditorial
+            ? ['published', 'pending', 'rejected', 'archived', 'all']
+            : ($user?->isPresident() ? ['published'] : ($user?->canPostIn('liquidations') ? ['published', 'mine', 'archived'] : ['published']));
         // SECURITY: Pending totals are queried only for review-capable users and never reach public or student views.
-        $pendingCount = $user?->canReview() ? Liquidation::pending()->count() : null;
+        $pendingCount = $isEditorial && $user?->canReview() ? Liquidation::pending()->count() : null;
         $tab = $request->query('tab', 'published');
         // SECURITY: Role-specific tab allowlists prevent private workflow states leaking to students.
         if (! in_array($tab, $allowedTabs, true)) $tab = 'published';
@@ -85,7 +87,9 @@ class LiquidationController extends Controller
         // SECURITY: Visiting Liquidation clears only this user's unread publication notices for this tab.
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['liquidation'])->update(['read_at' => now()]);
-        return view('liquidation.index', compact('liquidations', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'pendingCount'));
+        $view = $request->routeIs('editorial.liquidations.index') ? 'workspace.posts.liquidation.index' : 'liquidation.index';
+
+        return view($view, compact('liquidations', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'pendingCount'));
     }
 
     public function show(Liquidation $liquidation, Request $request, PostEngagement $engagement): View

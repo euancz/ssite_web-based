@@ -29,10 +29,12 @@ class DocumentController extends Controller
     {
         $this->authorize('viewAny', Document::class);
         $user = $request->user();
-        $allowedTabs = $user?->canReview() ? ['published', 'pending', 'rejected', 'archived', 'all']
-            : ($user?->canPostIn('documents') ? ['published', 'mine', 'archived'] : ['published']);
+        $isEditorial = $request->routeIs('editorial.documents.index');
+        $allowedTabs = $isEditorial
+            ? ['published', 'pending', 'rejected', 'archived', 'all']
+            : ($user?->isPresident() ? ['published'] : ($user?->canPostIn('documents') ? ['published', 'mine', 'archived'] : ['published']));
         // SECURITY: Pending totals are queried only for review-capable users and never reach public or student views.
-        $pendingCount = $user?->canReview() ? Document::pending()->count() : null;
+        $pendingCount = $isEditorial && $user?->canReview() ? Document::pending()->count() : null;
         $tab = $request->query('tab', 'published');
         // SECURITY: A tab whitelist prevents guests and students from requesting private workflow rows.
         if (! in_array($tab, $allowedTabs, true)) $tab = 'published';
@@ -88,7 +90,9 @@ class DocumentController extends Controller
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['document'])->update(['read_at' => now()]);
 
-        return view('documents.index', compact('documents', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'category', 'categoryOptions', 'pendingCount'));
+        $view = $request->routeIs('editorial.documents.index') ? 'workspace.posts.documents.index' : 'documents.index';
+
+        return view($view, compact('documents', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'category', 'categoryOptions', 'pendingCount'));
     }
 
     public function show(Document $document, Request $request, PostEngagement $engagement): View

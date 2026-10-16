@@ -37,7 +37,9 @@
         </header>
 
         @can('create', $policyClass)
+            @unless (auth()->user()?->isPresident())
             <x-posts.composer :href="route($createRoute)" :prompt="$composerPrompt" :user="auth()->user()" />
+            @endunless
         @endcan
 
         @if ($sortOptions)

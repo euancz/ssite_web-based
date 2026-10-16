@@ -28,11 +28,12 @@ class ActivityController extends Controller
     {
         $this->authorize('viewAny', Activity::class);
         $user = $request->user();
-        $allowedTabs = $user?->canReview()
+        $isEditorial = $request->routeIs('editorial.activities.index');
+        $allowedTabs = $isEditorial
             ? ['published', 'pending', 'rejected', 'archived', 'all']
-            : ($user?->canPostIn('activities') ? ['published', 'mine', 'archived'] : ['published', 'archived']);
+            : ($user?->isPresident() ? ['published'] : ($user?->canPostIn('activities') ? ['published', 'mine', 'archived'] : ['published', 'archived']));
         // SECURITY: Pending totals are queried only for review-capable users and never reach public or student views.
-        $pendingCount = $user?->canReview() ? Activity::pending()->count() : null;
+        $pendingCount = $isEditorial && $user?->canReview() ? Activity::pending()->count() : null;
         $tab = $request->query('tab', 'published');
 
         // SECURITY: Unknown or role-hidden tabs fall back to Published before querying records.
@@ -106,7 +107,9 @@ class ActivityController extends Controller
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['activity'])->update(['read_at' => now()]);
 
-        return view('activities.index', compact('activities', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'timeframe', 'timeframeOptions', 'pendingCount'));
+        $view = $request->routeIs('editorial.activities.index') ? 'workspace.posts.activities.index' : 'activities.index';
+
+        return view($view, compact('activities', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'timeframe', 'timeframeOptions', 'pendingCount'));
     }
 
     /** Show public activities or private records to their author or the President. */

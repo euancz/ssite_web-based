@@ -7,15 +7,16 @@
 <form method="POST" action="{{ $action }}" enctype="multipart/form-data" class="profile-form">
     @csrf
     @if ($activity) @method('PATCH') @endif
+    <p class="post-form-requirements"><span class="post-form-required-mark" aria-hidden="true">*</span> Fields marked with an asterisk are required.</p>
     {{-- The title length matches the activities table. --}}
     <div class="dashboard-form-field">
-        <label for="activity-title">Title</label>
+        <label for="activity-title">Title <span class="post-form-required-mark" aria-hidden="true">*</span></label>
         <input id="activity-title" name="title" type="text" maxlength="200" required value="{{ old('title', $activity?->title) }}">
         @error('title') <span class="profile-field-error">{{ $message }}</span> @enderror
     </div>
     {{-- The activity description is escaped when redisplayed and when shown publicly. --}}
     <div class="dashboard-form-field">
-        <label for="activity-description">Description</label>
+        <label for="activity-description">Description <span class="post-form-required-mark" aria-hidden="true">*</span></label>
         <textarea id="activity-description" name="description" rows="12" required>{{ old('description', $activity?->description) }}</textarea>
         <span class="profile-field-help">Maximum 300 words.</span>
         @error('description') <span class="profile-field-error">{{ $message }}</span> @enderror

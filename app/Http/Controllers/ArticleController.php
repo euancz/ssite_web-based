@@ -32,11 +32,12 @@ class ArticleController extends Controller
     {
         $this->authorize('viewAny', Article::class);
         $user = $request->user();
-        $allowedTabs = $user?->canReview()
+        $isEditorial = $request->routeIs('editorial.articles.index');
+        $allowedTabs = $isEditorial
             ? ['published', 'pending', 'rejected', 'archived', 'all']
-            : ($user?->canPostIn('articles') ? ['published', 'mine', 'archived'] : ['published', 'archived']);
+            : ($user?->isPresident() ? ['published'] : ($user?->canPostIn('articles') ? ['published', 'mine', 'archived'] : ['published', 'archived']));
         // SECURITY: Pending totals are queried only for review-capable accounts and never reach public or student views.
-        $pendingCount = $user?->canReview() ? Article::pending()->count() : null;
+        $pendingCount = $isEditorial && $user?->canReview() ? Article::pending()->count() : null;
         $tab = $request->query('tab', 'published');
 
         // SECURITY: Unknown or role-hidden tabs fall back to Published before building the query.
@@ -97,7 +98,9 @@ class ArticleController extends Controller
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['article'])->update(['read_at' => now()]);
 
-        return view('articles.index', compact('articles', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'pendingCount'));
+        $view = $request->routeIs('editorial.articles.index') ? 'workspace.posts.articles.index' : 'articles.index';
+
+        return view($view, compact('articles', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'pendingCount'));
     }
 
     /**

@@ -15,9 +15,11 @@
         @method('PATCH')
     @endif
 
+    <p class="post-form-requirements"><span class="post-form-required-mark" aria-hidden="true">*</span> Fields marked with an asterisk are required.</p>
+
     {{-- Keep each label, field, and error together for quick form scanning. --}}
     <div class="dashboard-form-field">
-        <label for="document-title">Title</label>
+        <label for="document-title">Title <span class="post-form-required-mark" aria-hidden="true">*</span></label>
         <input id="document-title" name="title" maxlength="200" required value="{{ old('title', $document?->title) }}">
         @error('title') <span class="profile-field-error">{{ $message }}</span> @enderror
     </div>
@@ -41,7 +43,7 @@
 
     {{-- SECURITY: The server checks the real MIME and %PDF header, then stores a generated filename privately. --}}
     <div class="dashboard-form-field">
-        <label for="document-file">{{ $document ? 'Replace PDF (optional)' : 'PDF file' }}</label>
+        <label for="document-file">{{ $document ? 'Replace PDF (optional)' : 'PDF file' }}@unless ($document) <span class="post-form-required-mark" aria-hidden="true">*</span>@endunless</label>
         <input id="document-file" name="file" type="file" accept=".pdf,application/pdf" @required(! $document)>
         <span class="profile-field-help">PDF only; maximum {{ config('school.max_pdf_size_kb', 10240) }} KB.</span>
         <span id="document-file-info" class="profile-field-help"></span>

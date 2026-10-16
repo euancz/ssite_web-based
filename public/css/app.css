@@ -2059,6 +2059,21 @@ ol {
     font-weight: 600;
 }
 
+.post-form-requirements {
+    margin: 0 0 18px;
+    padding: 10px 12px;
+    border: 1px solid #c8e8f5;
+    border-radius: 8px;
+    background: #f2faff;
+    color: var(--ssite-navy);
+    font-size: 13px;
+}
+
+.post-form-required-mark {
+    color: #b42318;
+    font-weight: 700;
+}
+
 .dashboard-form-field input,
 .dashboard-form-field select,
 .dashboard-role-form select,
