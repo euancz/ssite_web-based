@@ -21,6 +21,7 @@ class StoreProfileRequest extends ProfileRequest
     public function rules(): array
     {
         return [
+            'name' => ['prohibited'],
             'student_number' => $this->studentNumberRules(true),
             ...$this->commonProfileRules(),
         ];

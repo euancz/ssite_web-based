@@ -4,14 +4,14 @@
 @endphp
 
 <section class="profile-form-section">
-    {{-- Name remains editable, Microsoft email stays display-only, and gender uses school-configured choices. --}}
+    {{-- Microsoft-managed identity fields are read-only; gender uses school-configured choices. --}}
     <h2>Personal</h2>
     <div class="profile-form-grid">
         <div class="dashboard-form-field">
             <label for="profile-name">Name</label>
-            <input id="profile-name" type="text" name="name" value="{{ old('name', $user->name) }}"
-                   maxlength="100" autocomplete="name" required>
-            @error('name') <span class="profile-field-error">{{ $message }}</span> @enderror
+            <input id="profile-name" type="text" value="{{ $user->name }}"
+                   autocomplete="name" aria-describedby="profile-name-help" disabled>
+            <span id="profile-name-help" class="profile-field-help">Your name is managed by Microsoft.</span>
         </div>
         <div class="dashboard-form-field">
             <label for="profile-email">Email</label>
@@ -37,14 +37,14 @@
     <div class="profile-form-grid">
         <div class="dashboard-form-field">
             <label for="profile-student-number">Student number</label>
-            {{-- SECURITY: Only adviser edits enable student-number submission; the request also rejects student changes. --}}
+            {{-- SECURITY: Student-number changes are validated as unique and school-formatted by the request. --}}
             @if ($allowStudentNumber)
                 <input id="profile-student-number" type="text" name="student_number"
                        value="{{ old('student_number', $user->student_number) }}" maxlength="20" required>
             @else
                 <input id="profile-student-number" type="text"
                        value="{{ old('student_number', $user->student_number) }}" disabled>
-                <span class="profile-field-help">Only an adviser can change your student number.</span>
+                <span class="profile-field-help">Your student number can be updated here.</span>
             @endif
             @error('student_number') <span class="profile-field-error">{{ $message }}</span> @enderror
         </div>

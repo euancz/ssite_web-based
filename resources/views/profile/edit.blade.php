@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="dashboard-page profile-page">
-    <x-ui.page-header title="My Profile" subtitle="Update your student information." />
+    <x-ui.page-header title="My Profile" subtitle="Manage your personal, academic, and contact information." />
 
     {{-- Show a confirmation after the signed-in user saves profile edits. --}}
     @if (session('status'))
@@ -18,16 +18,22 @@
         </div>
     @endif
 
-    @include('profile.partials.picture', ['user' => $user])
+    <div class="profile-layout">
+        @include('profile.partials.picture', ['user' => $user])
 
-    <form method="POST" action="{{ route('profile.update') }}" class="dashboard-panel profile-form">
-        {{-- SECURITY: The request is scoped to the authenticated user; role and email are not submitted. --}}
-        @csrf
-        @method('PUT')
-        @include('profile.partials.fields', ['allowStudentNumber' => $user->isAdviser() || $user->isSuperadmin()])
-        <div class="profile-form-actions">
-            <button type="submit" class="dashboard-button">Save changes</button>
-        </div>
-    </form>
+        <form method="POST" action="{{ route('profile.update') }}" class="dashboard-panel profile-form">
+            {{-- SECURITY: The request is scoped to the authenticated user; role and email are not submitted. --}}
+            @csrf
+            @method('PUT')
+            <div class="profile-form-intro">
+                <h2>Account details</h2>
+                <p>Changes are saved to your SSITE account.</p>
+            </div>
+            @include('profile.partials.fields', ['allowStudentNumber' => true])
+            <div class="profile-form-actions">
+                <button type="submit" class="dashboard-button">Save changes</button>
+            </div>
+        </form>
+    </div>
 </div>
 @endsection

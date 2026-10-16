@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Profile;
 
 /**
- * Validates later profile edits while reserving student-number changes for advisers.
+ * Validates later profile edits while keeping Microsoft-managed identity fields read-only.
  */
 class UpdateProfileRequest extends ProfileRequest
 {
@@ -16,14 +16,13 @@ class UpdateProfileRequest extends ProfileRequest
     }
 
     /**
-     * Keep students from changing student numbers while allowing advisers to correct them.
+     * Allow users to update their own student number while rejecting submitted Microsoft identity changes.
      */
     public function rules(): array
     {
         return [
-            'student_number' => ($this->user()->isAdviser() || $this->user()->isSuperadmin())
-                ? $this->studentNumberRules(false)
-                : ['prohibited'],
+            'name' => ['prohibited'],
+            'student_number' => $this->studentNumberRules(false),
             ...$this->commonProfileRules(),
         ];
     }

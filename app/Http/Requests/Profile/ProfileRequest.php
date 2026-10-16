@@ -22,7 +22,6 @@ abstract class ProfileRequest extends FormRequest
             : config('school.programs', []);
 
         return [
-            'name' => ['required', 'string', 'max:100'],
             'institute' => ['required', 'string', Rule::in(config('school.institutes', []))],
             'program' => ['required', 'string', Rule::in($programs)],
             'year_level' => ['required', 'string', Rule::in(config('school.year_levels', []))],
@@ -55,8 +54,8 @@ abstract class ProfileRequest extends FormRequest
             'student_number.required' => 'Enter your student number.',
             'student_number.unique' => 'That student number is already registered.',
             'student_number.regex' => 'Enter a student number in the school-approved format.',
-            'student_number.prohibited' => 'Only an adviser can change your student number.',
-            'name.required' => 'Enter your name.',
+            'student_number.prohibited' => 'Your student number cannot be changed here.',
+            'name.prohibited' => 'Your name is managed by Microsoft.',
             'institute.required' => 'Select your institute.',
             'institute.in' => 'Select an institute from the available options.',
             'program.required' => 'Select your program.',
