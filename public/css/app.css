@@ -2725,6 +2725,7 @@ ol {
     width: min(420px, calc(100vw - 24px));
     max-height: min(65vh, 520px);
     overflow-y: auto;
+    overscroll-behavior: contain;
     border: 1px solid #cfe6ee;
     border-radius: 4px;
     background: #effaff;

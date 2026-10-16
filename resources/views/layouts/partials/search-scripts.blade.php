@@ -150,7 +150,6 @@
                 input.closest('form')?.addEventListener('submit', (event) => {
                     event.preventDefault();
                     fetchSuggestions(input, true);
-                    input.focus();
                 });
                 input.addEventListener('keydown', (event) => {
                     const shell = input.closest('.search-shell');
@@ -172,7 +171,13 @@
                     const active = options[activeIndex];
                     if (active) {
                         input.setAttribute('aria-activedescendant', active.id);
-                        active.scrollIntoView({ block: 'nearest' });
+                        const optionBounds = active.getBoundingClientRect();
+                        const listBounds = list.getBoundingClientRect();
+                        if (optionBounds.top < listBounds.top) {
+                            list.scrollTop -= listBounds.top - optionBounds.top;
+                        } else if (optionBounds.bottom > listBounds.bottom) {
+                            list.scrollTop += optionBounds.bottom - listBounds.bottom;
+                        }
                     } else input.removeAttribute('aria-activedescendant');
                 });
             });
