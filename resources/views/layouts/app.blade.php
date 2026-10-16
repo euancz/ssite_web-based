@@ -247,7 +247,6 @@
                         aria-label="Open menu"
                         aria-expanded="false"
                         aria-controls="mobile-nav"
-                        onclick="document.getElementById('mobile-nav').classList.toggle('hidden'); document.getElementById('icon-open').classList.toggle('hidden'); document.getElementById('icon-close').classList.toggle('hidden');"
                         class="icon-button mobile-menu-toggle">
                     <svg id="icon-open" class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
@@ -281,6 +280,48 @@
     {{-- The nav stays in normal page flow so it scrolls away while the site header remains sticky. --}}
     @include('layouts.partials.navigation')
     @endif
+
+    <script>
+        (() => {
+            const menuToggle = document.querySelector('.mobile-menu-toggle');
+            const mobileNav = document.getElementById('mobile-nav');
+            const openIcon = document.getElementById('icon-open');
+            const closeIcon = document.getElementById('icon-close');
+
+            if (!menuToggle || !mobileNav || !openIcon || !closeIcon) return;
+
+            const setMenuOpen = (open) => {
+                menuToggle.setAttribute('aria-expanded', String(open));
+                menuToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+                mobileNav.classList.toggle('hidden', !open);
+                openIcon.classList.toggle('hidden', open);
+                closeIcon.classList.toggle('hidden', !open);
+            };
+
+            menuToggle.addEventListener('click', () => {
+                setMenuOpen(menuToggle.getAttribute('aria-expanded') !== 'true');
+            });
+
+            document.addEventListener('click', (event) => {
+                if (mobileNav.classList.contains('hidden')
+                    || menuToggle.contains(event.target)
+                    || mobileNav.contains(event.target)) return;
+
+                setMenuOpen(false);
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key !== 'Escape' || mobileNav.classList.contains('hidden')) return;
+
+                setMenuOpen(false);
+                menuToggle.focus();
+            });
+
+            window.matchMedia('(min-width: 768px)').addEventListener('change', (event) => {
+                if (event.matches) setMenuOpen(false);
+            });
+        })();
+    </script>
 
     {{-- Keep anchor offsets matched to the rendered header and add its shadow only after scrolling. --}}
     <script>

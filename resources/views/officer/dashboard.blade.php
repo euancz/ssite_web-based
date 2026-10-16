@@ -6,11 +6,6 @@
 <div class="dashboard-page">
     @if (auth()->user()->canReview())
         <x-ui.page-header title="Welcome, {{ auth()->user()->name }}" subtitle="Review pending SSITE submissions across all modules." />
-        <section class="dashboard-stat-grid" aria-label="Pending review counts">
-            @foreach ($pendingByModule as $module)
-                <x-ui.stat-card :label="$module['label']" :value="$module['count']" :href="route('adviser.reviews.index', ['status' => 'pending'])" />
-            @endforeach
-        </section>
         <section class="dashboard-panel" aria-labelledby="president-needs-review-heading">
             <div class="dashboard-section-heading"><div><h2 id="president-needs-review-heading">Needs review</h2><p>Latest pending submissions across all modules.</p></div>
                 <a href="{{ route('adviser.reviews.index', ['status' => 'pending']) }}" class="dashboard-text-button">Review Posts</a>
@@ -23,8 +18,23 @@
                 <p class="dashboard-empty-state">No posts need review right now.</p>
             @endforelse
         </section>
+        <section class="dashboard-stat-grid" aria-label="Pending review counts">
+            @foreach ($pendingByModule as $module)
+                <x-ui.stat-card :label="$module['label']" :value="$module['count']" :href="route('adviser.reviews.index', ['status' => 'pending'])" />
+            @endforeach
+        </section>
     @else
         <x-ui.page-header title="Welcome, {{ auth()->user()->name }}" subtitle="Your position dashboard shows only your submissions." />
+        <section class="dashboard-panel" aria-labelledby="officer-attention-heading">
+            <div class="dashboard-section-heading"><h2 id="officer-attention-heading">Needs attention</h2></div>
+            @forelse ($rejectedPosts as $post)
+                <article class="dashboard-review-item"><div><h3>{{ $post->title }}</h3><p>Rejected · {{ $post->type }}</p>@if ($post->rejection_reason)<p class="dashboard-rejection-reason">Rejection reason: {{ $post->rejection_reason }}</p>@endif</div>
+                    <a class="dashboard-text-button" href="{{ $post->preview_url }}">View</a>
+                </article>
+            @empty
+                <p class="dashboard-empty-state">No rejected posts need your attention.</p>
+            @endforelse
+        </section>
         <section class="dashboard-stat-grid" aria-label="My post statistics">
             @foreach ($moduleStats as $module)
                 <x-ui.stat-card :label="$module['label'] . ' · My posts'" :value="$module['total']" :href="route($module['index'], ['tab' => 'mine'])" />
@@ -39,16 +49,6 @@
                     @endforeach
                 </tbody></table>
             </x-ui.data-table>
-        </section>
-        <section class="dashboard-panel" aria-labelledby="officer-attention-heading">
-            <div class="dashboard-section-heading"><h2 id="officer-attention-heading">Needs attention</h2></div>
-            @forelse ($rejectedPosts as $post)
-                <article class="dashboard-review-item"><div><h3>{{ $post->title }}</h3><p>Rejected · {{ $post->type }}</p>@if ($post->rejection_reason)<p class="dashboard-rejection-reason">Rejection reason: {{ $post->rejection_reason }}</p>@endif</div>
-                    <a class="dashboard-text-button" href="{{ $post->preview_url }}">View</a>
-                </article>
-            @empty
-                <p class="dashboard-empty-state">No rejected posts need your attention.</p>
-            @endforelse
         </section>
         <section class="dashboard-panel" aria-labelledby="recent-posts-heading">
             <div class="dashboard-section-heading"><div><h2 id="recent-posts-heading">My recent posts</h2></div></div>

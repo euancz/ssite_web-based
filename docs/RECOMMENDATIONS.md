@@ -218,7 +218,7 @@ No high-impact performance defect was verified at the stated scale. Public feeds
 ## Suggested sequence
 
 1. **Phase 1 — Stabilize and secure:** R-01 and R-02 first; resolve R-03 and establish a safe test database for R-04 before any tests or schema work. R-05 follows once the host is chosen. No SQL is required for R-01/R-02; R-03 needs an owner-provided schema-only export; R-04 needs an isolated test database.
-2. **Phase 2 — Polish and UX:** R-06, R-07, and R-10. R-10 is a verification pass; fix only separately approved, reproducible issues. R-07 needs a date-boundary check but no SQL.
+2. **Phase 2 - Polish and UX:** R-06 and R-07. R-10 was skipped at the owner's direction.
 3. **Phase 3 - Growth and handover:** R-08 and R-09 were skipped at the owner's direction.
 
 ## Approval table

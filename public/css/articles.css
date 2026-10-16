@@ -1,9 +1,4 @@
-/* Article-specific feed rules stay separate while the shared card owns common anatomy. */
-.post-feed-articles .post-card-body-full {
-    max-width: 72ch;
-    white-space: pre-line;
-}
-
+/* Article imagery keeps its established wide, landscape frame. */
 .post-feed-articles .post-card-media {
     aspect-ratio: 16 / 9;
 }

@@ -7,6 +7,7 @@
 }
 
 .post-feed-shell {
+    --post-feed-reading-width: 68ch;
     width: min(calc(100% - var(--layout-page-gutter) - var(--layout-page-gutter)), var(--post-feed-width));
     margin: var(--layout-page-top) auto var(--layout-page-bottom);
     color: var(--ssite-navy);
@@ -247,6 +248,11 @@
     color: var(--ssite-navy-soft);
     line-height: 1.55;
     overflow-wrap: anywhere;
+}
+
+.post-card-body-full {
+    max-width: var(--post-feed-reading-width);
+    white-space: pre-line;
 }
 
 .post-card-body [data-post-excerpt] {

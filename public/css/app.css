@@ -25,6 +25,45 @@
     --hover-scale: 1.07;
     --hover-lift: -3px;
     --hover-card-shadow: 0 8px 20px rgb(23 50 77 / 12%);
+
+    /* Semantic aliases expose existing roles and values without changing the incumbent look. */
+    --color-brand-bar: var(--ssite-blue);
+    --color-brand-surface: var(--ssite-blue-light);
+    --color-text-primary: var(--ssite-navy);
+    --color-text-secondary: var(--ssite-navy-soft);
+    --color-accent-rule: var(--ssite-line);
+    --color-status-danger: var(--ssite-danger);
+    --color-status-danger-surface: var(--ssite-error-surface);
+    --color-focus: var(--ssite-navy);
+    --font-family-body: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+    --type-body: 1rem;
+    --type-meta: 0.875rem;
+    --type-caption: 0.8rem;
+    --type-page-heading: clamp(1.7rem, 3vw, 2.35rem);
+    --space-page-gutter: var(--layout-page-gutter);
+    --space-page-top: var(--layout-page-top);
+    --space-page-bottom: var(--layout-page-bottom);
+    --space-1: var(--layout-space-1);
+    --space-2: var(--layout-space-2);
+    --space-3: var(--layout-space-3);
+    --space-4: var(--layout-space-4);
+    --space-5: var(--layout-space-5);
+    --space-6: var(--layout-space-6);
+    --radius-post-card: 14px;
+    --radius-control: 4px;
+    --radius-pill: 999px;
+    --shadow-post-card-offset: 4px 4px 0 rgb(23 50 77 / 14%);
+    --shadow-card-hover: var(--hover-card-shadow);
+    --motion-header: 160ms;
+    --motion-card: var(--hover-card-duration);
+    --motion-image: var(--hover-duration);
+    --motion-easing: var(--hover-easing);
+    --layer-dropdown: 30;
+    --layer-header: 40;
+    --layer-floating: 50;
+    --layer-search: 70;
+    --layer-notification: 80;
+    --layer-loading: 1000;
 }
 
 html {
@@ -35,7 +74,7 @@ html {
 *::before,
 *::after {
     box-sizing: border-box;
-    font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-family-body);
 }
 
 body.site-body {
@@ -635,11 +674,13 @@ ol {
 }
 
 .mobile-nav-item {
-    padding: 12px 0;
+    padding: 0;
 }
 
 .mobile-nav-link {
-    display: block;
+    display: flex;
+    min-height: 44px;
+    align-items: center;
     color: inherit;
     text-decoration: none;
 }
@@ -669,7 +710,8 @@ ol {
 
 .mobile-nav-summary {
     justify-content: space-between;
-    padding: 8px 0;
+    min-height: 44px;
+    padding: 10px 0;
     cursor: pointer;
     list-style: none;
 }
@@ -688,8 +730,10 @@ ol {
 }
 
 .mobile-nav-sublink {
-    display: block;
-    padding: 6px 0;
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    padding: 10px 0;
     font-size: 14px;
     text-decoration: none;
 }
@@ -1576,8 +1620,46 @@ ol {
 }
 
 .dashboard-table-scroll {
+    max-width: 100%;
     width: 100%;
     overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-color: #3e5972 #e7f1f5;
+    scrollbar-width: thin;
+}
+
+.dashboard-table-scroll:focus-visible {
+    outline: 3px solid var(--ssite-navy);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+.dashboard-table-scroll::-webkit-scrollbar {
+    height: 10px;
+}
+
+.dashboard-table-scroll::-webkit-scrollbar-track {
+    border-radius: 5px;
+    background: #e7f1f5;
+}
+
+.dashboard-table-scroll::-webkit-scrollbar-thumb {
+    border: 2px solid #e7f1f5;
+    border-radius: 5px;
+    background: #3e5972;
+}
+
+.dashboard-table-scroll-hint {
+    display: none;
+}
+
+@media (max-width: 720px) {
+    .dashboard-table-scroll-hint {
+        display: block;
+        margin: 8px 0 0;
+        color: var(--ssite-navy-soft);
+        font-size: 0.78rem;
+    }
 }
 
 .dashboard-table {
@@ -2290,6 +2372,63 @@ ol {
     .officers-manager-table td:nth-child(1),
     .officers-manager-table th:nth-child(4),
     .officers-manager-table td:nth-child(4) { display: none; }
+}
+
+@media (max-width: 639px) {
+    .dashboard-table {
+        min-width: 40rem;
+    }
+
+    .dashboard-table th,
+    .dashboard-table td {
+        padding: 10px;
+    }
+
+    .dashboard-table th:first-child,
+    .dashboard-table td:first-child {
+        position: sticky;
+        left: 0;
+        width: 12rem;
+        max-width: 12rem;
+        overflow-wrap: anywhere;
+        white-space: normal;
+    }
+
+    .dashboard-table th:first-child {
+        z-index: 2;
+        background: #effaff;
+    }
+
+    .dashboard-table td:first-child {
+        z-index: 1;
+        background: #fff;
+        box-shadow: 3px 0 6px rgb(23 50 77 / 10%);
+        color: var(--ssite-navy);
+        font-weight: 600;
+    }
+
+}
+
+@media (max-width: 639px) {
+    .officers-manager-table th:nth-child(2),
+    .officers-manager-table td:nth-child(2) {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        background: #fff;
+        box-shadow: 3px 0 6px rgb(23 50 77 / 10%);
+        color: var(--ssite-navy);
+        font-weight: 600;
+        width: 12rem;
+        max-width: 12rem;
+        overflow-wrap: anywhere;
+        white-space: normal;
+    }
+
+    .officers-manager-table th:nth-child(2) {
+        z-index: 2;
+        background: #effaff;
+    }
 }
 
 .status-badge-archived {

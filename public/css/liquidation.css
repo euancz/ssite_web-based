@@ -44,7 +44,7 @@
 .liquidation-detail-facts dd { margin: 0; color: var(--ssite-navy); font-size: 1rem; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .liquidation-detail-description { padding: 22px 26px; }
 .liquidation-detail-description h2 { margin: 0 0 8px; color: var(--ssite-navy); font-size: .95rem; }
-.liquidation-detail-description p { max-width: 72ch; margin: 0; color: var(--ssite-navy-soft); line-height: 1.65; white-space: pre-line; }
+.liquidation-detail-description p { max-width: var(--post-feed-reading-width); margin: 0; color: var(--ssite-navy-soft); line-height: 1.65; overflow-wrap: anywhere; white-space: pre-line; }
 .liquidation-detail-file { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; margin: 0 26px 22px; border: 1px solid #d5e2e8; border-radius: 9px; padding: 14px; background: #f7fafb; }
 .liquidation-detail-file > div:first-child { display: grid; gap: 4px; min-width: 0; }
 .liquidation-detail-file strong { color: var(--ssite-navy); overflow-wrap: anywhere; }
