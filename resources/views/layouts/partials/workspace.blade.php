@@ -70,23 +70,11 @@
                                 $isLibraryActive = $isLibraryRoute && request('tab', 'published') === $libraryTab;
                             @endphp
                             @if ($libraryRoute)
-                                <div class="workspace-library-button {{ $isLibraryActive ? 'is-active' : '' }}">
-                                    <a class="workspace-nav-link workspace-library-link" href="{{ route($libraryRoute, ['tab' => $libraryTab]) }}"
-                                       aria-label="{{ $libraryLabel }}" data-tooltip="{{ $libraryLabel }}"
-                                       @if ($isLibraryActive) aria-current="page" @endif>
-                                        <x-workspace.icon :name="$libraryIcon" /><span>{{ $libraryLabel }}</span>
-                                    </a>
-                                    <label class="workspace-library-type">
-                                        <span class="visually-hidden">{{ $libraryLabel }} type</span>
-                                        <select aria-label="{{ $libraryLabel }} type" data-library-type>
-                                            @foreach ($availableModules as $moduleKey => $module)
-                                                <option value="{{ route($module['workspace'], ['tab' => $libraryTab]) }}" @selected($activeModule === $moduleKey)>
-                                                    {{ $module['label'] }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </label>
-                                </div>
+                                <a class="workspace-nav-link workspace-library-link {{ $isLibraryActive ? 'is-active' : '' }}" href="{{ route($libraryRoute, ['tab' => $libraryTab]) }}"
+                                   aria-label="{{ $libraryLabel }}" data-tooltip="{{ $libraryLabel }}"
+                                   @if ($isLibraryActive) aria-current="page" @endif>
+                                    <x-workspace.icon :name="$libraryIcon" /><span>{{ $libraryLabel }}</span>
+                                </a>
                             @endif
                         @endforeach
                     </div>
@@ -282,11 +270,6 @@
                 }
             });
             phone.addEventListener('change', syncViewport);
-            sidebar.querySelectorAll('[data-library-type]').forEach((selector) => {
-                selector.addEventListener('change', () => {
-                    if (selector.value) window.location.assign(selector.value);
-                });
-            });
         })();
     </script>
 @else

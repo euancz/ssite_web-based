@@ -16,6 +16,15 @@
     'filterDefault' => null,
 ])
 
+@php
+    $filterUser = auth()->user();
+    $filterModules = collect(config('workspace.modules'))
+        ->filter(fn ($module, $key) => $filterUser
+            && ($filterUser->canReview()
+                || ($module['capability'] === 'canPostIn:' . $key && $filterUser->canPostIn($key))));
+    $filterModuleKey = $filterModules->search(fn ($module) => in_array($routeName, [$module['workspace'], $module['editorial']], true));
+@endphp
+
 {{-- Keep one centered feed frame while each page supplies its existing role-filtered content. --}}
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/post-feed.css') }}">
@@ -41,6 +50,19 @@
                     :active-tab="$activeTab"
                     :pending-count="$pendingCount"
                 />
+                @if (in_array($activeTab, ['published', 'archived'], true) && $filterModules->count() > 1 && $filterModuleKey !== false)
+                    <label class="post-feed-module-filter">
+                        <span>Content type</span>
+                        <select aria-label="Filter by content type" data-post-feed-module-filter>
+                            @foreach ($filterModules as $moduleKey => $module)
+                                @php($moduleRoute = $routeName === $module['editorial'] ? $module['editorial'] : $module['workspace'])
+                                <option value="{{ route($moduleRoute, ['tab' => $activeTab]) }}" @selected($filterModuleKey === $moduleKey)>
+                                    {{ $module['label'] }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </label>
+                @endif
                 <x-workspace.posts.sort-row
                     :action="route($routeName)"
                     :route-name="$routeName"
@@ -93,3 +115,16 @@
         <div data-feed-content>{{ $slot }}</div>
     </div>
 </div>
+
+@once
+    @push('scripts')
+        <script>
+            document.addEventListener('change', (event) => {
+                const selector = event.target instanceof Element
+                    ? event.target.closest('[data-post-feed-module-filter]')
+                    : null;
+                if (selector?.value) window.location.assign(selector.value);
+            });
+        </script>
+    @endpush
+@endonce

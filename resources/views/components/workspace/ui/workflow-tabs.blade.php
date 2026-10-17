@@ -5,24 +5,19 @@
     $labels = ['published' => 'Published', 'pending' => 'Pending Review', 'rejected' => 'Rejected', 'archived' => 'Archived', 'all' => 'All'];
     $isAdviser = in_array('pending', $allowedTabs, true);
     $isWorkspaceUser = auth()->user()?->canPost() || auth()->user()?->canReview();
-    $inlineTabs = array_values(array_filter($allowedTabs, fn ($tab) => in_array($tab, $isAdviser ? ['published', 'archived', 'pending'] : ['published', 'archived'], true)));
+    $inlineTabs = array_values(array_filter($allowedTabs, fn ($tab) => in_array($tab, $isWorkspaceUser
+        ? ($isAdviser ? ['pending'] : [])
+        : ($isAdviser ? ['published', 'archived', 'pending'] : ['published', 'archived']), true)));
     $moreTabs = array_values(array_filter($allowedTabs, fn ($tab) => in_array($tab, $isAdviser ? ['rejected'] : [], true)));
     $selectedMoreTab = in_array($activeTab, $moreTabs, true) ? $labels[$activeTab] : null;
 @endphp
+@if ($inlineTabs || $moreTabs)
 <nav class="dashboard-tabs" aria-label="Filter posts">
     @foreach ($inlineTabs as $tab)
         <a href="{{ route($routeName, ['tab' => $tab]) }}"
            @class(['dashboard-tab', 'is-active' => $activeTab === $tab])
            @if ($activeTab === $tab) aria-current="page" @endif>
-            @if ($isWorkspaceUser && $tab === 'published')
-                <svg class="dashboard-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 12a8 8 0 0 1 13.7-5.7L20 9M20 4v5h-5M20 12a8 8 0 0 1-13.7 5.7L4 15m0 5v-5h5"/></svg>
-                Published posts
-            @elseif ($isWorkspaceUser && $tab === 'archived')
-                <svg class="dashboard-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16v13H4zM3 4h18v3H3zM9 11h6"/></svg>
-                Archived posts
-            @else
-                {{ $labels[$tab] }}
-            @endif
+            {{ $labels[$tab] }}
             @if ($tab === 'pending' && $pendingCount !== null)<span class="dashboard-tab-count">{{ $pendingCount }}</span>@endif
         </a>
     @endforeach
@@ -44,6 +39,7 @@
         </details>
     @endif
 </nav>
+@endif
 
 @once
     @push('scripts')
