@@ -104,7 +104,9 @@ class AchievementController extends Controller
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['achievement'])->update(['read_at' => now()]);
 
-        $view = $request->routeIs('editorial.achievements.index') ? 'workspace.posts.achievements.index' : 'achievements.index';
+        // Use the management feed only after the role's tab allowlist has accepted the requested tab.
+        $workspaceList = $isEditorial || ($user && $user->canPostIn('achievements') && $tab !== 'published');
+        $view = $workspaceList ? 'workspace.posts.achievements.index' : 'achievements.index';
 
         return view($view, compact('achievements', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'category', 'categoryOptions', 'pendingCount'));
     }

@@ -14,13 +14,30 @@
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     @php
         $workspaceUser = auth()->user();
-        $workspaceRole = $workspaceUser && $workspaceUser->isPresident();
+        $workspaceRole = $workspaceUser && (
+            $workspaceUser->canPost()
+            || $workspaceUser->canReview()
+            || $workspaceUser->can('manage-users')
+            || $workspaceUser->can('manage-officers')
+        );
         $workspaceRoute = request()->routeIs(
             'officer.*', 'adviser.*', 'editorial.*',
+            'notifications.index', 'profile.edit',
             'articles.create', 'articles.edit', 'activities.create', 'activities.edit',
             'achievements.create', 'achievements.edit', 'documents.create', 'documents.edit',
             'liquidations.create', 'liquidations.edit'
-        );
+        ) || ($workspaceUser?->canReview() && request()->routeIs(
+            'articles.show', 'activities.show', 'achievements.show', 'documents.show', 'liquidations.show'
+        )) || (request()->routeIs('articles.index', 'activities.index', 'achievements.index', 'documents.index', 'liquidations.index')
+            && isset($tab) && is_string($tab) && $tab !== 'published'
+            && (
+                $workspaceUser?->canReview()
+                || (request()->routeIs('articles.index') && $workspaceUser?->canPostIn('articles'))
+                || (request()->routeIs('activities.index') && $workspaceUser?->canPostIn('activities'))
+                || (request()->routeIs('achievements.index') && $workspaceUser?->canPostIn('achievements'))
+                || (request()->routeIs('documents.index') && $workspaceUser?->canPostIn('documents'))
+                || (request()->routeIs('liquidations.index') && $workspaceUser?->canPostIn('liquidations'))
+            ));
         $workspaceEnabled = $workspaceRole && $workspaceRoute;
     @endphp
     @if ($workspaceEnabled)
@@ -233,19 +250,7 @@
                             </button>
                             @if (auth()->user()->canPost() || auth()->user()->can('review-posts') || auth()->user()->can('manage-users') || auth()->user()->can('manage-officers'))
                                 <div class="account-menu-divider" role="separator"></div>
-                                <p class="account-menu-section-label" role="presentation">Manage</p>
-                                @if (auth()->user()->canPost() || auth()->user()->isAdviser() || auth()->user()->isSuperadmin())
-                                    <a href="{{ route(auth()->user()->dashboardRoute()) }}" class="account-menu-action" role="menuitem">Dashboard</a>
-                                @endif
-                                @can('review-posts')
-                                    <a href="{{ route('adviser.reviews.index') }}" class="account-menu-action" role="menuitem">Review Posts ({{ $pendingReviewCount }})</a>
-                                @endcan
-                                @can('manage-users')
-                                    <a href="{{ route('adviser.users.index') }}" class="account-menu-action" role="menuitem">{{ auth()->user()->isSuperadmin() ? 'Manage Advisers' : 'Manage Users' }}</a>
-                                @endcan
-                                @can('manage-officers')
-                                    <a href="{{ route('adviser.officers.index') }}" class="account-menu-action" role="menuitem">Manage About Us</a>
-                                @endcan
+                                <a href="{{ route(auth()->user()->dashboardRoute()) }}" class="account-menu-action" role="menuitem">Open workspace</a>
                             @endif
                             {{-- Keep logout last and visually separate for every signed-in role. --}}
                             <div class="account-menu-divider" role="separator"></div>

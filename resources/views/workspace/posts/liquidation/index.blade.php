@@ -8,7 +8,7 @@
     stylesheet="liquidation"
     title="Liquidation"
     description="Browse and manage liquidation reports."
-    route-name="editorial.liquidations.index"
+    :route-name="request()->routeIs('editorial.liquidations.index') ? 'editorial.liquidations.index' : 'liquidations.index'"
     :allowed-tabs="$allowedTabs"
     :active-tab="$tab"
     :pending-count="$pendingCount"
@@ -132,12 +132,12 @@
         @empty
             @if ($sort !== 'recent')
                 <div class="post-feed-empty">
-                    <p>No reports match this sort. <a href="{{ route('editorial.liquidations.index', ['tab' => $tab]) }}">Reset</a></p>
+                    <p>No reports match this sort. <a href="{{ route(request()->routeIs('editorial.liquidations.index') ? 'editorial.liquidations.index' : 'liquidations.index', ['tab' => $tab]) }}">Reset</a></p>
                 </div>
             @elseif ($tab === 'published')
                 <x-workspace.posts.empty-state title="No published reports yet" message="Check back soon for the latest liquidation reports." />
             @elseif (auth()->user()?->canPostIn('liquidations'))
-                <x-workspace.posts.empty-state title="No reports in this tab" message="Use the prompt above to upload a report." />
+                <x-workspace.posts.empty-state title="No reports in this tab" message="Use Create liquidation report in the workspace navigation to start a submission." />
             @else
                 <x-workspace.posts.empty-state title="No reports found" message="Check back later for new reports." />
             @endif

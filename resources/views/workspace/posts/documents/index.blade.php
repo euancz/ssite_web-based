@@ -8,7 +8,7 @@
     stylesheet="documents"
     title="Documents"
     description="Browse and manage SSITE documents."
-    route-name="editorial.documents.index"
+    :route-name="request()->routeIs('editorial.documents.index') ? 'editorial.documents.index' : 'documents.index'"
     :allowed-tabs="$allowedTabs"
     :active-tab="$tab"
     :pending-count="$pendingCount"
@@ -104,12 +104,12 @@
         @empty
             @if ($sort !== 'recent' || $category !== '')
                 <div class="post-feed-empty">
-                    <p>No documents match these settings. <a href="{{ route('editorial.documents.index', ['tab' => $tab]) }}">Reset</a></p>
+                    <p>No documents match these settings. <a href="{{ route(request()->routeIs('editorial.documents.index') ? 'editorial.documents.index' : 'documents.index', ['tab' => $tab]) }}">Reset</a></p>
                 </div>
             @elseif ($tab === 'published')
                 <x-workspace.posts.empty-state title="No published documents yet" message="Check back soon for the latest SSITE documents." />
             @elseif (auth()->user()?->canPostIn('documents'))
-                <x-workspace.posts.empty-state title="No documents in this tab" message="Use the prompt above to upload a document." />
+                <x-workspace.posts.empty-state title="No documents in this tab" message="Use Create document in the workspace navigation to start a submission." />
             @else
                 <x-workspace.posts.empty-state title="No documents found" message="Check back later for new documents." />
             @endif

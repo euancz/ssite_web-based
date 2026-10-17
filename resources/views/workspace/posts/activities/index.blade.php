@@ -8,7 +8,7 @@
     stylesheet="activities"
     title="Activities"
     description="Read and manage SSITE activities."
-    route-name="editorial.activities.index"
+    :route-name="request()->routeIs('editorial.activities.index') ? 'editorial.activities.index' : 'activities.index'"
     :allowed-tabs="$allowedTabs"
     :active-tab="$tab"
     :pending-count="$pendingCount"
@@ -101,12 +101,12 @@
         @empty
             @if ($sort !== 'recent' || $timeframe !== 'all')
                 <div class="post-feed-empty">
-                    <p>No activities match these settings. <a href="{{ route('editorial.activities.index', ['tab' => $tab]) }}">Reset</a></p>
+                    <p>No activities match these settings. <a href="{{ route(request()->routeIs('editorial.activities.index') ? 'editorial.activities.index' : 'activities.index', ['tab' => $tab]) }}">Reset</a></p>
                 </div>
             @elseif ($tab === 'published')
                 <x-workspace.posts.empty-state title="No published activities yet" message="Check back soon for the latest SSITE activities." />
             @elseif (auth()->user()?->canPostIn('activities'))
-                <x-workspace.posts.empty-state title="No activities in this tab" message="Use the prompt above to create an activity." />
+                <x-workspace.posts.empty-state title="No activities in this tab" message="Use Create activity in the workspace navigation to start a submission." />
             @else
                 <x-workspace.posts.empty-state title="No activities found" message="Check back later for new activities." />
             @endif

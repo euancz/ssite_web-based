@@ -43,11 +43,11 @@ class DashboardController extends Controller
         }
 
         $modules = [
-            'articles' => ['label' => 'Articles', 'model' => Article::class, 'index' => 'articles.index', 'create' => 'articles.create', 'show' => 'articles.show'],
-            'activities' => ['label' => 'Activities', 'model' => Activity::class, 'index' => 'activities.index', 'create' => 'activities.create', 'show' => 'activities.show'],
-            'achievements' => ['label' => 'Achievements', 'model' => Achievement::class, 'index' => 'achievements.index', 'create' => 'achievements.create', 'show' => 'achievements.show'],
-            'documents' => ['label' => 'Documents', 'model' => Document::class, 'index' => 'documents.index', 'create' => 'documents.create', 'show' => 'documents.show'],
-            'liquidations' => ['label' => 'Liquidation', 'model' => Liquidation::class, 'index' => 'liquidations.index', 'create' => 'liquidations.create', 'show' => 'liquidations.show'],
+            'articles' => ['label' => 'Articles', 'singular' => 'article', 'icon' => 'file', 'model' => Article::class, 'index' => 'articles.index', 'create' => 'articles.create', 'show' => 'articles.show'],
+            'activities' => ['label' => 'Activities', 'singular' => 'activity', 'icon' => 'calendar', 'model' => Activity::class, 'index' => 'activities.index', 'create' => 'activities.create', 'show' => 'activities.show'],
+            'achievements' => ['label' => 'Achievements', 'singular' => 'achievement', 'icon' => 'award', 'model' => Achievement::class, 'index' => 'achievements.index', 'create' => 'achievements.create', 'show' => 'achievements.show'],
+            'documents' => ['label' => 'Documents', 'singular' => 'document', 'icon' => 'file', 'model' => Document::class, 'index' => 'documents.index', 'create' => 'documents.create', 'show' => 'documents.show'],
+            'liquidations' => ['label' => 'Liquidation', 'singular' => 'liquidation report', 'icon' => 'chart', 'model' => Liquidation::class, 'index' => 'liquidations.index', 'create' => 'liquidations.create', 'show' => 'liquidations.show'],
         ];
         $user = request()->user();
         $pendingByModule = [];

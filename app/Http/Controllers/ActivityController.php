@@ -107,7 +107,9 @@ class ActivityController extends Controller
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['activity'])->update(['read_at' => now()]);
 
-        $view = $request->routeIs('editorial.activities.index') ? 'workspace.posts.activities.index' : 'activities.index';
+        // Use the management feed only after the role's tab allowlist has accepted the requested tab.
+        $workspaceList = $isEditorial || ($user && $user->canPostIn('activities') && $tab !== 'published');
+        $view = $workspaceList ? 'workspace.posts.activities.index' : 'activities.index';
 
         return view($view, compact('activities', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'timeframe', 'timeframeOptions', 'pendingCount'));
     }

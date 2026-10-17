@@ -8,7 +8,7 @@
     stylesheet="achievements"
     title="Achievements"
     description="Read and manage SSITE achievements."
-    route-name="editorial.achievements.index"
+    :route-name="request()->routeIs('editorial.achievements.index') ? 'editorial.achievements.index' : 'achievements.index'"
     :allowed-tabs="$allowedTabs"
     :active-tab="$tab"
     :pending-count="$pendingCount"
@@ -101,12 +101,12 @@
         @empty
             @if ($sort !== 'recent' || $category !== '')
                 <div class="post-feed-empty">
-                    <p>No achievements match these settings. <a href="{{ route('editorial.achievements.index', ['tab' => $tab]) }}">Reset</a></p>
+                    <p>No achievements match these settings. <a href="{{ route(request()->routeIs('editorial.achievements.index') ? 'editorial.achievements.index' : 'achievements.index', ['tab' => $tab]) }}">Reset</a></p>
                 </div>
             @elseif ($tab === 'published')
                 <x-workspace.posts.empty-state title="No published achievements yet" message="Check back soon for the latest SSITE achievements." />
             @elseif (auth()->user()?->canPostIn('achievements'))
-                <x-workspace.posts.empty-state title="No achievements in this tab" message="Use the prompt above to create an achievement." />
+                <x-workspace.posts.empty-state title="No achievements in this tab" message="Use Create achievement in the workspace navigation to start a submission." />
             @else
                 <x-workspace.posts.empty-state title="No achievements found" message="Check back later for new achievements." />
             @endif

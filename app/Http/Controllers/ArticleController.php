@@ -98,7 +98,9 @@ class ArticleController extends Controller
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['article'])->update(['read_at' => now()]);
 
-        $view = $request->routeIs('editorial.articles.index') ? 'workspace.posts.articles.index' : 'articles.index';
+        // Use the management feed only after the role's tab allowlist has accepted the requested tab.
+        $workspaceList = $isEditorial || ($user && $user->canPostIn('articles') && $tab !== 'published');
+        $view = $workspaceList ? 'workspace.posts.articles.index' : 'articles.index';
 
         return view($view, compact('articles', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'pendingCount'));
     }

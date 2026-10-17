@@ -87,7 +87,9 @@ class LiquidationController extends Controller
         // SECURITY: Visiting Liquidation clears only this user's unread publication notices for this tab.
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['liquidation'])->update(['read_at' => now()]);
-        $view = $request->routeIs('editorial.liquidations.index') ? 'workspace.posts.liquidation.index' : 'liquidation.index';
+        // Use the management feed only after the role's tab allowlist has accepted the requested tab.
+        $workspaceList = $isEditorial || ($user && $user->canPostIn('liquidations') && $tab !== 'published');
+        $view = $workspaceList ? 'workspace.posts.liquidation.index' : 'liquidation.index';
 
         return view($view, compact('liquidations', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'pendingCount'));
     }

@@ -90,7 +90,9 @@ class DocumentController extends Controller
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['document'])->update(['read_at' => now()]);
 
-        $view = $request->routeIs('editorial.documents.index') ? 'workspace.posts.documents.index' : 'documents.index';
+        // Use the management feed only after the role's tab allowlist has accepted the requested tab.
+        $workspaceList = $isEditorial || ($user && $user->canPostIn('documents') && $tab !== 'published');
+        $view = $workspaceList ? 'workspace.posts.documents.index' : 'documents.index';
 
         return view($view, compact('documents', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'category', 'categoryOptions', 'pendingCount'));
     }

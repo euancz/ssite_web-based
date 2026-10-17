@@ -3,7 +3,7 @@
 @section('title', 'User Information')
 
 @section('content')
-<div class="dashboard-page">
+<div class="dashboard-page workspace-user-detail">
     <x-ui.page-header title="User Information" subtitle="Read-only account and profile details." />
 
     {{-- Read-only detail view lets advisers inspect a complete account without editing user-submitted fields here. --}}
@@ -29,6 +29,6 @@
         @endforeach
     </section>
 
-    <a href="{{ route('adviser.users.index') }}" class="dashboard-button dashboard-button-secondary">Back to users</a>
+    <a href="{{ route('adviser.users.index') }}" class="dashboard-button dashboard-button-secondary"><x-workspace.icon name="chevron" />Back to users</a>
 </div>
 @endsection

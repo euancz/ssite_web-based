@@ -3,9 +3,9 @@
 @section('title', 'Manage Users')
 
 @section('content')
-<div class="dashboard-page">
+<div class="dashboard-page workspace-user-manager">
     {{-- Adviser and superadmin role assignments use actor-specific server authorization. --}}
-    <x-ui.page-header title="{{ auth()->user()->isSuperadmin() ? 'Manage Advisers' : 'Manage Users' }}" subtitle="View accounts and assign only the roles available to your account." />
+    <x-ui.page-header title="{{ auth()->user()->isSuperadmin() ? 'Manage advisers' : 'Manage users' }}" subtitle="{{ auth()->user()->isSuperadmin() ? 'Assign or revoke adviser access for eligible accounts.' : 'Assign student and officer roles and configured positions.' }}" />
 
     {{-- Report the result of a completed role update without hiding validation errors. --}}
     @if (session('status'))
@@ -25,22 +25,22 @@
     @endif
 
     <section class="dashboard-panel">
-        <form method="GET" action="{{ route('adviser.users.index') }}" class="dashboard-filter-form">
+        <form method="GET" action="{{ route('adviser.users.index') }}" class="dashboard-filter-form workspace-user-filters">
             @csrf
             <div class="dashboard-form-field">
-                <label for="users-search">Search users</label>
+                <label for="users-search">Search accounts</label>
                 <input id="users-search" type="search" name="search" value="{{ request('search') }}"
                        maxlength="100" placeholder="Name, email, student number, institute, program, year">
             </div>
-            <details class="dashboard-extra-filters"><summary>Filters</summary>
-                <div class="dashboard-form-field"><label for="users-role-filter">Filter by role</label>
-                    <select id="users-role-filter" name="role"><option value="">All roles</option>
-                        @foreach ($targetRoles as $role)<option value="{{ $role }}" @selected(request('role') === $role)>{{ ucfirst($role) }}</option>@endforeach
-                    </select>
-                </div>
-            </details>
-            <button type="submit" class="dashboard-button">Search</button>
+            <div class="dashboard-form-field"><label for="users-role-filter">Role</label>
+                <select id="users-role-filter" name="role"><option value="">All eligible roles</option>
+                    @foreach ($targetRoles as $role)<option value="{{ $role }}" @selected(request('role') === $role)>{{ ucfirst($role) }}</option>@endforeach
+                </select>
+            </div>
+            <button type="submit" class="dashboard-button"><x-workspace.icon name="search" />Search</button>
         </form>
+
+        <p class="workspace-user-results">{{ $users->total() }} {{ \Illuminate\Support\Str::plural('account', $users->total()) }} · Showing {{ $users->firstItem() ?? 0 }}–{{ $users->lastItem() ?? 0 }}</p>
 
         <x-ui.data-table label="Users">
             <table class="dashboard-table adviser-users-table">
@@ -75,7 +75,7 @@
                                 @if (auth()->user()->is($user) || $user->isSuperadmin())
                                     <span class="dashboard-muted">{{ auth()->user()->is($user) ? 'Your role is protected' : 'Superadmin role is protected' }}</span>
                                 @else
-                                    <button type="button" class="dashboard-text-button" data-role-dialog-open="role-dialog-{{ $user->user_id }}">Change role</button>
+                                    <button type="button" class="dashboard-text-button workspace-role-change" data-role-dialog-open="role-dialog-{{ $user->user_id }}">Change role</button>
                                     <dialog id="role-dialog-{{ $user->user_id }}" class="reject-modal" aria-labelledby="role-title-{{ $user->user_id }}">
                                         <div class="reject-modal-content"><h2 id="role-title-{{ $user->user_id }}">Change role for {{ $user->name }}</h2>
                                             <form method="POST" action="{{ route('adviser.users.update-role', $user) }}" class="dashboard-role-form">

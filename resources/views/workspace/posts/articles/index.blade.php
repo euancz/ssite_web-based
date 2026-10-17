@@ -8,7 +8,7 @@
     stylesheet="articles"
     title="Articles"
     description="Read and manage SSITE articles."
-    route-name="editorial.articles.index"
+    :route-name="request()->routeIs('editorial.articles.index') ? 'editorial.articles.index' : 'articles.index'"
     :allowed-tabs="$allowedTabs"
     :active-tab="$tab"
     :pending-count="$pendingCount"
@@ -90,12 +90,12 @@
         @empty
             @if ($sort !== 'recent')
                 <div class="post-feed-empty">
-                    <p>No articles match this sort. <a href="{{ route('editorial.articles.index', ['tab' => $tab]) }}">Reset</a></p>
+                    <p>No articles match this sort. <a href="{{ route(request()->routeIs('editorial.articles.index') ? 'editorial.articles.index' : 'articles.index', ['tab' => $tab]) }}">Reset</a></p>
                 </div>
             @elseif ($tab === 'published')
                 <x-workspace.posts.empty-state title="No published articles yet" message="Check back soon for the latest SSITE articles." />
             @elseif (auth()->user()?->canPostIn('articles'))
-                <x-workspace.posts.empty-state title="No articles in this tab" message="Use the prompt above to create an article." />
+                <x-workspace.posts.empty-state title="No articles in this tab" message="Use Create article in the workspace navigation to start a submission." />
             @else
                 <x-workspace.posts.empty-state title="No articles found" message="Check back later for new articles." />
             @endif

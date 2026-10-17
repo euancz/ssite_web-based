@@ -13,6 +13,7 @@
         @case('check') <path d="M20 7 10 17l-5-5"/><circle cx="12" cy="12" r="9"/> @break
         @case('external') <path d="M14 4h6v6M20 4l-9 9"/><path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"/> @break
         @case('plus') <path d="M12 5v14M5 12h14"/> @break
+        @case('search') <circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/> @break
         @case('bell') <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/> @break
         @case('menu') <path d="M4 6h16M4 12h16M4 18h16"/> @break
         @case('chevron') <path d="m9 18 6-6-6-6"/> @break

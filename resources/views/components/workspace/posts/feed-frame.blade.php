@@ -63,6 +63,9 @@
                 :pending-count="$pendingCount"
             />
         @endif
+        @if ($activeTab === 'mine')
+            <p class="workspace-feed-scope-note">Showing submissions created by your account.</p>
+        @endif
     @endif
 
     <p class="dashboard-error post-feed-update-error" role="alert" data-feed-error hidden>
