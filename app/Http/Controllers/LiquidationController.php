@@ -30,9 +30,11 @@ class LiquidationController extends Controller
         $this->authorize('viewAny', Liquidation::class);
         $user = $request->user();
         $isEditorial = $request->routeIs('editorial.liquidations.index');
+        $isWorkspace = $request->routeIs('workspace.posts.liquidations.index');
+        if ($isWorkspace) abort_unless($user && ($user->canReview() || $user->canPostIn('liquidations')), 403);
         $allowedTabs = $isEditorial
             ? ['published', 'pending', 'rejected', 'archived', 'all']
-            : ($user?->isPresident() ? ['published'] : ($user?->canPostIn('liquidations') ? ['published', 'mine', 'archived'] : ['published']));
+            : ($isWorkspace ? ['published', 'archived'] : ($user?->isPresident() ? ['published'] : ($user?->canPostIn('liquidations') ? ['published', 'mine', 'archived'] : ['published', 'archived'])));
         // SECURITY: Pending totals are queried only for review-capable users and never reach public or student views.
         $pendingCount = $isEditorial && $user?->canReview() ? Liquidation::pending()->count() : null;
         $tab = $request->query('tab', 'published');
@@ -43,7 +45,12 @@ class LiquidationController extends Controller
         elseif ($tab === 'mine' && $user) $liquidations->where('created_by_user_id', $user->user_id);
         elseif ($tab === 'archived') {
             $liquidations->archived();
-            if (! $user?->isPresident()) $liquidations->where('created_by_user_id', $user->user_id);
+            if (! $user?->isPresident()) {
+                $liquidations->where(function ($query) use ($user): void {
+                    $query->approved();
+                    if ($user) $query->orWhere('created_by_user_id', $user->user_id);
+                });
+            }
         } elseif ($tab === 'pending') $liquidations->pending();
         elseif ($tab === 'rejected') $liquidations->rejected();
         // SECURITY: Engagement queries are limited to Published and require both the feature flag and schema.
@@ -88,7 +95,7 @@ class LiquidationController extends Controller
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['liquidation'])->update(['read_at' => now()]);
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
-        $workspaceList = $isEditorial || ($user && $user->canPostIn('liquidations') && $tab !== 'published');
+        $workspaceList = $isEditorial || $isWorkspace || ($user && $user->canPostIn('liquidations') && $tab !== 'published');
         $view = $workspaceList ? 'workspace.posts.liquidation.index' : 'liquidation.index';
 
         return view($view, compact('liquidations', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'pendingCount'));

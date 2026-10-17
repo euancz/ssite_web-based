@@ -8,7 +8,7 @@
     stylesheet="articles"
     title="Articles"
     description="Read and manage SSITE articles."
-    :route-name="request()->routeIs('editorial.articles.index') ? 'editorial.articles.index' : 'articles.index'"
+    :route-name="request()->routeIs('workspace.posts.articles.index') ? 'workspace.posts.articles.index' : (request()->routeIs('editorial.articles.index') ? 'editorial.articles.index' : 'articles.index')"
     :allowed-tabs="$allowedTabs"
     :active-tab="$tab"
     :pending-count="$pendingCount"
@@ -90,7 +90,7 @@
         @empty
             @if ($sort !== 'recent')
                 <div class="post-feed-empty">
-                    <p>No articles match this sort. <a href="{{ route(request()->routeIs('editorial.articles.index') ? 'editorial.articles.index' : 'articles.index', ['tab' => $tab]) }}">Reset</a></p>
+                    <p>No articles match this sort. <a href="{{ route(request()->routeIs('workspace.posts.articles.index') ? 'workspace.posts.articles.index' : (request()->routeIs('editorial.articles.index') ? 'editorial.articles.index' : 'articles.index'), ['tab' => $tab]) }}">Reset</a></p>
                 </div>
             @elseif ($tab === 'published')
                 <x-workspace.posts.empty-state title="No published articles yet" message="Check back soon for the latest SSITE articles." />

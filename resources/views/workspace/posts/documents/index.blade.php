@@ -8,7 +8,7 @@
     stylesheet="documents"
     title="Documents"
     description="Browse and manage SSITE documents."
-    :route-name="request()->routeIs('editorial.documents.index') ? 'editorial.documents.index' : 'documents.index'"
+    :route-name="request()->routeIs('workspace.posts.documents.index') ? 'workspace.posts.documents.index' : (request()->routeIs('editorial.documents.index') ? 'editorial.documents.index' : 'documents.index')"
     :allowed-tabs="$allowedTabs"
     :active-tab="$tab"
     :pending-count="$pendingCount"
@@ -104,7 +104,7 @@
         @empty
             @if ($sort !== 'recent' || $category !== '')
                 <div class="post-feed-empty">
-                    <p>No documents match these settings. <a href="{{ route(request()->routeIs('editorial.documents.index') ? 'editorial.documents.index' : 'documents.index', ['tab' => $tab]) }}">Reset</a></p>
+                    <p>No documents match these settings. <a href="{{ route(request()->routeIs('workspace.posts.documents.index') ? 'workspace.posts.documents.index' : (request()->routeIs('editorial.documents.index') ? 'editorial.documents.index' : 'documents.index'), ['tab' => $tab]) }}">Reset</a></p>
                 </div>
             @elseif ($tab === 'published')
                 <x-workspace.posts.empty-state title="No published documents yet" message="Check back soon for the latest SSITE documents." />

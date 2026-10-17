@@ -8,7 +8,7 @@
     stylesheet="liquidation"
     title="Liquidation"
     description="Browse and manage liquidation reports."
-    :route-name="request()->routeIs('editorial.liquidations.index') ? 'editorial.liquidations.index' : 'liquidations.index'"
+    :route-name="request()->routeIs('workspace.posts.liquidations.index') ? 'workspace.posts.liquidations.index' : (request()->routeIs('editorial.liquidations.index') ? 'editorial.liquidations.index' : 'liquidations.index')"
     :allowed-tabs="$allowedTabs"
     :active-tab="$tab"
     :pending-count="$pendingCount"
@@ -132,7 +132,7 @@
         @empty
             @if ($sort !== 'recent')
                 <div class="post-feed-empty">
-                    <p>No reports match this sort. <a href="{{ route(request()->routeIs('editorial.liquidations.index') ? 'editorial.liquidations.index' : 'liquidations.index', ['tab' => $tab]) }}">Reset</a></p>
+                    <p>No reports match this sort. <a href="{{ route(request()->routeIs('workspace.posts.liquidations.index') ? 'workspace.posts.liquidations.index' : (request()->routeIs('editorial.liquidations.index') ? 'editorial.liquidations.index' : 'liquidations.index'), ['tab' => $tab]) }}">Reset</a></p>
                 </div>
             @elseif ($tab === 'published')
                 <x-workspace.posts.empty-state title="No published reports yet" message="Check back soon for the latest liquidation reports." />

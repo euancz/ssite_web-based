@@ -8,7 +8,7 @@
     stylesheet="achievements"
     title="Achievements"
     description="Read and manage SSITE achievements."
-    :route-name="request()->routeIs('editorial.achievements.index') ? 'editorial.achievements.index' : 'achievements.index'"
+    :route-name="request()->routeIs('workspace.posts.achievements.index') ? 'workspace.posts.achievements.index' : (request()->routeIs('editorial.achievements.index') ? 'editorial.achievements.index' : 'achievements.index')"
     :allowed-tabs="$allowedTabs"
     :active-tab="$tab"
     :pending-count="$pendingCount"
@@ -101,7 +101,7 @@
         @empty
             @if ($sort !== 'recent' || $category !== '')
                 <div class="post-feed-empty">
-                    <p>No achievements match these settings. <a href="{{ route(request()->routeIs('editorial.achievements.index') ? 'editorial.achievements.index' : 'achievements.index', ['tab' => $tab]) }}">Reset</a></p>
+                    <p>No achievements match these settings. <a href="{{ route(request()->routeIs('workspace.posts.achievements.index') ? 'workspace.posts.achievements.index' : (request()->routeIs('editorial.achievements.index') ? 'editorial.achievements.index' : 'achievements.index'), ['tab' => $tab]) }}">Reset</a></p>
                 </div>
             @elseif ($tab === 'published')
                 <x-workspace.posts.empty-state title="No published achievements yet" message="Check back soon for the latest SSITE achievements." />

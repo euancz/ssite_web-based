@@ -12,42 +12,20 @@
         <span class="workspace-dashboard-role">{{ auth()->user()->position() ?? 'Officer' }}</span>
     </header>
 
-    <section class="workspace-officer-create" aria-labelledby="workspace-officer-create-title">
-        <div class="workspace-officer-section-heading">
-            <div><h2 id="workspace-officer-create-title">Create content</h2><p>Available for your assigned position.</p></div>
-        </div>
-        <div class="workspace-officer-create-links">
-            @foreach ($moduleStats as $key => $module)
-                <a href="{{ route($module['create']) }}">
-                    <span class="workspace-officer-create-icon"><x-workspace.icon :name="$modules[$key]['icon'] ?? 'file'" /></span>
-                    <span>Create {{ $modules[$key]['singular'] }}</span>
-                    <x-workspace.icon name="chevron" />
-                </a>
-            @endforeach
-        </div>
-    </section>
-
     <section class="workspace-officer-module-status" aria-labelledby="workspace-module-status-title">
         <div class="workspace-officer-section-heading">
             <div><h2 id="workspace-module-status-title">Your content</h2><p>Counts include only submissions created by your account.</p></div>
         </div>
-        <x-ui.data-table label="Your submission totals by content type">
-            <table class="dashboard-table workspace-officer-table workspace-officer-module-table">
-                <thead><tr><th scope="col">Content type</th><th scope="col">Total</th><th scope="col">Pending</th><th scope="col">Approved</th><th scope="col">Rejected</th><th scope="col">Manage</th></tr></thead>
-                <tbody>
-                    @foreach ($moduleStats as $module)
-                        <tr>
-                            <th scope="row">{{ $module['label'] }}</th>
-                            <td>{{ $module['total'] }}</td>
-                            <td>{{ $module['pending'] }}</td>
-                            <td>{{ $module['approved'] }}</td>
-                            <td>{{ $module['rejected'] }}</td>
-                            <td><a class="workspace-officer-manage-link" href="{{ route($module['index'], ['tab' => 'mine']) }}">Submissions <x-workspace.icon name="chevron" /></a></td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </x-ui.data-table>
+        <div class="workspace-metric-grid workspace-officer-metric-grid">
+            @foreach ($moduleStats as $key => $module)
+                <a class="workspace-metric-card workspace-officer-metric-card" href="{{ route($module['index'], ['tab' => 'mine']) }}">
+                    <span class="workspace-metric-icon"><x-workspace.icon :name="$modules[$key]['icon'] ?? 'file'" /></span>
+                    <span class="workspace-metric-label">{{ $module['label'] }}</span>
+                    <strong class="workspace-metric-value">{{ $module['total'] }}</strong>
+                    <small>{{ $module['pending'] }} pending <span aria-hidden="true">·</span> {{ $module['approved'] }} approved <span aria-hidden="true">·</span> {{ $module['rejected'] }} rejected</small>
+                </a>
+            @endforeach
+        </div>
     </section>
 
     <section class="workspace-officer-attention" aria-labelledby="workspace-attention-title">

@@ -12,12 +12,19 @@ class DocumentPolicy
 
     public function view(?User $user, Document $document): bool
     {
-        return ($document->isApproved() && $document->content_status === Document::CONTENT_ACTIVE)
+        // Approved archived records remain publicly readable; their PDF routes retain stricter access below.
+        return ($document->isApproved() && in_array($document->content_status, [Document::CONTENT_ACTIVE, Document::CONTENT_ARCHIVED], true))
             || ($user !== null && ($user->isPresident() || $this->owns($user, $document)));
     }
 
-    public function viewFile(User $user, Document $document): bool { return $this->view($user, $document); }
-    public function download(User $user, Document $document): bool { return $this->view($user, $document); }
+    // SECURITY: Public archived record pages do not grant archived PDF access to ordinary members.
+    public function viewFile(User $user, Document $document): bool
+    {
+        return ($document->isApproved() && $document->content_status === Document::CONTENT_ACTIVE)
+            || $user->isPresident()
+            || $this->owns($user, $document);
+    }
+    public function download(User $user, Document $document): bool { return $this->viewFile($user, $document); }
     public function create(User $user): bool { return $user->canPostIn('documents'); }
     public function update(User $user, Document $document): bool { return $user->isPresident() || ($user->canPostIn('documents') && $this->owns($user, $document)); }
     public function archive(User $user, Document $document): bool { return $this->update($user, $document); }

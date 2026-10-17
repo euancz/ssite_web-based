@@ -18,7 +18,7 @@
         $activeModule = $availableModules->keys()->first();
 
         foreach ($availableModules as $moduleKey => $module) {
-            if (request()->routeIs($moduleKey . '.*', 'editorial.' . $moduleKey . '.*')) {
+            if (request()->routeIs($moduleKey . '.*', 'editorial.' . $moduleKey . '.*', 'workspace.posts.' . $moduleKey . '.index')) {
                 $activeModule = $moduleKey;
                 break;
             }
@@ -33,15 +33,6 @@
                 <img src="{{ asset('images/SSITE LOGO.png') }}" alt="SSITE">
                 <span class="workspace-brand-copy"><strong>{{ $workspaceConfig['brand'] }}</strong></span>
             </a>
-
-            <section class="workspace-signed-in" aria-label="Signed in as">
-                @if ($profileImage)
-                    <img class="workspace-signed-avatar" src="{{ $profileImage }}" alt="">
-                @else
-                    <span class="workspace-signed-avatar workspace-profile-initials" aria-hidden="true">{{ $user->initials() }}</span>
-                @endif
-                <span class="workspace-signed-copy"><small>Signed in as</small><strong>{{ $user->name }}</strong><span>{{ $roleLabel }}</span></span>
-            </section>
 
             <nav class="workspace-nav" aria-label="Workspace">
                 <span class="workspace-nav-label">{{ $workspaceConfig['sections']['overview'] }}</span>
@@ -74,8 +65,8 @@
                     <div class="workspace-post-library" aria-label="Published and archived posts">
                         @foreach (['published' => ['Published posts', 'check'], 'archived' => ['Archived posts', 'archive']] as $libraryTab => [$libraryLabel, $libraryIcon])
                             @php
-                                $libraryRoute = $activeModule ? $availableModules[$activeModule][($libraryTab === 'archived' && $user->canReview()) ? 'editorial' : 'index'] : null;
-                                $isLibraryRoute = $activeModule && request()->routeIs($activeModule . '.index', 'editorial.' . $activeModule . '.index');
+                                $libraryRoute = $activeModule ? $availableModules[$activeModule]['workspace'] : null;
+                                $isLibraryRoute = $activeModule && request()->routeIs($activeModule . '.index', 'editorial.' . $activeModule . '.index', 'workspace.posts.' . $activeModule . '.index');
                                 $isLibraryActive = $isLibraryRoute && request('tab', 'published') === $libraryTab;
                             @endphp
                             @if ($libraryRoute)
@@ -89,7 +80,7 @@
                                         <span class="visually-hidden">{{ $libraryLabel }} type</span>
                                         <select aria-label="{{ $libraryLabel }} type" data-library-type>
                                             @foreach ($availableModules as $moduleKey => $module)
-                                                <option value="{{ route($module[($libraryTab === 'archived' && $user->canReview()) ? 'editorial' : 'index'], ['tab' => $libraryTab]) }}" @selected($activeModule === $moduleKey)>
+                                                <option value="{{ route($module['workspace'], ['tab' => $libraryTab]) }}" @selected($activeModule === $moduleKey)>
                                                     {{ $module['label'] }}
                                                 </option>
                                             @endforeach
@@ -136,18 +127,6 @@
                 @endif
             </nav>
 
-            <div class="workspace-sidebar-footer">
-                <a class="workspace-site-link" href="{{ url('/') }}" aria-label="View site" data-tooltip="View site">
-                    <x-workspace.icon name="external" /><span>View site</span>
-                </a>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button class="workspace-logout-link" type="submit" aria-label="Log out" data-tooltip="Log out">
-                        <svg class="workspace-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></svg>
-                        <span>Logout</span>
-                    </button>
-                </form>
-            </div>
         </aside>
 
         <div class="workspace-main">

@@ -29,9 +29,11 @@ class AchievementController extends Controller
         $this->authorize('viewAny', Achievement::class);
         $user = $request->user();
         $isEditorial = $request->routeIs('editorial.achievements.index');
+        $isWorkspace = $request->routeIs('workspace.posts.achievements.index');
+        if ($isWorkspace) abort_unless($user && ($user->canReview() || $user->canPostIn('achievements')), 403);
         $allowedTabs = $isEditorial
             ? ['published', 'pending', 'rejected', 'archived', 'all']
-            : ($user?->isPresident() ? ['published'] : ($user?->canPostIn('achievements') ? ['published', 'mine', 'archived'] : ['published', 'archived']));
+            : ($isWorkspace ? ['published', 'archived'] : ($user?->isPresident() ? ['published'] : ($user?->canPostIn('achievements') ? ['published', 'mine', 'archived'] : ['published', 'archived'])));
         // SECURITY: Pending totals are queried only for review-capable users and never reach public or student views.
         $pendingCount = $isEditorial && $user?->canReview() ? Achievement::pending()->count() : null;
         $tab = $request->query('tab', 'published');
@@ -105,7 +107,7 @@ class AchievementController extends Controller
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['achievement'])->update(['read_at' => now()]);
 
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
-        $workspaceList = $isEditorial || ($user && $user->canPostIn('achievements') && $tab !== 'published');
+        $workspaceList = $isEditorial || $isWorkspace || ($user && $user->canPostIn('achievements') && $tab !== 'published');
         $view = $workspaceList ? 'workspace.posts.achievements.index' : 'achievements.index';
 
         return view($view, compact('achievements', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'category', 'categoryOptions', 'pendingCount'));

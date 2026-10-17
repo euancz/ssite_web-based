@@ -8,7 +8,7 @@
     stylesheet="activities"
     title="Activities"
     description="Read and manage SSITE activities."
-    :route-name="request()->routeIs('editorial.activities.index') ? 'editorial.activities.index' : 'activities.index'"
+    :route-name="request()->routeIs('workspace.posts.activities.index') ? 'workspace.posts.activities.index' : (request()->routeIs('editorial.activities.index') ? 'editorial.activities.index' : 'activities.index')"
     :allowed-tabs="$allowedTabs"
     :active-tab="$tab"
     :pending-count="$pendingCount"
@@ -101,7 +101,7 @@
         @empty
             @if ($sort !== 'recent' || $timeframe !== 'all')
                 <div class="post-feed-empty">
-                    <p>No activities match these settings. <a href="{{ route(request()->routeIs('editorial.activities.index') ? 'editorial.activities.index' : 'activities.index', ['tab' => $tab]) }}">Reset</a></p>
+                    <p>No activities match these settings. <a href="{{ route(request()->routeIs('workspace.posts.activities.index') ? 'workspace.posts.activities.index' : (request()->routeIs('editorial.activities.index') ? 'editorial.activities.index' : 'activities.index'), ['tab' => $tab]) }}">Reset</a></p>
                 </div>
             @elseif ($tab === 'published')
                 <x-workspace.posts.empty-state title="No published activities yet" message="Check back soon for the latest SSITE activities." />

@@ -30,9 +30,11 @@ class DocumentController extends Controller
         $this->authorize('viewAny', Document::class);
         $user = $request->user();
         $isEditorial = $request->routeIs('editorial.documents.index');
+        $isWorkspace = $request->routeIs('workspace.posts.documents.index');
+        if ($isWorkspace) abort_unless($user && ($user->canReview() || $user->canPostIn('documents')), 403);
         $allowedTabs = $isEditorial
             ? ['published', 'pending', 'rejected', 'archived', 'all']
-            : ($user?->isPresident() ? ['published'] : ($user?->canPostIn('documents') ? ['published', 'mine', 'archived'] : ['published']));
+            : ($isWorkspace ? ['published', 'archived'] : ($user?->isPresident() ? ['published'] : ($user?->canPostIn('documents') ? ['published', 'mine', 'archived'] : ['published', 'archived'])));
         // SECURITY: Pending totals are queried only for review-capable users and never reach public or student views.
         $pendingCount = $isEditorial && $user?->canReview() ? Document::pending()->count() : null;
         $tab = $request->query('tab', 'published');
@@ -44,7 +46,12 @@ class DocumentController extends Controller
         elseif ($tab === 'mine' && $user) $documents->where('created_by_user_id', $user->user_id);
         elseif ($tab === 'archived') {
             $documents->archived();
-            if (! $user?->isPresident()) $documents->where('created_by_user_id', $user->user_id);
+            if (! $user?->isPresident()) {
+                $documents->where(function ($query) use ($user): void {
+                    $query->approved();
+                    if ($user) $query->orWhere('created_by_user_id', $user->user_id);
+                });
+            }
         } elseif ($tab === 'pending') $documents->pending();
         elseif ($tab === 'rejected') $documents->rejected();
 
@@ -91,7 +98,7 @@ class DocumentController extends Controller
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['document'])->update(['read_at' => now()]);
 
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
-        $workspaceList = $isEditorial || ($user && $user->canPostIn('documents') && $tab !== 'published');
+        $workspaceList = $isEditorial || $isWorkspace || ($user && $user->canPostIn('documents') && $tab !== 'published');
         $view = $workspaceList ? 'workspace.posts.documents.index' : 'documents.index';
 
         return view($view, compact('documents', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'category', 'categoryOptions', 'pendingCount'));

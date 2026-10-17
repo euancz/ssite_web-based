@@ -12,12 +12,19 @@ class LiquidationPolicy
 
     public function view(?User $user, Liquidation $liquidation): bool
     {
-        return ($liquidation->isApproved() && $liquidation->content_status === Liquidation::CONTENT_ACTIVE)
+        // Approved archived records remain publicly readable; their PDF routes retain stricter access below.
+        return ($liquidation->isApproved() && in_array($liquidation->content_status, [Liquidation::CONTENT_ACTIVE, Liquidation::CONTENT_ARCHIVED], true))
             || ($user !== null && ($user->isPresident() || $this->owns($user, $liquidation)));
     }
 
-    public function viewFile(User $user, Liquidation $liquidation): bool { return $this->view($user, $liquidation); }
-    public function download(User $user, Liquidation $liquidation): bool { return $this->view($user, $liquidation); }
+    // SECURITY: Public archived record pages do not grant archived PDF access to ordinary members.
+    public function viewFile(User $user, Liquidation $liquidation): bool
+    {
+        return ($liquidation->isApproved() && $liquidation->content_status === Liquidation::CONTENT_ACTIVE)
+            || $user->isPresident()
+            || $this->owns($user, $liquidation);
+    }
+    public function download(User $user, Liquidation $liquidation): bool { return $this->viewFile($user, $liquidation); }
     public function create(User $user): bool { return $user->canPostIn('liquidations'); }
     public function update(User $user, Liquidation $liquidation): bool { return $user->isPresident() || ($user->canPostIn('liquidations') && $this->owns($user, $liquidation)); }
     public function archive(User $user, Liquidation $liquidation): bool { return $this->update($user, $liquidation); }

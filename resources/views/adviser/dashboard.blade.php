@@ -13,9 +13,9 @@
         <section class="workspace-governance-summary" aria-labelledby="governance-summary-title">
             <div class="workspace-governance-section-heading"><div><h2 id="governance-summary-title">People and publishing</h2><p>Quick counts for your organization.</p></div></div>
             <ul class="workspace-governance-counts">
-                <li><div><span>Pending submissions</span><strong>{{ $pendingTotal }}</strong><small>Counts only; post details are restricted to the President.</small></div></li>
-                <li><a href="{{ route('adviser.users.index', ['role' => 'officer']) }}"><span>Officers</span><strong>{{ $totalOfficers }}</strong><small>Review officer accounts</small></a></li>
-                <li><a href="{{ route('adviser.users.index', ['role' => 'student']) }}"><span>Students</span><strong>{{ $totalStudents }}</strong><small>Review student accounts</small></a></li>
+                <li><div class="workspace-governance-count-card"><span class="workspace-metric-icon"><x-workspace.icon name="clock" /></span><span class="workspace-metric-label">Pending submissions</span><strong class="workspace-metric-value">{{ $pendingTotal }}</strong><small>Counts only; post details are restricted to the President.</small></div></li>
+                <li><a class="workspace-governance-count-card" href="{{ route('adviser.users.index', ['role' => 'officer']) }}"><span class="workspace-metric-icon"><x-workspace.icon name="users" /></span><span class="workspace-metric-label">Officers</span><strong class="workspace-metric-value">{{ $totalOfficers }}</strong><small>Review officer accounts</small></a></li>
+                <li><a class="workspace-governance-count-card" href="{{ route('adviser.users.index', ['role' => 'student']) }}"><span class="workspace-metric-icon"><x-workspace.icon name="users" /></span><span class="workspace-metric-label">Students</span><strong class="workspace-metric-value">{{ $totalStudents }}</strong><small>Review student accounts</small></a></li>
             </ul>
         </section>
 

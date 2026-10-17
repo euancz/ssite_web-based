@@ -33,9 +33,11 @@ class ArticleController extends Controller
         $this->authorize('viewAny', Article::class);
         $user = $request->user();
         $isEditorial = $request->routeIs('editorial.articles.index');
+        $isWorkspace = $request->routeIs('workspace.posts.articles.index');
+        if ($isWorkspace) abort_unless($user && ($user->canReview() || $user->canPostIn('articles')), 403);
         $allowedTabs = $isEditorial
             ? ['published', 'pending', 'rejected', 'archived', 'all']
-            : ($user?->isPresident() ? ['published'] : ($user?->canPostIn('articles') ? ['published', 'mine', 'archived'] : ['published', 'archived']));
+            : ($isWorkspace ? ['published', 'archived'] : ($user?->isPresident() ? ['published'] : ($user?->canPostIn('articles') ? ['published', 'mine', 'archived'] : ['published', 'archived'])));
         // SECURITY: Pending totals are queried only for review-capable accounts and never reach public or student views.
         $pendingCount = $isEditorial && $user?->canReview() ? Article::pending()->count() : null;
         $tab = $request->query('tab', 'published');
@@ -99,7 +101,7 @@ class ArticleController extends Controller
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['article'])->update(['read_at' => now()]);
 
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
-        $workspaceList = $isEditorial || ($user && $user->canPostIn('articles') && $tab !== 'published');
+        $workspaceList = $isEditorial || $isWorkspace || ($user && $user->canPostIn('articles') && $tab !== 'published');
         $view = $workspaceList ? 'workspace.posts.articles.index' : 'articles.index';
 
         return view($view, compact('articles', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'pendingCount'));
