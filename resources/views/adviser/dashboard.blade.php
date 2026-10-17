@@ -19,6 +19,8 @@
             </ul>
         </section>
 
+        <x-workspace.dashboard-guide />
+
         @if (! $presidentExists)
             <p class="dashboard-error workspace-governance-alert" role="alert">No President is assigned. Pending submissions cannot be reviewed, and no fallback approver is configured.</p>
         @endif
@@ -36,6 +38,8 @@
             <div><h1>Adviser access</h1><p>Manage adviser assignments and review recent role changes.</p></div>
             <span class="workspace-dashboard-role">Superadmin</span>
         </header>
+
+        <x-workspace.dashboard-guide />
 
         <section class="workspace-governance-list" aria-labelledby="current-advisers-title">
             <div class="workspace-governance-section-heading"><div><h2 id="current-advisers-title">Current advisers</h2><p>Advisers can assign student and officer roles.</p></div>

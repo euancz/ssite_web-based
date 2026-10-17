@@ -28,6 +28,8 @@
         </div>
     </section>
 
+    <x-workspace.dashboard-guide />
+
     <section class="workspace-officer-attention" aria-labelledby="workspace-attention-title">
         <div class="workspace-officer-section-heading">
             <div><h2 id="workspace-attention-title">Needs your attention</h2><p>Rejected submissions include feedback when a reason was recorded.</p></div>

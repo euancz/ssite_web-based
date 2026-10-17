@@ -47,9 +47,9 @@
     border: 1px solid var(--ssite-line);
     border-radius: 999px;
     padding: 8px 14px;
-    background: #fff;
+    background: var(--color-surface);
     color: var(--ssite-navy-soft);
-    box-shadow: 0 3px 10px rgb(23 50 77 / 6%);
+    box-shadow: var(--shadow-composer-feed);
     text-decoration: none;
 }
 
@@ -91,14 +91,15 @@
     margin-bottom: 3px;
 }
 
+/* Feed sorting and overflow controls share the approved text and focus roles. */
 .post-feed-sort select,
 .post-feed-sort-apply,
 .post-feed-sort-reset {
     min-height: 44px;
-    border: 1px solid #7894a7;
+    border: 1px solid var(--color-border-control);
     border-radius: 7px;
-    background: #fff;
-    color: var(--ssite-navy);
+    background: var(--color-surface);
+    color: var(--color-text-primary);
     font: inherit;
 }
 
@@ -123,7 +124,7 @@
 }
 
 .post-feed-sort :focus-visible {
-    outline: 3px solid var(--ssite-navy);
+    outline: 3px solid var(--color-focus);
     outline-offset: 2px;
 }
 
@@ -161,10 +162,10 @@
     min-height: 40px;
     align-items: center;
     justify-content: center;
-    border: 1px solid #b7cbd6;
+    border: 1px solid var(--color-border-subtle-control);
     border-radius: 7px;
     padding: 0 10px;
-    background: #fff;
+    background: var(--color-surface);
     color: var(--ssite-navy);
     font-size: 0.88rem;
     font-weight: 650;
@@ -181,12 +182,12 @@ a.ssite-page-button:hover {
 .ssite-page-button.is-current {
     border-color: var(--ssite-navy);
     background: var(--ssite-navy);
-    color: #fff;
+    color: var(--color-text-on-primary);
 }
 
 .ssite-page-button.is-disabled {
-    background: #f3f7f9;
-    color: #728694;
+    background: var(--color-surface-disabled-feed);
+    color: var(--color-text-disabled-feed);
     cursor: not-allowed;
 }
 
@@ -200,7 +201,7 @@ a.ssite-page-button:hover {
 }
 
 .ssite-pagination :focus-visible {
-    outline: 3px solid var(--ssite-navy);
+    outline: 3px solid var(--color-focus);
     outline-offset: 2px;
 }
 
@@ -216,7 +217,7 @@ a.ssite-page-button:hover {
     border: 1px solid var(--ssite-line);
     border-radius: var(--post-feed-card-radius);
     padding: clamp(14px, 3.5vw, 22px);
-    background: #fff;
+    background: var(--color-surface);
 }
 
 .post-feed-skeleton-author {
@@ -234,7 +235,7 @@ a.ssite-page-button:hover {
 .post-feed-skeleton-block {
     display: block;
     border-radius: 6px;
-    background: #e5eff4;
+    background: var(--color-surface-skeleton-feed);
     animation: post-feed-skeleton-pulse 1.1s ease-in-out infinite alternate;
 }
 
@@ -274,7 +275,7 @@ a.ssite-page-button:hover {
     height: 34px;
     border-top: 1px solid var(--ssite-line);
     border-radius: 0;
-    background: transparent;
+    background: var(--color-transparent);
 }
 
 @keyframes post-feed-skeleton-pulse {
@@ -282,11 +283,12 @@ a.ssite-page-button:hover {
     to { opacity: 1; }
 }
 
+/* Feed cards and their status callouts use the shared surface and type roles. */
 .post-feed-empty a {
     display: inline-flex;
     min-height: 44px;
     align-items: center;
-    color: var(--ssite-navy);
+    color: var(--color-text-primary);
     font-weight: 700;
 }
 
@@ -295,13 +297,13 @@ a.ssite-page-button:hover {
 .post-card button:focus-visible,
 .post-card-menu summary:focus-visible,
 .dashboard-tabs-more summary:focus-visible {
-    outline: 3px solid var(--ssite-navy);
+    outline: 3px solid var(--color-focus);
     outline-offset: 3px;
 }
 
 .post-feed-empty {
     padding: 24px 8px;
-    color: var(--ssite-navy);
+    color: var(--color-text-primary);
     text-align: center;
 }
 
@@ -312,7 +314,7 @@ a.ssite-page-button:hover {
 
 .post-feed-empty p {
     margin: 8px 0 0;
-    color: var(--ssite-navy-soft);
+    color: var(--color-text-secondary);
     line-height: 1.55;
 }
 
@@ -323,11 +325,11 @@ a.ssite-page-button:hover {
     gap: 14px;
     margin: 0 0 var(--post-feed-gap);
     overflow: visible;
-    border: 1px solid var(--ssite-line);
+    border: 1px solid var(--color-border-subtle-control);
     border-radius: var(--post-feed-card-radius);
     padding: clamp(14px, 3.5vw, 22px);
-    background: #fff;
-    box-shadow: 4px 4px 0 rgb(23 50 77 / 14%);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-post-card-offset);
     overflow-wrap: anywhere;
 }
 
@@ -354,14 +356,14 @@ a.ssite-page-button:hover {
 }
 
 .post-card-author-name {
-    color: var(--ssite-navy);
+    color: var(--color-text-primary);
     font-weight: 700;
     line-height: 1.3;
 }
 
 .post-card-author-role,
 .post-card-meta {
-    color: var(--ssite-navy-soft);
+    color: var(--color-text-secondary);
     font-size: 0.8rem;
     line-height: 1.45;
 }
@@ -384,23 +386,23 @@ a.ssite-page-button:hover {
 
 .post-card-title {
     margin: 0 0 8px;
-    color: var(--ssite-navy);
+    color: var(--color-text-primary);
     font-size: clamp(1.15rem, 4vw, 1.45rem);
     line-height: 1.25;
 }
 
 .post-card-title a {
     color: inherit;
-    text-decoration-color: transparent;
+    text-decoration-color: var(--color-transparent);
     text-underline-offset: 3px;
 }
 
 .post-card-title a:hover {
-    text-decoration-color: currentColor;
+    text-decoration-color: var(--color-current);
 }
 
 .post-card-body {
-    color: var(--ssite-navy-soft);
+    color: var(--color-text-secondary);
     line-height: 1.55;
     overflow-wrap: anywhere;
 }
@@ -430,7 +432,7 @@ a.ssite-page-button:hover {
     display: inline-block;
     min-height: 44px;
     padding-top: 9px;
-    color: var(--ssite-navy);
+    color: var(--color-text-primary);
     font-weight: 700;
     text-underline-offset: 3px;
 }
@@ -440,17 +442,18 @@ a.ssite-page-button:hover {
     margin: 0;
     border-radius: 8px;
     padding: 10px 12px;
-    color: var(--ssite-navy);
+    color: var(--color-text-primary);
 }
 
 .post-card-state {
-    background: var(--ssite-blue-light);
+    background: var(--color-status-neutral-background);
+    color: var(--color-status-neutral-text);
 }
 
 .post-card-rejection {
     margin-bottom: 12px;
-    background: #fff1f1;
-    color: #7f1d1d;
+    background: var(--color-status-danger-background);
+    color: var(--color-status-danger-text);
 }
 
 .post-card-media {
@@ -459,7 +462,7 @@ a.ssite-page-button:hover {
     max-height: 30rem;
     overflow: hidden;
     border-radius: 8px;
-    background: var(--ssite-blue-light);
+    background: var(--color-brand-surface);
     aspect-ratio: var(--post-feed-image-ratio);
 }
 
@@ -475,8 +478,8 @@ a.ssite-page-button:hover {
     min-width: 0;
     border-radius: 8px;
     padding: 12px;
-    background: #eaf8fd;
-    color: var(--ssite-navy);
+    background: var(--color-surface-info-feed);
+    color: var(--color-text-primary);
 }
 
 .post-card-footer {
@@ -485,7 +488,7 @@ a.ssite-page-button:hover {
     flex-wrap: wrap;
     align-items: center;
     gap: 8px 14px;
-    border-top: 1px solid #c8e6f2;
+    border-top: 1px solid var(--color-status-info-border);
     padding-top: 12px;
 }
 
@@ -495,7 +498,7 @@ a.ssite-page-button:hover {
     flex-wrap: wrap;
     align-items: center;
     gap: 4px 10px;
-    color: var(--ssite-navy-soft);
+    color: var(--color-text-secondary);
     font-size: 0.86rem;
 }
 
@@ -505,9 +508,9 @@ a.ssite-page-button:hover {
 
 .post-like-button {
     min-height: 44px;
-    border: 1px solid #7894a7;
-    background: #fff;
-    color: var(--ssite-navy);
+    border: 1px solid var(--color-border-control);
+    background: var(--color-surface);
+    color: var(--color-text-primary);
 }
 
 .post-card-footer a,
@@ -522,8 +525,8 @@ a.ssite-page-button:hover {
     border: 0;
     border-radius: 7px;
     padding: 8px 12px;
-    background: transparent;
-    color: var(--ssite-navy);
+    background: var(--color-transparent);
+    color: var(--color-text-primary);
     font: inherit;
     font-size: 0.9rem;
     font-weight: 700;
@@ -536,7 +539,7 @@ a.ssite-page-button:hover {
 .post-card-menu-panel a:hover,
 .post-card-menu-panel button:hover,
 .post-feed-attachment-actions a:hover {
-    background: var(--ssite-blue-light);
+    background: var(--color-surface-page);
 }
 
 .post-card-footer-actions {
@@ -556,9 +559,9 @@ a.ssite-page-button:hover {
     min-width: 44px;
     min-height: 44px;
     place-items: center;
-    border: 1px solid transparent;
+    border: 1px solid var(--color-transparent);
     border-radius: 50%;
-    color: var(--ssite-navy);
+    color: var(--color-text-primary);
     cursor: pointer;
     list-style: none;
 }
@@ -574,7 +577,7 @@ a.ssite-page-button:hover {
 
 .post-card-menu > summary:hover,
 .post-card-menu[open] > summary {
-    background: var(--ssite-blue-light);
+    background: var(--color-surface-page);
 }
 
 .post-card-menu-panel {
@@ -584,11 +587,11 @@ a.ssite-page-button:hover {
     right: 0;
     display: grid;
     width: min(14rem, calc(100vw - 2rem));
-    border: 1px solid #9cb5c5;
+    border: 1px solid var(--color-border);
     border-radius: 8px;
     padding: 5px;
-    background: #fff;
-    box-shadow: 0 8px 20px rgb(23 50 77 / 18%);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-menu-feed);
 }
 
 .post-card-menu-panel a,
@@ -615,9 +618,9 @@ a.ssite-page-button:hover {
     height: 56px;
     flex: 0 0 48px;
     place-items: center;
-    border: 1px solid #9cb5c5;
+    border: 1px solid var(--color-border-menu-feed);
     border-radius: 6px;
-    background: #fff;
+    background: var(--color-surface);
     color: var(--ssite-navy);
     font-size: 0.65rem;
     font-weight: 700;
@@ -681,8 +684,8 @@ a.ssite-page-button:hover {
     width: 7px;
     height: 7px;
     margin-left: 8px;
-    border-right: 2px solid currentColor;
-    border-bottom: 2px solid currentColor;
+    border-right: 2px solid var(--color-current);
+    border-bottom: 2px solid var(--color-current);
     content: "";
     transform: translateY(-2px) rotate(45deg);
 }
@@ -704,7 +707,7 @@ a.ssite-page-button:hover {
     .post-card:hover,
     .post-card:focus-within {
         transform: translateY(-2px);
-        box-shadow: 5px 6px 0 rgb(23 50 77 / 18%);
+        box-shadow: var(--shadow-card-hover-feed);
     }
 }
 

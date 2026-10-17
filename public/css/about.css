@@ -9,7 +9,7 @@
     margin: 0;
     border-bottom: 3px solid var(--ssite-line);
     padding-bottom: 8px;
-    color: var(--ssite-navy);
+    color: var(--color-text-primary);
     font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
     font-size: clamp(1.8rem, 3vw, 2.7rem);
     font-weight: 800;
@@ -23,7 +23,7 @@
 
 .about-page-intro {
     margin: 0 0 28px;
-    color: var(--ssite-navy-soft);
+    color: var(--color-text-secondary);
     font-size: 1.05rem;
     line-height: 1.6;
 }
@@ -38,11 +38,11 @@
 .mission-card,
 .vision-card {
     min-height: 164px;
-    border: 1px solid #cfeaf5;
+    border: 1px solid var(--color-border-about-card);
     border-radius: 22px;
     padding: 22px 20px;
-    background: linear-gradient(180deg, #d9f4fb 0%, #ebfaff 100%);
-    box-shadow: 0 12px 28px rgb(23 50 77 / 10%);
+    background: linear-gradient(180deg, var(--color-surface-about-card-start) 0%, var(--color-surface-about-card-end) 100%);
+    box-shadow: 0 12px 28px var(--shadow-about-card);
 }
 
 .mission-card {
@@ -56,9 +56,9 @@
 .mission-card h2,
 .vision-card h2 {
     margin: 0 0 10px;
-    border-bottom: 2px solid #64c5df;
+    border-bottom: 2px solid var(--color-accent-about-card);
     padding-bottom: 7px;
-    color: var(--ssite-navy);
+    color: var(--color-text-primary);
     font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
     font-size: 1.05rem;
     font-weight: 800;
@@ -69,7 +69,7 @@
 .mission-card p,
 .vision-card p {
     margin: 0;
-    color: #25394b;
+    color: var(--color-text-about-body);
     font-size: 1rem;
     line-height: 1.7;
 }
@@ -93,10 +93,10 @@
     width: 44px;
     height: 44px;
     place-items: center;
-    border: 1px solid #cfe6ee;
+    border: 1px solid var(--color-border-about-control);
     border-radius: 4px;
-    background: #effaff;
-    color: #17324d;
+    background: var(--color-surface-about-control);
+    color: var(--color-text-primary);
     cursor: pointer;
     list-style: none;
 }
@@ -110,18 +110,18 @@
     display: grid;
     min-width: 13rem;
     padding: 4px;
-    border: 1px solid #cfe6ee;
+    border: 1px solid var(--color-border-about-control);
     border-radius: 4px;
-    background: #effaff;
-    box-shadow: 0 8px 20px rgb(17 42 55 / 14%);
+    background: var(--color-surface-about-control);
+    box-shadow: 0 8px 20px var(--shadow-about-menu);
 }
 .about-manage-dropdown a,
 .about-manage-dropdown button {
     min-height: 44px;
     padding: 10px 12px;
     border: 0;
-    background: transparent;
-    color: #17324d;
+    background: var(--color-transparent);
+    color: var(--color-text-primary);
     font: inherit;
     text-align: left;
     text-decoration: none;
@@ -131,13 +131,13 @@
 .about-manage-dropdown button:hover,
 .about-manage-menu > summary:focus-visible,
 .about-manage-dropdown a:focus-visible,
-.about-manage-dropdown button:focus-visible { background: #dff3fa; outline: 2px solid #17324d; outline-offset: 1px; }
+.about-manage-dropdown button:focus-visible { background: var(--color-surface-about-control-hover); outline: 2px solid var(--color-text-primary); outline-offset: 1px; }
 .about-history-menu { position: absolute; top: 0; right: 10px; margin: 0; }
 .leadership-item { position: relative; overflow: visible; }
 .leadership-item:has(.about-history-menu) > summary { padding-right: 68px; }
 .about-officer-controls { display: flex; justify-content: center; gap: 8px; margin-top: 8px; }
 .about-officer-controls a,
-.about-officer-controls button { display: grid; min-width: 44px; min-height: 44px; place-items: center; padding: 8px; border: 1px solid #cfe6ee; background: #effaff; color: #17324d; text-decoration: none; cursor: pointer; }
+.about-officer-controls button { display: grid; min-width: 44px; min-height: 44px; place-items: center; padding: 8px; border: 1px solid var(--color-border-about-control); background: var(--color-surface-about-control); color: var(--color-text-primary); text-decoration: none; cursor: pointer; }
 .about-officer-controls svg { width: 18px; height: 18px; }
 .officer-card h3,
 .officer-card p { overflow: hidden; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
@@ -170,7 +170,7 @@
 .officer-photo {
     width: 100%;
     height: 100%;
-    background: #f7fbfc;
+    background: var(--color-surface-about-photo);
     object-fit: cover;
 }
 
@@ -178,16 +178,16 @@
     width: min(100%, 140px);
     aspect-ratio: 1;
     margin: 0 auto 6px;
-    border: 2px solid #7dd3ef;
-    background: #f7fbfc;
-    box-shadow: 0 1px 5px rgb(23 50 77 / 16%);
+    border: 2px solid var(--color-border-about-photo);
+    background: var(--color-surface-about-photo);
+    box-shadow: 0 1px 5px var(--shadow-about-photo);
     border-radius: 0;
 }
 
 .officer-card h3 {
     min-height: 2.2em;
     margin: 0;
-    color: var(--ssite-navy);
+    color: var(--color-text-primary);
     font-family: 'Poppins', ui-sans-serif, system-ui, sans-serif;
     font-size: 12px;
     font-weight: 700;
@@ -197,7 +197,7 @@
 .officer-card p {
     min-height: 2em;
     margin: 1px 0 0;
-    color: #263b4e;
+    color: var(--color-text-about-role);
     font-size: 10px;
     line-height: 1.15;
 }
@@ -215,8 +215,8 @@
 .leadership-item {
     overflow: hidden;
     border-radius: 4px;
-    background: #d2f2fa;
-    color: var(--ssite-navy);
+    background: var(--color-surface-about-leadership);
+    color: var(--color-text-primary);
 }
 
 .leadership-item summary {
@@ -250,9 +250,9 @@
 
 .leadership-item > p {
     margin: 0;
-    border-top: 1px solid rgb(23 50 77 / 14%);
+    border-top: 1px solid var(--color-border-about-leadership);
     padding: 12px 16px;
-    color: #344b60;
+    color: var(--color-text-about-leadership);
     font-size: 13px;
     line-height: 1.5;
 }
@@ -292,6 +292,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #526b7d;
+    color: var(--color-text-about-placeholder);
     font-size: 12px;
 }

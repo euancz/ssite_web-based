@@ -1,12 +1,12 @@
 /* Documents keep private-file actions grouped with readable PDF metadata. */
 .post-feed-documents .post-card-strip {
-    border: 1px solid #c8e6f2;
-    background: #f4fbfe;
+    border: 1px solid var(--color-border-info-feed);
+    background: var(--color-surface-document-strip);
 }
 
 .post-feed-documents .post-feed-pdf-mark {
-    border-color: #9cb5c5;
-    box-shadow: 2px 2px 0 rgb(23 50 77 / 10%);
+    border-color: var(--color-border-menu-feed);
+    box-shadow: var(--shadow-document-mark);
 }
 
 .post-feed-documents .post-feed-category-chip {

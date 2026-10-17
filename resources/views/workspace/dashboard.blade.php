@@ -38,6 +38,8 @@
         </div>
     </section>
 
+    <x-workspace.dashboard-guide />
+
     @can('manage-officers')
         <section class="workspace-admin-shortcut" aria-labelledby="workspace-officers-title">
             <div>
