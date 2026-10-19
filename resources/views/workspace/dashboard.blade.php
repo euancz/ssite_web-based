@@ -20,19 +20,19 @@
             <a class="workspace-metric-card workspace-metric-pending" href="{{ route('adviser.reviews.index', ['status' => 'pending']) }}">
                 <span class="workspace-metric-icon"><x-workspace.icon name="clock" /></span>
                 <span class="workspace-metric-label">Pending review</span>
-                <strong class="workspace-metric-value">{{ $dashboardStatus['pending'] }}</strong>
+                <strong class="workspace-metric-value"><x-ui.count-up :value="$dashboardStatus['pending']" /></strong>
                 <small>Submissions waiting for a decision</small>
             </a>
             <article class="workspace-metric-card workspace-metric-published">
                 <span class="workspace-metric-icon"><x-workspace.icon name="check" /></span>
                 <span class="workspace-metric-label">Published</span>
-                <strong class="workspace-metric-value">{{ $dashboardStatus['published'] }}</strong>
+                <strong class="workspace-metric-value"><x-ui.count-up :value="$dashboardStatus['published']" /></strong>
                 <small>Visible on the student site</small>
             </article>
             <article class="workspace-metric-card workspace-metric-archived">
                 <span class="workspace-metric-icon"><x-workspace.icon name="archive" /></span>
                 <span class="workspace-metric-label">Archived</span>
-                <strong class="workspace-metric-value">{{ $dashboardStatus['archived'] }}</strong>
+                <strong class="workspace-metric-value"><x-ui.count-up :value="$dashboardStatus['archived']" /></strong>
                 <small>Retained outside active listings</small>
             </article>
         </div>

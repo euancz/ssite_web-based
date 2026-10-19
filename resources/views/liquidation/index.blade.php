@@ -19,10 +19,10 @@
     :sort-options="$sortOptions"
 >
     @if (session('status'))
-        <p class="dashboard-success" role="status">{{ session('status') }}</p>
+        <p class="dashboard-success" role="status" data-flash-toast>{{ session('status') }}</p>
     @endif
     @if (session('error'))
-        <p class="dashboard-error" role="alert">{{ session('error') }}</p>
+        <p class="dashboard-error" role="alert" data-flash-toast>{{ session('error') }}</p>
     @endif
 
     {{-- President bulk archive remains separate from each card's single-post actions. --}}
@@ -58,7 +58,7 @@
             <article class="liquidation-report-row">
                 <div class="liquidation-report-main">
                     <div class="liquidation-report-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3.75h6l4 4v12.5H7a2 2 0 0 1-2-2v-12.5a2 2 0 0 1 2-2zM13 3.75v4h4M8 14h8M8 17h8"/></svg>
+                        <x-icon name="file-text" />
                         <span>PDF</span>
                     </div>
                     <div class="liquidation-report-copy">

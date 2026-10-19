@@ -3,12 +3,8 @@
 {{-- Keep management controls policy-gated and use the existing feature routes and HTTP methods. --}}
 @canany(['update', 'archive', 'restore', 'delete'], $post)
     <details class="post-card-menu" data-post-menu>
-        <summary aria-label="More actions for {{ $post->title }}" aria-haspopup="true" aria-expanded="false">
-            <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="5" cy="12" r="1.8"></circle>
-                <circle cx="12" cy="12" r="1.8"></circle>
-                <circle cx="19" cy="12" r="1.8"></circle>
-            </svg>
+        <summary aria-label="More actions for {{ $post->title }}" data-tooltip="More actions" aria-haspopup="true" aria-expanded="false">
+            <x-icon name="ellipsis" />
         </summary>
         <div class="post-card-menu-panel">
             @can('update', $post)

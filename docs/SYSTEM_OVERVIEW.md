@@ -132,6 +132,8 @@ Documents and Liquidation store PDFs on Laravel's private `local` disk under `st
 | `app/Http/Controllers/` | User-scoped notification list, summary, read, and dismiss endpoints | `NotificationController.php` |
 | `config/` | Environment and school option configuration | `school.php`, `services.php` |
 | `resources/views/` | Public pages, feature pages, dashboards, forms, and UI components | `pages/home.blade.php`; `articles/`, `activities/`, `achievements/`, `documents/`, and `liquidation/` contain feature pages and forms; `layouts/partials/` holds navigation and layout scripts; `layouts/`, `profile/`, `officer/`, `adviser/officers/`, `components/ui/` including `workflow-tabs.blade.php` |
+| `resources/views/components/` | Shared Blade UI and static icon shapes | `icon.blade.php`, `ui/`, `posts/`, and `workspace/` |
+| `resources/js/` | Vite browser entry and optional UI enhancements | `app.js`, `motion.js`, and `flash-toasts.js` |
 | `resources/views/search/` | Full search results and filters | `index.blade.php` |
 | `resources/views/notifications/` | Paginated notification history | `index.blade.php` |
 | `bootstrap/` | Framework boot configuration and middleware aliases | `app.php` |
@@ -171,6 +173,16 @@ Search suggestions render inside the sticky header with visible overflow and rem
 - If I want to add the effect to a new content card, add `card-hover` and wrap its image in `card-media` in the matching public content view; keep management UI out of this pattern.
 - If I want to turn off content card motion, remove the `card-hover` and `card-media` classes from the affected view.
 - Content card transforms create stacking contexts. Keep card lists visibly overflowing and check row menus against the sticky header, navigation pill, and About gear menu when adding a card effect.
+
+## Icons, motion, and flash feedback
+
+Blade icons come from the shared allow-listed static shape map in `resources/views/components/icon.blade.php`; workspace calls retain a compatibility wrapper. The shapes are copied from Lucide Static and remain inline SVG, with required attribution in `THIRD_PARTY_NOTICES.md`. The icon names and usage guidance are listed in `docs/ICONS.md`.
+
+The shared layout loads the deferred Vite entry from `resources/js/app.js`. Its Motion helpers in `resources/js/motion.js` handle capped below-fold reveals, opt-in count-up values, notification count-change pops, and the long-article reading indicator. Motion targets remain visible in the server-rendered HTML; reduced-motion and setup-failure paths preserve the normal state. Only the first 12 eligible feed cards can reveal. The reading bar is limited to approved active article details and stays hidden without JavaScript or on short bodies.
+
+Session status/error messages marked in the public and workspace views are progressively upgraded by `resources/js/flash-toasts.js` into persistent, manually dismissible toasts. Their escaped copy and status/alert roles remain; there is no auto-dismiss. Without JavaScript they keep their inline placement. Login-popover, field-validation, and asynchronous feedback are not part of this upgrade.
+
+The change history, bundle measurements, route comparison, source-review notes, and verification limits are in `docs/ICONS_MOTION_PROGRESS.md`. Desktop/mobile rendering, keyboard operation, zoom, reduced-motion interaction, JavaScript-off behavior in a browser, and screen-reader announcements still need browser verification against a working application URL.
 
 ## Gotchas and extension notes
 

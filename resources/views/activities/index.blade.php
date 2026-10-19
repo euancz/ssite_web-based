@@ -24,10 +24,10 @@
     filter-default="all"
 >
     @if (session('status'))
-        <p class="dashboard-success" role="status">{{ session('status') }}</p>
+        <p class="dashboard-success" role="status" data-flash-toast>{{ session('status') }}</p>
     @endif
     @if (session('error'))
-        <p class="dashboard-error" role="alert">{{ session('error') }}</p>
+        <p class="dashboard-error" role="alert" data-flash-toast>{{ session('error') }}</p>
     @endif
 
     {{-- President bulk archive remains separate from each card's single-post actions. --}}

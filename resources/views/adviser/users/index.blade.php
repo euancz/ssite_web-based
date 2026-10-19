@@ -9,7 +9,7 @@
 
     {{-- Report the result of a completed role update without hiding validation errors. --}}
     @if (session('status'))
-        <p class="dashboard-success" role="status">{{ session('status') }}</p>
+        <p class="dashboard-success" role="status" data-flash-toast>{{ session('status') }}</p>
     @endif
 
     {{-- FormRequest/role validation failures are shown before the adviser retries. --}}

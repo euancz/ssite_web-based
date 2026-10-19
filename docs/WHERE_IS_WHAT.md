@@ -5,6 +5,13 @@ Use this guide to find the file that owns a common change.
 | If I want to change... | Open... |
 | --- | --- |
 | Navbar pinning while scrolling | `public/css/app.css` (`.site-header`) |
+| Add or change a shared icon shape or name | `resources/views/components/icon.blade.php` and `docs/ICONS.md`; keep the workspace wrapper compatible |
+| Change icon sizing, stroke, status colors, or shared UI tokens | `public/css/app.css` and `resources/views/components/icon.blade.php` |
+| Change feed reveal, count-up, notification pop, or article reading-progress behavior | `resources/js/motion.js`; opt-in view markers live in the corresponding Blade views/components |
+| Change session flash toast enhancement or dismissal | `resources/js/flash-toasts.js`, `public/css/app.css`, and views marked with `data-flash-toast`; unenhanced messages stay inline |
+| Change which flash messages become toasts | Search for `data-flash-toast` in `resources/views/`; login, validation, and async feedback have separate behavior |
+| Change Motion dependency or Vite entry wiring | `package.json`, `resources/js/app.js`, and `vite.config.js` |
+| Review icon/motion batch status, bundle sizes, and verification limits | `docs/ICONS_MOTION_PROGRESS.md` |
 | Header suggestions, keyboard behavior, or dropdown limits | `resources/views/layouts/partials/search-scripts.blade.php` and `public/css/app.css` |
 | Search query normalization, searchable fields, excerpts, and result relevance | `app/Support/SiteSearch.php` |
 | Full search results, filtering, and pagination | `app/Http/Controllers/SearchController.php` and `resources/views/search/index.blade.php` |

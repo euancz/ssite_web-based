@@ -1,0 +1,117 @@
+﻿
+  GET|HEAD  / ......................................................................................... HomeController
+  GET|HEAD  about ............................................................................ about ΓÇ║ AboutController
+  GET|HEAD  achievements ............................................ achievements.index ΓÇ║ AchievementController@index
+  POST      achievements ............................................ achievements.store ΓÇ║ AchievementController@store
+  POST      achievements/bulk-archive .................. achievements.bulk-archive ΓÇ║ AchievementController@bulkArchive
+  GET|HEAD  achievements/create ................................... achievements.create ΓÇ║ AchievementController@create
+  GET|HEAD  achievements/{achievement} ................................ achievements.show ΓÇ║ AchievementController@show
+  PATCH     achievements/{achievement} ............................ achievements.update ΓÇ║ AchievementController@update
+  DELETE    achievements/{achievement} .......................... achievements.destroy ΓÇ║ AchievementController@destroy
+  POST      achievements/{achievement}/approve .................. achievements.approve ΓÇ║ AchievementController@approve
+  POST      achievements/{achievement}/archive .................. achievements.archive ΓÇ║ AchievementController@archive
+  GET|HEAD  achievements/{achievement}/edit ........................... achievements.edit ΓÇ║ AchievementController@edit
+  POST      achievements/{achievement}/reject ..................... achievements.reject ΓÇ║ AchievementController@reject
+  POST      achievements/{achievement}/restore .................. achievements.restore ΓÇ║ AchievementController@restore
+  GET|HEAD  activities ................................................... activities.index ΓÇ║ ActivityController@index
+  POST      activities ................................................... activities.store ΓÇ║ ActivityController@store
+  POST      activities/bulk-archive ......................... activities.bulk-archive ΓÇ║ ActivityController@bulkArchive
+  GET|HEAD  activities/create .......................................... activities.create ΓÇ║ ActivityController@create
+  GET|HEAD  activities/{activity} .......................................... activities.show ΓÇ║ ActivityController@show
+  PATCH     activities/{activity} ...................................... activities.update ΓÇ║ ActivityController@update
+  DELETE    activities/{activity} .................................... activities.destroy ΓÇ║ ActivityController@destroy
+  POST      activities/{activity}/approve ............................ activities.approve ΓÇ║ ActivityController@approve
+  POST      activities/{activity}/archive ............................ activities.archive ΓÇ║ ActivityController@archive
+  GET|HEAD  activities/{activity}/edit ..................................... activities.edit ΓÇ║ ActivityController@edit
+  POST      activities/{activity}/reject ............................... activities.reject ΓÇ║ ActivityController@reject
+  POST      activities/{activity}/restore ............................ activities.restore ΓÇ║ ActivityController@restore
+  GET|HEAD  adviser/dashboard ........................................ adviser.dashboard ΓÇ║ Adviser\DashboardController
+  GET|HEAD  adviser/officers ............................ adviser.officers.index ΓÇ║ Adviser\OfficerTermController@index
+  POST      adviser/officers ............................ adviser.officers.store ΓÇ║ Adviser\OfficerTermController@store
+  POST      adviser/officers/copy-previous adviser.officers.copy-previous ΓÇ║ Adviser\OfficerTermController@copyPrevious
+  GET|HEAD  adviser/officers/create ................... adviser.officers.create ΓÇ║ Adviser\OfficerTermController@create
+  DELETE    adviser/officers/{officer} .............. adviser.officers.destroy ΓÇ║ Adviser\OfficerTermController@destroy
+  PATCH     adviser/officers/{officer} ................ adviser.officers.update ΓÇ║ Adviser\OfficerTermController@update
+  GET|HEAD  adviser/officers/{officer}/edit ............... adviser.officers.edit ΓÇ║ Adviser\OfficerTermController@edit
+  GET|HEAD  adviser/reviews ................................... adviser.reviews.index ΓÇ║ Adviser\ReviewController@index
+  GET|HEAD  adviser/users ......................................... adviser.users.index ΓÇ║ Adviser\UserController@index
+  GET|HEAD  adviser/users/{user} .................................... adviser.users.show ΓÇ║ Adviser\UserController@show
+  PUT       adviser/users/{user}/role .................. adviser.users.update-role ΓÇ║ Adviser\UserController@updateRole
+  GET|HEAD  articles ........................................................ articles.index ΓÇ║ ArticleController@index
+  POST      articles ........................................................ articles.store ΓÇ║ ArticleController@store
+  POST      articles/bulk-archive .............................. articles.bulk-archive ΓÇ║ ArticleController@bulkArchive
+  GET|HEAD  articles/create ............................................... articles.create ΓÇ║ ArticleController@create
+  GET|HEAD  articles/{article} ................................................ articles.show ΓÇ║ ArticleController@show
+  PATCH     articles/{article} ............................................ articles.update ΓÇ║ ArticleController@update
+  DELETE    articles/{article} .......................................... articles.destroy ΓÇ║ ArticleController@destroy
+  POST      articles/{article}/approve .................................. articles.approve ΓÇ║ ArticleController@approve
+  POST      articles/{article}/archive .................................. articles.archive ΓÇ║ ArticleController@archive
+  GET|HEAD  articles/{article}/edit ........................................... articles.edit ΓÇ║ ArticleController@edit
+  POST      articles/{article}/reject ..................................... articles.reject ΓÇ║ ArticleController@reject
+  POST      articles/{article}/restore .................................. articles.restore ΓÇ║ ArticleController@restore
+  GET|HEAD  auth/microsoft ................................... microsoft.login ΓÇ║ Auth\MicrosoftAuthController@redirect
+  GET|HEAD  auth/microsoft/callback ....................... microsoft.callback ΓÇ║ Auth\MicrosoftAuthController@callback
+  GET|HEAD  documents ..................................................... documents.index ΓÇ║ DocumentController@index
+  POST      documents ..................................................... documents.store ΓÇ║ DocumentController@store
+  POST      documents/bulk-archive ........................... documents.bulk-archive ΓÇ║ DocumentController@bulkArchive
+  GET|HEAD  documents/create ............................................ documents.create ΓÇ║ DocumentController@create
+  GET|HEAD  documents/{document} ............................................ documents.show ΓÇ║ DocumentController@show
+  PATCH     documents/{document} ........................................ documents.update ΓÇ║ DocumentController@update
+  DELETE    documents/{document} ...................................... documents.destroy ΓÇ║ DocumentController@destroy
+  POST      documents/{document}/approve .............................. documents.approve ΓÇ║ DocumentController@approve
+  POST      documents/{document}/archive .............................. documents.archive ΓÇ║ DocumentController@archive
+  GET|HEAD  documents/{document}/download ........................... documents.download ΓÇ║ DocumentController@download
+  GET|HEAD  documents/{document}/edit ....................................... documents.edit ΓÇ║ DocumentController@edit
+  POST      documents/{document}/reject ................................. documents.reject ΓÇ║ DocumentController@reject
+  POST      documents/{document}/restore .............................. documents.restore ΓÇ║ DocumentController@restore
+  GET|HEAD  documents/{document}/view ................................... documents.view ΓÇ║ DocumentController@viewFile
+  GET|HEAD  editorial/achievements ........................ editorial.achievements.index ΓÇ║ AchievementController@index
+  GET|HEAD  editorial/activities ............................... editorial.activities.index ΓÇ║ ActivityController@index
+  GET|HEAD  editorial/articles .................................... editorial.articles.index ΓÇ║ ArticleController@index
+  GET|HEAD  editorial/documents ................................. editorial.documents.index ΓÇ║ DocumentController@index
+  GET|HEAD  editorial/liquidations ........................ editorial.liquidations.index ΓÇ║ LiquidationController@index
+  GET|HEAD  home ............................................................................... home ΓÇ║ HomeController
+  GET|HEAD  liquidation ............................................. liquidations.index ΓÇ║ LiquidationController@index
+  POST      liquidation ............................................. liquidations.store ΓÇ║ LiquidationController@store
+  POST      liquidation/bulk-archive ................... liquidations.bulk-archive ΓÇ║ LiquidationController@bulkArchive
+  GET|HEAD  liquidation/create .................................... liquidations.create ΓÇ║ LiquidationController@create
+  GET|HEAD  liquidation/{liquidation} ................................. liquidations.show ΓÇ║ LiquidationController@show
+  PATCH     liquidation/{liquidation} ............................. liquidations.update ΓÇ║ LiquidationController@update
+  DELETE    liquidation/{liquidation} ........................... liquidations.destroy ΓÇ║ LiquidationController@destroy
+  POST      liquidation/{liquidation}/approve ................... liquidations.approve ΓÇ║ LiquidationController@approve
+  POST      liquidation/{liquidation}/archive ................... liquidations.archive ΓÇ║ LiquidationController@archive
+  GET|HEAD  liquidation/{liquidation}/download ................ liquidations.download ΓÇ║ LiquidationController@download
+  GET|HEAD  liquidation/{liquidation}/edit ............................ liquidations.edit ΓÇ║ LiquidationController@edit
+  POST      liquidation/{liquidation}/reject ...................... liquidations.reject ΓÇ║ LiquidationController@reject
+  POST      liquidation/{liquidation}/restore ................... liquidations.restore ΓÇ║ LiquidationController@restore
+  GET|HEAD  liquidation/{liquidation}/view ........................ liquidations.view ΓÇ║ LiquidationController@viewFile
+  GET|HEAD  login ......................................................... login ΓÇ║ Auth\AuthController@redirectToHome
+  POST      login .......................................................................... Auth\AuthController@login
+  POST      logout ............................................................... logout ΓÇ║ Auth\AuthController@logout
+  GET|HEAD  notifications ......................................... notifications.index ΓÇ║ NotificationController@index
+  POST      notifications/read-all ........................... notifications.read-all ΓÇ║ NotificationController@readAll
+  GET|HEAD  notifications/summary ............................. notifications.summary ΓÇ║ NotificationController@summary
+  DELETE    notifications/{notification} ...................... notifications.destroy ΓÇ║ NotificationController@destroy
+  GET|HEAD  notifications/{notification}/avatar ................. notifications.avatar ΓÇ║ NotificationController@avatar
+  POST      notifications/{notification}/read ....................... notifications.read ΓÇ║ NotificationController@read
+  GET|HEAD  officer/dashboard ........................................ officer.dashboard ΓÇ║ Officer\DashboardController
+  POST      posts/{type}/{post}/like .......................................... posts.like ΓÇ║ PostLikeController@toggle
+  PUT       profile ................................................ profile.update ΓÇ║ Profile\ProfileController@update
+  GET|HEAD  profile/complete ..................................... profile.complete ΓÇ║ Profile\ProfileController@create
+  POST      profile/complete ................................ profile.complete.store ΓÇ║ Profile\ProfileController@store
+  GET|HEAD  profile/edit ............................................... profile.edit ΓÇ║ Profile\ProfileController@edit
+  POST      profile/picture ......................... profile.picture.update ΓÇ║ Profile\ProfileController@updatePicture
+  DELETE    profile/picture ......................... profile.picture.remove ΓÇ║ Profile\ProfileController@removePicture
+  GET|HEAD  search ............................................................. search.index ΓÇ║ SearchController@index
+  GET|HEAD  search/suggest ................................................. search.suggest ΓÇ║ SearchController@suggest
+  GET|HEAD  storage/{path} storage.local ΓÇ║ vendor/laravel/framework/src/Illuminate/Filesystem/FilesystemServiceProvidΓÇª
+  PUT       storage/{path} storage.local.upload ΓÇ║ vendor/laravel/framework/src/Illuminate/Filesystem/FilesystemServicΓÇª
+  GET|HEAD  up ........... vendor/laravel/framework/src/Illuminate/Foundation/Configuration/ApplicationBuilder.php:219
+  GET|HEAD  workspace/posts/achievements ............ workspace.posts.achievements.index ΓÇ║ AchievementController@index
+  GET|HEAD  workspace/posts/activities ................... workspace.posts.activities.index ΓÇ║ ActivityController@index
+  GET|HEAD  workspace/posts/articles ........................ workspace.posts.articles.index ΓÇ║ ArticleController@index
+  GET|HEAD  workspace/posts/documents ..................... workspace.posts.documents.index ΓÇ║ DocumentController@index
+  GET|HEAD  workspace/posts/liquidations ............ workspace.posts.liquidations.index ΓÇ║ LiquidationController@index
+
+                                                                                                  Showing [113] routes
+

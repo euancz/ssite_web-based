@@ -13,5 +13,14 @@
 @endphp
 
 <span {{ $attributes->class(['status-badge', $statusClass]) }}>
+    @if ($normalizedStatus === 'pending')
+        <x-icon name="clock" size="sm" />
+    @elseif ($normalizedStatus === 'approved')
+        <x-icon name="circle-check" size="sm" />
+    @elseif ($normalizedStatus === 'rejected')
+        <x-icon name="circle-x" size="sm" />
+    @elseif ($normalizedStatus === 'archived')
+        <x-icon name="archive" size="sm" />
+    @endif
     {{ ucfirst($normalizedStatus) }}
 </span>

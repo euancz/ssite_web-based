@@ -83,6 +83,35 @@
             const notificationBadge = document.getElementById('notification-badge');
             const notificationCsrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
             const postLabels = { article: 'Article', activity: 'Activity', achievement: 'Achievement', document: 'Document', liquidation: 'Liquidation' };
+            const notificationIconTemplates = new Map([
+                ['submitted', 'notification-icon-submitted'],
+                ['approved', 'notification-icon-approved'],
+                ['published', 'notification-icon-published'],
+                ['rejected', 'notification-icon-rejected'],
+            ]);
+            const notificationPostIconTemplates = new Map([
+                ['article', 'notification-post-article'],
+                ['activity', 'notification-post-activity'],
+                ['achievement', 'notification-post-achievement'],
+                ['document', 'notification-post-document'],
+                ['liquidation', 'notification-post-liquidation'],
+            ]);
+            const appendStaticIcon = (container, templateId, className) => {
+                const template = document.getElementById(templateId);
+                if (!(template instanceof HTMLTemplateElement)) {
+                    console.error(`Missing static notification icon template: ${templateId}`);
+                    return;
+                }
+                const source = template.content.firstElementChild;
+                if (!(source instanceof SVGSVGElement)) {
+                    console.error(`Invalid static notification icon template: ${templateId}`);
+                    return;
+                }
+                const icon = source.cloneNode(true);
+                if (!(icon instanceof SVGSVGElement)) return;
+                icon.classList.add(className);
+                container.append(icon);
+            };
             document.querySelectorAll('.notification-actor-avatar').forEach((avatar) => {
                 avatar.addEventListener('error', () => avatar.remove(), { once: true });
             });
@@ -121,8 +150,13 @@
                     if (!response.ok) throw new Error('Notification request failed.');
                     const summary = await response.json();
                     const count = Number(summary.unread_count || 0);
+                    const previousCount = Number(notificationBadge.dataset.unreadCount || 0);
                     notificationBadge.textContent = count > 99 ? '99+' : String(count);
+                    notificationBadge.dataset.unreadCount = String(count);
                     notificationBadge.classList.toggle('hidden', count === 0);
+                    if (count !== previousCount && count > 0) {
+                        notificationBadge.dispatchEvent(new Event('ssite:notification-count-change'));
+                    }
 
                     document.querySelectorAll('[data-notification-post-type]').forEach((dot) => {
                         const unread = Number(summary.nav_counts?.[dot.dataset.notificationPostType] || 0) > 0;
@@ -152,9 +186,9 @@
                         const typeIcon = document.createElement('span');
                         typeIcon.className = `notification-type-icon notification-type-${data.type || 'published'}`;
                         typeIcon.setAttribute('aria-hidden', 'true');
-                        typeIcon.textContent = (data.type || 'published').slice(0, 1).toUpperCase();
+                        appendStaticIcon(typeIcon, notificationIconTemplates.get(data.type) || 'notification-icon-default', 'notification-status-icon');
                         const postIcon = document.createElement('small');
-                        postIcon.textContent = (postLabels[data.post_type] || 'P').slice(0, 1);
+                        appendStaticIcon(postIcon, notificationPostIconTemplates.get(data.post_type) || 'notification-post-article', 'notification-post-icon');
                         typeIcon.append(postIcon);
                         const avatar = document.createElement('img');
                         avatar.className = 'notification-actor-avatar';

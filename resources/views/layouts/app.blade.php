@@ -12,6 +12,7 @@
 
     <!-- App styles -->
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    @vite('resources/js/app.js')
     @php
         $workspaceUser = auth()->user();
         $workspaceRole = $workspaceUser && (
@@ -47,6 +48,23 @@
     @stack('styles')
 </head>
 <body class="{{ $workspaceEnabled ? 'site-body workspace-site-body' : 'site-body' }}">
+    <template id="search-icon-articles"><x-icon name="file-text" size="sm" /></template>
+    <template id="search-icon-activities"><x-icon name="calendar-days" size="sm" /></template>
+    <template id="search-icon-achievements"><x-icon name="award" size="sm" /></template>
+    <template id="search-icon-documents"><x-icon name="file-text" size="sm" /></template>
+    <template id="search-icon-liquidation"><x-icon name="chart-column-increasing" size="sm" /></template>
+    <template id="search-icon-officers"><x-icon name="users" size="sm" /></template>
+    <template id="search-icon-default"><x-icon name="info" size="sm" /></template>
+    <template id="notification-icon-submitted"><x-icon name="clock" size="sm" /></template>
+    <template id="notification-icon-approved"><x-icon name="circle-check" size="sm" /></template>
+    <template id="notification-icon-published"><x-icon name="circle-check" size="sm" /></template>
+    <template id="notification-icon-rejected"><x-icon name="circle-x" size="sm" /></template>
+    <template id="notification-icon-default"><x-icon name="info" size="sm" /></template>
+    <template id="notification-post-article"><x-icon name="file-text" size="sm" /></template>
+    <template id="notification-post-activity"><x-icon name="calendar-days" size="sm" /></template>
+    <template id="notification-post-achievement"><x-icon name="award" size="sm" /></template>
+    <template id="notification-post-document"><x-icon name="file-text" size="sm" /></template>
+    <template id="notification-post-liquidation"><x-icon name="chart-column-increasing" size="sm" /></template>
     @if ($workspaceEnabled)
         @include('layouts.partials.workspace')
     @else
@@ -87,10 +105,8 @@
                         <input type="text" name="q" value="{{ request()->routeIs('search.index') && isset($query) ? $query : (is_string(request()->query('q')) ? mb_substr(request()->query('q'), 0, 100) : '') }}" placeholder="Discover something from SSITE..."
                                class="site-search-input" role="combobox" aria-autocomplete="list" aria-expanded="false"
                                aria-controls="desktop-search-list" autocomplete="off">
-                        <button type="submit" class="search-submit-icon" aria-label="Search">
-                            <svg class="site-search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M18 10.5a7.5 7.5 0 11-15 0 7.5 7.5 0 0115 0z"/>
-                            </svg>
+                        <button type="submit" class="search-submit-icon" aria-label="Search" data-tooltip="Search">
+                            <x-icon name="search" size="sm" class="site-search-icon" />
                         </button>
                     </form>
                     <div id="desktop-search-list" class="search-suggestions hidden" role="listbox" aria-label="Search suggestions"></div>
@@ -98,12 +114,12 @@
 
                 {{-- search icon (mobile/tablet only, opens the mobile search field below) --}}
                 <button type="button"
-                        aria-label="Search"
-                        onclick="document.getElementById('mobile-search').classList.toggle('hidden')"
-                        class="icon-button mobile-search-toggle">
-                    <svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M18 10.5a7.5 7.5 0 11-15 0 7.5 7.5 0 0115 0z"/>
-                    </svg>
+                        id="mobile-search-toggle"
+                        aria-label="Open search"
+                        aria-controls="mobile-search"
+                        aria-expanded="false"
+                        class="icon-button mobile-search-toggle" data-tooltip="Open search">
+                    <x-icon name="search" class="icon" />
                 </button>
 
                 {{-- LOGGED OUT: Login button --}}
@@ -189,11 +205,10 @@
                          data-read-url-template="{{ route('notifications.read', '00000000-0000-4000-8000-000000000000') }}"
                          data-avatar-url-template="{{ route('notifications.avatar', '00000000-0000-4000-8000-000000000000') }}">
                         <button type="button" id="notifications-toggle" aria-label="Notifications"
-                                aria-controls="notifications-dropdown" aria-expanded="false" class="icon-button account-notifications">
-                            <svg class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                            </svg>
-                            <span id="notification-badge" class="notification-badge {{ $notificationUnreadCount ? '' : 'hidden' }}">{{ $notificationUnreadCount > 99 ? '99+' : $notificationUnreadCount }}</span>
+                                aria-controls="notifications-dropdown" aria-expanded="false" class="icon-button account-notifications" data-tooltip="Notifications">
+                            <x-icon name="bell" class="icon" />
+                            {{-- SECURITY: Seed count-change detection with the server-rendered unread total; visible text stays capped. --}}
+                            <span id="notification-badge" class="notification-badge {{ $notificationUnreadCount ? '' : 'hidden' }}" data-motion="badge" data-unread-count="{{ $notificationUnreadCount }}">{{ $notificationUnreadCount > 99 ? '99+' : $notificationUnreadCount }}</span>
                         </button>
                         <section id="notifications-dropdown" class="notification-dropdown hidden" aria-label="Notifications">
                             <div class="notification-dropdown-heading">
@@ -217,7 +232,7 @@
                                 aria-haspopup="menu"
                                 aria-controls="account-menu"
                                 aria-expanded="false"
-                                class="icon-button account-toggle">
+                                class="icon-button account-toggle" data-tooltip="Account menu">
                             {{-- Keep the existing circular account button styling while showing the signed-in user's avatar. --}}
                             <x-ui.avatar :user="auth()->user()" size="sm" />
                         </button>
@@ -235,17 +250,12 @@
                             </div>
                             @if (auth()->user()->hasCompletedProfile())
                                 <a href="{{ route('profile.edit') }}" class="account-menu-action" role="menuitem">
-                                    <svg aria-hidden="true" class="icon-small" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.1a7.5 7.5 0 0115 0A17.9 17.9 0 0112 21.75c-2.7 0-5.25-.6-7.5-1.65z"/>
-                                    </svg>
+                                    <x-icon name="user-round" size="sm" class="icon-small" />
                                     <span>My Profile</span>
                                 </a>
                             @endif
                             <button type="button" class="account-menu-action" role="menuitem">
-                                <svg aria-hidden="true" class="icon-small" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25a3.75 3.75 0 100 7.5 3.75 3.75 0 000-7.5z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06-1.5 2.6-.08-.02a1.65 1.65 0 00-1.78.76l-.04.07h-3l-.02-.08a1.65 1.65 0 00-1.4-1.14 1.65 1.65 0 00-1.73.92l-.04.08-2.84-1.02.02-.08a1.65 1.65 0 00-.76-1.78l-.07-.04v-3l.08-.02a1.65 1.65 0 001.14-1.4 1.65 1.65 0 00-.92-1.73l-.08-.04 1.02-2.84.08.02a1.65 1.65 0 001.78-.76l.04-.07h3l.02.08a1.65 1.65 0 001.4 1.14 1.65 1.65 0 001.73-.92l.04-.08 2.84 1.02-.02.08a1.65 1.65 0 00.76 1.78l.07.04v3l-.08.02A1.65 1.65 0 0019.4 15z"/>
-                                </svg>
+                                <x-icon name="settings" size="sm" class="icon-small" />
                                 <span>Settings</span>
                             </button>
                             @if (auth()->user()->canPost() || auth()->user()->can('review-posts') || auth()->user()->can('manage-users') || auth()->user()->can('manage-officers'))
@@ -257,9 +267,7 @@
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="account-menu-logout" role="menuitem">
-                                    <svg aria-hidden="true" class="icon-small" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3-3H9m0 0l3-3m-3 3l3 3"/>
-                                    </svg>
+                                    <x-icon name="log-out" size="sm" class="icon-small" />
                                     <span>Logout</span>
                                 </button>
                             </form>
@@ -270,15 +278,12 @@
                 {{-- hamburger (mobile/tablet only) --}}
                 <button type="button"
                         aria-label="Open menu"
+                        data-tooltip="Open menu"
                         aria-expanded="false"
                         aria-controls="mobile-nav"
                         class="icon-button mobile-menu-toggle">
-                    <svg id="icon-open" class="icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-                    </svg>
-                    <svg id="icon-close" class="icon hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
+                    <x-icon name="menu" class="icon" id="icon-open" />
+                    <x-icon name="x" class="icon hidden" id="icon-close" />
                 </button>
             </div>
         </div>
@@ -291,10 +296,8 @@
                     <input type="text" name="q" value="{{ request()->routeIs('search.index') && isset($query) ? $query : (is_string(request()->query('q')) ? mb_substr(request()->query('q'), 0, 100) : '') }}" placeholder="Discover something from SSITE..."
                            class="site-search-input" role="combobox" aria-autocomplete="list" aria-expanded="false"
                            aria-controls="mobile-search-list" autocomplete="off">
-                    <button type="submit" class="search-submit-icon" aria-label="Search">
-                        <svg class="site-search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M18 10.5a7.5 7.5 0 11-15 0 7.5 7.5 0 0115 0z"/>
-                        </svg>
+                    <button type="submit" class="search-submit-icon" aria-label="Search" data-tooltip="Search">
+                        <x-icon name="search" size="sm" class="site-search-icon" />
                     </button>
                 </form>
                 <div id="mobile-search-list" class="search-suggestions hidden" role="listbox" aria-label="Search suggestions"></div>
@@ -312,12 +315,35 @@
             const mobileNav = document.getElementById('mobile-nav');
             const openIcon = document.getElementById('icon-open');
             const closeIcon = document.getElementById('icon-close');
+            const searchToggle = document.getElementById('mobile-search-toggle');
+            const mobileSearch = document.getElementById('mobile-search');
+
+            {{-- Keep the mobile search toggle's accessible state aligned with the existing visibility toggle. --}}
+            if (searchToggle && mobileSearch) {
+                searchToggle.addEventListener('click', () => {
+                    const open = searchToggle.getAttribute('aria-expanded') !== 'true';
+                    searchToggle.setAttribute('aria-expanded', String(open));
+                    searchToggle.setAttribute('aria-label', open ? 'Close search' : 'Open search');
+                    searchToggle.dataset.tooltip = open ? 'Close search' : 'Open search';
+                    mobileSearch.classList.toggle('hidden', !open);
+                });
+
+                window.matchMedia('(min-width: 1024px)').addEventListener('change', (event) => {
+                    if (!event.matches) return;
+                    mobileSearch.classList.add('hidden');
+                    searchToggle.setAttribute('aria-expanded', 'false');
+                    searchToggle.setAttribute('aria-label', 'Open search');
+                    searchToggle.dataset.tooltip = 'Open search';
+                });
+            }
 
             if (!menuToggle || !mobileNav || !openIcon || !closeIcon) return;
 
             const setMenuOpen = (open) => {
                 menuToggle.setAttribute('aria-expanded', String(open));
-                menuToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+                const label = open ? 'Close menu' : 'Open menu';
+                menuToggle.setAttribute('aria-label', label);
+                menuToggle.dataset.tooltip = label;
                 mobileNav.classList.toggle('hidden', !open);
                 openIcon.classList.toggle('hidden', open);
                 closeIcon.classList.toggle('hidden', !open);
@@ -413,22 +439,15 @@
                 <h4 class="footer-heading">Contact Us</h4>
                 <ul class="footer-contact-list">
                     <li class="footer-contact-item">
-                        <svg class="footer-contact-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
+                        <x-icon name="map-pin" size="md" class="footer-contact-icon" />
                         <span>Dolores, Mabalacat City College</span>
                     </li>
                     <li class="footer-contact-item">
-                        <svg class="footer-contact-icon" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M22 12a10 10 0 10-11.5 9.87v-6.99H7.9V12h2.6V9.8c0-2.57 1.53-3.99 3.87-3.99 1.12 0 2.3.2 2.3.2v2.53h-1.3c-1.28 0-1.68.8-1.68 1.62V12h2.86l-.46 2.88h-2.4v6.99A10 10 0 0022 12z"/>
-                        </svg>
+                        <x-icon name="external-link" size="md" class="footer-contact-icon" />
                         <a href="https://www.facebook.com/ICSSSITE" class="footer-facebook-link" target="_blank" rel="noopener noreferrer">Student Society in Information Technology Education</a>
                     </li>
                     <li class="footer-contact-item">
-                        <svg class="footer-contact-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                        </svg>
+                        <x-icon name="mail" size="md" class="footer-contact-icon" />
                         <a href="mailto:ssite@gmail.com" class="footer-email-link">ssite@gmail.com</a>
                     </li>
                 </ul>
@@ -443,10 +462,8 @@
     </footer>
     @endif
 
-    <button type="button" id="back-to-top" class="back-to-top hidden" aria-label="Back to top">
-        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m-7 7 7-7 7 7"/>
-        </svg>
+    <button type="button" id="back-to-top" class="back-to-top hidden" aria-label="Back to top" data-tooltip="Back to top">
+        <x-icon name="arrow-up" size="md" />
     </button>
 
     <div id="page-loading-skeleton" class="page-loading-skeleton hidden" role="status" aria-label="Loading page">

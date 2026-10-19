@@ -8,7 +8,7 @@
 
     {{-- Show a confirmation after the signed-in user saves profile edits. --}}
     @if (session('status'))
-        <p class="dashboard-success" role="status">{{ session('status') }}</p>
+        <p class="dashboard-success" role="status" data-flash-toast>{{ session('status') }}</p>
     @endif
 
     {{-- Keep field-specific validation feedback visible on a failed update. --}}
