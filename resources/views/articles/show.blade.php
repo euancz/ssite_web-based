@@ -5,10 +5,17 @@
 @section('content')
 <x-posts.feed-frame variant="show" stylesheet="articles">
     @if (session('status'))
-        <p class="dashboard-success" role="status">{{ session('status') }}</p>
+        <p class="dashboard-success" role="status" data-flash-toast>{{ session('status') }}</p>
     @endif
     @if (session('error'))
-        <p class="dashboard-error" role="alert">{{ session('error') }}</p>
+        <p class="dashboard-error" role="alert" data-flash-toast>{{ session('error') }}</p>
+    @endif
+
+    @if ($article->isApproved() && ! $article->isArchived())
+        {{-- SECURITY: The read-only progress indicator appears only for approved, active article details. --}}
+        <div class="article-reading-progress" data-motion="reading-progress" aria-hidden="true" hidden>
+            <span></span>
+        </div>
     @endif
 
     <x-posts.card
@@ -21,6 +28,7 @@
         :full="true"
         :media-url="$article->imageUrl()"
         :media-alt="$article->title"
+        :reading-progress="$article->isApproved() && ! $article->isArchived()"
     >
         <x-slot:footerActions>
             @can('approve', $article)

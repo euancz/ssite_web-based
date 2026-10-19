@@ -52,9 +52,7 @@
 				<details class="leadership-item">
 					<summary>
 						<span>SSITE Officers A.Y. {{ $year }}</span>
-						<svg class="leadership-chevron" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/>
-						</svg>
+						<x-icon name="chevron-down" size="sm" class="leadership-chevron" />
 					</summary>
 					<div class="officers-grid">
 						@foreach ($yearOfficers as $officer)

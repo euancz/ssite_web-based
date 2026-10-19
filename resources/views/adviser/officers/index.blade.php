@@ -8,7 +8,7 @@
     <x-ui.page-header title="Manage Officers" subtitle="Maintain the annual officer snapshots shown on About.">
         <x-slot:actions><a class="dashboard-button" href="{{ route('adviser.officers.create', ['academic_year' => $year]) }}"><x-workspace.icon name="plus" />Add officer</a></x-slot:actions>
     </x-ui.page-header>
-    @if (session('status')) <p class="dashboard-success" role="status">{{ session('status') }}</p> @endif
+    @if (session('status')) <p class="dashboard-success" role="status" data-flash-toast>{{ session('status') }}</p> @endif
     @if ($errors->any()) <div class="dashboard-error" role="alert">@foreach ($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div> @endif
     <section class="dashboard-panel">
         <form method="GET" action="{{ route('adviser.officers.index') }}" class="dashboard-filter-form">

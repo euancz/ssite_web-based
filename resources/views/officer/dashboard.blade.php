@@ -21,8 +21,8 @@
                 <a class="workspace-metric-card workspace-officer-metric-card" href="{{ route($module['index'], ['tab' => 'mine']) }}">
                     <span class="workspace-metric-icon"><x-workspace.icon :name="$modules[$key]['icon'] ?? 'file'" /></span>
                     <span class="workspace-metric-label">{{ $module['label'] }}</span>
-                    <strong class="workspace-metric-value">{{ $module['total'] }}</strong>
-                    <small>{{ $module['pending'] }} pending <span aria-hidden="true">·</span> {{ $module['approved'] }} approved <span aria-hidden="true">·</span> {{ $module['rejected'] }} rejected</small>
+                    <strong class="workspace-metric-value"><x-ui.count-up :value="$module['total']" /></strong>
+                    <small><x-ui.count-up :value="$module['pending']" /> pending <span aria-hidden="true">·</span> <x-ui.count-up :value="$module['approved']" /> approved <span aria-hidden="true">·</span> <x-ui.count-up :value="$module['rejected']" /> rejected</small>
                 </a>
             @endforeach
         </div>

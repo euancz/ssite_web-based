@@ -5,7 +5,14 @@
             const inputs = [...document.querySelectorAll('.search-form [role="combobox"]')];
             const suggestionsUrl = @json(route('search.suggest'));
             const typeLabels = { articles: 'Articles', activities: 'Activities', achievements: 'Achievements', documents: 'Documents', liquidation: 'Liquidation', officers: 'Officers' };
-            const typeIcons = { articles: '▤', activities: '◷', achievements: '★', documents: '▧', liquidation: '◫', officers: '♙' };
+            const typeIconTemplates = {
+                articles: 'search-icon-articles',
+                activities: 'search-icon-activities',
+                achievements: 'search-icon-achievements',
+                documents: 'search-icon-documents',
+                liquidation: 'search-icon-liquidation',
+                officers: 'search-icon-officers',
+            };
             let timer = null;
             let request = null;
             let sequence = 0;
@@ -79,7 +86,13 @@
                     const icon = document.createElement('span');
                     icon.className = 'search-suggestion-icon';
                     icon.setAttribute('aria-hidden', 'true');
-                    icon.textContent = typeIcons[type] || '•';
+                    const templateId = Object.hasOwn(typeIconTemplates, type) ? typeIconTemplates[type] : 'search-icon-default';
+                    const template = document.getElementById(templateId);
+                    if (template instanceof HTMLTemplateElement) {
+                        icon.append(template.content.cloneNode(true));
+                    } else {
+                        console.error(`Missing static search icon template: ${templateId}`);
+                    }
                     const label = document.createElement('span');
                     label.textContent = typeLabels[type] || 'Results';
                     heading.append(icon, label);

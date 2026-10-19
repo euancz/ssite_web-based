@@ -9,10 +9,12 @@
     'mediaUrl' => null,
     'mediaAlt' => null,
     'showApproval' => true,
+    'readingProgress' => false,
 ])
 
 {{-- One escaped, role-aware card keeps list and detail anatomy consistent across all post types. --}}
-<article class="post-card {{ $full ? 'post-card-full' : '' }}">
+{{-- SECURITY: Reveal only server-rendered feed cards; the Motion module caps eligible cards and leaves HTML visible by default. --}}
+<article class="post-card {{ $full ? 'post-card-full' : '' }}" @if (! $full) data-motion="reveal" @endif>
     <header class="post-card-header">
         <x-ui.avatar
             :user="$post->author"
@@ -62,7 +64,7 @@
         @endcan
         @if ($full)
             <h1 class="post-card-title">{{ $post->title }}</h1>
-            <div class="post-card-body post-card-body-full">{{ $content }}</div>
+            <div class="post-card-body post-card-body-full" @if ($readingProgress) data-reading-content @endif>{{ $content }}</div>
         @else
             <h2 class="post-card-title"><a href="{{ $showUrl }}">{{ $post->title }}</a></h2>
             <div class="post-card-body">

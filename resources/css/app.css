@@ -10,3 +10,10 @@
     --font-sans: 'Poppins', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+.ssite-icon {
+    display: inline-block;
+    flex-shrink: 0;
+    vertical-align: middle;
+    color: currentColor;
+}

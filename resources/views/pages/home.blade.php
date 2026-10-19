@@ -17,7 +17,7 @@
 
     {{-- The featured Article is queried from approved and active records only. --}}
     @forelse ($articles as $article)
-        <article class="featured-article card-hover">
+        <article class="featured-article card-hover" data-motion="reveal">
             <p class="article-category">Article</p>
             <h2 class="featured-title">
                 <a href="{{ route('articles.show', $article) }}" class="article-title-link">{{ $article->title }}</a>
@@ -47,7 +47,7 @@
 
         {{-- Public Activity cards contain only approved and active records from the home query. --}}
         @forelse ($activities as $activity)
-            <article class="secondary-article secondary-article-first card-hover">
+            <article class="secondary-article secondary-article-first card-hover" data-motion="reveal">
                 <a href="{{ route('activities.show', $activity) }}" class="secondary-article-image-link card-media" aria-label="Read {{ $activity->title }}">
                         <img src="{{ $activity->imageUrl() }}" alt="Activity: {{ $activity->title }}" class="article-image">
                 </a>
@@ -69,7 +69,7 @@
 
         {{-- Public Achievement cards contain only approved and active records from the home query. --}}
         @forelse ($achievements as $achievement)
-            <article class="secondary-article secondary-article-second card-hover">
+            <article class="secondary-article secondary-article-second card-hover" data-motion="reveal">
                 <a href="{{ route('achievements.show', $achievement) }}" class="secondary-article-image-link card-media" aria-label="Read {{ $achievement->title }}">
                         <img src="{{ $achievement->imageUrl() }}" alt="Achievement: {{ $achievement->title }}" class="article-image">
                 </a>

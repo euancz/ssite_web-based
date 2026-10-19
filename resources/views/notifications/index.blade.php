@@ -24,11 +24,18 @@
         <div class="notification-page-list">
             @forelse ($notifications as $notification)
                 @php($data = (array) $notification->data)
+                @php($statusIcon = match ($data['type'] ?? '') {
+                    'submitted' => 'clock',
+                    'approved', 'published' => 'circle-check',
+                    'rejected' => 'circle-x',
+                    default => 'info',
+                })
                 <article class="notification-page-card {{ $notification->read_at ? '' : 'is-unread' }}">
                     <form method="POST" action="{{ route('notifications.read', $notification->id) }}" class="notification-page-open-form">
                         @csrf
                         <button type="submit" class="notification-page-open">
-                            <span class="notification-type-icon notification-type-{{ $data['type'] ?? 'published' }}" aria-hidden="true">{{ strtoupper(substr($data['type'] ?? 'P', 0, 1)) }}
+                            <span class="notification-type-icon notification-type-{{ $data['type'] ?? 'published' }}" aria-hidden="true">
+                                <x-icon :name="$statusIcon" size="sm" class="notification-status-icon" />
                                 <img class="notification-actor-avatar" src="{{ route('notifications.avatar', $notification->id) }}" alt="">
                             </span>
                             <span class="notification-page-copy">

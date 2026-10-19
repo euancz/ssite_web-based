@@ -26,9 +26,7 @@
                 <p>@yield('message')</p>
                 <a class="error-home-link" href="{{ url('/') }}">
                     <span>Return to SSITE home</span>
-                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.75 12h14.5m-6-6 6 6-6 6"/>
-                    </svg>
+                    <x-icon name="arrow-right" size="sm" />
                 </a>
             </div>
         </main>

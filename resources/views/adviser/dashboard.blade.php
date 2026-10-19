@@ -13,9 +13,9 @@
         <section class="workspace-governance-summary" aria-labelledby="governance-summary-title">
             <div class="workspace-governance-section-heading"><div><h2 id="governance-summary-title">People and publishing</h2><p>Quick counts for your organization.</p></div></div>
             <ul class="workspace-governance-counts">
-                <li><div class="workspace-governance-count-card"><span class="workspace-metric-icon"><x-workspace.icon name="clock" /></span><span class="workspace-metric-label">Pending submissions</span><strong class="workspace-metric-value">{{ $pendingTotal }}</strong><small>Counts only; post details are restricted to the President.</small></div></li>
-                <li><a class="workspace-governance-count-card" href="{{ route('adviser.users.index', ['role' => 'officer']) }}"><span class="workspace-metric-icon"><x-workspace.icon name="users" /></span><span class="workspace-metric-label">Officers</span><strong class="workspace-metric-value">{{ $totalOfficers }}</strong><small>Review officer accounts</small></a></li>
-                <li><a class="workspace-governance-count-card" href="{{ route('adviser.users.index', ['role' => 'student']) }}"><span class="workspace-metric-icon"><x-workspace.icon name="users" /></span><span class="workspace-metric-label">Students</span><strong class="workspace-metric-value">{{ $totalStudents }}</strong><small>Review student accounts</small></a></li>
+                <li><div class="workspace-governance-count-card"><span class="workspace-metric-icon"><x-workspace.icon name="clock" /></span><span class="workspace-metric-label">Pending submissions</span><strong class="workspace-metric-value"><x-ui.count-up :value="$pendingTotal" /></strong><small>Counts only; post details are restricted to the President.</small></div></li>
+                <li><a class="workspace-governance-count-card" href="{{ route('adviser.users.index', ['role' => 'officer']) }}"><span class="workspace-metric-icon"><x-workspace.icon name="users" /></span><span class="workspace-metric-label">Officers</span><strong class="workspace-metric-value"><x-ui.count-up :value="$totalOfficers" /></strong><small>Review officer accounts</small></a></li>
+                <li><a class="workspace-governance-count-card" href="{{ route('adviser.users.index', ['role' => 'student']) }}"><span class="workspace-metric-icon"><x-workspace.icon name="users" /></span><span class="workspace-metric-label">Students</span><strong class="workspace-metric-value"><x-ui.count-up :value="$totalStudents" /></strong><small>Review student accounts</small></a></li>
             </ul>
         </section>
 
@@ -29,7 +29,7 @@
             <div class="workspace-governance-section-heading"><div><h2 id="pending-counts-heading">Pending submission counts</h2><p>Titles, authors, and private post content are not shown here.</p></div></div>
             <ul class="workspace-governance-module-counts">
                 @foreach ($pendingByModule as $module)
-                    <li><span>{{ $module['label'] }}</span><strong>{{ $module['count'] }}</strong></li>
+                    <li><span>{{ $module['label'] }}</span><strong><x-ui.count-up :value="$module['count']" /></strong></li>
                 @endforeach
             </ul>
         </section>

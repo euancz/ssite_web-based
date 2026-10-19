@@ -5,15 +5,15 @@
 @section('content')
 <x-posts.feed-frame variant="show" stylesheet="liquidation">
     @if (session('status'))
-        <p class="dashboard-success" role="status">{{ session('status') }}</p>
+        <p class="dashboard-success" role="status" data-flash-toast>{{ session('status') }}</p>
     @endif
     @if (session('error'))
-        <p class="dashboard-error" role="alert">{{ session('error') }}</p>
+        <p class="dashboard-error" role="alert" data-flash-toast>{{ session('error') }}</p>
     @endif
 
     <article class="liquidation-document-detail">
         <header class="liquidation-detail-heading">
-            <div class="liquidation-report-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3.75h6l4 4v12.5H7a2 2 0 0 1-2-2v-12.5a2 2 0 0 1 2-2zM13 3.75v4h4M8 14h8M8 17h8"/></svg><span>PDF</span></div>
+            <div class="liquidation-report-icon" aria-hidden="true"><x-icon name="file-text" /><span>PDF</span></div>
             <div><h1>{{ $liquidation->title }}</h1><p>Submitted by {{ $liquidation->author?->name ?? 'Former member' }} · {{ $liquidation->created_at?->format('F j, Y') ?? 'Date unavailable' }}</p></div>
             <x-posts.row-menu :post="$liquidation" route-prefix="liquidations" />
         </header>

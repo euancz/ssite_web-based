@@ -119,19 +119,21 @@
 
         <div class="workspace-main">
             <header class="workspace-topbar">
-                <button class="workspace-menu-toggle" type="button" aria-label="Collapse sidebar" aria-pressed="false" aria-controls="workspace-sidebar">
+                {{-- SECURITY: Keep the menu's accessible name and visible tooltip in sync with its existing responsive state. --}}
+                <button class="workspace-menu-toggle" type="button" aria-label="Collapse sidebar" data-tooltip="Collapse sidebar" aria-pressed="false" aria-controls="workspace-sidebar">
                     <x-workspace.icon name="menu" />
                 </button>
                 <div class="workspace-topbar-title"><span>SSITE Workspace</span><span aria-hidden="true">/</span><strong>@yield('title', 'Dashboard')</strong></div>
                 <div class="workspace-topbar-actions">
-                    <a class="workspace-view-site" href="{{ url('/') }}"><x-workspace.icon name="external" /><span>View site</span></a>
+                    <a class="workspace-view-site" href="{{ url('/') }}" aria-label="View site" data-tooltip="View site"><x-workspace.icon name="external" /><span>View site</span></a>
                     <div class="notification-menu-wrapper workspace-notification" id="notification-menu-wrapper"
                          data-summary-url="{{ route('notifications.summary') }}"
                          data-read-url-template="{{ route('notifications.read', '00000000-0000-4000-8000-000000000000') }}"
                          data-avatar-url-template="{{ route('notifications.avatar', '00000000-0000-4000-8000-000000000000') }}">
-                        <button type="button" id="notifications-toggle" aria-label="Notifications" aria-controls="notifications-dropdown" aria-expanded="false" class="workspace-notification-toggle">
+                        <button type="button" id="notifications-toggle" aria-label="Notifications" data-tooltip="Notifications" aria-controls="notifications-dropdown" aria-expanded="false" class="workspace-notification-toggle">
                             <x-workspace.icon name="bell" />
-                            <span id="notification-badge" class="notification-badge hidden">0</span>
+                            {{-- SECURITY: Start from the exact server-rendered unread value so the first poll is not animated. --}}
+                            <span id="notification-badge" class="notification-badge hidden" data-motion="badge" data-unread-count="0">0</span>
                         </button>
                         <section id="notifications-dropdown" class="notification-dropdown hidden" aria-label="Notifications">
                             <div class="notification-dropdown-heading">
@@ -148,7 +150,7 @@
                         </section>
                     </div>
                     <div class="account-menu-wrapper workspace-account-menu" id="account-menu-wrapper">
-                        <button type="button" id="account-menu-toggle" aria-label="Account menu" aria-haspopup="menu" aria-controls="account-menu" aria-expanded="false" class="workspace-profile-toggle">
+                        <button type="button" id="account-menu-toggle" aria-label="Account menu" data-tooltip="Account menu" aria-haspopup="menu" aria-controls="account-menu" aria-expanded="false" class="workspace-profile-toggle">
                             @if ($profileImage)
                                 <img src="{{ $profileImage }}" alt="" class="workspace-profile-picture">
                             @else
@@ -207,6 +209,7 @@
                 shell.classList.toggle('is-collapsed', value);
                 toggle.setAttribute('aria-pressed', String(value));
                 toggle.setAttribute('aria-label', value ? 'Expand sidebar' : 'Collapse sidebar');
+                toggle.dataset.tooltip = value ? 'Expand sidebar' : 'Collapse sidebar';
                 try {
                     window.localStorage.setItem(storageKey, String(value));
                 } catch (_) {
@@ -224,6 +227,7 @@
                 document.body.classList.toggle('workspace-menu-open', value);
                 toggle.setAttribute('aria-expanded', String(value));
                 toggle.setAttribute('aria-label', value ? 'Close workspace navigation' : 'Open workspace navigation');
+                toggle.dataset.tooltip = value ? 'Close workspace navigation' : 'Open workspace navigation';
                 if (value) sidebar.querySelector('a[href]')?.focus();
                 if (!value && restoreFocus) toggle.focus();
             };

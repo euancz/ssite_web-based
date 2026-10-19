@@ -555,6 +555,7 @@ a.ssite-page-button:hover {
 }
 
 .post-card-menu > summary {
+    position: relative;
     display: grid;
     min-width: 44px;
     min-height: 44px;
