@@ -73,11 +73,9 @@ Route::prefix('notifications')->name('notifications.')->middleware(['auth', 'pro
 });
 Route::prefix('documents')->name('documents.')->middleware(['auth', 'profile.complete'])->group(function () {
     Route::get('/{document}/view', [DocumentController::class, 'viewFile'])->whereNumber('document')->name('view');
-    Route::get('/{document}/download', [DocumentController::class, 'download'])->whereNumber('document')->name('download');
 });
 Route::prefix('liquidation')->name('liquidations.')->middleware(['auth', 'profile.complete'])->group(function () {
     Route::get('/{liquidation}/view', [LiquidationController::class, 'viewFile'])->whereNumber('liquidation')->name('view');
-    Route::get('/{liquidation}/download', [LiquidationController::class, 'download'])->whereNumber('liquidation')->name('download');
 });
 
 // SECURITY: Route middleware exposes each module capability in route:list; policies repeat authorization in controllers.

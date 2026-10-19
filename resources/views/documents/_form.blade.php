@@ -38,7 +38,7 @@
     </div>
 
     @if ($document)
-        <p>Current PDF: {{ $document->original_name }} · <a href="{{ route('documents.view', $document) }}">View current file</a>. Leave empty to keep the current file.</p>
+        <p>Current PDF: {{ $document->original_name }} · <a href="{{ route('documents.show', $document) }}">View current file</a>. Leave empty to keep the current file.</p>
     @endif
 
     {{-- SECURITY: The server checks the real MIME and %PDF header, then stores a generated filename privately. --}}

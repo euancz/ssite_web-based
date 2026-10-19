@@ -6,6 +6,7 @@ use App\Models\Liquidation;
 use App\Rules\MaxWords;
 use App\Support\PostNotificationRecipients;
 use App\Support\PostEngagement;
+use App\Support\PrivatePdfResponse;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -13,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -109,7 +111,10 @@ class LiquidationController extends Controller
         $engagement->recordView($liquidation, $request);
         $engagement->loadLikeState($liquidation, $request);
         $liquidation->load(['author', 'reviewer']);
-        return view('liquidation.show', compact('liquidation'));
+        $viewerUrl = $request->user() && $request->user()->can('viewFile', $liquidation)
+            ? URL::temporarySignedRoute('liquidations.view', now()->addMinutes(5), ['liquidation' => $liquidation])
+            : null;
+        return view('liquidation.show', compact('liquidation', 'viewerUrl'));
     }
 
     public function create(): View { $this->authorize('create', Liquidation::class); return view('liquidation.create'); }
@@ -284,30 +289,17 @@ class LiquidationController extends Controller
         return back()->with('status', 'The selected reports were archived.');
     }
 
-    public function viewFile(Liquidation $liquidation): StreamedResponse|RedirectResponse
+    public function viewFile(Liquidation $liquidation, Request $request, PrivatePdfResponse $pdfResponse): StreamedResponse
     {
         // SECURITY: Hide the existence of non-public reports from users without file access.
         try { $this->authorize('viewFile', $liquidation); }
         catch (AuthorizationException) { abort(404); }
-        return $this->fileResponse($liquidation, true);
-    }
-
-    public function download(Liquidation $liquidation): StreamedResponse|RedirectResponse
-    {
-        // SECURITY: A private report is a 404 to anyone other than its owner or the President.
-        try { $this->authorize('download', $liquidation); }
-        catch (AuthorizationException) { abort(404); }
-        return $this->fileResponse($liquidation, false);
-    }
-
-    private function fileResponse(Liquidation $liquidation, bool $inline): StreamedResponse|RedirectResponse
-    {
-        if (! $this->isPrivatePdfPath($liquidation->file_path) || ! Storage::disk('local')->exists($liquidation->file_path)) {
-            return back()->with('error', 'This PDF is currently unavailable. The report record is still available to manage.');
-        }
-        // SECURITY: The sanitized original label is the download name; the private path is never exposed.
-        return Storage::disk('local')->response($liquidation->file_path, $this->safeDownloadName($liquidation->original_name),
-            ['Content-Type' => 'application/pdf', 'X-Content-Type-Options' => 'nosniff'], $inline ? 'inline' : 'attachment');
+        // SECURITY: Signed URLs expire quickly; range fetches retain the same signature and recheck policy.
+        abort_unless($request->hasValidSignature(), 404);
+        // SECURITY: This best-effort header check blocks ordinary top-level PDF navigation.
+        abort_if(strtolower((string) $request->header('Sec-Fetch-Dest')) === 'document', 404);
+        if (! $this->isPrivatePdfPath($liquidation->file_path) || ! Storage::disk('local')->exists($liquidation->file_path)) abort(404);
+        return $pdfResponse->make(Storage::disk('local')->path($liquidation->file_path), $this->safeOriginalName($liquidation->original_name), $request);
     }
 
     private function assertPdf(UploadedFile $file): void
@@ -326,10 +318,10 @@ class LiquidationController extends Controller
     {
         // SECURITY: Random server-side names keep client paths out of the private liquidation folder.
         $path = $file->storeAs('liquidation', Str::random(40) . '.pdf', 'local');
-        return [$path, $this->safeDownloadName($file->getClientOriginalName()), (int) $file->getSize()];
+        return [$path, $this->safeOriginalName($file->getClientOriginalName()), (int) $file->getSize()];
     }
 
-    private function safeDownloadName(?string $name): string
+    private function safeOriginalName(?string $name): string
     {
         $name = basename(str_replace('\\', '/', (string) $name));
         $name = preg_replace('/[\x00-\x1F\x7F"\\\\\/]+/u', '', $name) ?? '';

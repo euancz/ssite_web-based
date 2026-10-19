@@ -517,7 +517,8 @@ a.ssite-page-button:hover {
 .post-card-footer button,
 .post-card-menu-panel a,
 .post-card-menu-panel button,
-.post-feed-attachment-actions a {
+.post-feed-attachment-actions a,
+.post-feed-attachment-actions button {
     display: inline-flex;
     min-height: 44px;
     align-items: center;
@@ -534,11 +535,16 @@ a.ssite-page-button:hover {
     cursor: pointer;
 }
 
+.post-feed-attachment-actions button {
+    appearance: none;
+}
+
 .post-card-footer a:hover,
 .post-card-footer button:hover,
 .post-card-menu-panel a:hover,
 .post-card-menu-panel button:hover,
-.post-feed-attachment-actions a:hover {
+.post-feed-attachment-actions a:hover,
+.post-feed-attachment-actions button:hover {
     background: var(--color-surface-page);
 }
 

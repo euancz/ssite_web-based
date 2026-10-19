@@ -1,4 +1,4 @@
-@props(['post', 'routePrefix', 'category' => null, 'guestCanSeeList' => false])
+@props(['post', 'routePrefix', 'category' => null, 'guestCanSeeList' => false, 'viewerUrl' => null, 'viewerDialogId' => null])
 
 {{-- Show sanitized file metadata and authorized controller actions, never the private storage path. --}}
 <section class="post-feed-attachment" aria-label="PDF attachment">
@@ -17,14 +17,15 @@
     </div>
     <div class="post-feed-attachment-actions">
         @can('viewFile', $post)
-            <a href="{{ route($routePrefix . '.view', $post) }}">View</a>
-        @endcan
-        @can('download', $post)
-            <a href="{{ route($routePrefix . '.download', $post) }}">Download</a>
+            @if ($viewerUrl && $viewerDialogId)
+                <button type="button" data-pdf-modal-open="{{ $viewerDialogId }}">View</button>
+            @else
+                <a href="{{ route($routePrefix . '.show', $post) }}">View</a>
+            @endif
         @endcan
         @guest
             @if ($guestCanSeeList)
-                <a href="{{ route($routePrefix . '.download', $post) }}">Log in to download</a>
+                <a href="{{ route($routePrefix . '.show', $post) }}">View details</a>
             @endif
         @endguest
     </div>

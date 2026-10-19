@@ -94,8 +94,7 @@
                     <x-posts.row-menu :post="$liquidation" route-prefix="liquidations" />
                 </div>
                 <div class="liquidation-report-actions">
-                    @can('viewFile', $liquidation)<a href="{{ route('liquidations.view', $liquidation) }}">Preview PDF</a>@endcan
-                    @can('download', $liquidation)<a href="{{ route('liquidations.download', $liquidation) }}" class="liquidation-download-link">Download PDF</a>@endcan
+                    @can('viewFile', $liquidation)<a href="{{ route('liquidations.show', $liquidation) }}">View</a>@endcan
                     @guest<a href="{{ route('liquidations.show', $liquidation) }}">View report</a>@endguest
                 </div>
                 <div class="liquidation-report-review">

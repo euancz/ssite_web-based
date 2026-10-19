@@ -28,8 +28,8 @@
         <section class="liquidation-detail-file" aria-label="PDF document">
             <div><strong>{{ $liquidation->original_name }}</strong><span>{{ number_format($liquidation->file_size / 1024, 1) }} KB · PDF document</span></div>
             <div class="liquidation-report-actions">
-                @can('viewFile', $liquidation)<a href="{{ route('liquidations.view', $liquidation) }}">Preview PDF</a>@endcan
-                @can('download', $liquidation)<a href="{{ route('liquidations.download', $liquidation) }}" class="liquidation-download-link">Download PDF</a>@endcan
+                {{-- The controller provides a short-lived signed URL only after file-view authorization. --}}
+                @can('viewFile', $liquidation)<button type="button" data-pdf-modal-open="liquidation-pdf-dialog">View</button>@endcan
                 @guest<a href="{{ route('liquidations.index') }}">Back to reports</a>@endguest
             </div>
         </section>
@@ -51,5 +51,43 @@
             @endcan
         </div>
     </article>
+
+    @can('viewFile', $liquidation)
+        {{-- The report preview uses the shared canvas viewer in a native dialog, never native PDF navigation. --}}
+        <dialog id="liquidation-pdf-dialog" class="document-pdf-dialog" aria-labelledby="liquidation-pdf-heading">
+            <section
+                id="liquidation-pdf-viewer"
+                class="document-pdf-viewer"
+                data-pdf-viewer
+                data-pdf-url="{{ $viewerUrl }}"
+                tabindex="0"
+                aria-labelledby="liquidation-pdf-heading"
+                aria-describedby="liquidation-pdf-note"
+            >
+            <div class="document-pdf-viewer__heading">
+                <h2 id="liquidation-pdf-heading">Report preview</h2>
+                <button type="button" class="dashboard-button dashboard-button-secondary" data-pdf-dialog-close aria-label="Close report preview"><x-icon name="x" size="sm" /> Close</button>
+            </div>
+            <p id="liquidation-pdf-note" class="document-pdf-viewer__note">View only. Text selection is unavailable. Use the arrow keys to change pages, plus/minus to zoom, 0 to fit width, and Escape to exit full screen.</p>
+            <div class="document-pdf-toolbar" role="group" aria-label="PDF controls">
+                <button type="button" class="dashboard-button dashboard-button-secondary" data-pdf-previous disabled>Previous</button>
+                <span class="document-pdf-page-status" data-pdf-page-status aria-live="polite">Loading page…</span>
+                <button type="button" class="dashboard-button dashboard-button-secondary" data-pdf-next disabled>Next</button>
+                <button type="button" class="dashboard-button dashboard-button-secondary" data-pdf-zoom-out disabled aria-label="Zoom out"><x-icon name="minus" size="sm" /></button>
+                <span data-pdf-zoom-status aria-live="off">100%</span>
+                <button type="button" class="dashboard-button dashboard-button-secondary" data-pdf-zoom-in disabled aria-label="Zoom in"><x-icon name="plus" size="sm" /></button>
+                <button type="button" class="dashboard-button dashboard-button-secondary" data-pdf-fit disabled>Fit width</button>
+                <button type="button" class="dashboard-button dashboard-button-secondary" data-pdf-fullscreen aria-pressed="false">Full screen</button>
+            </div>
+            <div class="document-pdf-stage" data-pdf-stage>
+                {{-- Canvas interactions have casual-copy deterrents only; this is not a security boundary. --}}
+                <canvas class="document-pdf-canvas" data-pdf-canvas draggable="false" role="img" aria-label="PDF page 1"></canvas>
+            </div>
+            <p class="document-pdf-status" data-pdf-status role="status" aria-live="polite">Loading document…</p>
+            <button type="button" class="dashboard-button dashboard-button-secondary document-pdf-retry" data-pdf-retry hidden>Reload page</button>
+            </section>
+        </dialog>
+        <noscript><p class="document-pdf-noscript">Enable JavaScript to open the report viewer.</p></noscript>
+    @endcan
 </x-posts.feed-frame>
 @endsection

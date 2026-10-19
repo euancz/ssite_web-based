@@ -249,7 +249,7 @@ These are proposed display strings. They do not change stored statuses, roles, p
 | Public visibility | Published | Means approved and active together; do not badge it as a fourth review state |
 | Create/submit | Create [item]; Submit for review | “Add,” “New,” “Submit” where same action |
 | Review actions | Approve; Reject | Do not rename approval/rejection actions differently per module |
-| Content actions | Archive; Restore; Delete permanently; Download; View | “Delete,” “Remove,” “Open” where semantically identical; private PDF still downloads through authorized route |
+| Content actions | Archive; Restore; Delete permanently; View | Delete, Remove, or Open where semantically identical; PDFs open through the authorized view route |
 | Navigation | Dashboard; Review queue; My submissions; View site; Notifications; Profile | “Needs review,” “Manage posts,” “Manage About Us” where they point to the same destination |
 | Empty states | “No [items] yet.” / “No [items] match these filters.” | Use separate unfiltered and filtered messages; preserve existing meaningful contextual detail |
 
