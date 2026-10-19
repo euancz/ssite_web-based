@@ -32,7 +32,6 @@
 | Email | `mail` | Public footer contact |
 | Overflow actions | `ellipsis` | Public and workspace post row menus |
 | Like | `heart` | Existing feature-flagged Like action |
-| Download | `download` | Existing authorized file action |
 | Delete | `trash-2` | Existing management actions |
 | Right arrow | `arrow-right` | Error-page return link |
 | Up arrow | `arrow-up` | Public back-to-top control |

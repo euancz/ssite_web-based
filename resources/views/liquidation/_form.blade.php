@@ -44,7 +44,7 @@
     </div>
 
     @if ($liquidation)
-        <p>Current PDF: {{ $liquidation->original_name }} · <a href="{{ route('liquidations.view', $liquidation) }}">View current file</a>. Leave empty to keep the current file.</p>
+        <p>Current PDF: {{ $liquidation->original_name }} · <a href="{{ route('liquidations.show', $liquidation) }}">View current file</a>. Leave empty to keep the current file.</p>
     @endif
 
     {{-- SECURITY: Server verifies finfo MIME and the %PDF header, then generates a private stored filename. --}}

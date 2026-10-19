@@ -98,9 +98,8 @@ class ContentAuthorizationTest extends TestCase
         $document->file_path = 'private/documents/example.pdf';
 
         $this->assertTrue($policy->viewFile($owner, $document));
-        $this->assertTrue($policy->download($president, $document));
+        $this->assertTrue($policy->viewFile($president, $document));
         $this->assertFalse($policy->viewFile($student, $document));
-        $this->assertFalse($policy->download($student, $document));
     }
 
     private function user(int $id, string $role, ?string $position = null): User

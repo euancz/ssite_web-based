@@ -24,7 +24,6 @@ class LiquidationPolicy
             || $user->isPresident()
             || $this->owns($user, $liquidation);
     }
-    public function download(User $user, Liquidation $liquidation): bool { return $this->viewFile($user, $liquidation); }
     public function create(User $user): bool { return $user->canPostIn('liquidations'); }
     public function update(User $user, Liquidation $liquidation): bool { return $user->isPresident() || ($user->canPostIn('liquidations') && $this->owns($user, $liquidation)); }
     public function archive(User $user, Liquidation $liquidation): bool { return $this->update($user, $liquidation); }

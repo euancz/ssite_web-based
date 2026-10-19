@@ -4,7 +4,7 @@ SSITE is a Laravel Blade application for the Student Society in Information Tech
 
 ## Roles
 
-| Role / position | Upload PDFs | Approve or reject | View or download PDFs | Other capabilities |
+| Role / position | Upload PDFs | Approve or reject | View PDFs | Other capabilities |
 | --- | --- | --- | --- | --- |
 | Student | No | No | Published PDFs after login and profile completion | View public posts and edit allowed personal information. |
 | President officer | Documents and Liquidation | Yes; all pending modules | Published and all non-public PDFs after login and profile completion | Post in all modules; posts auto-approve by default (`school.president_posts_auto_approved`); manage, bulk archive, and permanently delete posts. |
@@ -70,7 +70,7 @@ Each content controller keeps its feature actions visible in one place: `index`,
 
 Before changing a module, keep this protection checklist:
 
-- Public lists, details, search, home sections, notification links, and downloads expose only `publiclyVisible()` content to students and guests. Return 404 for private records to viewers who may not see them.
+- Public lists, details, search, home sections, notification links, and PDF view routes expose only `publiclyVisible()` content to students and guests. Return 404 for private records to viewers who may not see them.
 - Write routes keep their role and `profile.complete` middleware. Policies continue to authorize each action.
 - Position capabilities decide which module an officer may post in. Non-President officers may manage only their own content by comparing `created_by_user_id` with `auth()->user()->user_id`; the President may manage any item.
 - Model keys and route keys stay custom (`article_id`, `activity_id`, `achievement_id`, `document_id`, `liquidation_id`, `term_id`, and `user_id`). Fillable fields stay limited to domain data; workflow, ownership, and file metadata are set by trusted controller code.
@@ -111,7 +111,9 @@ Displayed messages are “A new post was submitted for review.”, “A post nee
 
 Notifications are synchronous database notifications. Pending items are announced only to President reviewers; when none is assigned, no review notice is sent. The author is excluded from the separate publication broadcast to prevent duplicate notices. Recipients are processed in batches of 100, and notification exceptions are logged without failing the post action. Users with incomplete profiles are included because this app has no inactive-account flag; the profile gate controls page access instead. The bell summary returns the latest 10 items and unread total; `/notifications` paginates by 15 and supports All/Unread. Only unread `published` notices contribute to navigation tab dots; approval, rejection, and submission notices do not. Visiting the matching index clears only that user's published notices for that type. Read, read-all, dismiss, and avatar routes are scoped to the signed-in user's records. A notice for an archived, deleted, or otherwise unavailable post redirects with a friendly message. Archive and restore are silent and restore never republishes.
 
-Documents and Liquidation store PDFs on Laravel's private `local` disk under `storage/app/private/documents` and `storage/app/private/liquidation`. Authorized controller routes stream or download files after policy checks; the files are not exposed through `storage:link`. Documents may have a public listing (`school.documents_list_public`, default true), but PDF access requires login and a completed profile. Liquidation listing access follows `school.liquidation_list_public` (default false). Both use `school.max_pdf_size_kb` (default 10240).
+Documents and Liquidation store PDFs on Laravel's private `local` disk under `storage/app/private/documents` and `storage/app/private/liquidation`. Authorized controller routes return files inline after policy checks; the files are not exposed through `storage:link`. Documents may have a public listing (`school.documents_list_public`, default true), but PDF access requires login and a completed profile. Liquidation listing access follows `school.liquidation_list_public` (default false). Both use `school.max_pdf_size_kb` (default 10240).
+
+Authorized show pages render PDFs with a shared, lazy-loaded PDF.js canvas viewer and a local worker; no text layer is sent to the page. The short-lived signed viewer URL still passes through the authenticated policy-checked file handler. Canvas context-menu and drag restrictions are casual-copy deterrents only, not protection. Browser printing retains the record details and a notice but omits the PDF pages.
 
 ## Folder map
 
@@ -203,7 +205,7 @@ The change history, bundle measurements, route comparison, source-review notes, 
 - **Documents and Liquidation schemas:** These tables are SQL-managed and have no create/alter migrations here. Confirm the live schemas before deployment; the application does not alter them.
 - **Private PDF storage:** Document and liquidation PDFs live under `storage/app/private/documents` and `storage/app/private/liquidation` on the local disk. Do not run `storage:link` for these files. Backups and deployments must preserve the private storage directory.
 - **PDF upload limits:** `school.max_pdf_size_kb` is the application limit. PHP's `upload_max_filesize` and `post_max_size` in `php.ini` must also be large enough for the desired upload.
-- **PDF access:** `school.documents_list_public` controls whether document metadata lists are public; `school.liquidation_list_public` controls liquidation listing access. PDF view/download routes always require login and a completed profile.
+- **PDF access:** `school.documents_list_public` controls whether document metadata lists are public; `school.liquidation_list_public` controls liquidation listing access. PDF view routes require login and a completed profile.
 - **Role checks:** Blade `@can` checks only hide navigation. Keep middleware or authorization checks on every protected route and write action.
 - **Officer positions:** `config/school.php` defines canonical assignable positions and module capabilities. Positions grant no capabilities unless the account role is `officer`; `User` centralizes checks. Adviser assigns student/officer roles and officer positions; superadmin assigns or revokes adviser roles only.
 - **Adding a role:** Update the role values and helpers in `User`, middleware route declarations, Gate definitions, role-specific dashboard redirect, assignment policies, and documentation. Review all user-management validation before making a new role assignable.
@@ -227,7 +229,7 @@ Activities and Achievements use the same role-specific tabs and ten-item paginat
 
 ## Documents and Liquidation tabs
 
-Documents and Liquidation use the Article role-specific tabs and ten-item pagination. Documents support category filtering. Liquidation supports report-date and amount ordering. Both have recent, oldest, and title ordering, plus optional schema-backed engagement ordering. Per-tab text search is removed; global header search remains. Public/student queries must use each model's `publiclyVisible()` scope. PDF view and download handlers authorize before reading from the private local disk; missing files return a friendly message. Change list access and maximum size in `config/school.php`.
+Documents and Liquidation use the Article role-specific tabs and ten-item pagination. Documents support category filtering. Liquidation supports report-date and amount ordering. Both have recent, oldest, and title ordering, plus optional schema-backed engagement ordering. Per-tab text search is removed; global header search remains. Public/student queries must use each model's `publiclyVisible()` scope. PDF view handlers authorize before reading from the private local disk; missing files return a friendly message. Change list access and maximum size in `config/school.php`.
 
 ## Optional post engagement
 

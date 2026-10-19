@@ -27,10 +27,8 @@
 .liquidation-report-facts strong:last-child { margin-bottom: 0; }
 .liquidation-report-facts .liquidation-report-amount { font-size: 1.05rem; }
 .liquidation-report-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 11px 22px; border-top: 1px solid var(--color-border-liquidation-actions); background: var(--color-surface-liquidation-muted); }
-.liquidation-report-actions a { display: inline-flex; align-items: center; min-height: 34px; border: 1px solid var(--color-border-liquidation-control); border-radius: 6px; padding: 6px 11px; color: var(--color-text-liquidation-action); font-size: .8rem; font-weight: 650; text-decoration: none; }
-.liquidation-report-actions a:hover { border-color: var(--color-border-liquidation-action-hover); background: var(--color-surface-liquidation-action-hover); }
-.liquidation-report-actions .liquidation-download-link { border-color: var(--color-brand-liquidation-action); background: var(--color-brand-liquidation-action); color: var(--color-surface); }
-.liquidation-report-actions .liquidation-download-link:hover { background: var(--color-brand-liquidation-action-hover); }
+.liquidation-report-actions a, .liquidation-report-actions button { display: inline-flex; align-items: center; min-height: 34px; border: 1px solid var(--color-border-liquidation-control); border-radius: 6px; padding: 6px 11px; background: transparent; color: var(--color-text-liquidation-action); font: inherit; font-size: .8rem; font-weight: 650; text-decoration: none; cursor: pointer; }
+.liquidation-report-actions a:hover, .liquidation-report-actions button:hover { border-color: var(--color-border-liquidation-action-hover); background: var(--color-surface-liquidation-action-hover); }
 .liquidation-report-review, .liquidation-report-admin { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 0 22px 12px; }
 .liquidation-report-admin:empty { display: none; }
 .liquidation-document-detail { overflow: hidden; border: 1px solid var(--color-border-liquidation-card); border-radius: 12px; background: var(--color-surface); box-shadow: 0 3px 12px var(--shadow-liquidation-detail); }

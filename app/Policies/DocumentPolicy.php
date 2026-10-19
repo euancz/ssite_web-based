@@ -24,7 +24,6 @@ class DocumentPolicy
             || $user->isPresident()
             || $this->owns($user, $document);
     }
-    public function download(User $user, Document $document): bool { return $this->viewFile($user, $document); }
     public function create(User $user): bool { return $user->canPostIn('documents'); }
     public function update(User $user, Document $document): bool { return $user->isPresident() || ($user->canPostIn('documents') && $this->owns($user, $document)); }
     public function archive(User $user, Document $document): bool { return $this->update($user, $document); }

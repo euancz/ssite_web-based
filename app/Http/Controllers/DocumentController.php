@@ -6,6 +6,7 @@ use App\Models\Document;
 use App\Rules\MaxWords;
 use App\Support\PostNotificationRecipients;
 use App\Support\PostEngagement;
+use App\Support\PrivatePdfResponse;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -13,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -112,7 +114,10 @@ class DocumentController extends Controller
         $engagement->recordView($document, $request);
         $engagement->loadLikeState($document, $request);
         $document->load(['author', 'reviewer']);
-        return view('documents.show', compact('document'));
+        $viewerUrl = $request->user() && $request->user()->can('viewFile', $document)
+            ? URL::temporarySignedRoute('documents.view', now()->addMinutes(5), ['document' => $document])
+            : null;
+        return view('documents.show', compact('document', 'viewerUrl'));
     }
 
     public function create(): View { $this->authorize('create', Document::class); return view('documents.create'); }
@@ -279,31 +284,17 @@ class DocumentController extends Controller
         return back()->with('status', 'The selected documents were archived.');
     }
 
-    public function viewFile(Document $document): StreamedResponse|RedirectResponse
+    public function viewFile(Document $document, Request $request, PrivatePdfResponse $pdfResponse): StreamedResponse
     {
         // SECURITY: Hide the existence of a non-public document from users without file access.
         try { $this->authorize('viewFile', $document); }
         catch (AuthorizationException) { abort(404); }
-        return $this->fileResponse($document, true);
-    }
-
-    public function download(Document $document): StreamedResponse|RedirectResponse
-    {
-        // SECURITY: A private document is a 404 to anyone other than its owner or the President.
-        try { $this->authorize('download', $document); }
-        catch (AuthorizationException) { abort(404); }
-        return $this->fileResponse($document, false);
-    }
-
-    private function fileResponse(Document $document, bool $inline): StreamedResponse|RedirectResponse
-    {
-        if (! $this->isPrivatePdfPath($document->file_path) || ! Storage::disk('local')->exists($document->file_path)) {
-            return back()->with('error', 'This PDF is currently unavailable. The document record is still available to manage.');
-        }
-        // SECURITY: Download names come from a cleaned client label, never from the private storage path.
-        $name = $this->safeDownloadName($document->original_name);
-        $headers = ['Content-Type' => 'application/pdf', 'X-Content-Type-Options' => 'nosniff'];
-        return Storage::disk('local')->response($document->file_path, $name, $headers, $inline ? 'inline' : 'attachment');
+        // SECURITY: Signed URLs expire quickly; range fetches retain the same signature and recheck policy.
+        abort_unless($request->hasValidSignature(), 404);
+        // SECURITY: This best-effort header check blocks ordinary top-level PDF navigation.
+        abort_if(strtolower((string) $request->header('Sec-Fetch-Dest')) === 'document', 404);
+        if (! $this->isPrivatePdfPath($document->file_path) || ! Storage::disk('local')->exists($document->file_path)) abort(404);
+        return $pdfResponse->make(Storage::disk('local')->path($document->file_path), $this->safeOriginalName($document->original_name), $request);
     }
 
     private function assertPdf(UploadedFile $file): void
@@ -322,10 +313,10 @@ class DocumentController extends Controller
     {
         // SECURITY: Random server filenames prevent user-controlled paths and collisions on the private disk.
         $path = $file->storeAs('documents', Str::random(40) . '.pdf', 'local');
-        return [$path, $this->safeDownloadName($file->getClientOriginalName()), (int) $file->getSize()];
+        return [$path, $this->safeOriginalName($file->getClientOriginalName()), (int) $file->getSize()];
     }
 
-    private function safeDownloadName(?string $name): string
+    private function safeOriginalName(?string $name): string
     {
         $name = basename(str_replace('\\', '/', (string) $name));
         $name = preg_replace('/[\x00-\x1F\x7F"\\\\\/]+/u', '', $name) ?? '';

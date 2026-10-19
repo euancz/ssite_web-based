@@ -137,7 +137,6 @@ Lucide Static has since been reinstalled temporarily, pinned, and audited for ex
 | External social destination | `external-link` | Footer link currently represented by a Facebook-branded path; Lucide has no Facebook trademark icon. The link text already identifies the destination. |
 | Overflow actions | `ellipsis` | Public and workspace post row menus |
 | Like | `heart` | Existing feature-flagged Like action where rendered |
-| Download | `download` | Existing private-file action where rendered |
 
 The exact old-SVG-to-concept map will be checked against source context during each migration batch. Any additional, verified UI concept discovered in the full area-by-area inventory will be added to this table before its change; no guessed Lucide names or second icon family will be introduced.
 
@@ -245,7 +244,7 @@ For every approved batch, record status, Impeccable command(s), files, before/af
 - `php artisan view:clear`, `view:cache`, then `view:clear` after approved Blade batches; these are compile/cache checks, not database tests.
 - Review 320, 360, 768, 1024, and 1440px; keyboard-only; 200% zoom; empty/long content; missing image; reduced motion on and preference toggled while open; JS disabled; Motion entry blocked. If browser access remains unavailable, report each as unverified rather than infer.
 - Verify first viewport never animates in, all content remains visible without JavaScript, icons remain inline, no layout shift is introduced, phone motion is brief and nonessential, and all text states remain visible.
-- Verify role conditions and server-rendered controls remain unchanged in source; no routes, controller authorization, ownership, upload/download paths, search/notification endpoints, or data change.
+- Verify role conditions and server-rendered controls remain unchanged in source; no routes, controller authorization, ownership, upload/replacement paths, search/notification endpoints, or data change.
 - Confirm only one SVG icon-shape source remains; identify justified brand image exceptions and non-icon punctuation separately.
 - No login accounts, database queries/writes, migrations, seeders, or test suites are part of this plan.
 
