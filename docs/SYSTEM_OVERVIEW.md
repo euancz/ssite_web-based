@@ -167,6 +167,17 @@ Search suggestions render inside the sticky header with visible overflow and rem
 - If I want to change the bell dropdown, badge, polling interval, or tab dots, open `resources/views/layouts/partials/account-scripts.blade.php` and `public/css/app.css`.
 - If I want to change the notifications page layout, open `resources/views/notifications/index.blade.php` and `public/css/app.css`.
 
+## Figma-to-Blade setup
+
+The Figma workflow is configuration and documentation only; it does not change application behavior. The official remote MCP configuration is in `.vscode/mcp.json`, the reusable Copilot rules are in `.github/copilot-instructions.md`, and the saved prompt is `.github/prompts/figma-to-blade.prompt.md`. The workflow keeps a project ceiling of five Figma read calls per calendar month, requires the user to provide the real account-wide count, shows one planned call and waits for written approval, saves each approved frame note under `docs/figma/`, and switches to the no-call fallback when the ceiling is reached. The call log only knows about calls made through this repository's workflow. Connect only Figma files the user owns or is authorized to share because design data is sent to the AI service.
+
+- If I want to change the monthly Figma read ceiling, open `.github/copilot-instructions.md`, `.github/prompts/figma-to-blade.prompt.md`, `docs/FIGMA_CALL_LOG.md`, and `docs/FIGMA_WORKFLOW.md`.
+- If I want to add or change a Figma workflow rule, open `.github/copilot-instructions.md` and `.github/prompts/figma-to-blade.prompt.md`; update the related workflow docs if the procedure changes.
+- If I want to switch to the no-call fallback, open `docs/FIGMA_NO_MCP_FALLBACK.md` and use `docs/figma/tokens-template.md`.
+- If I want to review or record project workflow calls, open `docs/FIGMA_CALL_LOG.md`.
+- If I want to reuse a previously read frame, open its note in `docs/figma/` instead of calling Figma again.
+- If I want to change the MCP server connection, open `.vscode/mcp.json` and keep exactly one Figma server with no credentials.
+
 ## Content card motion
 
 - If I want to change the content card zoom amount, open `public/css/app.css` (`--hover-scale`).

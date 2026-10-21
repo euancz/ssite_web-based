@@ -149,6 +149,15 @@ Content card gotcha: transforms create stacking contexts that can trap row menus
 
 If I want to change a color, open `public/css/app.css` and update the `:root` token. If I want to change the font, open `resources/views/layouts/app.blade.php`, `public/css/app.css`, and `resources/css/app.css`. If I want to change spacing, open `public/css/app.css` for shared components or the matching page stylesheet. If I want to add a component, open `resources/views/components/ui/` and add or update its styles in `public/css/app.css`.
 
+## Figma-to-Blade setup
+
+- If I want to change the monthly Figma read ceiling, open `.github/copilot-instructions.md`, `.github/prompts/figma-to-blade.prompt.md`, `docs/FIGMA_CALL_LOG.md`, and `docs/FIGMA_WORKFLOW.md`.
+- If I want to add a Figma rule, open `.github/copilot-instructions.md` for the standing rule and `.github/prompts/figma-to-blade.prompt.md` for the reusable workflow; update the related `docs/FIGMA_*.md` file when the procedure changes.
+- If I want to switch to the no-call fallback, open `docs/FIGMA_NO_MCP_FALLBACK.md` and fill in `docs/figma/tokens-template.md`.
+- If I want to reuse a saved frame instead of calling Figma again, open the matching note in `docs/figma/` and follow `docs/figma/README.md`.
+- If I want to record or review the project's Figma calls, open `docs/FIGMA_CALL_LOG.md`.
+- If I want to change the official MCP connection, open `.vscode/mcp.json`; keep one credential-free Figma server and do not add a second server.
+
 ## Officer history
 
 The current academic year is calculated from the date and the configured start month. Advisers maintain a separate snapshot for each year; role changes affect only the current year's row. New-year rows are not created automatically. Photos uploaded for officer terms are stored in `storage/app/public/officer-photos`, served through `storage:link`, and old uploaded term photos are removed only when their term is replaced or deleted.
