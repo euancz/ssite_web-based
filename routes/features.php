@@ -5,6 +5,7 @@ use App\Http\Controllers\AchievementController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\DiscoverController;
 use App\Http\Controllers\LiquidationController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PostLikeController;
@@ -19,6 +20,7 @@ Route::middleware(['profile.complete', 'throttle:60,1'])->group(function () {
     Route::get('/search/suggest', [SearchController::class, 'suggest'])->name('search.suggest');
 });
 Route::get('/about', AboutController::class)->name('about');
+Route::get('/discover', DiscoverController::class)->name('discover');
 Route::resource('articles', ArticleController::class)->only(['index', 'show'])
     ->middleware('profile.complete')->whereNumber('article');
 Route::resource('activities', ActivityController::class)->only(['index', 'show'])

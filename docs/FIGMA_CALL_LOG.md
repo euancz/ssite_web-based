@@ -6,3 +6,4 @@ The project default ceiling is **five read calls per calendar month**. The agent
 
 | Date | Tool | Frame | Calls used this month (running) | Notes |
 | --- | --- | --- | ---: | --- |
+| 2026-10-21 | `get_design_context` | Normal/public view, node `228:1113` | 1 | Blocked by Figma: the OAuth account does not have edit access to the file. No design context or screenshot returned. |

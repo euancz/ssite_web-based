@@ -1,7 +1,8 @@
 ---
+name: figma-to-blade
 description: Implement one approved Figma frame as a Laravel Blade visual change
+disable-model-invocation: true
 ---
-
 # Figma to Blade
 
 Use this workflow for one selected Figma frame only.
