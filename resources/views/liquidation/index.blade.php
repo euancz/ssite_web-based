@@ -1,151 +1,94 @@
 @extends('layouts.app')
 
-@section('title', 'Liquidation')
+@section('title', 'Transparency')
+
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/liquidation.css') }}">
+@endpush
 
 @section('content')
-<x-posts.feed-frame
-    variant="index"
-    stylesheet="liquidation"
-    title="Liquidation"
-    description="Browse and manage liquidation reports."
-    :policy-class="\App\Models\Liquidation::class"
-    create-route="liquidations.create"
-    composer-prompt="Share a liquidation report…"
-    route-name="liquidations.index"
-    :allowed-tabs="$allowedTabs"
-    :active-tab="$tab"
-    :pending-count="$pendingCount"
-    :sort="$sort"
-    :sort-options="$sortOptions"
->
+<div class="transparency-page">
     @if (session('status'))
-        <p class="dashboard-success" role="status" data-flash-toast>{{ session('status') }}</p>
+        <p class="dashboard-success transparency-toast" role="status" data-flash-toast>{{ session('status') }}</p>
     @endif
     @if (session('error'))
-        <p class="dashboard-error" role="alert" data-flash-toast>{{ session('error') }}</p>
+        <p class="dashboard-error transparency-toast" role="alert" data-flash-toast>{{ session('error') }}</p>
     @endif
 
-    {{-- President bulk archive remains separate from each card's single-post actions. --}}
-    @can('bulkArchive', \App\Models\Liquidation::class)
-        @if ($tab !== 'published' && $liquidations->isNotEmpty())
-            <form id="liquidation-bulk-archive" method="POST" action="{{ route('liquidations.bulk-archive') }}">
-                @csrf
-            </form>
-            <div class="article-bulk-actions" data-selection-bar hidden>
-                <span data-selection-count>0 selected</span>
-                <button type="button" class="dashboard-button dashboard-button-secondary"
-                        onclick="document.getElementById('bulk-archive-liquidation-modal').showModal()">
-                    Archive selected
-                </button>
-            </div>
-            <dialog id="bulk-archive-liquidation-modal" class="reject-modal">
-                <div class="reject-modal-content">
-                    <h2>Archive selected reports?</h2>
-                    <p>Selected reports leave Published and keep their approval status.</p>
-                    <div class="reject-modal-actions">
-                        <button type="button" class="dashboard-button dashboard-button-secondary"
-                                onclick="document.getElementById('bulk-archive-liquidation-modal').close()">Cancel</button>
-                        <button type="submit" form="liquidation-bulk-archive" class="dashboard-button">Archive selected</button>
-                    </div>
-                </div>
-            </dialog>
-        @endif
-    @endcan
-
-    @php($tabLabels = ['published' => 'Published', 'mine' => 'My Posts', 'pending' => 'Pending Review', 'rejected' => 'Rejected', 'archived' => 'Archived', 'all' => 'All'])
-    <section class="post-feed-list" aria-label="{{ $tabLabels[$tab] }} liquidation reports">
-        @forelse ($liquidations as $liquidation)
-            <article class="liquidation-report-row">
-                <div class="liquidation-report-main">
-                    <div class="liquidation-report-icon" aria-hidden="true">
-                        <x-icon name="file-text" />
-                        <span>PDF</span>
-                    </div>
-                    <div class="liquidation-report-copy">
-                        <h2><a href="{{ route('liquidations.show', $liquidation) }}">{{ $liquidation->title }}</a></h2>
-                        <p class="liquidation-report-file">{{ $liquidation->original_name }} <span>·</span> {{ number_format($liquidation->file_size / 1024, 1) }} KB</p>
-                        @if ($liquidation->description)<p class="liquidation-report-description">{{ \Illuminate\Support\Str::limit(strip_tags($liquidation->description), 180) }}</p>@endif
-                        <p class="liquidation-report-byline">{{ $liquidation->author?->name ?? 'Former member' }} <span>·</span> {{ $liquidation->created_at?->diffForHumans() ?? 'Date unavailable' }}</p>
-                    </div>
-                    <div class="liquidation-report-facts">
-                        <span>Report date</span>
-                        <strong>{{ $liquidation->report_date?->format('M j, Y') ?? 'Not provided' }}</strong>
-                        <span>Amount</span>
-                        <strong class="liquidation-report-amount">{{ $liquidation->formattedAmount() }}</strong>
-                    </div>
-                    @if ($tab === 'published')
-                        {{-- SECURITY: Engagement controls render only for Published rows with schema-backed attributes. --}}
-                        <div class="post-card-engagement" aria-label="Post activity">
-                            @if (config('school.enable_view_counts', false) && isset($liquidation->view_count) && (int) $liquidation->view_count > 0)
-                                <span>{{ number_format((int) $liquidation->view_count) }} {{ \Illuminate\Support\Str::plural('view', (int) $liquidation->view_count) }}</span>
-                            @endif
-                            @if (config('school.enable_likes', false) && isset($liquidation->likes_count))
-                                @php($liked = (int) ($liquidation->liked_by_viewer ?? 0) > 0)
-                                @if ((int) $liquidation->likes_count > 0)
-                                    <span>{{ number_format((int) $liquidation->likes_count) }} {{ \Illuminate\Support\Str::plural('like', (int) $liquidation->likes_count) }}</span>
-                                @endif
-                                <form method="POST" action="{{ route('posts.like', ['type' => $liquidation::POST_TYPE, 'post' => $liquidation->getKey()]) }}">
-                                    @csrf
-                                    <input type="hidden" name="liked" value="{{ $liked ? '0' : '1' }}">
-                                    <button type="submit" class="post-like-button" aria-pressed="{{ $liked ? 'true' : 'false' }}">
-                                        {{ $liked ? 'Unlike' : 'Like' }}
-                                    </button>
-                                </form>
-                            @endif
-                        </div>
-                    @endif
-                    <x-posts.row-menu :post="$liquidation" route-prefix="liquidations" />
-                </div>
-                <div class="liquidation-report-actions">
-                    @can('viewFile', $liquidation)<a href="{{ route('liquidations.show', $liquidation) }}">View</a>@endcan
-                    @guest<a href="{{ route('liquidations.show', $liquidation) }}">View report</a>@endguest
-                </div>
-                <div class="liquidation-report-review">
-                    @if ($tab !== 'published' || $liquidation->isArchived())<x-ui.status-badge :status="$liquidation->approval_status" />@endif
-                    @if ($liquidation->isArchived())<x-ui.status-badge status="archived" />@endif
-                </div>
-                <div class="liquidation-report-admin">
-                    @can('approve', $liquidation)
-                        @if ($tab === 'pending' && $liquidation->isPending())
-                            <form method="POST" action="{{ route('liquidations.approve', $liquidation) }}">
-                                @csrf
-                                <button type="submit" class="dashboard-button">Approve</button>
-                            </form>
-                            <button type="button" class="dashboard-button dashboard-button-secondary"
-                                    data-modal-open="liquidation-reject-{{ $liquidation->getKey() }}">Reject</button>
-                            <x-ui.reject-modal
-                                id="liquidation-reject-{{ $liquidation->getKey() }}"
-                                :action="route('liquidations.reject', $liquidation)"
-                                subject="liquidation report"
-                            />
-                        @endif
-                    @endcan
-
-                    @can('bulkArchive', \App\Models\Liquidation::class)
-                        @if ($tab !== 'published' && ! $liquidation->isArchived())
-                            <label class="dashboard-muted">
-                                <input type="checkbox" name="liquidation_ids[]" value="{{ $liquidation->liquidation_id }}" form="liquidation-bulk-archive">
-                                Select
-                            </label>
-                        @endif
-                    @endcan
-                </div>
-            </article>
-        @empty
-            @if ($sort !== 'recent')
-                <div class="post-feed-empty">
-                    <p>No reports match this sort. <a href="{{ route('liquidations.index', ['tab' => $tab]) }}">Reset</a></p>
-                </div>
-            @elseif ($tab === 'published')
-                <x-posts.empty-state title="No published reports yet" message="Check back soon for the latest liquidation reports." />
-            @elseif (auth()->user()?->canPostIn('liquidations'))
-                <x-posts.empty-state title="No reports in this tab" message="Use the prompt above to upload a report." />
-            @else
-                <x-posts.empty-state title="No reports found" message="Check back later for new reports." />
-            @endif
-        @endforelse
+    <section class="transparency-hero" aria-labelledby="transparency-title">
+        <div class="transparency-hero-grid" aria-hidden="true"></div>
+        <div class="transparency-hero-content">
+            <p class="transparency-kicker">Financial transparency <span aria-hidden="true">•</span> accountability <span aria-hidden="true">•</span> trust</p>
+            <h1 id="transparency-title">Funds with purpose</h1>
+            <p>Explore SSITE's financial records, expense reports, and liquidation documents to see how organization funds are managed and utilized.</p>
+        </div>
     </section>
 
-    <div class="dashboard-pagination">{{ $liquidations->links('vendor.pagination.ssite') }}</div>
-</x-posts.feed-frame>
+    <form class="transparency-filters" method="GET" action="{{ route('transparency') }}">
+        <label class="transparency-search">
+            <span class="visually-hidden">Search events</span>
+            <input type="search" name="q" value="{{ is_string(request()->query('q')) ? mb_substr(request()->query('q'), 0, 100) : '' }}" placeholder="Search events..." autocomplete="off">
+            <x-icon name="search" size="sm" aria-hidden="true" />
+        </label>
+        <label class="transparency-select">
+            <span>Sort by semester</span>
+            <select name="sort" aria-label="Sort by semester" onchange="this.form.submit()">
+                <option value="recent" @selected($sort === 'recent')>1st Semester</option>
+                <option value="oldest" @selected($sort === 'oldest')>2nd Semester</option>
+            </select>
+            <x-icon name="chevron-down" size="sm" aria-hidden="true" />
+        </label>
+        <label class="transparency-select">
+            <span>Sort by A.Y</span>
+            <select name="academic_year" aria-label="Sort by academic year" onchange="this.form.submit()">
+                <option value="2025-2026" @selected(request()->query('academic_year', '2025-2026') === '2025-2026')>A.Y. 2025–2026</option>
+            </select>
+            <x-icon name="chevron-down" size="sm" aria-hidden="true" />
+        </label>
+        <input type="hidden" name="tab" value="{{ $tab }}">
+    </form>
+
+    <section class="transparency-register" aria-labelledby="transactions-title">
+        <div class="transparency-register-heading">
+            <h2 id="transactions-title">Transactions</h2>
+            @can('create', \App\Models\Liquidation::class)
+                <a href="{{ route('liquidations.create') }}">Submit report</a>
+            @endcan
+        </div>
+
+        <div class="transparency-table-wrap" role="region" aria-label="Published transactions" tabindex="0">
+            <table class="transparency-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Event title</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($liquidations as $liquidation)
+                        <tr>
+                            <td>
+                                <a href="{{ route('liquidations.show', $liquidation) }}">
+                                    <x-icon name="file-text" size="sm" aria-hidden="true" />
+                                    <span>{{ $liquidation->title }}</span>
+                                </a>
+                            </td>
+                            <td>{{ $liquidation->report_date?->format('F j, Y') ?? 'Date unavailable' }}</td>
+                            <td>{{ $liquidation->formattedAmount() }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="3" class="transparency-empty">No published transactions yet. Check back soon for the latest records.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if ($liquidations->hasPages())
+            <div class="transparency-pagination">{{ $liquidations->links('vendor.pagination.ssite') }}</div>
+        @endif
+    </section>
+</div>
 @endsection

@@ -1,4 +1,173 @@
 /* Liquidation is presented as an accountable document register, not a social feed. */
+.transparency-page {
+    width: min(calc(100% - 2rem), 71rem);
+    margin: 1.8rem auto 3.4rem;
+    color: var(--ssite-navy);
+}
+.transparency-toast { margin: 0 auto 1rem; max-width: 70rem; }
+.transparency-hero {
+    position: relative;
+    min-height: 164px;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    border-radius: 20px;
+    background: var(--ssite-blue-light);
+    box-shadow: 0 8px 22px rgba(17, 42, 55, .14);
+}
+.transparency-hero-grid {
+    position: absolute;
+    inset: 0;
+    opacity: .27;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='46' height='22' viewBox='0 0 46 22'%3E%3Cpath d='M0 0H46M0 22H46M0 0V22M46 0V22' fill='none' stroke='%230876c9' stroke-opacity='.34'/%3E%3C/svg%3E");
+    transform: perspective(300px) rotateX(12deg) scale(1.1);
+    transform-origin: center bottom;
+}
+.transparency-hero-content {
+    position: relative;
+    max-width: 42rem;
+    padding: 2rem 1.25rem;
+    text-align: center;
+}
+.transparency-kicker {
+    margin: 0 0 .4rem;
+    color: var(--ssite-navy);
+    font-size: .76rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+.transparency-hero h1 {
+    margin: 0;
+    color: var(--ssite-navy);
+    font-family: var(--font-family-display);
+    font-size: clamp(2.05rem, 5vw, 3.45rem);
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: -.025em;
+    text-transform: uppercase;
+}
+.transparency-hero-content > p:last-child {
+    max-width: 36rem;
+    margin: .7rem auto 0;
+    color: var(--ssite-navy);
+    font-size: .76rem;
+    line-height: 1.45;
+}
+.transparency-filters {
+    display: grid;
+    grid-template-columns: minmax(13rem, 1.25fr) repeat(2, minmax(10rem, .75fr));
+    align-items: end;
+    gap: 1.6rem;
+    margin: 1.8rem 0 1.6rem;
+}
+.transparency-search, .transparency-select {
+    position: relative;
+    display: grid;
+    gap: .35rem;
+}
+.transparency-search {
+    min-height: 44px;
+    align-items: center;
+    border: 1px solid var(--ssite-navy);
+    border-bottom-width: 2px;
+    border-radius: 7px;
+    background: var(--color-surface);
+}
+.transparency-search input {
+    width: 100%;
+    min-height: 42px;
+    border: 0;
+    padding: 0 2.6rem 0 .8rem;
+    background: transparent;
+    color: var(--ssite-navy);
+    font: inherit;
+    font-size: .75rem;
+}
+.transparency-search svg { position: absolute; right: .75rem; color: var(--ssite-navy); pointer-events: none; }
+.transparency-select > span { color: var(--ssite-navy); font-size: .65rem; font-weight: 700; }
+.transparency-select select {
+    width: 100%;
+    min-height: 44px;
+    appearance: none;
+    border: 1px solid var(--ssite-navy);
+    border-bottom-width: 2px;
+    border-radius: 7px;
+    padding: 0 2.5rem 0 .8rem;
+    background: var(--ssite-blue-light);
+    color: var(--ssite-navy);
+    font: inherit;
+    font-size: .75rem;
+    cursor: pointer;
+}
+.transparency-select svg { position: absolute; right: .75rem; bottom: .8rem; pointer-events: none; }
+.transparency-search :focus-visible, .transparency-select select:focus-visible, .transparency-table a:focus-visible, .transparency-register-heading a:focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+}
+.transparency-register {
+    overflow: hidden;
+    border: 1px solid #dce3e7;
+    border-radius: 7px;
+    background: var(--color-surface);
+    box-shadow: 0 2px 8px rgba(17, 42, 55, .1);
+}
+.transparency-register-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.5rem 1.55rem .85rem;
+}
+.transparency-register-heading h2 {
+    margin: 0;
+    color: var(--ssite-navy);
+    font-family: var(--font-family-display);
+    font-size: 1.25rem;
+    letter-spacing: -.02em;
+}
+.transparency-register-heading a {
+    color: var(--ssite-navy);
+    font-size: .75rem;
+    font-weight: 700;
+}
+.transparency-table-wrap { overflow-x: auto; padding: 0 2.75rem 1.05rem; }
+.transparency-table { width: 100%; min-width: 34rem; border-collapse: collapse; color: var(--ssite-navy); font-size: .7rem; }
+.transparency-table th {
+    border-bottom: 1px solid #aab9c2;
+    padding: .55rem .75rem;
+    color: #52616a;
+    font-size: .63rem;
+    font-weight: 700;
+    text-align: left;
+    text-transform: uppercase;
+}
+.transparency-table td { border-bottom: 1px solid #d7dee2; padding: .72rem .75rem; vertical-align: middle; }
+.transparency-table th:first-child, .transparency-table td:first-child { width: 54%; }
+.transparency-table td:nth-child(2) { width: 27%; }
+.transparency-table td:last-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.transparency-table td a { display: inline-flex; align-items: center; gap: .35rem; color: var(--ssite-navy); font-weight: 600; text-decoration: none; }
+.transparency-table td a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.transparency-table td a svg { color: #58717e; }
+.transparency-empty { padding: 2rem .75rem !important; color: var(--ssite-navy-soft); text-align: center; }
+.transparency-pagination { padding: 0 1.5rem 1.2rem; }
+@media (max-width: 700px) {
+    .transparency-page { width: min(calc(100% - 1.25rem), 42rem); margin-top: 1rem; }
+    .transparency-hero { min-height: 190px; border-radius: 16px; }
+    .transparency-filters { grid-template-columns: 1fr 1fr; gap: .9rem; margin: 1.25rem 0; }
+    .transparency-search { grid-column: 1 / -1; }
+    .transparency-register-heading { padding-inline: 1rem; }
+    .transparency-table-wrap { padding-inline: .5rem; }
+}
+@media (max-width: 430px) {
+    .transparency-filters { grid-template-columns: 1fr; }
+    .transparency-search { grid-column: auto; }
+    .transparency-kicker { font-size: .65rem; }
+    .transparency-hero h1 { font-size: 2rem; }
+    .transparency-hero-content > p:last-child { font-size: .7rem; }
+}
+@media (prefers-reduced-motion: reduce) { .transparency-hero-grid { transform: none; } }
+
 .post-feed-liquidation .post-feed-list { gap: 12px; }
 .liquidation-report-row {
     overflow: hidden;

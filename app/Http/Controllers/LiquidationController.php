@@ -55,6 +55,17 @@ class LiquidationController extends Controller
             }
         } elseif ($tab === 'pending') $liquidations->pending();
         elseif ($tab === 'rejected') $liquidations->rejected();
+        $searchQuery = $request->query('q');
+        if (is_string($searchQuery) && trim($searchQuery) !== '') {
+            $searchQuery = mb_substr(trim($searchQuery), 0, 100);
+            $liquidations->where(function ($query) use ($searchQuery): void {
+                $query->where('title', 'like', '%' . $searchQuery . '%')
+                    ->orWhere('description', 'like', '%' . $searchQuery . '%')
+                    ->orWhere('original_name', 'like', '%' . $searchQuery . '%');
+            });
+        } else {
+            $searchQuery = '';
+        }
         // SECURITY: Engagement queries are limited to Published and require both the feature flag and schema.
         $viewCountsEnabled = $tab === 'published' && $engagement->viewCountsAvailable($liquidations->getModel());
         // SECURITY: Like controls and ordering require the likes table and this module's counter column.
@@ -92,7 +103,7 @@ class LiquidationController extends Controller
         if (in_array($sort, ['viewed', 'liked'], true)) $liquidations->orderBy('created_at', 'desc');
         $liquidations = $liquidations->orderBy('liquidation_id', 'asc')
             ->paginate(5)
-            ->appends(['tab' => $tab, 'sort' => $sort]);
+            ->appends(['tab' => $tab, 'sort' => $sort, 'q' => $searchQuery, 'academic_year' => $request->query('academic_year')]);
         // SECURITY: Visiting Liquidation clears only this user's unread publication notices for this tab.
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['liquidation'])->update(['read_at' => now()]);

@@ -33,6 +33,9 @@ $documentListMiddleware = config('school.documents_list_public', true)
     ? ['profile.complete'] : ['auth', 'profile.complete'];
 $liquidationListMiddleware = config('school.liquidation_list_public', false)
     ? ['profile.complete'] : ['auth', 'profile.complete'];
+Route::get('/transparency', [LiquidationController::class, 'index'])
+    ->name('transparency')
+    ->middleware($liquidationListMiddleware);
 Route::resource('documents', DocumentController::class)->only(['index', 'show'])
     ->middleware($documentListMiddleware)->whereNumber('document');
 Route::resource('liquidation', LiquidationController::class)->names('liquidations')
