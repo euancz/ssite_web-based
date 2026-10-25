@@ -37,3 +37,10 @@ This record is updated after each approved setup batch. No Figma read tool is ca
 - Added guidance for changing the ceiling, adding rules, switching to the fallback, reusing saved notes, and maintaining one server.
 - No application code, routes, database files, dependencies, or page designs were changed.
 - No Figma tool was called.
+
+### 2026-10-21 — Figma access attempt
+
+- The approved single `get_design_context` read for the normal/public frame (`228:1113`) was attempted after the Figma MCP server became available.
+- Figma rejected the request because the OAuth account does not have edit access to the file.
+- The call is recorded as 1 project call; no design context, screenshot, or asset data was returned.
+- No application code, routes, database files, dependencies, or page designs were changed.

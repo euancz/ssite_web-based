@@ -114,19 +114,21 @@ class MicrosoftAuthController extends Controller
         } catch (InvalidStateException $e) {
             report($e);
 
-            return redirect('/')
-                ->with(
-                    'error',
-                    'Microsoft could not verify this sign-in session. Please start again from this site and use the same address throughout sign-in.'
-                );
+            $message = 'Microsoft could not verify this sign-in session. Please start again from this site and use the same browser tab throughout sign-in.';
+            if (config('app.debug')) {
+                $message .= ' Details: ' . $e->getMessage();
+            }
+
+            return redirect('/')->with('error', $message);
         } catch (\Throwable $e) {
             report($e);
 
-            return redirect('/')
-                ->with(
-                    'error',
-                    'Microsoft sign-in could not be completed. Please try again.'
-                );
+            $message = 'Microsoft sign-in could not be completed. Please try again.';
+            if (config('app.debug')) {
+                $message .= ' Details: ' . $e->getMessage();
+            }
+
+            return redirect('/')->with('error', $message);
         }
     }
 }
