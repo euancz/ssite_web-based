@@ -1,5 +1,6 @@
 @props([
     'post',
+    'management' => false,
     'module',
     'routePrefix',
     'showUrl',
@@ -45,9 +46,9 @@
                 @endif
             </p>
         </div>
-        @unless (auth()->user()?->isPresident())
-            <x-posts.row-menu :post="$post" :route-prefix="$routePrefix" />
-        @endunless
+        @if ($management)
+            <x-workspace.posts.row-menu :post="$post" :route-prefix="$routePrefix" />
+        @endif
     </header>
 
     <div class="post-card-copy">
@@ -100,7 +101,7 @@
     <footer class="post-card-footer">
         @unless ($full)
             <a class="post-card-read-link" href="{{ $showUrl }}">Read full post</a>
-        @endunless
+        @endif
         @if ((! $full && $tab === 'published') || ($full && $post->isApproved() && ! $post->isArchived()))
             {{-- SECURITY: Engagement renders only for public content with schema-backed attributes. --}}
             <div class="post-card-engagement" aria-label="Post activity">
@@ -122,7 +123,7 @@
                 @endif
             </div>
         @endif
-        <x-posts.share-link :post="$post" :url="$showUrl" />
+        <x-posts.share-link :post="$post" :url="route($routePrefix . '.show', $post)" />
         @if (isset($footerActions))
             <div class="post-card-footer-actions">{{ $footerActions }}</div>
         @endif

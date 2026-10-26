@@ -1,0 +1,57 @@
+/* Shared interaction and form recipes, built on the existing SSITE tokens. */
+.site-body {
+    accent-color: var(--color-accent);
+    caret-color: var(--color-accent);
+    scrollbar-color: var(--color-border-control) var(--color-surface-page);
+}
+.site-body ::selection { background: var(--color-brand-surface); color: var(--color-text-primary); }
+.site-body a { text-underline-offset: .2em; }
+.site-body :focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; }
+.site-skip-link {
+    position: fixed;
+    z-index: var(--layer-loading);
+    inset: .5rem auto auto .5rem;
+    transform: translateY(-150%);
+    padding: .75rem 1rem;
+    border-radius: var(--radius-control);
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font-weight: 700;
+}
+.site-skip-link:focus { transform: translateY(0); }
+.workspace-content .workspace-workflow-tabs { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.workspace-content .workspace-workflow-tabs .dashboard-tab { min-height: 44px; font-size: var(--type-meta); padding: .5rem .75rem; }
+.workspace-content .workspace-workflow-tabs .dashboard-tab.is-active { background: var(--color-brand-surface); border-color: var(--color-accent); }
+.workspace-content .post-feed-tab-row { flex-wrap: wrap; align-items: center; gap: var(--space-4); }
+.workspace-content .post-feed-module-filter { font-size: var(--type-meta); }
+.workspace-content .workspace-composer-panel { overflow: visible; }
+.workspace-content .workspace-composer-panel .profile-form { max-width: 52rem; }
+.site-body .profile-form :is(input, select, textarea) { font: inherit; font-size: var(--type-body); max-width: 100%; }
+.workspace-content .workspace-composer-panel .dashboard-form-field label { font-size: var(--type-meta); }
+.site-body .profile-form :is(input, select) { min-height: 44px; }
+.site-body .profile-form textarea { resize: vertical; line-height: 1.65; }
+.site-body .profile-form :is(input, textarea)::placeholder { color: var(--color-text-secondary); opacity: 1; }
+.site-body .profile-form [aria-invalid="true"] { border-color: var(--color-status-danger); }
+.site-body .profile-field-error { color: var(--color-status-danger); font-size: var(--type-meta); }
+.site-body .profile-field-help { color: var(--color-text-secondary); font-size: var(--type-meta); }
+.site-body .profile-form-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.site-body .profile-form-actions .dashboard-button { min-height: 44px; font-size: var(--type-meta); }
+.site-body button:disabled { cursor: not-allowed; opacity: .65; }
+.site-body .form-error-summary { margin: var(--space-5); padding: var(--space-4); border: 1px solid var(--color-status-danger); border-radius: var(--radius-control); }
+.site-body .form-error-summary h2 { margin: 0 0 var(--space-2); font-size: 1.125rem; }
+.site-body .form-error-summary p { margin: 0 0 var(--space-2); }
+.site-body .form-error-summary ul { margin-block: 0; padding-inline-start: var(--space-5); }
+.workspace-content .dashboard-table :is(th, td) { font-size: var(--type-meta); }
+.site-body .dashboard-table { font-variant-numeric: tabular-nums; }
+.site-body .dashboard-table :is(td, th) { overflow-wrap: anywhere; }
+.site-body .post-card-body-full { max-width: 72ch; line-height: 1.75; overflow-wrap: anywhere; }
+.site-body .reject-modal { max-width: min(34rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow-y: auto; }
+@media (max-width: 600px) {
+    .workspace-content .workspace-composer-panel > .profile-form { padding: var(--space-4); }
+    .site-body .profile-form-actions > :is(button, a) { flex: 1 1 auto; justify-content: center; }
+    .workspace-content .post-feed-module-filter { width: 100%; justify-content: space-between; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .site-body { scroll-behavior: auto; }
+    .site-body :is(.dashboard-button, .post-card, .news-card, .document-tile, .site-skip-link) { transition: none; animation: none; }
+}

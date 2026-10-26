@@ -31,6 +31,7 @@ class NotificationController extends Controller
         $notifications = $request->user()->notifications()
             ->when($filter === 'unread', fn ($query) => $query->whereNull('read_at'))
             ->latest()->paginate(15)->withQueryString();
+
         return view('notifications.index', compact('notifications', 'filter'));
     }
 
@@ -83,6 +84,10 @@ class NotificationController extends Controller
             return redirect()->route($indexRoute)->with('status', 'This post is no longer available.');
         }
 
+        if (($data['type'] ?? '') !== 'published' && $request->user()->can('update', $post)) {
+            $showRoute = 'workspace.posts.'.$showRoute;
+        }
+
         return redirect()->route($showRoute, $post->getKey());
     }
 
@@ -90,6 +95,7 @@ class NotificationController extends Controller
     {
         // SECURITY: Marking all read only updates rows attached to the current account.
         $request->user()->unreadNotifications()->update(['read_at' => now()]);
+
         return back()->with('status', 'All notifications were marked as read.');
     }
 
@@ -97,6 +103,7 @@ class NotificationController extends Controller
     {
         // SECURITY: Deletion is scoped to the signed-in user's relation and returns 404 for foreign IDs.
         $request->user()->notifications()->whereKey($notification)->firstOrFail()->delete();
+
         return back()->with('status', 'The notification was dismissed.');
     }
 
@@ -106,15 +113,21 @@ class NotificationController extends Controller
         $record = $request->user()->notifications()->whereKey($notification)->firstOrFail();
         $data = (array) $record->data;
         $mapping = self::POST_TYPES[$data['post_type'] ?? ''] ?? null;
-        if (! $mapping || ! isset($data['post_id'])) abort(404);
+        if (! $mapping || ! isset($data['post_id'])) {
+            abort(404);
+        }
         [$model, $key] = $mapping;
         $post = $model::query()->where($key, $data['post_id'])->first();
-        if (! $post) abort(404);
+        if (! $post) {
+            abort(404);
+        }
 
         // Submission notices show the posting officer; review notices show the adviser on the post.
         $actorId = ($data['type'] ?? '') === 'submitted' ? $post->created_by_user_id : $post->reviewed_by_user_id;
         $avatarUrl = $actorId ? User::query()->find($actorId)?->avatarUrl() : null;
-        if (! $avatarUrl) abort(404);
+        if (! $avatarUrl) {
+            abort(404);
+        }
 
         return redirect()->away($avatarUrl);
     }

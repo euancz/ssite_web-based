@@ -52,9 +52,6 @@
     <section class="transparency-register" aria-labelledby="transactions-title">
         <div class="transparency-register-heading">
             <h2 id="transactions-title">Transactions</h2>
-            @can('create', \App\Models\Liquidation::class)
-                <a href="{{ route('liquidations.create') }}">Submit report</a>
-            @endcan
         </div>
 
         <div class="transparency-table-wrap" role="region" aria-label="Published transactions" tabindex="0">

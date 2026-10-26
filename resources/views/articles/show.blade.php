@@ -19,6 +19,7 @@
     @endif
 
     <x-posts.card
+        :management="$management"
         :post="$article"
         module="Articles"
         route-prefix="articles"
@@ -31,6 +32,7 @@
         :reading-progress="$article->isApproved() && ! $article->isArchived()"
     >
         <x-slot:footerActions>
+            @if ($management)
             @can('approve', $article)
                 @if ($article->isPending())
                     <form method="POST" action="{{ route('articles.approve', $article) }}">
@@ -45,6 +47,7 @@
                     />
                 @endif
             @endcan
+                    @endif
         </x-slot:footerActions>
     </x-posts.card>
 </x-posts.feed-frame>

@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Content\ArticleRequest;
 use App\Models\Article;
-use App\Rules\MaxWords;
-use App\Support\PostNotificationRecipients;
+use App\Services\ContentReview;
+use App\Services\PostFiles;
+use App\Support\ContentListing;
 use App\Support\PostEngagement;
-use Illuminate\Contracts\View\View;
+use App\Support\PostNotificationRecipients;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /* Officer submissions follow position capabilities and start pending. The President reviews;
@@ -32,39 +33,8 @@ class ArticleController extends Controller
     {
         $this->authorize('viewAny', Article::class);
         $user = $request->user();
-        $isEditorial = $request->routeIs('editorial.articles.index');
-        $isWorkspace = $request->routeIs('workspace.posts.articles.index');
-        if ($isWorkspace) abort_unless($user && ($user->canReview() || $user->canPostIn('articles')), 403);
-        $allowedTabs = $isEditorial
-            ? ['published', 'pending', 'rejected', 'archived', 'all']
-            : ($isWorkspace ? ['published', 'archived'] : ($user?->isPresident() ? ['published'] : ($user?->canPostIn('articles') ? ['published', 'mine', 'archived'] : ['published', 'archived'])));
-        // SECURITY: Pending totals are queried only for review-capable accounts and never reach public or student views.
-        $pendingCount = $isEditorial && $user?->canReview() ? Article::pending()->count() : null;
-        $tab = $request->query('tab', 'published');
-
-        // SECURITY: Unknown or role-hidden tabs fall back to Published before building the query.
-        if (! in_array($tab, $allowedTabs, true)) {
-            $tab = 'published';
-        }
-
-        $articles = Article::query()->with('author');
-        if ($tab === 'published') {
-            $articles->publiclyVisible();
-        } elseif ($tab === 'mine' && $user) {
-            $articles->where('created_by_user_id', $user->user_id);
-        } elseif ($tab === 'archived') {
-            $articles->archived();
-            if (! $user?->isPresident()) {
-                $articles->where(function ($query) use ($user): void {
-                    $query->approved();
-                    if ($user) $query->orWhere('created_by_user_id', $user->user_id);
-                });
-            }
-        } elseif ($tab === 'pending') {
-            $articles->pending();
-        } elseif ($tab === 'rejected') {
-            $articles->rejected();
-        }
+        [$articles, $allowedTabs, $tab, $pendingCount, $workspaceList] = app(ContentListing::class)
+            ->scope(Article::query()->with('author'), $request, 'articles');
 
         // SECURITY: Engagement queries are limited to Published and require both the feature flag and schema.
         $viewCountsEnabled = $tab === 'published' && $engagement->viewCountsAvailable($articles->getModel());
@@ -73,7 +43,9 @@ class ArticleController extends Controller
             && $engagement->likeCountsAvailable($articles->getModel());
         if ($likesEnabled) {
             $articles->withCount('likes');
-            if ($user) $articles->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->user_id)]);
+            if ($user) {
+                $articles->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->user_id)]);
+            }
         }
 
         // SECURITY: Request values select a fixed column/direction pair; they never become SQL identifiers.
@@ -82,26 +54,37 @@ class ArticleController extends Controller
             'oldest' => ['created_at', 'asc'],
             'title' => ['title', 'asc'],
         ];
-        if ($viewCountsEnabled) $sortMap['viewed'] = ['view_count', 'desc'];
-        if ($likesEnabled) $sortMap['liked'] = ['like_count', 'desc'];
+        if ($viewCountsEnabled) {
+            $sortMap['viewed'] = ['view_count', 'desc'];
+        }
+        if ($likesEnabled) {
+            $sortMap['liked'] = ['like_count', 'desc'];
+        }
         $sort = $request->query('sort');
         $sort = is_string($sort) && array_key_exists($sort, $sortMap) ? $sort : 'recent';
         $sortOptions = ['recent' => 'Most recent', 'oldest' => 'Oldest', 'title' => 'Title (A to Z)'];
-        if ($viewCountsEnabled) $sortOptions['viewed'] = 'Most viewed';
-        if ($likesEnabled) $sortOptions['liked'] = 'Most liked';
+        if ($viewCountsEnabled) {
+            $sortOptions['viewed'] = 'Most viewed';
+        }
+        if ($likesEnabled) {
+            $sortOptions['liked'] = 'Most liked';
+        }
         [$sortColumn, $sortDirection] = $sortMap[$sort];
         $articles->orderBy($sortColumn, $sortDirection);
-        if (in_array($sort, ['viewed', 'liked'], true)) $articles->orderBy('created_at', 'desc');
+        if (in_array($sort, ['viewed', 'liked'], true)) {
+            $articles->orderBy('created_at', 'desc');
+        }
         $articles = $articles->orderBy('article_id', 'asc')
             ->paginate(5)
             ->appends(['tab' => $tab, 'sort' => $sort]);
 
         // SECURITY: Visiting Articles clears only this user's unread publication notices for this tab.
-        if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
-            ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['article'])->update(['read_at' => now()]);
+        if ($user) {
+            $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
+                ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['article'])->update(['read_at' => now()]);
+        }
 
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
-        $workspaceList = $isEditorial || $isWorkspace || ($user && $user->canPostIn('articles') && $tab !== 'published');
         $view = $workspaceList ? 'workspace.posts.articles.index' : 'articles.index';
 
         return view($view, compact('articles', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'pendingCount'));
@@ -121,12 +104,18 @@ class ArticleController extends Controller
         if (! auth()->check() && ! $this->publiclyVisible($article)) {
             abort(404);
         }
+        $management = $request->routeIs('workspace.posts.*');
+        if ($management) {
+            abort_unless($request->user()?->canPostIn('articles'), 403);
+        } else {
+            abort_unless($article->isApproved() && $article->content_status === Article::CONTENT_ACTIVE, 404);
+        }
         // SECURITY: Count only after show authorization; the service excludes authors, bots, and nonpublic posts.
         $engagement->recordView($article, $request);
         $engagement->loadLikeState($article, $request);
         $article->load(['author', 'reviewer']);
 
-        return view('articles.show', compact('article'));
+        return view('articles.show', compact('article', 'management'));
     }
 
     /**
@@ -142,21 +131,10 @@ class ArticleController extends Controller
     /**
      * Store position-based submissions as pending or President posts as configured.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(ArticleRequest $request): RedirectResponse
     {
         // Validate only editable article fields; policy checks still protect the write below.
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:200'],
-            'content' => ['required', 'string', new MaxWords],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-        ], [
-            'title.required' => 'Enter an article title.',
-            'title.max' => 'The title may not be longer than 200 characters.',
-            'content.required' => 'Enter the article content.',
-            'image.image' => 'Choose a valid image file.',
-            'image.mimes' => 'The image must be a JPG, JPEG, PNG, or WebP file.',
-            'image.max' => 'The image may not be larger than 2 MB.',
-        ]);
+        $validated = $request->safe()->except(['image', 'file']);
         $this->authorize('create', Article::class);
         $user = $request->user();
         $article = new Article($validated);
@@ -175,14 +153,17 @@ class ArticleController extends Controller
             $article->image = $this->storeImage($request);
         }
 
-        $article->save();
+        app(PostFiles::class)->save($article);
 
         // SECURITY: Pending submissions notify configured reviewers; President posts follow the school toggle.
         $notifications = app(PostNotificationRecipients::class);
-        if ($autoApprove && $article->content_status === Article::CONTENT_ACTIVE) $notifications->published('article', $article, $user);
-        else $notifications->submitted('article', $article, $user);
+        if ($autoApprove && $article->content_status === Article::CONTENT_ACTIVE) {
+            $notifications->published('article', $article, $user);
+        } else {
+            $notifications->submitted('article', $article, $user);
+        }
 
-        return redirect()->route('articles.show', $article)->with('status', 'The article was created.');
+        return redirect()->route('workspace.posts.articles.show', $article)->with('status', 'The article was created.');
     }
 
     /**
@@ -198,25 +179,13 @@ class ArticleController extends Controller
     /**
      * Update article content and reset review when a rejected or approved post changes.
      */
-    public function update(Request $request, Article $article): RedirectResponse
+    public function update(ArticleRequest $request, Article $article): RedirectResponse
     {
         // Keep replacement images optional and validate the same editable fields as creation.
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:200'],
-            'content' => ['required', 'string', new MaxWords],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-        ], [
-            'title.required' => 'Enter an article title.',
-            'title.max' => 'The title may not be longer than 200 characters.',
-            'content.required' => 'Enter the article content.',
-            'image.image' => 'Choose a valid image file.',
-            'image.mimes' => 'The image must be a JPG, JPEG, PNG, or WebP file.',
-            'image.max' => 'The image may not be larger than 2 MB.',
-        ]);
+        $validated = $request->safe()->except(['image', 'file']);
         $this->authorize('update', $article);
         $wasApproved = $article->isApproved();
         $wasRejected = $article->isRejected();
-        $oldImage = $article->image;
         $article->fill($validated);
 
         if ($request->hasFile('image')) {
@@ -233,16 +202,13 @@ class ArticleController extends Controller
             $article->reviewed_at = null;
         }
 
-        $article->save();
+        app(PostFiles::class)->save($article);
         // SECURITY: Only officer edits returned to pending trigger a review notice; failures never block saving.
         if ($request->user()->isOfficer() && ($wasRejected || ($wasApproved && config('school.reset_approval_on_edit', true)))) {
             app(PostNotificationRecipients::class)->submitted('article', $article, $request->user(), true);
         }
-        if ($oldImage && $oldImage !== $article->image) {
-            Storage::disk('public')->delete($oldImage);
-        }
 
-        return redirect()->route('articles.show', $article)->with('status', 'The article was updated.');
+        return redirect()->route('workspace.posts.articles.show', $article)->with('status', 'The article was updated.');
     }
 
     /**
@@ -256,7 +222,7 @@ class ArticleController extends Controller
         }
 
         $article->content_status = Article::CONTENT_ARCHIVED;
-        $article->save();
+        app(PostFiles::class)->save($article);
 
         return back()->with('status', 'The article was archived.');
     }
@@ -272,7 +238,7 @@ class ArticleController extends Controller
         }
 
         $article->content_status = Article::CONTENT_ACTIVE;
-        $article->save();
+        app(PostFiles::class)->save($article);
 
         return back()->with('status', 'The article was restored.');
     }
@@ -287,14 +253,9 @@ class ArticleController extends Controller
             return back()->with('error', 'Only pending articles can be approved.');
         }
 
-        // SECURITY: A conditional state change ensures concurrent clicks can send only one notification set.
-        $reviewedAt = now();
-        $changed = $article->newQuery()->whereKey($article->getKey())->where('approval_status', Article::APPROVAL_PENDING)
-            ->update(['approval_status' => Article::APPROVAL_APPROVED, 'rejection_reason' => null,
-                'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => $reviewedAt]);
-        if (! $changed) return back()->with('error', 'Only pending articles can be approved.');
-        $article->approval_status = Article::APPROVAL_APPROVED;
-        app(PostNotificationRecipients::class)->approved('article', $article, $request->user());
+        if (! app(ContentReview::class)->decide($article, $request->user(), true)) {
+            return back()->with('error', 'This submission changed or was already reviewed. Reload it before reviewing again.');
+        }
 
         return back()->with('status', 'The article was approved.');
     }
@@ -315,13 +276,9 @@ class ArticleController extends Controller
         }
 
         $reason = $validated['rejection_reason'];
-        $changed = $article->newQuery()->whereKey($article->getKey())->where('approval_status', Article::APPROVAL_PENDING)
-            ->update(['approval_status' => Article::APPROVAL_REJECTED, 'rejection_reason' => $reason,
-                'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => now()]);
-        if (! $changed) return back()->with('error', 'Only pending articles can be rejected.');
-        $article->approval_status = Article::APPROVAL_REJECTED;
-        $article->rejection_reason = $reason;
-        app(PostNotificationRecipients::class)->rejected('article', $article, $request->user(), $reason);
+        if (! app(ContentReview::class)->decide($article, $request->user(), false, $reason)) {
+            return back()->with('error', 'This submission changed or was already reviewed. Reload it before reviewing again.');
+        }
 
         return back()->with('status', 'The article was rejected.');
     }
@@ -332,14 +289,9 @@ class ArticleController extends Controller
     public function destroy(Article $article): RedirectResponse
     {
         $this->authorize('delete', $article);
-        if ($article->image) {
-            Storage::disk('public')->delete($article->image);
-        }
-        // SECURITY: Remove module-scoped likes before permanently deleting their parent post.
-        app(PostEngagement::class)->deleteLikesForPost($article);
-        $article->delete();
+        app(PostFiles::class)->delete($article);
 
-        return redirect()->route('articles.index', ['tab' => 'all'])->with('status', 'The article was deleted.');
+        return redirect()->route('workspace.posts.articles.index', ['tab' => 'all'])->with('status', 'The article was deleted.');
     }
 
     /**
@@ -369,7 +321,7 @@ class ArticleController extends Controller
      */
     private function publiclyVisible(Article $article): bool
     {
-        return $article->isApproved() && in_array($article->content_status, [Article::CONTENT_ACTIVE, Article::CONTENT_ARCHIVED], true);
+        return $article->isApproved() && $article->content_status === Article::CONTENT_ACTIVE;
     }
 
     /**
@@ -377,9 +329,6 @@ class ArticleController extends Controller
      */
     private function storeImage(Request $request): string
     {
-        $file = $request->file('image');
-        $filename = Str::uuid() . '.' . ($file->guessExtension() ?: 'bin');
-
-        return $file->storeAs('articles', $filename, 'public');
+        return app(PostFiles::class)->store($request->file('image'), 'articles', 'public');
     }
 }

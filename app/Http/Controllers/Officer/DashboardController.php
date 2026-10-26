@@ -37,11 +37,11 @@ class DashboardController extends Controller
         }
 
         $modules = [
-            'articles' => ['label' => 'Articles', 'singular' => 'article', 'icon' => 'file', 'model' => Article::class, 'index' => 'articles.index', 'create' => 'articles.create', 'show' => 'articles.show'],
-            'activities' => ['label' => 'Activities', 'singular' => 'activity', 'icon' => 'calendar', 'model' => Activity::class, 'index' => 'activities.index', 'create' => 'activities.create', 'show' => 'activities.show'],
-            'achievements' => ['label' => 'Achievements', 'singular' => 'achievement', 'icon' => 'award', 'model' => Achievement::class, 'index' => 'achievements.index', 'create' => 'achievements.create', 'show' => 'achievements.show'],
-            'documents' => ['label' => 'Documents', 'singular' => 'document', 'icon' => 'file', 'model' => Document::class, 'index' => 'documents.index', 'create' => 'documents.create', 'show' => 'documents.show'],
-            'liquidations' => ['label' => 'Liquidation', 'singular' => 'liquidation report', 'icon' => 'chart', 'model' => Liquidation::class, 'index' => 'liquidations.index', 'create' => 'liquidations.create', 'show' => 'liquidations.show'],
+            'articles' => ['label' => 'Articles', 'singular' => 'article', 'icon' => 'file', 'model' => Article::class, 'index' => 'workspace.posts.articles.index', 'create' => 'articles.create', 'show' => 'workspace.posts.articles.show'],
+            'activities' => ['label' => 'Activities', 'singular' => 'activity', 'icon' => 'calendar', 'model' => Activity::class, 'index' => 'workspace.posts.activities.index', 'create' => 'activities.create', 'show' => 'workspace.posts.activities.show'],
+            'achievements' => ['label' => 'Achievements', 'singular' => 'achievement', 'icon' => 'award', 'model' => Achievement::class, 'index' => 'workspace.posts.achievements.index', 'create' => 'achievements.create', 'show' => 'workspace.posts.achievements.show'],
+            'documents' => ['label' => 'Documents', 'singular' => 'document', 'icon' => 'file', 'model' => Document::class, 'index' => 'workspace.posts.documents.index', 'create' => 'documents.create', 'show' => 'workspace.posts.documents.show'],
+            'liquidations' => ['label' => 'Liquidation', 'singular' => 'liquidation report', 'icon' => 'chart', 'model' => Liquidation::class, 'index' => 'workspace.posts.liquidations.index', 'create' => 'liquidations.create', 'show' => 'workspace.posts.liquidations.show'],
         ];
         $user = request()->user();
         $pendingByModule = [];
@@ -65,7 +65,9 @@ class DashboardController extends Controller
             $pendingPosts = $pendingPosts->sortByDesc('created_at')->take(10)->values();
         } else {
             foreach ($user->postableModules() as $key) {
-                if (! isset($modules[$key])) continue;
+                if (! isset($modules[$key])) {
+                    continue;
+                }
                 $module = $modules[$key];
                 $model = $module['model'];
                 $owned = $model::query()->where('created_by_user_id', $user->user_id);

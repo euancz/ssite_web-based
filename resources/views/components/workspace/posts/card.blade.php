@@ -118,7 +118,7 @@
                 @endif
             </div>
         @endif
-        <x-posts.share-link :post="$post" :url="$showUrl" />
+        <x-posts.share-link :post="$post" :url="route($routePrefix . '.show', $post)" />
         @if (isset($footerActions))
             <div class="post-card-footer-actions">{{ $footerActions }}</div>
         @endif

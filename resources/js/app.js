@@ -1,4 +1,7 @@
 import './bootstrap';
+import { initContentForms } from './content-forms';
+
+initContentForms();
 import { initMotion } from './motion';
 import { initFlashToasts } from './flash-toasts';
 

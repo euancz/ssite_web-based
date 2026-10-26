@@ -50,7 +50,7 @@
                     :active-tab="$activeTab"
                     :pending-count="$pendingCount"
                 />
-                @if (in_array($activeTab, ['published', 'archived'], true) && $filterModules->count() > 1 && $filterModuleKey !== false)
+                @if ($filterModules->count() > 1 && $filterModuleKey !== false)
                     <label class="post-feed-module-filter">
                         <span>Content type</span>
                         <select aria-label="Filter by content type" data-post-feed-module-filter>

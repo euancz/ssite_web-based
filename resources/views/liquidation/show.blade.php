@@ -15,7 +15,7 @@
         <header class="liquidation-detail-heading">
             <div class="liquidation-report-icon" aria-hidden="true"><x-icon name="file-text" /><span>PDF</span></div>
             <div><h1>{{ $liquidation->title }}</h1><p>Submitted by {{ $liquidation->author?->name ?? 'Former member' }} · {{ $liquidation->created_at?->format('F j, Y') ?? 'Date unavailable' }}</p></div>
-            <x-posts.row-menu :post="$liquidation" route-prefix="liquidations" />
+            @if ($management)<x-workspace.posts.row-menu :post="$liquidation" route-prefix="liquidations" />@endif
         </header>
         <dl class="liquidation-detail-facts">
             <div><dt>Report date</dt><dd>{{ $liquidation->report_date?->format('F j, Y') ?? 'Not provided' }}</dd></div>
@@ -33,6 +33,7 @@
                 @guest<a href="{{ route('liquidations.index') }}">Back to reports</a>@endguest
             </div>
         </section>
+        @if ($management)
         <div class="liquidation-detail-admin">
             @can('approve', $liquidation)
                 @if ($liquidation->isPending())
@@ -50,6 +51,7 @@
                 @endif
             @endcan
         </div>
+        @endif
     </article>
 
     @can('viewFile', $liquidation)

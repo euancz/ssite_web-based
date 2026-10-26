@@ -1,5 +1,7 @@
 # SSITE System Overview
 
+Current public/workspace boundaries and validation/persistence changes are documented in [Priority 1 progress](PRIORITY_1_PROGRESS.md). Review [the installed database baseline](DATABASE_BASELINE_REVIEW.md) before running migrations.
+
 SSITE is a Laravel Blade application for the Student Society in Information Technology Education at Mabalacat City College. Users sign in with Microsoft or the existing password login, then complete required student information before using protected pages. The app stores identity, role, and student information on one `users` table with `user_id` as its primary key. Articles, Activities, Achievements, Documents, and Liquidation use a shared posting, review, and archiving workflow.
 
 ## Roles
@@ -29,11 +31,11 @@ Profile editing uses the same authenticated-user pattern: the profile controller
 
 An officer viewing their own pending Articles follows this path:
 
-1. `routes/features.php` matches `articles.index` at `/articles` with the `tab=pending` query value.
+1. `routes/features.php` matches `articles.index` at `/workspace/posts/articles` with the `tab=pending` query value.
 2. The route applies `profile.complete`, which lets guests pass and redirects incomplete signed-in accounts; write routes separately require authentication and the module policy capability.
 3. `ArticleController::index` validates the tab against the signed-in role, scopes the query, and searches/paginates only those rows.
 4. `Article` maps `article_id`, relates authors through `users.user_id`, and `ArticlePolicy` governs private article viewing.
-5. `resources/views/articles/index.blade.php` renders the role's tabs and results with the shared Blade components.
+5. `resources/views/workspace/posts/articles/index.blade.php` renders authorized management tabs; public `/articles` URLs always render only approved, active records without management controls.
 
 ## Microsoft login and forced profile completion
 
@@ -50,7 +52,7 @@ The application clock defaults to `Asia/Manila` through `APP_TIMEZONE` in `confi
 
 ## Officer history
 
-`AcademicYear::current()` calculates the current A.Y. using `school.academic_year_start_month` (June by default), so the changeover happens from the calendar date without a scheduled task. `officer_terms` rows are snapshots: name, position, and photo stay with that year even if a linked account changes or is deleted. Role assignment synchronizes only the current year's row. New officers are not copied forward automatically. The public About page shows current-year rows above newest-first history rows; roster editing routes are retained but denied.
+`AcademicYear::current()` calculates the current A.Y. using `school.academic_year_start_month` (June by default), so the changeover happens from the calendar date without a scheduled task. `officer_terms` rows are snapshots: name, position, and photo stay with that year even if a linked account changes or is deleted. Role assignment synchronizes only the current year's row. New officers are not copied forward automatically. The public About page shows current-year rows above newest-first history rows; the President may manage roster snapshots through policy-gated workspace routes.
 
 ## Post approval flow
 
@@ -66,7 +68,7 @@ The Articles, Activities, Achievements, Documents, and Liquidation tables were c
 
 ## Simplified CRUD pattern
 
-Each content controller keeps its feature actions visible in one place: `index`, `create`, `store`, `show`, `edit`, `update`, and `destroy`, with `approve`, `reject`, `archive`, and `restore` beside them. Short feature validation rules and messages live in `store`, `update`, and `reject`; Officer Term and Profile FormRequests remain because they contain shared or custom validation logic.
+Each content controller keeps its feature actions visible in one place: `index`, `create`, `store`, `show`, `edit`, `update`, and `destroy`, with `approve`, `reject`, `archive`, and `restore` beside them. Content create/update rules and messages live in module-specific Form Requests under `app/Http/Requests/Content`. `PostFiles` coordinates transactions and attachment cleanup, and `ContentReview` serializes review decisions and sends notifications after commit. Officer Term and Profile FormRequests remain unchanged.
 
 Before changing a module, keep this protection checklist:
 

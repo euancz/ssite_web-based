@@ -2,13 +2,23 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Auth;
+use App\Models\OfficerTerm;
 use App\Models\User;
+use App\Support\AcademicYear;
+use Illuminate\Support\Facades\Auth;
+use Tests\Concerns\BuildsContentSchema;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
+    use BuildsContentSchema;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->buildContentSchema();
+    }
+
     /**
      * A basic test example.
      */
@@ -17,10 +27,8 @@ class ExampleTest extends TestCase
         $response = $this->get('/');
 
         $response->assertOk()
-            ->assertSee('Published Articles')
-            ->assertSee('Latest Activities')
-            ->assertSee('Featured Activities')
-            ->assertSee('Most Viewed')
+            ->assertSee("What's New at SSITE", false)
+            ->assertSee('No articles have been published yet.')
             ->assertSee('class="login-popover-divider"', false);
     }
 
@@ -57,7 +65,7 @@ class ExampleTest extends TestCase
     public function test_normal_login_accepts_non_mcc_email_addresses(): void
     {
         $guard = Auth::getFacadeRoot()->guard();
-        $user = new User();
+        $user = new User;
         $user->role = 'student';
 
         Auth::shouldReceive('guard')->andReturn($guard);
@@ -78,25 +86,16 @@ class ExampleTest extends TestCase
 
     public function test_about_page_is_public_and_renders_the_officers(): void
     {
-        $user = User::factory()->make();
-        $user->profile_completed_at = now();
-
-        $this->actingAs($user)->get('/about')
-            ->assertOk()
-            ->assertSee('Get to Know SSITE')
-            ->assertSee('Mission')
-            ->assertSee('Vision')
-            ->assertSee('SSITE Officers A.Y. 2026-2027')
-            ->assertSee('Khyle Alegre')
-            ->assertSee('images/officerimg/Khyle Alegre 1.png')
-            ->assertSee('Leadership History')
-            ->assertSee('https://placehold.co/320x320', false)
-            ->assertSee('css/about.css');
+        OfficerTerm::create(['academic_year' => AcademicYear::current(), 'name' => 'Current officer fixture', 'position' => 'President', 'sort_order' => 0]);
+        OfficerTerm::create(['academic_year' => '2024-2025', 'name' => 'Past officer fixture', 'position' => 'Secretary', 'sort_order' => 0]);
+        $this->get('/about')->assertOk()
+            ->assertSee('Mission')->assertSee('Vision')
+            ->assertSee('Current officer fixture')->assertSee('Past officer fixture');
     }
 
     public function test_guest_is_redirected_home_with_login_modal_for_protected_pages(): void
     {
-        $this->get('/about')
+        $this->get('/home')
             ->assertRedirect('/')
             ->assertSessionHas('error', 'Sign in first before proceeding.');
 
@@ -113,15 +112,17 @@ class ExampleTest extends TestCase
     {
         $officer = User::factory()->make();
         $officer->role = 'officer';
+        $officer->officer_position = 'Multimedia';
+        $officer->user_id = 101;
         $officer->profile_completed_at = now();
 
         $this->actingAs($officer)
             ->get(route('officer.dashboard'))
             ->assertOk()
-            ->assertSee('My recent posts')
+            ->assertSee('Recent submissions')
             ->assertSee('Dashboard')
-            ->assertSee('New Post')
-            ->assertSee('href="' . route('officer.dashboard') . '"', false);
+            ->assertSee('Your content')
+            ->assertSee('href="'.route('officer.dashboard').'"', false);
 
         $student = User::factory()->make();
         $student->role = 'student';
@@ -142,7 +143,7 @@ class ExampleTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_adviser_can_view_the_review_queue(): void
+    public function test_adviser_cannot_review_content(): void
     {
         $adviser = User::factory()->make();
         $adviser->role = 'adviser';
@@ -150,11 +151,7 @@ class ExampleTest extends TestCase
 
         $this->actingAs($adviser)
             ->get(route('adviser.reviews.index'))
-            ->assertOk()
-            ->assertSee('Review Posts')
-            ->assertSee('Pending')
-            ->assertSee('Reject post')
-            ->assertSee('not implemented yet');
+            ->assertForbidden();
     }
 
     public function test_role_is_not_mass_assignable(): void

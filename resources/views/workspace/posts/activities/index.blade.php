@@ -54,14 +54,14 @@
         @endif
     @endcan
 
-    @php($tabLabels = ['published' => 'Published posts', 'pending' => 'Pending Review', 'rejected' => 'Rejected', 'archived' => 'Archived posts', 'all' => 'All'])
+    @php($tabLabels = ['mine' => 'My submissions', 'published' => 'Published posts', 'pending' => 'Pending Review', 'rejected' => 'Rejected', 'archived' => 'Archived posts', 'all' => 'All'])
     <section class="post-feed-list" aria-label="{{ $tabLabels[$tab] }} activities">
         @forelse ($activities as $activity)
             <x-workspace.posts.card
                 :post="$activity"
                 module="Activities"
                 route-prefix="activities"
-                :show-url="route('activities.show', $activity)"
+                :show-url="route('workspace.posts.activities.show', $activity)"
                 :content="$activity->description"
                 :tab="$tab"
                 :media-url="$activity->imageUrl()"

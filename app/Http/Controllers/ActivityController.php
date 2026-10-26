@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Content\ActivityRequest;
 use App\Models\Activity;
-use App\Rules\MaxWords;
-use App\Support\PostNotificationRecipients;
+use App\Services\ContentReview;
+use App\Services\PostFiles;
+use App\Support\ContentListing;
 use App\Support\PostEngagement;
+use App\Support\PostNotificationRecipients;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /* Officer submissions follow position capabilities and start pending. The President reviews;
@@ -28,39 +29,8 @@ class ActivityController extends Controller
     {
         $this->authorize('viewAny', Activity::class);
         $user = $request->user();
-        $isEditorial = $request->routeIs('editorial.activities.index');
-        $isWorkspace = $request->routeIs('workspace.posts.activities.index');
-        if ($isWorkspace) abort_unless($user && ($user->canReview() || $user->canPostIn('activities')), 403);
-        $allowedTabs = $isEditorial
-            ? ['published', 'pending', 'rejected', 'archived', 'all']
-            : ($isWorkspace ? ['published', 'archived'] : ($user?->isPresident() ? ['published'] : ($user?->canPostIn('activities') ? ['published', 'mine', 'archived'] : ['published', 'archived'])));
-        // SECURITY: Pending totals are queried only for review-capable users and never reach public or student views.
-        $pendingCount = $isEditorial && $user?->canReview() ? Activity::pending()->count() : null;
-        $tab = $request->query('tab', 'published');
-
-        // SECURITY: Unknown or role-hidden tabs fall back to Published before querying records.
-        if (! in_array($tab, $allowedTabs, true)) {
-            $tab = 'published';
-        }
-
-        $activities = Activity::query()->with('author');
-        if ($tab === 'published') {
-            $activities->publiclyVisible();
-        } elseif ($tab === 'mine' && $user) {
-            $activities->where('created_by_user_id', $user->user_id);
-        } elseif ($tab === 'archived') {
-            $activities->archived();
-            if (! $user?->isPresident()) {
-                $activities->where(function ($query) use ($user): void {
-                    $query->approved();
-                    if ($user) $query->orWhere('created_by_user_id', $user->user_id);
-                });
-            }
-        } elseif ($tab === 'pending') {
-            $activities->pending();
-        } elseif ($tab === 'rejected') {
-            $activities->rejected();
-        }
+        [$activities, $allowedTabs, $tab, $pendingCount, $workspaceList] = app(ContentListing::class)
+            ->scope(Activity::query()->with('author'), $request, 'activities');
 
         // SECURITY: Engagement queries are limited to Published and require both the feature flag and schema.
         $viewCountsEnabled = $tab === 'published' && $engagement->viewCountsAvailable($activities->getModel());
@@ -69,7 +39,9 @@ class ActivityController extends Controller
             && $engagement->likeCountsAvailable($activities->getModel());
         if ($likesEnabled) {
             $activities->withCount('likes');
-            if ($user) $activities->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->user_id)]);
+            if ($user) {
+                $activities->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->user_id)]);
+            }
         }
 
         // SECURITY: Sort keys map to fixed columns; date sorts keep records without an event date last.
@@ -77,16 +49,24 @@ class ActivityController extends Controller
         if ($tab === 'published') {
             $sortMap['event_soonest'] = ['activity_date', 'asc'];
             $sortMap['event_latest'] = ['activity_date', 'desc'];
-            if ($viewCountsEnabled) $sortMap['viewed'] = ['view_count', 'desc'];
-            if ($likesEnabled) $sortMap['liked'] = ['like_count', 'desc'];
+            if ($viewCountsEnabled) {
+                $sortMap['viewed'] = ['view_count', 'desc'];
+            }
+            if ($likesEnabled) {
+                $sortMap['liked'] = ['like_count', 'desc'];
+            }
         }
         $sort = $request->query('sort');
         $sort = is_string($sort) && array_key_exists($sort, $sortMap) ? $sort : 'recent';
         $sortOptions = ['recent' => 'Most recent', 'oldest' => 'Oldest', 'title' => 'Title (A to Z)'];
         if ($tab === 'published') {
             $sortOptions += ['event_soonest' => 'Event date (soonest)', 'event_latest' => 'Event date (latest)'];
-            if ($viewCountsEnabled) $sortOptions['viewed'] = 'Most viewed';
-            if ($likesEnabled) $sortOptions['liked'] = 'Most liked';
+            if ($viewCountsEnabled) {
+                $sortOptions['viewed'] = 'Most viewed';
+            }
+            if ($likesEnabled) {
+                $sortOptions['liked'] = 'Most liked';
+            }
         }
         $timeframe = $request->query('timeframe');
         $timeframeOptions = ['all' => 'All dates', 'upcoming' => 'Upcoming', 'past' => 'Past'];
@@ -101,16 +81,19 @@ class ActivityController extends Controller
             $activities->orderByRaw('activity_date IS NULL ASC');
         }
         $activities->orderBy($sortColumn, $sortDirection);
-        if (in_array($sort, ['viewed', 'liked'], true)) $activities->orderBy('created_at', 'desc');
+        if (in_array($sort, ['viewed', 'liked'], true)) {
+            $activities->orderBy('created_at', 'desc');
+        }
         $activities = $activities->orderBy('activity_id', 'asc')
             ->paginate(5)
             ->appends(['tab' => $tab, 'sort' => $sort, 'timeframe' => $timeframe]);
         // SECURITY: Visiting Activities clears only this user's unread publication notices for this tab.
-        if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
-            ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['activity'])->update(['read_at' => now()]);
+        if ($user) {
+            $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
+                ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['activity'])->update(['read_at' => now()]);
+        }
 
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
-        $workspaceList = $isEditorial || $isWorkspace || ($user && $user->canPostIn('activities') && $tab !== 'published');
         $view = $workspaceList ? 'workspace.posts.activities.index' : 'activities.index';
 
         return view($view, compact('activities', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'timeframe', 'timeframeOptions', 'pendingCount'));
@@ -128,12 +111,18 @@ class ActivityController extends Controller
         if (! auth()->check() && ! $this->publiclyVisible($activity)) {
             abort(404);
         }
+        $management = $request->routeIs('workspace.posts.*');
+        if ($management) {
+            abort_unless($request->user()?->canPostIn('activities'), 403);
+        } else {
+            abort_unless($activity->isApproved() && $activity->content_status === Activity::CONTENT_ACTIVE, 404);
+        }
         // SECURITY: Count only after show authorization; the service excludes authors, bots, and nonpublic posts.
         $engagement->recordView($activity, $request);
         $engagement->loadLikeState($activity, $request);
         $activity->load(['author', 'reviewer']);
 
-        return view('activities.show', compact('activity'));
+        return view('activities.show', compact('activity', 'management'));
     }
 
     /** Show the activity form only when the current position can post here. */
@@ -145,25 +134,10 @@ class ActivityController extends Controller
     }
 
     /** Store position-based submissions as pending or President posts as configured. */
-    public function store(Request $request): RedirectResponse
+    public function store(ActivityRequest $request): RedirectResponse
     {
         // Validate editable activity fields and the optional image before writing.
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:200'],
-            'description' => ['required', 'string', new MaxWords],
-            'activity_date' => ['nullable', 'date'],
-            'location' => ['nullable', 'string', 'max:200'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-        ], [
-            'title.required' => 'Enter an activity title.',
-            'title.max' => 'The title may not be longer than 200 characters.',
-            'description.required' => 'Enter the activity description.',
-            'activity_date.date' => 'Enter a valid activity date.',
-            'location.max' => 'The location may not be longer than 200 characters.',
-            'image.image' => 'Choose a valid image file.',
-            'image.mimes' => 'The image must be a JPG, JPEG, PNG, or WebP file.',
-            'image.max' => 'The image may not be larger than 2 MB.',
-        ]);
+        $validated = $request->safe()->except(['image', 'file']);
         $this->authorize('create', Activity::class);
         $user = $request->user();
         $activity = new Activity($validated);
@@ -182,13 +156,16 @@ class ActivityController extends Controller
             $activity->image = $this->storeImage($request);
         }
 
-        $activity->save();
+        app(PostFiles::class)->save($activity);
         // SECURITY: Pending submissions notify configured reviewers; President posts follow the school toggle.
         $notifications = app(PostNotificationRecipients::class);
-        if ($autoApprove && $activity->content_status === Activity::CONTENT_ACTIVE) $notifications->published('activity', $activity, $user);
-        else $notifications->submitted('activity', $activity, $user);
+        if ($autoApprove && $activity->content_status === Activity::CONTENT_ACTIVE) {
+            $notifications->published('activity', $activity, $user);
+        } else {
+            $notifications->submitted('activity', $activity, $user);
+        }
 
-        return redirect()->route('activities.show', $activity)->with('status', 'The activity was created.');
+        return redirect()->route('workspace.posts.activities.show', $activity)->with('status', 'The activity was created.');
     }
 
     /** Show the edit form to the owner with a current capability or the President. */
@@ -200,29 +177,13 @@ class ActivityController extends Controller
     }
 
     /** Update activity fields and return rejected or configured approved edits to review. */
-    public function update(Request $request, Activity $activity): RedirectResponse
+    public function update(ActivityRequest $request, Activity $activity): RedirectResponse
     {
         // Keep the same optional replacement image and activity field rules as creation.
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:200'],
-            'description' => ['required', 'string', new MaxWords],
-            'activity_date' => ['nullable', 'date'],
-            'location' => ['nullable', 'string', 'max:200'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-        ], [
-            'title.required' => 'Enter an activity title.',
-            'title.max' => 'The title may not be longer than 200 characters.',
-            'description.required' => 'Enter the activity description.',
-            'activity_date.date' => 'Enter a valid activity date.',
-            'location.max' => 'The location may not be longer than 200 characters.',
-            'image.image' => 'Choose a valid image file.',
-            'image.mimes' => 'The image must be a JPG, JPEG, PNG, or WebP file.',
-            'image.max' => 'The image may not be larger than 2 MB.',
-        ]);
+        $validated = $request->safe()->except(['image', 'file']);
         $this->authorize('update', $activity);
         $wasApproved = $activity->isApproved();
         $wasRejected = $activity->isRejected();
-        $oldImage = $activity->image;
         $activity->fill($validated);
 
         if ($request->hasFile('image')) {
@@ -239,16 +200,13 @@ class ActivityController extends Controller
             $activity->reviewed_at = null;
         }
 
-        $activity->save();
+        app(PostFiles::class)->save($activity);
         // SECURITY: Only officer edits returned to pending trigger a review notice; failures never block saving.
         if ($request->user()->isOfficer() && ($wasRejected || ($wasApproved && config('school.reset_approval_on_edit', true)))) {
             app(PostNotificationRecipients::class)->submitted('activity', $activity, $request->user(), true);
         }
-        if ($oldImage && $oldImage !== $activity->image) {
-            $this->deleteStoredImage($oldImage);
-        }
 
-        return redirect()->route('activities.show', $activity)->with('status', 'The activity was updated.');
+        return redirect()->route('workspace.posts.activities.show', $activity)->with('status', 'The activity was updated.');
     }
 
     /** Archive an activity for its owner or the President without changing approval state. */
@@ -260,7 +218,7 @@ class ActivityController extends Controller
         }
 
         $activity->content_status = Activity::CONTENT_ARCHIVED;
-        $activity->save();
+        app(PostFiles::class)->save($activity);
 
         return back()->with('status', 'The activity was archived.');
     }
@@ -274,7 +232,7 @@ class ActivityController extends Controller
         }
 
         $activity->content_status = Activity::CONTENT_ACTIVE;
-        $activity->save();
+        app(PostFiles::class)->save($activity);
 
         return back()->with('status', 'The activity was restored.');
     }
@@ -287,14 +245,9 @@ class ActivityController extends Controller
             return back()->with('error', 'Only pending activities can be approved.');
         }
 
-        // SECURITY: A conditional state change ensures concurrent clicks can send only one notification set.
-        $reviewedAt = now();
-        $changed = $activity->newQuery()->whereKey($activity->getKey())->where('approval_status', Activity::APPROVAL_PENDING)
-            ->update(['approval_status' => Activity::APPROVAL_APPROVED, 'rejection_reason' => null,
-                'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => $reviewedAt]);
-        if (! $changed) return back()->with('error', 'Only pending activities can be approved.');
-        $activity->approval_status = Activity::APPROVAL_APPROVED;
-        app(PostNotificationRecipients::class)->approved('activity', $activity, $request->user());
+        if (! app(ContentReview::class)->decide($activity, $request->user(), true)) {
+            return back()->with('error', 'This submission changed or was already reviewed. Reload it before reviewing again.');
+        }
 
         return back()->with('status', 'The activity was approved.');
     }
@@ -313,13 +266,9 @@ class ActivityController extends Controller
         }
 
         $reason = $validated['rejection_reason'];
-        $changed = $activity->newQuery()->whereKey($activity->getKey())->where('approval_status', Activity::APPROVAL_PENDING)
-            ->update(['approval_status' => Activity::APPROVAL_REJECTED, 'rejection_reason' => $reason,
-                'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => now()]);
-        if (! $changed) return back()->with('error', 'Only pending activities can be rejected.');
-        $activity->approval_status = Activity::APPROVAL_REJECTED;
-        $activity->rejection_reason = $reason;
-        app(PostNotificationRecipients::class)->rejected('activity', $activity, $request->user(), $reason);
+        if (! app(ContentReview::class)->decide($activity, $request->user(), false, $reason)) {
+            return back()->with('error', 'This submission changed or was already reviewed. Reload it before reviewing again.');
+        }
 
         return back()->with('status', 'The activity was rejected.');
     }
@@ -328,14 +277,9 @@ class ActivityController extends Controller
     public function destroy(Activity $activity): RedirectResponse
     {
         $this->authorize('delete', $activity);
-        if ($activity->image) {
-            $this->deleteStoredImage($activity->image);
-        }
-        // SECURITY: Remove module-scoped likes before permanently deleting their parent post.
-        app(PostEngagement::class)->deleteLikesForPost($activity);
-        $activity->delete();
+        app(PostFiles::class)->delete($activity);
 
-        return redirect()->route('activities.index', ['tab' => 'all'])->with('status', 'The activity was deleted.');
+        return redirect()->route('workspace.posts.activities.index', ['tab' => 'all'])->with('status', 'The activity was deleted.');
     }
 
     /** Archive President-selected activities after validating and authorizing every submitted ID. */
@@ -361,23 +305,12 @@ class ActivityController extends Controller
     /** Check public state for guests, who have no user policy context. */
     private function publiclyVisible(Activity $activity): bool
     {
-        return $activity->isApproved() && in_array($activity->content_status, [Activity::CONTENT_ACTIVE, Activity::CONTENT_ARCHIVED], true);
+        return $activity->isApproved() && $activity->content_status === Activity::CONTENT_ACTIVE;
     }
 
     /** Save a validated upload under this module's public-disk image directory. */
     private function storeImage(Request $request): string
     {
-        $file = $request->file('image');
-        $filename = Str::uuid() . '.' . ($file->guessExtension() ?: 'bin');
-
-        return $file->storeAs('activities', $filename, 'public');
-    }
-
-    /** Ignore database paths outside the generated activity image filename pattern. */
-    private function deleteStoredImage(string $path): void
-    {
-        if (preg_match('#^activities/[A-Za-z0-9-]+\.(jpg|jpeg|png|webp)$#i', $path)) {
-            Storage::disk('public')->delete($path);
-        }
+        return app(PostFiles::class)->store($request->file('image'), 'activities', 'public');
     }
 }

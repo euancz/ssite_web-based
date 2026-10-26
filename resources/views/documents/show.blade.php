@@ -12,6 +12,7 @@
     @endif
 
     <x-posts.card
+        :management="$management"
         :post="$document"
         module="Documents"
         route-prefix="documents"
@@ -32,6 +33,7 @@
         </x-slot:attachment>
 
         <x-slot:footerActions>
+            @if ($management)
             @can('approve', $document)
                 @if ($document->isPending())
                     <form method="POST" action="{{ route('documents.approve', $document) }}">
@@ -47,6 +49,7 @@
                     />
                 @endif
             @endcan
+                    @endif
         </x-slot:footerActions>
     </x-posts.card>
 

@@ -8,12 +8,14 @@
     --site-control-height: 54px;
     --site-filter-gap: 48px;
     --site-card-gap: 28px;
-    --site-ink: #083747;
+    --site-ink: var(--color-text-primary);
     --site-cyan: linear-gradient(110deg, #63e1ed, #80d7e8 48%, #7ce5e5);
     --site-control-fill: linear-gradient(110deg, #a8e4f5, #a2f2fb);
-    --site-display-font: Georgia, 'Times New Roman', serif;
+    --site-display-font: var(--font-family-display);
     --layout-page-gutter: 20px;
-    background: #f8f8f8;
+    background-color: var(--color-surface-page);
+    background-image: linear-gradient(var(--color-grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--color-grid-line) 1px, transparent 1px);
+    background-size: 24px 24px;
     color: var(--site-ink);
 }
 body.main-site-body main :is(.site-page, .dashboard-page) {

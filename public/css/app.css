@@ -35,6 +35,8 @@
     --color-status-danger: #9B1C1C;
     --color-status-danger-surface: var(--ssite-error-surface);
     --color-focus: #0B6B8E;
+    --font-family-display: 'Pixelify Sans', 'Poppins', sans-serif;
+    --color-grid-line: rgb(23 50 77 / 5%);
     --font-family-body: 'Poppins', ui-sans-serif, system-ui, sans-serif;
     --type-body: 1rem;
     --type-meta: 0.875rem;

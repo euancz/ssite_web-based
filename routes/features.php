@@ -4,8 +4,8 @@ use App\Http\Controllers\AboutController;
 use App\Http\Controllers\AchievementController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\ArticleController;
-use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DiscoverController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\LiquidationController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PostLikeController;
@@ -53,6 +53,11 @@ Route::prefix('editorial')->name('editorial.')->middleware(['auth', 'role:office
 
 // SECURITY: Workspace library URLs require a signed-in actor; each controller checks the module capability or review role.
 Route::prefix('workspace/posts')->name('workspace.posts.')->middleware(['auth', 'profile.complete'])->group(function () {
+    Route::get('/articles/{article}', [ArticleController::class, 'show'])->whereNumber('article')->name('articles.show');
+    Route::get('/activities/{activity}', [ActivityController::class, 'show'])->whereNumber('activity')->name('activities.show');
+    Route::get('/achievements/{achievement}', [AchievementController::class, 'show'])->whereNumber('achievement')->name('achievements.show');
+    Route::get('/documents/{document}', [DocumentController::class, 'show'])->whereNumber('document')->name('documents.show');
+    Route::get('/liquidations/{liquidation}', [LiquidationController::class, 'show'])->whereNumber('liquidation')->name('liquidations.show');
     Route::get('/articles', [ArticleController::class, 'index'])->name('articles.index');
     Route::get('/activities', [ActivityController::class, 'index'])->name('activities.index');
     Route::get('/achievements', [AchievementController::class, 'index'])->name('achievements.index');

@@ -49,7 +49,7 @@
         @endif
     @endcan
 
-    @php($tabLabels = ['published' => 'Published posts', 'pending' => 'Pending Review', 'rejected' => 'Rejected', 'archived' => 'Archived posts', 'all' => 'All'])
+    @php($tabLabels = ['mine' => 'My submissions', 'published' => 'Published posts', 'pending' => 'Pending Review', 'rejected' => 'Rejected', 'archived' => 'Archived posts', 'all' => 'All'])
     <section class="post-feed-list" aria-label="{{ $tabLabels[$tab] }} liquidation reports">
         @forelse ($liquidations as $liquidation)
             <article class="liquidation-report-row">
@@ -59,7 +59,7 @@
                         <span>PDF</span>
                     </div>
                     <div class="liquidation-report-copy">
-                        <h2><a href="{{ route('liquidations.show', $liquidation) }}">{{ $liquidation->title }}</a></h2>
+                        <h2><a href="{{ route('workspace.posts.liquidations.show', $liquidation) }}">{{ $liquidation->title }}</a></h2>
                         <p class="liquidation-report-file">{{ $liquidation->original_name }} <span>·</span> {{ number_format($liquidation->file_size / 1024, 1) }} KB</p>
                         @if ($liquidation->description)<p class="liquidation-report-description">{{ \Illuminate\Support\Str::limit(strip_tags($liquidation->description), 180) }}</p>@endif
                         <p class="liquidation-report-byline">{{ $liquidation->author?->name ?? 'Former member' }} <span>·</span> {{ $liquidation->created_at?->diffForHumans() ?? 'Date unavailable' }}</p>
@@ -94,8 +94,8 @@
                     <x-posts.row-menu :post="$liquidation" route-prefix="liquidations" />
                 </div>
                 <div class="liquidation-report-actions">
-                    @can('viewFile', $liquidation)<a href="{{ route('liquidations.show', $liquidation) }}">View</a>@endcan
-                    @guest<a href="{{ route('liquidations.show', $liquidation) }}">View report</a>@endguest
+                    @can('viewFile', $liquidation)<a href="{{ route('workspace.posts.liquidations.show', $liquidation) }}">View</a>@endcan
+                    @guest<a href="{{ route('workspace.posts.liquidations.show', $liquidation) }}">View report</a>@endguest
                 </div>
                 <div class="liquidation-report-review">
                     @if ($tab !== 'published' || $liquidation->isArchived())<x-ui.status-badge :status="$liquidation->approval_status" />@endif

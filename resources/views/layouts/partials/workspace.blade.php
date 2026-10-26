@@ -18,7 +18,7 @@
         $activeModule = $availableModules->keys()->first();
 
         foreach ($availableModules as $moduleKey => $module) {
-            if (request()->routeIs($moduleKey . '.*', 'editorial.' . $moduleKey . '.*', 'workspace.posts.' . $moduleKey . '.index')) {
+            if (request()->routeIs($moduleKey . '.*', 'editorial.' . $moduleKey . '.*', 'workspace.posts.' . $moduleKey . '.*')) {
                 $activeModule = $moduleKey;
                 break;
             }
@@ -62,12 +62,12 @@
 
                 @if ($availableModules->isNotEmpty())
                     <span class="workspace-nav-label">{{ $workspaceConfig['sections']['library'] }}</span>
-                    <div class="workspace-post-library" aria-label="Published and archived posts">
-                        @foreach (['published' => ['Published posts', 'check'], 'archived' => ['Archived posts', 'archive']] as $libraryTab => [$libraryLabel, $libraryIcon])
+                    <div class="workspace-post-library" aria-label="Content library">
+                        @foreach (['mine' => ['My submissions', 'file'], 'published' => ['Published posts', 'check'], 'archived' => ['Archived posts', 'archive']] as $libraryTab => [$libraryLabel, $libraryIcon])
                             @php
                                 $libraryRoute = $activeModule ? $availableModules[$activeModule]['workspace'] : null;
                                 $isLibraryRoute = $activeModule && request()->routeIs($activeModule . '.index', 'editorial.' . $activeModule . '.index', 'workspace.posts.' . $activeModule . '.index');
-                                $isLibraryActive = $isLibraryRoute && request('tab', 'published') === $libraryTab;
+                                $isLibraryActive = $isLibraryRoute && request('tab', $user->isPresident() ? 'published' : 'mine') === $libraryTab;
                             @endphp
                             @if ($libraryRoute)
                                 <a class="workspace-nav-link workspace-library-link {{ $isLibraryActive ? 'is-active' : '' }}" href="{{ route($libraryRoute, ['tab' => $libraryTab]) }}"

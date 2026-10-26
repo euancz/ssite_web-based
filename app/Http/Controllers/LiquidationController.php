@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Content\LiquidationRequest;
 use App\Models\Liquidation;
-use App\Rules\MaxWords;
-use App\Support\PostNotificationRecipients;
+use App\Services\ContentReview;
+use App\Services\PostFiles;
+use App\Support\ContentListing;
 use App\Support\PostEngagement;
+use App\Support\PostNotificationRecipients;
 use App\Support\PrivatePdfResponse;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
@@ -15,7 +18,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -31,37 +33,16 @@ class LiquidationController extends Controller
     {
         $this->authorize('viewAny', Liquidation::class);
         $user = $request->user();
-        $isEditorial = $request->routeIs('editorial.liquidations.index');
-        $isWorkspace = $request->routeIs('workspace.posts.liquidations.index');
-        if ($isWorkspace) abort_unless($user && ($user->canReview() || $user->canPostIn('liquidations')), 403);
-        $allowedTabs = $isEditorial
-            ? ['published', 'pending', 'rejected', 'archived', 'all']
-            : ($isWorkspace ? ['published', 'archived'] : ($user?->isPresident() ? ['published'] : ($user?->canPostIn('liquidations') ? ['published', 'mine', 'archived'] : ['published', 'archived'])));
-        // SECURITY: Pending totals are queried only for review-capable users and never reach public or student views.
-        $pendingCount = $isEditorial && $user?->canReview() ? Liquidation::pending()->count() : null;
-        $tab = $request->query('tab', 'published');
-        // SECURITY: Role-specific tab allowlists prevent private workflow states leaking to students.
-        if (! in_array($tab, $allowedTabs, true)) $tab = 'published';
-        $liquidations = Liquidation::query()->with('author');
-        if ($tab === 'published') $liquidations->publiclyVisible();
-        elseif ($tab === 'mine' && $user) $liquidations->where('created_by_user_id', $user->user_id);
-        elseif ($tab === 'archived') {
-            $liquidations->archived();
-            if (! $user?->isPresident()) {
-                $liquidations->where(function ($query) use ($user): void {
-                    $query->approved();
-                    if ($user) $query->orWhere('created_by_user_id', $user->user_id);
-                });
-            }
-        } elseif ($tab === 'pending') $liquidations->pending();
-        elseif ($tab === 'rejected') $liquidations->rejected();
+        [$liquidations, $allowedTabs, $tab, $pendingCount, $workspaceList] = app(ContentListing::class)
+            ->scope(Liquidation::query()->with('author'), $request, 'liquidations');
+
         $searchQuery = $request->query('q');
         if (is_string($searchQuery) && trim($searchQuery) !== '') {
             $searchQuery = mb_substr(trim($searchQuery), 0, 100);
             $liquidations->where(function ($query) use ($searchQuery): void {
-                $query->where('title', 'like', '%' . $searchQuery . '%')
-                    ->orWhere('description', 'like', '%' . $searchQuery . '%')
-                    ->orWhere('original_name', 'like', '%' . $searchQuery . '%');
+                $query->where('title', 'like', '%'.$searchQuery.'%')
+                    ->orWhere('description', 'like', '%'.$searchQuery.'%')
+                    ->orWhere('original_name', 'like', '%'.$searchQuery.'%');
             });
         } else {
             $searchQuery = '';
@@ -73,7 +54,9 @@ class LiquidationController extends Controller
             && $engagement->likeCountsAvailable($liquidations->getModel());
         if ($likesEnabled) {
             $liquidations->withCount('likes');
-            if ($user) $liquidations->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->user_id)]);
+            if ($user) {
+                $liquidations->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->user_id)]);
+            }
         }
 
         // SECURITY: Only fixed sort keys reach ordering; report amounts remain confined to authorized list viewers.
@@ -82,8 +65,12 @@ class LiquidationController extends Controller
             $sortMap['report_soonest'] = ['report_date', 'asc'];
             $sortMap['report_latest'] = ['report_date', 'desc'];
             $sortMap['amount_high'] = ['amount', 'desc'];
-            if ($viewCountsEnabled) $sortMap['viewed'] = ['view_count', 'desc'];
-            if ($likesEnabled) $sortMap['liked'] = ['like_count', 'desc'];
+            if ($viewCountsEnabled) {
+                $sortMap['viewed'] = ['view_count', 'desc'];
+            }
+            if ($likesEnabled) {
+                $sortMap['liked'] = ['like_count', 'desc'];
+            }
         }
         $sort = $request->query('sort');
         $sort = is_string($sort) && array_key_exists($sort, $sortMap) ? $sort : 'recent';
@@ -94,21 +81,30 @@ class LiquidationController extends Controller
                 'report_latest' => 'Report date (latest)',
                 'amount_high' => 'Amount (high to low)',
             ];
-            if ($viewCountsEnabled) $sortOptions['viewed'] = 'Most viewed';
-            if ($likesEnabled) $sortOptions['liked'] = 'Most liked';
+            if ($viewCountsEnabled) {
+                $sortOptions['viewed'] = 'Most viewed';
+            }
+            if ($likesEnabled) {
+                $sortOptions['liked'] = 'Most liked';
+            }
         }
         [$sortColumn, $sortDirection] = $sortMap[$sort];
-        if ($sortColumn === 'report_date') $liquidations->orderByRaw('report_date IS NULL ASC');
+        if ($sortColumn === 'report_date') {
+            $liquidations->orderByRaw('report_date IS NULL ASC');
+        }
         $liquidations->orderBy($sortColumn, $sortDirection);
-        if (in_array($sort, ['viewed', 'liked'], true)) $liquidations->orderBy('created_at', 'desc');
+        if (in_array($sort, ['viewed', 'liked'], true)) {
+            $liquidations->orderBy('created_at', 'desc');
+        }
         $liquidations = $liquidations->orderBy('liquidation_id', 'asc')
             ->paginate(5)
             ->appends(['tab' => $tab, 'sort' => $sort, 'q' => $searchQuery, 'academic_year' => $request->query('academic_year')]);
         // SECURITY: Visiting Liquidation clears only this user's unread publication notices for this tab.
-        if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
-            ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['liquidation'])->update(['read_at' => now()]);
+        if ($user) {
+            $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
+                ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['liquidation'])->update(['read_at' => now()]);
+        }
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
-        $workspaceList = $isEditorial || $isWorkspace || ($user && $user->canPostIn('liquidations') && $tab !== 'published');
         $view = $workspaceList ? 'workspace.posts.liquidation.index' : 'liquidation.index';
 
         return view($view, compact('liquidations', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'pendingCount'));
@@ -116,8 +112,17 @@ class LiquidationController extends Controller
 
     public function show(Liquidation $liquidation, Request $request, PostEngagement $engagement): View
     {
-        try { $this->authorize('view', $liquidation); }
-        catch (AuthorizationException) { abort(404); }
+        try {
+            $this->authorize('view', $liquidation);
+        } catch (AuthorizationException) {
+            abort(404);
+        }
+        $management = $request->routeIs('workspace.posts.*');
+        if ($management) {
+            abort_unless($request->user()?->canPostIn('liquidations'), 403);
+        } else {
+            abort_unless($liquidation->isApproved() && $liquidation->content_status === Liquidation::CONTENT_ACTIVE, 404);
+        }
         // SECURITY: Count only after show authorization; the service excludes authors, bots, and nonpublic posts.
         $engagement->recordView($liquidation, $request);
         $engagement->loadLikeState($liquidation, $request);
@@ -125,31 +130,21 @@ class LiquidationController extends Controller
         $viewerUrl = $request->user() && $request->user()->can('viewFile', $liquidation)
             ? URL::temporarySignedRoute('liquidations.view', now()->addMinutes(5), ['liquidation' => $liquidation])
             : null;
-        return view('liquidation.show', compact('liquidation', 'viewerUrl'));
+
+        return view('liquidation.show', compact('liquidation', 'viewerUrl', 'management'));
     }
 
-    public function create(): View { $this->authorize('create', Liquidation::class); return view('liquidation.create'); }
+    public function create(): View
+    {
+        $this->authorize('create', Liquidation::class);
 
-    public function store(Request $request): RedirectResponse
+        return view('liquidation.create');
+    }
+
+    public function store(LiquidationRequest $request): RedirectResponse
     {
         // Validate report fields and the configured PDF limit before checking file contents.
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:200'],
-            'description' => ['nullable', 'string', new MaxWords],
-            'amount' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
-            'report_date' => ['nullable', 'date'],
-            'file' => ['required', 'file', 'mimes:pdf', 'max:' . config('school.max_pdf_size_kb', 10240)],
-        ], [
-            'title.required' => 'Enter a liquidation report title.',
-            'title.max' => 'The title may not be longer than 200 characters.',
-            'amount.numeric' => 'Enter a valid amount.',
-            'amount.min' => 'The amount may not be negative.',
-            'amount.max' => 'The amount exceeds the supported limit.',
-            'report_date.date' => 'Enter a valid report date.',
-            'file.required' => 'Choose a PDF to upload.',
-            'file.mimes' => 'Choose a valid PDF document.',
-            'file.max' => 'The PDF exceeds the configured upload size limit.',
-        ]);
+        $validated = $request->safe()->except(['image', 'file']);
         $this->authorize('create', Liquidation::class);
         $file = $request->file('file');
         $this->assertPdf($file);
@@ -164,43 +159,32 @@ class LiquidationController extends Controller
             $liquidation->reviewed_at = now();
         }
         [$liquidation->file_path, $liquidation->original_name, $liquidation->file_size] = $this->storePdf($file);
-        $liquidation->save();
+        app(PostFiles::class)->save($liquidation);
         // SECURITY: Pending submissions notify configured reviewers; President posts follow the school toggle.
         $notifications = app(PostNotificationRecipients::class);
-        if ($autoApprove && $liquidation->content_status === Liquidation::CONTENT_ACTIVE) $notifications->published('liquidation', $liquidation, $request->user());
-        else $notifications->submitted('liquidation', $liquidation, $request->user());
-        return redirect()->route('liquidations.show', $liquidation)->with('status', 'The liquidation report was uploaded.');
+        if ($autoApprove && $liquidation->content_status === Liquidation::CONTENT_ACTIVE) {
+            $notifications->published('liquidation', $liquidation, $request->user());
+        } else {
+            $notifications->submitted('liquidation', $liquidation, $request->user());
+        }
+
+        return redirect()->route('workspace.posts.liquidations.show', $liquidation)->with('status', 'The liquidation report was uploaded.');
     }
 
     public function edit(Liquidation $liquidation): View
     {
         $this->authorize('update', $liquidation);
+
         return view('liquidation.edit', compact('liquidation'));
     }
 
-    public function update(Request $request, Liquidation $liquidation): RedirectResponse
+    public function update(LiquidationRequest $request, Liquidation $liquidation): RedirectResponse
     {
         // Keep replacement PDFs optional and validate the same editable report fields.
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:200'],
-            'description' => ['nullable', 'string', new MaxWords],
-            'amount' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
-            'report_date' => ['nullable', 'date'],
-            'file' => ['nullable', 'file', 'mimes:pdf', 'max:' . config('school.max_pdf_size_kb', 10240)],
-        ], [
-            'title.required' => 'Enter a liquidation report title.',
-            'title.max' => 'The title may not be longer than 200 characters.',
-            'amount.numeric' => 'Enter a valid amount.',
-            'amount.min' => 'The amount may not be negative.',
-            'amount.max' => 'The amount exceeds the supported limit.',
-            'report_date.date' => 'Enter a valid report date.',
-            'file.mimes' => 'Choose a valid PDF document.',
-            'file.max' => 'The PDF exceeds the configured upload size limit.',
-        ]);
+        $validated = $request->safe()->except(['image', 'file']);
         $this->authorize('update', $liquidation);
         $wasApproved = $liquidation->isApproved();
         $wasRejected = $liquidation->isRejected();
-        $oldPath = $liquidation->file_path;
         unset($validated['file']);
         $liquidation->fill($validated);
         if ($request->hasFile('file')) {
@@ -215,45 +199,49 @@ class LiquidationController extends Controller
             $liquidation->reviewed_by_user_id = null;
             $liquidation->reviewed_at = null;
         }
-        $liquidation->save();
+        app(PostFiles::class)->save($liquidation);
         // SECURITY: Edits returned to pending notify configured reviewers; failures never block saving.
         if ($request->user()->isOfficer() && ($wasRejected || ($wasApproved && config('school.reset_approval_on_edit', true)))) {
             app(PostNotificationRecipients::class)->submitted('liquidation', $liquidation, $request->user(), true);
         }
-        if ($oldPath && $oldPath !== $liquidation->file_path) $this->deletePrivatePath($oldPath);
-        return redirect()->route('liquidations.show', $liquidation)->with('status', 'The liquidation report was updated.');
+
+        return redirect()->route('workspace.posts.liquidations.show', $liquidation)->with('status', 'The liquidation report was updated.');
     }
 
     public function archive(Liquidation $liquidation): RedirectResponse
     {
         $this->authorize('archive', $liquidation);
-        if ($liquidation->isArchived()) return back()->with('status', 'This report is already archived.');
+        if ($liquidation->isArchived()) {
+            return back()->with('status', 'This report is already archived.');
+        }
         $liquidation->content_status = Liquidation::CONTENT_ARCHIVED;
-        $liquidation->save();
+        app(PostFiles::class)->save($liquidation);
+
         return back()->with('status', 'The report was archived.');
     }
 
     public function restore(Liquidation $liquidation): RedirectResponse
     {
         $this->authorize('restore', $liquidation);
-        if (! $liquidation->isArchived()) return back()->with('status', 'This report is already active.');
+        if (! $liquidation->isArchived()) {
+            return back()->with('status', 'This report is already active.');
+        }
         $liquidation->content_status = Liquidation::CONTENT_ACTIVE;
-        $liquidation->save();
+        app(PostFiles::class)->save($liquidation);
+
         return back()->with('status', 'The report was restored.');
     }
 
     public function approve(Request $request, Liquidation $liquidation): RedirectResponse
     {
         $this->authorize('approve', $liquidation);
-        if (! $liquidation->isPending()) return back()->with('error', 'Only pending reports can be approved.');
-        // SECURITY: A conditional state change ensures concurrent clicks can send only one notification set.
-        $reviewedAt = now();
-        $changed = $liquidation->newQuery()->whereKey($liquidation->getKey())->where('approval_status', Liquidation::APPROVAL_PENDING)
-            ->update(['approval_status' => Liquidation::APPROVAL_APPROVED, 'rejection_reason' => null,
-                'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => $reviewedAt]);
-        if (! $changed) return back()->with('error', 'Only pending reports can be approved.');
-        $liquidation->approval_status = Liquidation::APPROVAL_APPROVED;
-        app(PostNotificationRecipients::class)->approved('liquidation', $liquidation, $request->user());
+        if (! $liquidation->isPending()) {
+            return back()->with('error', 'Only pending reports can be approved.');
+        }
+        if (! app(ContentReview::class)->decide($liquidation, $request->user(), true)) {
+            return back()->with('error', 'This submission changed or was already reviewed. Reload it before reviewing again.');
+        }
+
         return back()->with('status', 'The report was approved.');
     }
 
@@ -265,26 +253,23 @@ class LiquidationController extends Controller
             'rejection_reason.max' => 'The rejection reason may not be longer than 255 characters.',
         ]);
         $this->authorize('reject', $liquidation);
-        if (! $liquidation->isPending()) return back()->with('error', 'Only pending reports can be rejected.');
+        if (! $liquidation->isPending()) {
+            return back()->with('error', 'Only pending reports can be rejected.');
+        }
         $reason = $validated['rejection_reason'];
-        $changed = $liquidation->newQuery()->whereKey($liquidation->getKey())->where('approval_status', Liquidation::APPROVAL_PENDING)
-            ->update(['approval_status' => Liquidation::APPROVAL_REJECTED, 'rejection_reason' => $reason,
-                'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => now()]);
-        if (! $changed) return back()->with('error', 'Only pending reports can be rejected.');
-        $liquidation->approval_status = Liquidation::APPROVAL_REJECTED;
-        $liquidation->rejection_reason = $reason;
-        app(PostNotificationRecipients::class)->rejected('liquidation', $liquidation, $request->user(), $reason);
+        if (! app(ContentReview::class)->decide($liquidation, $request->user(), false, $reason)) {
+            return back()->with('error', 'This submission changed or was already reviewed. Reload it before reviewing again.');
+        }
+
         return back()->with('status', 'The report was rejected.');
     }
 
     public function destroy(Liquidation $liquidation): RedirectResponse
     {
         $this->authorize('delete', $liquidation);
-        $this->deletePrivatePath($liquidation->file_path);
-        // SECURITY: Remove module-scoped likes before permanently deleting their parent post.
-        app(PostEngagement::class)->deleteLikesForPost($liquidation);
-        $liquidation->delete();
-        return redirect()->route('liquidations.index', ['tab' => 'all'])->with('status', 'The report was deleted.');
+        app(PostFiles::class)->delete($liquidation);
+
+        return redirect()->route('workspace.posts.liquidations.index', ['tab' => 'all'])->with('status', 'The report was deleted.');
     }
 
     public function bulkArchive(Request $request): RedirectResponse
@@ -295,21 +280,30 @@ class LiquidationController extends Controller
             'liquidation_ids.*' => ['required', 'integer', 'distinct', Rule::exists('liquidations', 'liquidation_id')],
         ]);
         $items = Liquidation::query()->whereIn('liquidation_id', $validated['liquidation_ids'])->get();
-        foreach ($items as $item) $this->authorize('archive', $item);
+        foreach ($items as $item) {
+            $this->authorize('archive', $item);
+        }
         Liquidation::query()->whereIn('liquidation_id', $items->modelKeys())->update(['content_status' => Liquidation::CONTENT_ARCHIVED, 'updated_at' => now()]);
+
         return back()->with('status', 'The selected reports were archived.');
     }
 
     public function viewFile(Liquidation $liquidation, Request $request, PrivatePdfResponse $pdfResponse): StreamedResponse
     {
         // SECURITY: Hide the existence of non-public reports from users without file access.
-        try { $this->authorize('viewFile', $liquidation); }
-        catch (AuthorizationException) { abort(404); }
+        try {
+            $this->authorize('viewFile', $liquidation);
+        } catch (AuthorizationException) {
+            abort(404);
+        }
         // SECURITY: Signed URLs expire quickly; range fetches retain the same signature and recheck policy.
         abort_unless($request->hasValidSignature(), 404);
         // SECURITY: This best-effort header check blocks ordinary top-level PDF navigation.
         abort_if(strtolower((string) $request->header('Sec-Fetch-Dest')) === 'document', 404);
-        if (! $this->isPrivatePdfPath($liquidation->file_path) || ! Storage::disk('local')->exists($liquidation->file_path)) abort(404);
+        if (! $this->isPrivatePdfPath($liquidation->file_path) || ! Storage::disk('local')->exists($liquidation->file_path)) {
+            abort(404);
+        }
+
         return $pdfResponse->make(Storage::disk('local')->path($liquidation->file_path), $this->safeOriginalName($liquidation->original_name), $request);
     }
 
@@ -319,7 +313,9 @@ class LiquidationController extends Controller
         $mime = $file->getMimeType();
         $handle = @fopen($file->getRealPath(), 'rb');
         $header = $handle ? fread($handle, 5) : '';
-        if ($handle) fclose($handle);
+        if ($handle) {
+            fclose($handle);
+        }
         if (strtolower($file->getClientOriginalExtension()) !== 'pdf' || $mime !== 'application/pdf' || $header !== '%PDF-') {
             throw ValidationException::withMessages(['file' => 'Choose a genuine PDF file with a .pdf filename.']);
         }
@@ -328,7 +324,8 @@ class LiquidationController extends Controller
     private function storePdf(UploadedFile $file): array
     {
         // SECURITY: Random server-side names keep client paths out of the private liquidation folder.
-        $path = $file->storeAs('liquidation', Str::random(40) . '.pdf', 'local');
+        $path = app(PostFiles::class)->store($file, 'liquidation', 'local', true);
+
         return [$path, $this->safeOriginalName($file->getClientOriginalName()), (int) $file->getSize()];
     }
 
@@ -340,13 +337,8 @@ class LiquidationController extends Controller
         $name = preg_replace('/\.pdf(?:\.exe|\.com|\.bat|\.cmd)$/i', '', $name) ?? $name;
         $name = preg_replace('/\.pdf$/i', '', $name) ?? $name;
         $name = mb_substr($name !== '' ? $name : 'liquidation', 0, 251);
-        return $name . '.pdf';
-    }
 
-    private function deletePrivatePath(?string $path): void
-    {
-        // SECURITY: Deletion is restricted to this module's own private storage directory.
-        if ($this->isPrivatePdfPath($path)) Storage::disk('local')->delete($path);
+        return $name.'.pdf';
     }
 
     private function isPrivatePdfPath(?string $path): bool

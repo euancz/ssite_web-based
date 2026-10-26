@@ -8,30 +8,65 @@ use App\Models\User;
 /** Document permissions follow configured officer positions while preserving private PDF authorization. */
 class DocumentPolicy
 {
-    public function viewAny(?User $user): bool { return true; }
+    public function viewAny(?User $user): bool
+    {
+        return true;
+    }
 
     public function view(?User $user, Document $document): bool
     {
-        // Approved archived records remain publicly readable; their PDF routes retain stricter access below.
-        return ($document->isApproved() && in_array($document->content_status, [Document::CONTENT_ACTIVE, Document::CONTENT_ARCHIVED], true))
+        // Only approved, active records are public; owner and President previews remain authorized.
+        return ($document->isApproved() && $document->content_status === Document::CONTENT_ACTIVE)
             || ($user !== null && ($user->isPresident() || $this->owns($user, $document)));
     }
 
-    // SECURITY: Public archived record pages do not grant archived PDF access to ordinary members.
+    // SECURITY: Archived PDFs remain restricted to their owner and the President.
     public function viewFile(User $user, Document $document): bool
     {
         return ($document->isApproved() && $document->content_status === Document::CONTENT_ACTIVE)
             || $user->isPresident()
             || $this->owns($user, $document);
     }
-    public function create(User $user): bool { return $user->canPostIn('documents'); }
-    public function update(User $user, Document $document): bool { return $user->isPresident() || ($user->canPostIn('documents') && $this->owns($user, $document)); }
-    public function archive(User $user, Document $document): bool { return $this->update($user, $document); }
-    public function restore(User $user, Document $document): bool { return $this->update($user, $document); }
-    public function approve(User $user, Document $document): bool { return $user->canReview(); }
-    public function reject(User $user, Document $document): bool { return $user->canReview(); }
-    public function delete(User $user, Document $document): bool { return $user->canPermanentlyDelete(); }
-    public function bulkArchive(User $user): bool { return $user->isPresident(); }
+
+    public function create(User $user): bool
+    {
+        return $user->canPostIn('documents');
+    }
+
+    public function update(User $user, Document $document): bool
+    {
+        return $user->isPresident() || ($user->canPostIn('documents') && $this->owns($user, $document));
+    }
+
+    public function archive(User $user, Document $document): bool
+    {
+        return $this->update($user, $document);
+    }
+
+    public function restore(User $user, Document $document): bool
+    {
+        return $this->update($user, $document);
+    }
+
+    public function approve(User $user, Document $document): bool
+    {
+        return $user->canReview();
+    }
+
+    public function reject(User $user, Document $document): bool
+    {
+        return $user->canReview();
+    }
+
+    public function delete(User $user, Document $document): bool
+    {
+        return $user->canPermanentlyDelete();
+    }
+
+    public function bulkArchive(User $user): bool
+    {
+        return $user->isPresident();
+    }
 
     // SECURITY: Ownership always compares created_by_user_id with users.user_id.
     private function owns(User $user, Document $document): bool

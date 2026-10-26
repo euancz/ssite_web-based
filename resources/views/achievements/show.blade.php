@@ -12,6 +12,7 @@
     @endif
 
     <x-posts.card
+        :management="$management"
         :post="$achievement"
         module="Achievements"
         route-prefix="achievements"
@@ -27,6 +28,7 @@
         </x-slot:strip>
 
         <x-slot:footerActions>
+            @if ($management)
             @can('approve', $achievement)
                 @if ($achievement->isPending())
                     <form method="POST" action="{{ route('achievements.approve', $achievement) }}">
@@ -42,6 +44,7 @@
                     />
                 @endif
             @endcan
+                    @endif
         </x-slot:footerActions>
     </x-posts.card>
 </x-posts.feed-frame>

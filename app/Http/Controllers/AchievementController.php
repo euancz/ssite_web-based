@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Content\AchievementRequest;
 use App\Models\Achievement;
-use App\Rules\MaxWords;
-use App\Support\PostNotificationRecipients;
+use App\Services\ContentReview;
+use App\Services\PostFiles;
+use App\Support\ContentListing;
 use App\Support\PostEngagement;
+use App\Support\PostNotificationRecipients;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /* Position-based submissions start pending; the President reviews and may publish directly.
@@ -28,39 +29,8 @@ class AchievementController extends Controller
     {
         $this->authorize('viewAny', Achievement::class);
         $user = $request->user();
-        $isEditorial = $request->routeIs('editorial.achievements.index');
-        $isWorkspace = $request->routeIs('workspace.posts.achievements.index');
-        if ($isWorkspace) abort_unless($user && ($user->canReview() || $user->canPostIn('achievements')), 403);
-        $allowedTabs = $isEditorial
-            ? ['published', 'pending', 'rejected', 'archived', 'all']
-            : ($isWorkspace ? ['published', 'archived'] : ($user?->isPresident() ? ['published'] : ($user?->canPostIn('achievements') ? ['published', 'mine', 'archived'] : ['published', 'archived'])));
-        // SECURITY: Pending totals are queried only for review-capable users and never reach public or student views.
-        $pendingCount = $isEditorial && $user?->canReview() ? Achievement::pending()->count() : null;
-        $tab = $request->query('tab', 'published');
-
-        // SECURITY: Unknown or role-hidden tabs fall back to Published before querying records.
-        if (! in_array($tab, $allowedTabs, true)) {
-            $tab = 'published';
-        }
-
-        $achievements = Achievement::query()->with('author');
-        if ($tab === 'published') {
-            $achievements->publiclyVisible();
-        } elseif ($tab === 'mine' && $user) {
-            $achievements->where('created_by_user_id', $user->user_id);
-        } elseif ($tab === 'archived') {
-            $achievements->archived();
-            if (! $user?->isPresident()) {
-                $achievements->where(function ($query) use ($user): void {
-                    $query->approved();
-                    if ($user) $query->orWhere('created_by_user_id', $user->user_id);
-                });
-            }
-        } elseif ($tab === 'pending') {
-            $achievements->pending();
-        } elseif ($tab === 'rejected') {
-            $achievements->rejected();
-        }
+        [$achievements, $allowedTabs, $tab, $pendingCount, $workspaceList] = app(ContentListing::class)
+            ->scope(Achievement::query()->with('author'), $request, 'achievements');
 
         // SECURITY: Categories come only from this already visibility-scoped tab query.
         $categories = (clone $achievements)->whereNotNull('category')->where('category', '<>', '')
@@ -84,30 +54,43 @@ class AchievementController extends Controller
             && $engagement->likeCountsAvailable($achievements->getModel());
         if ($likesEnabled) {
             $achievements->withCount('likes');
-            if ($user) $achievements->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->user_id)]);
+            if ($user) {
+                $achievements->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->user_id)]);
+            }
         }
 
         // SECURITY: Sort keys map to fixed column/direction pairs and never reach raw SQL.
         $sortMap = ['recent' => ['created_at', 'desc'], 'oldest' => ['created_at', 'asc'], 'title' => ['title', 'asc']];
-        if ($viewCountsEnabled) $sortMap['viewed'] = ['view_count', 'desc'];
-        if ($likesEnabled) $sortMap['liked'] = ['like_count', 'desc'];
+        if ($viewCountsEnabled) {
+            $sortMap['viewed'] = ['view_count', 'desc'];
+        }
+        if ($likesEnabled) {
+            $sortMap['liked'] = ['like_count', 'desc'];
+        }
         $sort = $request->query('sort');
         $sort = is_string($sort) && array_key_exists($sort, $sortMap) ? $sort : 'recent';
         $sortOptions = ['recent' => 'Most recent', 'oldest' => 'Oldest', 'title' => 'Title (A to Z)'];
-        if ($viewCountsEnabled) $sortOptions['viewed'] = 'Most viewed';
-        if ($likesEnabled) $sortOptions['liked'] = 'Most liked';
+        if ($viewCountsEnabled) {
+            $sortOptions['viewed'] = 'Most viewed';
+        }
+        if ($likesEnabled) {
+            $sortOptions['liked'] = 'Most liked';
+        }
         [$sortColumn, $sortDirection] = $sortMap[$sort];
         $achievements->orderBy($sortColumn, $sortDirection);
-        if (in_array($sort, ['viewed', 'liked'], true)) $achievements->orderBy('created_at', 'desc');
+        if (in_array($sort, ['viewed', 'liked'], true)) {
+            $achievements->orderBy('created_at', 'desc');
+        }
         $achievements = $achievements->orderBy('achievement_id', 'asc')
             ->paginate(5)
             ->appends(['tab' => $tab, 'sort' => $sort, 'category' => $category]);
         // SECURITY: Visiting Achievements clears only this user's unread publication notices for this tab.
-        if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
-            ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['achievement'])->update(['read_at' => now()]);
+        if ($user) {
+            $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
+                ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['achievement'])->update(['read_at' => now()]);
+        }
 
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
-        $workspaceList = $isEditorial || $isWorkspace || ($user && $user->canPostIn('achievements') && $tab !== 'published');
         $view = $workspaceList ? 'workspace.posts.achievements.index' : 'achievements.index';
 
         return view($view, compact('achievements', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'category', 'categoryOptions', 'pendingCount'));
@@ -125,12 +108,18 @@ class AchievementController extends Controller
         if (! auth()->check() && ! $this->publiclyVisible($achievement)) {
             abort(404);
         }
+        $management = $request->routeIs('workspace.posts.*');
+        if ($management) {
+            abort_unless($request->user()?->canPostIn('achievements'), 403);
+        } else {
+            abort_unless($achievement->isApproved() && $achievement->content_status === Achievement::CONTENT_ACTIVE, 404);
+        }
         // SECURITY: Count only after show authorization; the service excludes authors, bots, and nonpublic posts.
         $engagement->recordView($achievement, $request);
         $engagement->loadLikeState($achievement, $request);
         $achievement->load(['author', 'reviewer']);
 
-        return view('achievements.show', compact('achievement'));
+        return view('achievements.show', compact('achievement', 'management'));
     }
 
     /** Show the achievement form only when the current position can post here. */
@@ -142,27 +131,10 @@ class AchievementController extends Controller
     }
 
     /** Store position-based submissions as pending or President posts as configured. */
-    public function store(Request $request): RedirectResponse
+    public function store(AchievementRequest $request): RedirectResponse
     {
         // Validate editable achievement fields and the optional image before writing.
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:200'],
-            'description' => ['required', 'string', new MaxWords],
-            'awardee' => ['nullable', 'string', 'max:200'],
-            'category' => ['nullable', 'string', 'max:100'],
-            'achievement_date' => ['nullable', 'date'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-        ], [
-            'title.required' => 'Enter an achievement title.',
-            'title.max' => 'The title may not be longer than 200 characters.',
-            'description.required' => 'Enter the achievement description.',
-            'awardee.max' => 'The awardee may not be longer than 200 characters.',
-            'category.max' => 'The category may not be longer than 100 characters.',
-            'achievement_date.date' => 'Enter a valid achievement date.',
-            'image.image' => 'Choose a valid image file.',
-            'image.mimes' => 'The image must be a JPG, JPEG, PNG, or WebP file.',
-            'image.max' => 'The image may not be larger than 2 MB.',
-        ]);
+        $validated = $request->safe()->except(['image', 'file']);
         $this->authorize('create', Achievement::class);
         $user = $request->user();
         $achievement = new Achievement($validated);
@@ -181,13 +153,16 @@ class AchievementController extends Controller
             $achievement->image = $this->storeImage($request);
         }
 
-        $achievement->save();
+        app(PostFiles::class)->save($achievement);
         // SECURITY: Pending submissions notify configured reviewers; President posts follow the school toggle.
         $notifications = app(PostNotificationRecipients::class);
-        if ($autoApprove && $achievement->content_status === Achievement::CONTENT_ACTIVE) $notifications->published('achievement', $achievement, $user);
-        else $notifications->submitted('achievement', $achievement, $user);
+        if ($autoApprove && $achievement->content_status === Achievement::CONTENT_ACTIVE) {
+            $notifications->published('achievement', $achievement, $user);
+        } else {
+            $notifications->submitted('achievement', $achievement, $user);
+        }
 
-        return redirect()->route('achievements.show', $achievement)->with('status', 'The achievement was created.');
+        return redirect()->route('workspace.posts.achievements.show', $achievement)->with('status', 'The achievement was created.');
     }
 
     /** Show the edit form to the owner with a current capability or the President. */
@@ -199,31 +174,13 @@ class AchievementController extends Controller
     }
 
     /** Update achievement fields and return rejected or configured approved edits to review. */
-    public function update(Request $request, Achievement $achievement): RedirectResponse
+    public function update(AchievementRequest $request, Achievement $achievement): RedirectResponse
     {
         // Keep replacement images optional and retain the same field validation as creation.
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:200'],
-            'description' => ['required', 'string', new MaxWords],
-            'awardee' => ['nullable', 'string', 'max:200'],
-            'category' => ['nullable', 'string', 'max:100'],
-            'achievement_date' => ['nullable', 'date'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-        ], [
-            'title.required' => 'Enter an achievement title.',
-            'title.max' => 'The title may not be longer than 200 characters.',
-            'description.required' => 'Enter the achievement description.',
-            'awardee.max' => 'The awardee may not be longer than 200 characters.',
-            'category.max' => 'The category may not be longer than 100 characters.',
-            'achievement_date.date' => 'Enter a valid achievement date.',
-            'image.image' => 'Choose a valid image file.',
-            'image.mimes' => 'The image must be a JPG, JPEG, PNG, or WebP file.',
-            'image.max' => 'The image may not be larger than 2 MB.',
-        ]);
+        $validated = $request->safe()->except(['image', 'file']);
         $this->authorize('update', $achievement);
         $wasApproved = $achievement->isApproved();
         $wasRejected = $achievement->isRejected();
-        $oldImage = $achievement->image;
         $achievement->fill($validated);
 
         if ($request->hasFile('image')) {
@@ -240,16 +197,13 @@ class AchievementController extends Controller
             $achievement->reviewed_at = null;
         }
 
-        $achievement->save();
+        app(PostFiles::class)->save($achievement);
         // SECURITY: Edits returned to pending notify configured reviewers; failures never block saving.
         if ($request->user()->isOfficer() && ($wasRejected || ($wasApproved && config('school.reset_approval_on_edit', true)))) {
             app(PostNotificationRecipients::class)->submitted('achievement', $achievement, $request->user(), true);
         }
-        if ($oldImage && $oldImage !== $achievement->image) {
-            $this->deleteStoredImage($oldImage);
-        }
 
-        return redirect()->route('achievements.show', $achievement)->with('status', 'The achievement was updated.');
+        return redirect()->route('workspace.posts.achievements.show', $achievement)->with('status', 'The achievement was updated.');
     }
 
     /** Archive an achievement for its owner or the President without changing approval state. */
@@ -261,7 +215,7 @@ class AchievementController extends Controller
         }
 
         $achievement->content_status = Achievement::CONTENT_ARCHIVED;
-        $achievement->save();
+        app(PostFiles::class)->save($achievement);
 
         return back()->with('status', 'The achievement was archived.');
     }
@@ -275,7 +229,7 @@ class AchievementController extends Controller
         }
 
         $achievement->content_status = Achievement::CONTENT_ACTIVE;
-        $achievement->save();
+        app(PostFiles::class)->save($achievement);
 
         return back()->with('status', 'The achievement was restored.');
     }
@@ -288,14 +242,9 @@ class AchievementController extends Controller
             return back()->with('error', 'Only pending achievements can be approved.');
         }
 
-        // SECURITY: A conditional state change ensures concurrent clicks can send only one notification set.
-        $reviewedAt = now();
-        $changed = $achievement->newQuery()->whereKey($achievement->getKey())->where('approval_status', Achievement::APPROVAL_PENDING)
-            ->update(['approval_status' => Achievement::APPROVAL_APPROVED, 'rejection_reason' => null,
-                'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => $reviewedAt]);
-        if (! $changed) return back()->with('error', 'Only pending achievements can be approved.');
-        $achievement->approval_status = Achievement::APPROVAL_APPROVED;
-        app(PostNotificationRecipients::class)->approved('achievement', $achievement, $request->user());
+        if (! app(ContentReview::class)->decide($achievement, $request->user(), true)) {
+            return back()->with('error', 'This submission changed or was already reviewed. Reload it before reviewing again.');
+        }
 
         return back()->with('status', 'The achievement was approved.');
     }
@@ -314,13 +263,9 @@ class AchievementController extends Controller
         }
 
         $reason = $validated['rejection_reason'];
-        $changed = $achievement->newQuery()->whereKey($achievement->getKey())->where('approval_status', Achievement::APPROVAL_PENDING)
-            ->update(['approval_status' => Achievement::APPROVAL_REJECTED, 'rejection_reason' => $reason,
-                'reviewed_by_user_id' => $request->user()->user_id, 'reviewed_at' => now()]);
-        if (! $changed) return back()->with('error', 'Only pending achievements can be rejected.');
-        $achievement->approval_status = Achievement::APPROVAL_REJECTED;
-        $achievement->rejection_reason = $reason;
-        app(PostNotificationRecipients::class)->rejected('achievement', $achievement, $request->user(), $reason);
+        if (! app(ContentReview::class)->decide($achievement, $request->user(), false, $reason)) {
+            return back()->with('error', 'This submission changed or was already reviewed. Reload it before reviewing again.');
+        }
 
         return back()->with('status', 'The achievement was rejected.');
     }
@@ -329,14 +274,9 @@ class AchievementController extends Controller
     public function destroy(Achievement $achievement): RedirectResponse
     {
         $this->authorize('delete', $achievement);
-        if ($achievement->image) {
-            $this->deleteStoredImage($achievement->image);
-        }
-        // SECURITY: Remove module-scoped likes before permanently deleting their parent post.
-        app(PostEngagement::class)->deleteLikesForPost($achievement);
-        $achievement->delete();
+        app(PostFiles::class)->delete($achievement);
 
-        return redirect()->route('achievements.index', ['tab' => 'all'])->with('status', 'The achievement was deleted.');
+        return redirect()->route('workspace.posts.achievements.index', ['tab' => 'all'])->with('status', 'The achievement was deleted.');
     }
 
     /** Archive President-selected achievements after validating and authorizing every submitted ID. */
@@ -362,23 +302,12 @@ class AchievementController extends Controller
     /** Check public state for guests, who have no user policy context. */
     private function publiclyVisible(Achievement $achievement): bool
     {
-        return $achievement->isApproved() && in_array($achievement->content_status, [Achievement::CONTENT_ACTIVE, Achievement::CONTENT_ARCHIVED], true);
+        return $achievement->isApproved() && $achievement->content_status === Achievement::CONTENT_ACTIVE;
     }
 
     /** Save a validated upload under this module's public-disk image directory. */
     private function storeImage(Request $request): string
     {
-        $file = $request->file('image');
-        $filename = Str::uuid() . '.' . ($file->guessExtension() ?: 'bin');
-
-        return $file->storeAs('achievements', $filename, 'public');
-    }
-
-    /** Ignore database paths outside the generated achievement image filename pattern. */
-    private function deleteStoredImage(string $path): void
-    {
-        if (preg_match('#^achievements/[A-Za-z0-9-]+\.(jpg|jpeg|png|webp)$#i', $path)) {
-            Storage::disk('public')->delete($path);
-        }
+        return app(PostFiles::class)->store($request->file('image'), 'achievements', 'public');
     }
 }

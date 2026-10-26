@@ -8,7 +8,7 @@
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- App styles -->
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
@@ -27,18 +27,7 @@
             'articles.create', 'articles.edit', 'activities.create', 'activities.edit',
             'achievements.create', 'achievements.edit', 'documents.create', 'documents.edit',
             'liquidations.create', 'liquidations.edit'
-        ) || ($workspaceUser?->canReview() && request()->routeIs(
-            'articles.show', 'activities.show', 'achievements.show', 'documents.show', 'liquidations.show'
-        )) || (request()->routeIs('articles.index', 'activities.index', 'achievements.index', 'documents.index', 'liquidations.index')
-            && isset($tab) && is_string($tab) && $tab !== 'published'
-            && (
-                $workspaceUser?->canReview()
-                || (request()->routeIs('articles.index') && $workspaceUser?->canPostIn('articles'))
-                || (request()->routeIs('activities.index') && $workspaceUser?->canPostIn('activities'))
-                || (request()->routeIs('achievements.index') && $workspaceUser?->canPostIn('achievements'))
-                || (request()->routeIs('documents.index') && $workspaceUser?->canPostIn('documents'))
-                || (request()->routeIs('liquidations.index') && $workspaceUser?->canPostIn('liquidations'))
-            ));
+        );
         $workspaceEnabled = $workspaceRole && $workspaceRoute;
     @endphp
     @if ($workspaceEnabled)
@@ -50,6 +39,7 @@
         <link rel="stylesheet" href="{{ asset('css/site-navigation.css') }}">
         <link rel="stylesheet" href="{{ asset('css/main-site.css') }}">
     @endunless
+    <link rel="stylesheet" href="{{ asset('css/ui-foundation.css') }}">
 </head>
 <body class="{{ $workspaceEnabled ? 'site-body workspace-site-body' : 'site-body main-site-body' }} {{ request()->routeIs('discover') ? 'discover-site-body' : '' }}">
     <template id="search-icon-articles"><x-icon name="file-text" size="sm" /></template>
@@ -72,6 +62,7 @@
     @if ($workspaceEnabled)
         @include('layouts.partials.workspace')
     @else
+    <a class="site-skip-link" href="#main-content">Skip to content</a>
     {{-- Role shortcuts live in the account menu; the shared Home destination stays public for every role. --}}
     @php($roleHomeUrl = url('/'))
 
@@ -407,7 +398,7 @@
     @include('layouts.partials.search-scripts')
 
     {{-- ============================= PAGE CONTENT ============================= --}}
-    <main>
+    <main id="main-content" tabindex="-1">
         @yield('content')
     </main>
 

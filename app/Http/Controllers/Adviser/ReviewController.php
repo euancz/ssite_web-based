@@ -28,13 +28,15 @@ class ReviewController extends Controller
         $queries = array_map(function (array $module) use ($status): Builder {
             return DB::table($module['table'])
                 ->selectRaw(
-                    '? as post_type, ? as type_label, ? as route_prefix, ' . $module['key'] . ' as post_id, title, created_by_user_id, created_at, approval_status as status, rejection_reason',
+                    '? as post_type, ? as type_label, ? as route_prefix, '.$module['key'].' as post_id, title, created_by_user_id, created_at, approval_status as status, rejection_reason',
                     [$module['type'], $module['label'], $module['route']]
                 )
                 ->where('approval_status', $status);
         }, $modules);
         $union = array_shift($queries);
-        foreach ($queries as $query) $union->unionAll($query);
+        foreach ($queries as $query) {
+            $union->unionAll($query);
+        }
 
         $posts = DB::query()->fromSub($union, 'review_posts')
             ->orderByDesc('created_at')->paginate(5)->withQueryString();
@@ -42,9 +44,9 @@ class ReviewController extends Controller
             ->get(['user_id', 'name'])->keyBy('user_id');
         foreach ($posts as $post) {
             $post->author = $authors->get($post->created_by_user_id);
-            $post->preview_url = route($post->route_prefix . '.show', [$post->post_id]);
-            $post->approve_url = route($post->route_prefix . '.approve', [$post->post_id]);
-            $post->reject_url = route($post->route_prefix . '.reject', [$post->post_id]);
+            $post->preview_url = route('workspace.posts.'.$post->route_prefix.'.show', [$post->post_id]);
+            $post->approve_url = route($post->route_prefix.'.approve', [$post->post_id]);
+            $post->reject_url = route($post->route_prefix.'.reject', [$post->post_id]);
         }
 
         return view('adviser.reviews.index', ['posts' => $posts, 'activeStatus' => $status]);

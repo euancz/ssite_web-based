@@ -55,7 +55,7 @@
                 :post="$article"
                 module="Articles"
                 route-prefix="articles"
-                :show-url="route('articles.show', $article)"
+                :show-url="route('workspace.posts.articles.show', $article)"
                 :content="$article->content"
                 :tab="$tab"
                 :media-url="$article->imageUrl()"
