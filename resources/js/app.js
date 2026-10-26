@@ -5,6 +5,14 @@ import { initFlashToasts } from './flash-toasts';
 initMotion();
 initFlashToasts();
 
+if (document.querySelector('[data-document-selection]')) {
+    import('./document-selection');
+}
+
+if (document.querySelector('[data-document-preview]')) {
+    import('./document-previews').then(({ initDocumentPreviews }) => initDocumentPreviews()).catch(() => {});
+}
+
 // Load PDF.js only after an authorized user opens the viewer dialog.
 const pdfModalTriggers = [...document.querySelectorAll('[data-pdf-modal-open]')];
 if (pdfModalTriggers.length) {

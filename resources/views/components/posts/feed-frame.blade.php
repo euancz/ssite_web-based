@@ -27,29 +27,18 @@
     @endif
 @endpush
 
-<div class="post-feed-shell {{ $stylesheet ? 'post-feed-' . $stylesheet : '' }}">
+<div class="site-page post-feed-shell {{ $stylesheet ? 'post-feed-' . $stylesheet : '' }}">
     @if ($variant === 'index')
-        <header class="post-feed-heading">
+        <header class="post-feed-heading site-hero">
             <h1>{{ $title }}</h1>
             @if ($description)
                 <p>{{ $description }}</p>
             @endif
         </header>
 
-        @can('create', $policyClass)
-            @unless (auth()->user()?->isPresident())
-            <x-posts.composer :href="route($createRoute)" :prompt="$composerPrompt" :user="auth()->user()" />
-            @endunless
-        @endcan
 
         @if ($sortOptions)
             <div class="post-feed-tab-row">
-                <x-ui.workflow-tabs
-                    :route-name="$routeName"
-                    :allowed-tabs="$allowedTabs"
-                    :active-tab="$activeTab"
-                    :pending-count="$pendingCount"
-                />
                 <x-posts.sort-row
                     :action="route($routeName)"
                     :route-name="$routeName"
@@ -63,13 +52,6 @@
                     :filter-default="$filterDefault"
                 />
             </div>
-        @else
-            <x-ui.workflow-tabs
-                :route-name="$routeName"
-                :allowed-tabs="$allowedTabs"
-                :active-tab="$activeTab"
-                :pending-count="$pendingCount"
-            />
         @endif
     @endif
 

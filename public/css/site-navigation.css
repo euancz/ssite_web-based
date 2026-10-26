@@ -1,0 +1,33 @@
+/* Main-site masthead and tabs, shared by every public page. */
+.public-home-header { background: #7bd0ed; box-shadow: 0 4px 8px rgb(6 56 71 / 16%); }
+.public-home-header .site-header-main { max-width: 1250px; min-height: 96px; padding: 16px 24px; }
+.public-home-header .site-logo { width: 60px; height: 60px; }
+.public-home-header .site-brand { gap: 12px; }
+.public-home-header .site-brand-name { color: #063847; font-size: 18px; }
+.public-home-header .site-header-actions { gap: 16px; }
+.public-home-header .site-search-desktop { width: 210px; }
+.public-home-header .site-search-input { height: 34px; border: 1px solid #155571; border-radius: 4px; background: #fff; font-size: 11px; }
+.public-home-header .login-toggle-button { min-height: 36px; padding: 0 20px; border: 1px solid #063847; border-bottom-width: 4px; border-radius: 5px; background: #155571; color: #fff; font-size: 14px; }
+.desktop-navigation { width: fit-content; max-width: calc(100% - 32px); margin: 26px auto 32px; border: 1px solid #063847; border-bottom-width: 5px; border-radius: 11px; background: #155571; }
+.site-nav-list { width: auto; gap: 6px; padding: 4px 16px; color: #fff; font-size: 15px; font-weight: 600; }
+.site-nav-item { padding: 0; }
+.site-nav-link { min-height: 44px; padding: 0 14px; border-radius: 5px; }
+.site-nav-link:hover, .site-nav-link.is-active { background: rgb(255 255 255 / 12%); opacity: 1; }
+.site-nav-link.is-active::after { display: none; }
+.site-nav-link:focus-visible, .mobile-nav-link:focus-visible { outline: 2px solid #fff; outline-offset: -3px; }
+.desktop-navigation .nav-unread-dot, .mobile-navigation .nav-unread-dot { background: #ffe58f; }
+.mobile-navigation { border: 0; background: #155571; }
+.mobile-nav-list, .mobile-nav-link.is-active { color: #fff; }
+@media (max-width: 767px) {
+    .public-home-header .site-header-main { min-height: 68px; padding: 10px 16px; }
+    .public-home-header .site-logo { width: 44px; height: 44px; }
+    .public-home-header .site-brand-name { font-size: 14px; }
+    .public-home-header .site-header-actions { gap: 8px; }
+    .public-home-header .site-search-desktop { display: none; }
+    .public-home-header .login-toggle-button { padding: 0 12px; }
+    .desktop-navigation { display: none; }
+}
+@media (min-width: 768px) and (max-width: 1100px) {
+    .public-home-header .site-brand-name { font-size: 13px; }
+    .public-home-header .site-logo { width: 48px; height: 48px; }
+}

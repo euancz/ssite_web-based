@@ -113,6 +113,7 @@ export function initPrivatePdfViewer(viewer) {
         if (sequence !== renderSequence) return;
 
         setBusy(true);
+        delete status.dataset.ready;
         status.textContent = 'Rendering page…';
         status.setAttribute('role', 'status');
         retry.hidden = true;
@@ -149,6 +150,7 @@ export function initPrivatePdfViewer(viewer) {
             if (sequence !== renderSequence) return;
             renderTask = null;
             status.textContent = 'Document ready.';
+            status.dataset.ready = 'true';
             status.setAttribute('role', 'status');
             updatePageStatus();
             setBusy(false);

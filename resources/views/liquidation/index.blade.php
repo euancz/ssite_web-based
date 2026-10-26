@@ -3,11 +3,12 @@
 @section('title', 'Transparency')
 
 @push('styles')
+    <link rel="stylesheet" href="{{ asset('css/record-selection.css') }}">
     <link rel="stylesheet" href="{{ asset('css/liquidation.css') }}">
 @endpush
 
 @section('content')
-<div class="transparency-page">
+<div class="transparency-page site-page">
     @if (session('status'))
         <p class="dashboard-success transparency-toast" role="status" data-flash-toast>{{ session('status') }}</p>
     @endif
@@ -15,7 +16,7 @@
         <p class="dashboard-error transparency-toast" role="alert" data-flash-toast>{{ session('error') }}</p>
     @endif
 
-    <section class="transparency-hero" aria-labelledby="transparency-title">
+    <section class="transparency-hero site-hero" aria-labelledby="transparency-title">
         <div class="transparency-hero-grid" aria-hidden="true"></div>
         <div class="transparency-hero-content">
             <p class="transparency-kicker">Financial transparency <span aria-hidden="true">•</span> accountability <span aria-hidden="true">•</span> trust</p>
@@ -69,7 +70,7 @@
                     @forelse ($liquidations as $liquidation)
                         <tr>
                             <td>
-                                <a href="{{ route('liquidations.show', $liquidation) }}">
+                                <a href="{{ route('liquidations.show', $liquidation) }}" data-document-selection="liquidation-selection-{{ $liquidation->getKey() }}" aria-haspopup="dialog" aria-controls="liquidation-selection-{{ $liquidation->getKey() }}">
                                     <x-icon name="file-text" size="sm" aria-hidden="true" />
                                     <span>{{ $liquidation->title }}</span>
                                 </a>
@@ -90,5 +91,8 @@
             <div class="transparency-pagination">{{ $liquidations->links('vendor.pagination.ssite') }}</div>
         @endif
     </section>
+    @foreach ($liquidations as $liquidation)
+        <x-posts.selection :post="$liquidation" :id="'liquidation-selection-' . $liquidation->getKey()" route-prefix="liquidations" category="Events" :date="$liquidation->report_date" :expense="true" />
+    @endforeach
 </div>
 @endsection

@@ -8,7 +8,7 @@
 @endpush
 
 @section('content')
-<div class="home-page">
+<div class="home-page site-page">
     <section class="home-hero" aria-labelledby="home-hero-title">
         <div class="home-hero-art" aria-hidden="true">
             <span class="hero-note hero-note--welcome">WELCOME</span>

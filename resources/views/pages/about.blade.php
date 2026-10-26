@@ -7,8 +7,8 @@
 @endpush
 
 @section('content')
-<div class="about-page">
-	<section class="about-hero" aria-labelledby="about-hero-title">
+<div class="about-page site-page">
+	<section class="about-hero site-hero" aria-labelledby="about-hero-title">
 		<p class="about-hero-label">ABOUT THE ORGANIZATION</p>
 		<h1 id="about-hero-title">GET TO KNOW SSITE</h1>
 		<p>Discover who we are, what we stand for, and the vision that brings our community together.</p>

@@ -31,6 +31,16 @@
     </div>
 
     <div class="dashboard-form-field">
+        <label for="document-semester">Semester</label>
+        <select id="document-semester" name="semester">
+            <option value="">Not assigned</option>
+            <option value="1" @selected((string) old('semester', $document?->semester) === '1')>1st Semester</option>
+            <option value="2" @selected((string) old('semester', $document?->semester) === '2')>2nd Semester</option>
+        </select>
+        @error('semester') <span class="profile-field-error">{{ $message }}</span> @enderror
+    </div>
+
+    <div class="dashboard-form-field">
         <label for="document-description">Description</label>
         <textarea id="document-description" name="description" rows="6">{{ old('description', $document?->description) }}</textarea>
         <span class="profile-field-help">Maximum 300 words.</span>

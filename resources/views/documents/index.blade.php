@@ -2,123 +2,95 @@
 
 @section('title', 'Documents')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/record-selection.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/documents-gallery.css') }}">
+@endpush
+
 @section('content')
-<x-posts.feed-frame
-    variant="index"
-    stylesheet="documents"
-    title="Documents"
-    description="Browse and manage SSITE documents."
-    :policy-class="\App\Models\Document::class"
-    create-route="documents.create"
-    composer-prompt="Share a document…"
-    route-name="documents.index"
-    :allowed-tabs="$allowedTabs"
-    :active-tab="$tab"
-    :pending-count="$pendingCount"
-    :sort="$sort"
-    :sort-options="$sortOptions"
-    filter-name="category"
-    :filter="$category"
-    :filter-options="$categoryOptions"
-    filter-label="Filter by category"
-    filter-default=""
->
-    @if (session('status'))
-        <p class="dashboard-success" role="status" data-flash-toast>{{ session('status') }}</p>
-    @endif
-    @if (session('error'))
-        <p class="dashboard-error" role="alert" data-flash-toast>{{ session('error') }}</p>
-    @endif
-
-    {{-- President bulk archive remains separate from each card's single-post actions. --}}
-    @can('bulkArchive', \App\Models\Document::class)
-        @if ($tab !== 'published' && $documents->isNotEmpty())
-            <form id="document-bulk-archive" method="POST" action="{{ route('documents.bulk-archive') }}">
-                @csrf
-            </form>
-            <div class="article-bulk-actions" data-selection-bar hidden>
-                <span data-selection-count>0 selected</span>
-                <button type="button" class="dashboard-button dashboard-button-secondary"
-                        onclick="document.getElementById('bulk-archive-document-modal').showModal()">
-                    Archive selected
-                </button>
-            </div>
-            <dialog id="bulk-archive-document-modal" class="reject-modal">
-                <div class="reject-modal-content">
-                    <h2>Archive selected documents?</h2>
-                    <p>Selected documents leave Published and keep their approval status.</p>
-                    <div class="reject-modal-actions">
-                        <button type="button" class="dashboard-button dashboard-button-secondary"
-                                onclick="document.getElementById('bulk-archive-document-modal').close()">Cancel</button>
-                        <button type="submit" form="document-bulk-archive" class="dashboard-button">Archive selected</button>
-                    </div>
-                </div>
-            </dialog>
-        @endif
-    @endcan
-
-    @php($tabLabels = ['published' => 'Published', 'mine' => 'My Posts', 'pending' => 'Pending Review', 'rejected' => 'Rejected', 'archived' => 'Archived', 'all' => 'All'])
-    <section class="post-feed-list" aria-label="{{ $tabLabels[$tab] }} documents">
-        @forelse ($documents as $document)
-            <x-posts.card
-                :post="$document"
-                module="Documents"
-                route-prefix="documents"
-                :show-url="route('documents.show', $document)"
-                :content="$document->description ?? ''"
-                :tab="$tab"
-            >
-                <x-slot:attachment>
-                    <x-posts.attachment
-                        :post="$document"
-                        route-prefix="documents"
-                        :category="$document->category ?: 'Uncategorized'"
-                        guest-can-see-list
-                    />
-                </x-slot:attachment>
-
-                <x-slot:footerActions>
-                    @can('approve', $document)
-                        @if ($tab === 'pending' && $document->isPending())
-                            <form method="POST" action="{{ route('documents.approve', $document) }}">
-                                @csrf
-                                <button type="submit" class="dashboard-button">Approve</button>
-                            </form>
-                            <button type="button" class="dashboard-button dashboard-button-secondary"
-                                    data-modal-open="document-reject-{{ $document->getKey() }}">Reject</button>
-                            <x-ui.reject-modal
-                                id="document-reject-{{ $document->getKey() }}"
-                                :action="route('documents.reject', $document)"
-                                subject="document"
-                            />
-                        @endif
-                    @endcan
-
-                    @can('bulkArchive', \App\Models\Document::class)
-                        @if ($tab !== 'published' && ! $document->isArchived())
-                            <label class="dashboard-muted">
-                                <input type="checkbox" name="document_ids[]" value="{{ $document->document_id }}" form="document-bulk-archive">
-                                Select
-                            </label>
-                        @endif
-                    @endcan
-                </x-slot:footerActions>
-            </x-posts.card>
-        @empty
-            @if ($sort !== 'recent' || $category !== '')
-                <div class="post-feed-empty">
-                    <p>No documents match these settings. <a href="{{ route('documents.index', ['tab' => $tab]) }}">Reset</a></p>
-                </div>
-            @elseif ($tab === 'published')
-                <x-posts.empty-state title="No published documents yet" message="Check back soon for the latest SSITE documents." />
-            @elseif (auth()->user()?->canPostIn('documents'))
-                <x-posts.empty-state title="No documents in this tab" message="Use the prompt above to upload a document." />
-            @else
-                <x-posts.empty-state title="No documents found" message="Check back later for new documents." />
-            @endif
-        @endforelse
+<div class="documents-page site-page">
+    <section class="documents-hero site-hero" aria-labelledby="documents-title">
+        <div class="documents-hero-grid" aria-hidden="true"></div>
+        <div class="documents-hero-copy">
+            <p class="documents-eyebrow">DOCUMENTS &bull; RECORDS &bull; ARCHIVES</p>
+            <h1 id="documents-title">OFFICIAL RECORDS</h1>
+            <p>Browse SSITE's official documents and organizational records in one accessible location.</p>
+        </div>
     </section>
 
-    <div class="dashboard-pagination">{{ $documents->links('vendor.pagination.ssite') }}</div>
-</x-posts.feed-frame>
+    <form class="documents-filters" method="GET" action="{{ route('documents.index') }}">
+        <input type="hidden" name="tab" value="{{ $tab }}">
+        <div class="documents-search">
+            <label class="visually-hidden" for="document-search">Search title</label>
+            <input id="document-search" type="search" name="q" value="{{ $searchQuery }}" placeholder="Search Title" maxlength="100">
+            <button type="submit" aria-label="Search documents"><x-icon name="search" size="sm" /></button>
+        </div>
+        <label class="documents-select">
+            <span>Sort By Semester</span>
+            <select name="semester" onchange="this.form.requestSubmit()">
+                <option value="">All Semesters</option>
+                <option value="1" @selected($semester === '1')>1st Semester</option>
+                <option value="2" @selected($semester === '2')>2nd Semester</option>
+            </select>
+            <x-icon name="chevron-down" aria-hidden="true" />
+        </label>
+        <label class="documents-select">
+            <span>Categories</span>
+            <select name="category" onchange="this.form.requestSubmit()">
+                @foreach ($categoryOptions as $value => $label)
+                    <option value="{{ $value }}" @selected($category === $value)>{{ $value === '' ? 'All Categories' : $label }}</option>
+                @endforeach
+            </select>
+            <x-icon name="chevron-down" aria-hidden="true" />
+        </label>
+        <noscript><button class="site-button" type="submit">Apply filters</button></noscript>
+    </form>
+
+    @if (session('status'))
+        <p class="dashboard-success" role="status">{{ session('status') }}</p>
+    @endif
+    @if (session('error'))
+        <p class="dashboard-error" role="alert">{{ session('error') }}</p>
+    @endif
+
+    <section class="documents-grid" aria-label="Documents">
+        @forelse ($documents as $document)
+            <article class="document-tile">
+                <a class="document-tile-link" href="{{ route('documents.show', $document) }}" data-document-selection="document-selection-{{ $document->getKey() }}" aria-haspopup="dialog" aria-controls="document-selection-{{ $document->getKey() }}">
+                    <div class="document-preview"
+                        @if (auth()->user()?->can('viewFile', $document))
+                            data-document-preview="{{ \Illuminate\Support\Facades\URL::temporarySignedRoute('documents.view', now()->addMinutes(15), ['document' => $document]) }}"
+                        @endif>
+                        <div class="document-preview-fallback">
+                            <img src="{{ asset('images/SSITE LOGO.png') }}" alt="" width="60" height="60">
+                            <span>SSITE Official Document</span>
+                            <small>{{ auth()->check() ? 'Open document for details' : 'Sign in to preview the PDF' }}</small>
+                        </div>
+                        <canvas hidden aria-hidden="true"></canvas>
+                    </div>
+                    <div class="document-tile-copy">
+                        <span class="document-category">{{ $document->category ?: 'Uncategorized' }}</span>
+                        <h2>{{ $document->title }}</h2>
+                        <div class="document-tile-meta">
+                            <p>Student Society in Information Technology Education</p>
+                            <time datetime="{{ $document->created_at?->toDateString() }}">{{ $document->created_at?->format('F j, Y') }}</time>
+                        </div>
+                    </div>
+                </a>
+            </article>
+            @include('documents._selection', ['document' => $document])
+        @empty
+            <div class="documents-empty">
+                <h2>{{ $searchQuery !== '' || $category !== '' || $semester !== '' ? 'No matching documents' : 'No published documents yet' }}</h2>
+                <p>{{ $searchQuery !== '' || $category !== '' || $semester !== '' ? 'Try another title, semester, or category.' : 'Check back soon for official SSITE records.' }}</p>
+                @if ($searchQuery !== '' || $category !== '' || $semester !== '')
+                    <a href="{{ route('documents.index') }}">Clear filters</a>
+                @endif
+            </div>
+        @endforelse
+    </section>
+    @if ($documents->hasPages())
+        <div class="dashboard-pagination">{{ $documents->links('vendor.pagination.ssite') }}</div>
+    @endif
+</div>
 @endsection

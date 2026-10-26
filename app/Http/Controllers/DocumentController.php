@@ -70,6 +70,15 @@ class DocumentController extends Controller
         }
         if ($category !== '') $documents->where('category', $category);
 
+        $semester = $request->query('semester');
+        $semester = in_array($semester, ['1', '2'], true) ? $semester : '';
+        if ($semester !== '') $documents->where('semester', $semester);
+
+        // Search stays inside the existing visibility scope and uses bound values.
+        $searchQuery = $request->query('q');
+        $searchQuery = is_string($searchQuery) ? mb_substr(trim($searchQuery), 0, 100) : '';
+        if ($searchQuery !== '') $documents->where('title', 'like', '%' . $searchQuery . '%');
+
         // SECURITY: Engagement queries are limited to Published and require both the feature flag and schema.
         $viewCountsEnabled = $tab === 'published' && $engagement->viewCountsAvailable($documents->getModel());
         // SECURITY: Like controls and ordering require the likes table and this module's counter column.
@@ -94,7 +103,7 @@ class DocumentController extends Controller
         if (in_array($sort, ['viewed', 'liked'], true)) $documents->orderBy('created_at', 'desc');
         $documents = $documents->orderBy('document_id', 'asc')
             ->paginate(5)
-            ->appends(['tab' => $tab, 'sort' => $sort, 'category' => $category]);
+            ->appends(['tab' => $tab, 'sort' => $sort, 'category' => $category, 'q' => $searchQuery, 'semester' => $semester]);
         // SECURITY: Visiting Documents clears only this user's unread publication notices for this tab.
         if ($user) $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
             ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['document'])->update(['read_at' => now()]);
@@ -103,7 +112,7 @@ class DocumentController extends Controller
         $workspaceList = $isEditorial || $isWorkspace || ($user && $user->canPostIn('documents') && $tab !== 'published');
         $view = $workspaceList ? 'workspace.posts.documents.index' : 'documents.index';
 
-        return view($view, compact('documents', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'category', 'categoryOptions', 'pendingCount'));
+        return view($view, compact('documents', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'category', 'categoryOptions', 'pendingCount', 'searchQuery', 'semester'));
     }
 
     public function show(Document $document, Request $request, PostEngagement $engagement): View
@@ -129,6 +138,7 @@ class DocumentController extends Controller
             'title' => ['required', 'string', 'max:200'],
             'description' => ['nullable', 'string', new MaxWords],
             'category' => ['nullable', 'string', 'max:100'],
+            'semester' => ['nullable', Rule::in(['1', '2'])],
             'file' => ['required', 'file', 'mimes:pdf', 'max:' . config('school.max_pdf_size_kb', 10240)],
         ], [
             'title.required' => 'Enter a document title.',
@@ -173,6 +183,7 @@ class DocumentController extends Controller
             'title' => ['required', 'string', 'max:200'],
             'description' => ['nullable', 'string', new MaxWords],
             'category' => ['nullable', 'string', 'max:100'],
+            'semester' => ['nullable', Rule::in(['1', '2'])],
             'file' => ['nullable', 'file', 'mimes:pdf', 'max:' . config('school.max_pdf_size_kb', 10240)],
         ], [
             'title.required' => 'Enter a document title.',

@@ -21,7 +21,7 @@ class Document extends Model
     protected $primaryKey = 'document_id';
 
     // SECURITY: Workflow and file metadata are set by trusted controller actions only.
-    protected $fillable = ['title', 'description', 'category'];
+    protected $fillable = ['title', 'description', 'category', 'semester'];
 
     protected function casts(): array
     {

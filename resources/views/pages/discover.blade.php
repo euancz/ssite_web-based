@@ -8,71 +8,6 @@
             background: #f8f8f8;
         }
 
-        .discover-site-body .site-header {
-            background: #70cdec;
-            box-shadow: none;
-        }
-
-        .discover-site-body .site-header-main {
-            max-width: 1180px;
-            padding: 10px 20px;
-        }
-
-        .discover-site-body .site-logo {
-            width: 44px;
-            height: 44px;
-        }
-
-        .discover-site-body .site-brand-name {
-            color: #07334a;
-            font-size: 10px;
-        }
-
-        .discover-site-body .site-search-input {
-            height: 30px;
-            border-color: rgba(7, 51, 74, 0.35);
-            border-radius: 3px;
-            font-size: 10px;
-        }
-
-        .discover-site-body .login-toggle-button {
-            min-height: 30px;
-            padding: 0.4rem 0.8rem;
-            border-radius: 4px;
-            background: #064566;
-            font-size: 10px;
-        }
-
-        .discover-site-body .desktop-navigation {
-            display: flex;
-            justify-content: center;
-            border: 0;
-            padding: 14px 14px 24px;
-            background: #f8f8f8;
-        }
-
-        .discover-site-body .site-nav-list {
-            width: fit-content;
-            gap: 28px;
-            padding: 10px 24px;
-            border-radius: 7px;
-            background: #075370;
-            color: #fff;
-            font-size: 11px;
-        }
-
-        .discover-site-body .site-nav-item {
-            padding: 0;
-        }
-
-        .discover-site-body .site-nav-link {
-            min-height: 20px;
-        }
-
-        .discover-site-body .site-nav-link.is-active::after {
-            background: #fff;
-        }
-
         .discover-page {
             background: #f8f8f8;
             min-height: 100vh;
@@ -347,11 +282,6 @@
         }
 
         @media (max-width: 960px) {
-            .discover-site-body .site-nav-list {
-                gap: 16px;
-                padding-right: 16px;
-                padding-left: 16px;
-            }
 
             .discover-filters {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -367,22 +297,6 @@
         }
 
         @media (max-width: 640px) {
-            .discover-site-body .site-header-main {
-                padding: 8px 12px;
-            }
-
-            .discover-site-body .site-logo {
-                width: 36px;
-                height: 36px;
-            }
-
-            .discover-site-body .site-brand-name {
-                font-size: 8px;
-            }
-
-            .discover-site-body .desktop-navigation {
-                display: none;
-            }
 
             .discover-main {
                 padding-left: 14px;
@@ -419,8 +333,8 @@
 
 @section('content')
     <div class="discover-page">
-        <main class="discover-main">
-            <section class="discover-hero" aria-labelledby="discover-title">
+        <div class="discover-main site-page">
+            <section class="discover-hero site-hero" aria-labelledby="discover-title">
                 <div class="discover-hero-inner">
                     <p class="discover-kicker">Articles • Activities • Achievements</p>
                     <h1 class="discover-title" id="discover-title">Stories &amp; Highlights</h1>
@@ -553,7 +467,7 @@
                     </div>
                 </section>
             @endforeach
-        </main>
+        </div>
     </div>
 @endsection
 

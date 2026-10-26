@@ -46,8 +46,12 @@
     @endif
 
     @stack('styles')
+    @unless ($workspaceEnabled)
+        <link rel="stylesheet" href="{{ asset('css/site-navigation.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/main-site.css') }}">
+    @endunless
 </head>
-<body class="{{ $workspaceEnabled ? 'site-body workspace-site-body' : 'site-body' }} {{ request()->routeIs('discover') ? 'discover-site-body' : '' }}">
+<body class="{{ $workspaceEnabled ? 'site-body workspace-site-body' : 'site-body main-site-body' }} {{ request()->routeIs('discover') ? 'discover-site-body' : '' }}">
     <template id="search-icon-articles"><x-icon name="file-text" size="sm" /></template>
     <template id="search-icon-activities"><x-icon name="calendar-days" size="sm" /></template>
     <template id="search-icon-achievements"><x-icon name="award" size="sm" /></template>
@@ -84,7 +88,7 @@
             </div>
         </header>
     @else
-    <header class="site-header {{ request()->is('/') || request()->routeIs('about') ? 'public-home-header' : '' }}">
+    <header class="site-header public-home-header">
         {{-- Top bar: logo + search + icons --}}
         <div class="site-header-main">
             <a href="{{ $roleHomeUrl }}" class="site-brand">
