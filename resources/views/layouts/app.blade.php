@@ -22,7 +22,7 @@
             || $workspaceUser->can('manage-officers')
         );
         $workspaceRoute = request()->routeIs(
-            'officer.*', 'adviser.*', 'editorial.*', 'workspace.posts.*', 'workspace.drafts.*',
+            'officer.*', 'adviser.*', 'editorial.*', 'workspace.posts.*', 'workspace.drafts.*', 'workspace.review-history.*', 'workspace.content-activity.*',
             'notifications.index', 'profile.edit',
             'articles.create', 'articles.edit', 'activities.create', 'activities.edit',
             'achievements.create', 'achievements.edit', 'documents.create', 'documents.edit',

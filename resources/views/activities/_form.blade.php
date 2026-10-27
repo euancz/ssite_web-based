@@ -36,6 +36,7 @@
         <label for="activity-image">{{ $activity ? 'Replace image (optional)' : 'Image (optional)' }}</label>
         <input id="activity-image" data-image-preview="activity-image-preview" name="image" @error('image') aria-invalid="true" aria-describedby="activity-image-error" @enderror type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
         <span class="profile-field-help">JPG, PNG, or WebP; maximum 2 MB.</span>
+        <x-workspace.upload-status input-id="activity-image" :max-kb="2048" />
         @error('image') <span id="activity-image-error" class="profile-field-error">{{ $message }}</span> @enderror
         @if ($activity?->image)
             <img id="activity-image-preview" class="article-form-preview" src="{{ $activity->imageUrl() }}" alt="Current activity image">

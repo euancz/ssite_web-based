@@ -42,6 +42,7 @@
         <label for="achievement-image">{{ $achievement ? 'Replace image (optional)' : 'Image (optional)' }}</label>
         <input id="achievement-image" data-image-preview="achievement-image-preview" name="image" @error('image') aria-invalid="true" aria-describedby="achievement-image-error" @enderror type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
         <span class="profile-field-help">JPG, PNG, or WebP; maximum 2 MB.</span>
+        <x-workspace.upload-status input-id="achievement-image" :max-kb="2048" />
         @error('image') <span id="achievement-image-error" class="profile-field-error">{{ $message }}</span> @enderror
         @if ($achievement?->image)
             <img id="achievement-image-preview" class="article-form-preview" src="{{ $achievement->imageUrl() }}" alt="Current achievement image">

@@ -50,6 +50,7 @@
         <label for="article-image">{{ $article ? 'Replace image (optional)' : 'Image (optional)' }}</label>
         <input id="article-image" data-image-preview="article-image-preview" name="image" @error('image') aria-invalid="true" aria-describedby="article-image-error" @enderror type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
         <span class="profile-field-help">JPG, PNG, or WebP; maximum 2 MB.</span>
+        <x-workspace.upload-status input-id="article-image" :max-kb="2048" />
         @error('image') <span id="article-image-error" class="profile-field-error">{{ $message }}</span> @enderror
         @if ($article?->image)
             <img id="article-image-preview" class="article-form-preview" src="{{ $article->imageUrl() }}" alt="Current article image">

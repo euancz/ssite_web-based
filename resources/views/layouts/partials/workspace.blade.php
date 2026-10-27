@@ -63,7 +63,11 @@
                 @if ($availableModules->isNotEmpty())
                     <span class="workspace-nav-label">{{ $workspaceConfig['sections']['library'] }}</span>
                     <div class="workspace-post-library" aria-label="Content library">
+                        <a class="workspace-nav-link {{ request()->routeIs('workspace.content-activity.*') ? 'is-active' : '' }}" href="{{ route('workspace.content-activity.index') }}" aria-label="Content activity" data-tooltip="Content activity" @if(request()->routeIs('workspace.content-activity.*')) aria-current="page" @endif><x-workspace.icon name="file" /><span>Content activity</span></a>
                         <a class="workspace-nav-link {{ request()->routeIs('workspace.drafts.*') ? 'is-active' : '' }}" href="{{ route('workspace.drafts.index') }}" aria-label="My drafts" data-tooltip="My drafts" @if(request()->routeIs('workspace.drafts.*')) aria-current="page" @endif><x-workspace.icon name="file" /><span>My drafts</span></a>
+                        @if (app(\App\Services\ContentReviewHistory::class)->available())
+                            <a class="workspace-nav-link {{ request()->routeIs('workspace.review-history.*') ? 'is-active' : '' }}" href="{{ route('workspace.review-history.index') }}" aria-label="Review history" data-tooltip="Review history" @if(request()->routeIs('workspace.review-history.*')) aria-current="page" @endif><x-workspace.icon name="check" /><span>Review history</span></a>
+                        @endif
                         @foreach (['mine' => ['My submissions', 'file'], 'published' => ['Published posts', 'check'], 'archived' => ['Archived posts', 'archive']] as $libraryTab => [$libraryLabel, $libraryIcon])
                             @php
                                 $libraryRoute = $activeModule ? $availableModules[$activeModule]['workspace'] : null;

@@ -53,6 +53,11 @@ Route::prefix('editorial')->name('editorial.')->middleware(['auth', 'role:office
 });
 
 // SECURITY: Workspace library URLs require a signed-in actor; each controller checks the module capability or review role.
+Route::get('/workspace/review-history', \App\Http\Controllers\ReviewHistoryController::class)
+    ->middleware(['auth', 'profile.complete'])->name('workspace.review-history.index');
+Route::get('/workspace/content-activity', \App\Http\Controllers\ContentActivityController::class)
+    ->middleware(['auth', 'profile.complete'])->name('workspace.content-activity.index');
+
 Route::prefix('workspace/drafts')->name('workspace.drafts.')->middleware(['auth', 'profile.complete'])->group(function () {
     Route::get('/', [ContentDraftController::class, 'index'])->name('index');
     Route::get('/{draft}/edit', [ContentDraftController::class, 'edit'])->whereUuid('draft')->name('edit');

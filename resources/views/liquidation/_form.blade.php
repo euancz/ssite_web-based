@@ -44,7 +44,7 @@
         <label for="liquidation-file">{{ $liquidation ? 'Replace PDF (optional)' : 'PDF file' }}@unless ($liquidation) <span class="post-form-required-mark" aria-hidden="true">*</span>@endunless</label>
         <input id="liquidation-file" name="file" @error('file') aria-invalid="true" aria-describedby="liquidation-file-error" @enderror type="file" accept=".pdf,application/pdf" @required(! $liquidation)>
         <span class="profile-field-help">PDF only; maximum {{ config('school.max_pdf_size_kb', 10240) }} KB.</span>
-        <span id="liquidation-file-info" class="profile-field-help"></span>
+        <x-workspace.upload-status input-id="liquidation-file" :max-kb="config('school.max_pdf_size_kb', 10240)" />
         @error('file') <span id="liquidation-file-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
 
@@ -57,14 +57,3 @@
         <a class="dashboard-button dashboard-button-secondary" href="{{ route('workspace.posts.liquidations.index') }}">Back to submissions</a>
     </div>
 </form>
-
-{{-- Display selected name and file size before submission. --}}
-@push('scripts')
-    <script>
-        document.getElementById('liquidation-file')?.addEventListener('change', event => {
-            const file = event.target.files?.[0];
-            const info = document.getElementById('liquidation-file-info');
-            if (info) info.textContent = file ? `${file.name} · ${(file.size / 1024).toFixed(1)} KB` : '';
-        });
-    </script>
-@endpush

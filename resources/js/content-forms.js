@@ -1,7 +1,12 @@
+import { protectUnsavedContent } from './unsaved-content';
+import { initContentUploads } from './content-uploads';
+
 // Progressive enhancement: every form remains usable with ordinary HTML submission.
 export function initContentForms() {
     document.querySelector('[data-form-errors]')?.focus();
     document.querySelectorAll('[data-content-form]').forEach((form) => {
+        protectUnsavedContent(form);
+        initContentUploads(form);
         const livePreview = form.querySelector('[data-content-preview]');
         const body = form.querySelector('textarea[name="content"], textarea[name="description"]');
         const counter = body ? document.createElement('span') : null;
@@ -68,13 +73,15 @@ export function initContentForms() {
                 delete button.dataset.savingLabel;
             });
         };
-        form.addEventListener('submit', () => {
+        form.addEventListener('submit', (event) => {
+            if (event.defaultPrevented) return;
             form.setAttribute('aria-busy', 'true');
             form.querySelectorAll('button[type="submit"]').forEach((button) => {
                 button.dataset.savingLabel = button.textContent;
                 button.textContent = 'Saving…';
                 button.disabled = true;
             });
+            queueMicrotask(() => { if (event.defaultPrevented) reset(); });
         });
         window.addEventListener('pageshow', reset);
     });

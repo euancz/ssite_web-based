@@ -1,6 +1,6 @@
 # Content review history: implementation and migration review
 
-Prepared October 27, 2026. Implementation is complete; the new application table has not been created.
+Prepared October 27, 2026. Following review and the user's instruction to continue, the scoped migration was applied successfully. Review history is enabled for future explicit decisions.
 
 ## Behavior and scope
 
@@ -12,7 +12,7 @@ Existing reviewer/status fields remain the current-state summary. Earlier decisi
 
 The application exposes no update/delete endpoints or mutable event model. This is append-only application history, not a tamper-proof database ledger; privileged database access can still alter rows. Events intentionally survive deletion of posts or reviewer accounts. Retained snapshot names/reasons are not exposed through a public or orphan-history endpoint. Any later retention/deletion policy requires separate review.
 
-## Database change for approval
+## Approved database change
 
 Create only `content_review_events`:
 
@@ -32,9 +32,9 @@ Index `content_review_events_post_index(post_type, post_id, id)` supports scoped
 
 Migration: `database/migrations/2026_10_27_000005_create_content_review_events_table.php`.
 
-Read-only MySQL inspection confirmed the table and migration-ledger entry are absent. Laravel pretend mode generated the CREATE TABLE and named index without executing them. The table uses configured utf8mb4 encoding.
+Pre-migration read-only MySQL inspection confirmed the table and migration-ledger entry were absent. Laravel pretend mode generated the CREATE TABLE and named index for review. The table uses configured utf8mb4 encoding.
 
-After approval, execute only:
+After approval, only this command was executed:
 
 ```powershell
 php artisan migrate --path=database/migrations/2026_10_27_000005_create_content_review_events_table.php --force
@@ -52,3 +52,7 @@ Before migration the history UI is hidden and the existing review workflow conti
 - Browser pages and mutations use isolated SQLite fixtures, not application data or a live Microsoft-authenticated session. Read-only application schema inspection and SQL generation were the only database operations against MySQL in this batch.
 
 Scheduling, full content revisions, broader activity logging, durable draft attachments, and additional analytics remain separate work.
+
+## Application verification after approval
+
+Artisan completed only `2026_10_27_000005_create_content_review_events_table`. Read-only checks confirmed all nine columns, the named composite index, ledger entry, zero initial events, and enabled feature availability. Counts and SHA-256 checksums of all rows in all five existing content tables matched before and after execution (Articles: 1, Activities: 0, Achievements: 0, Documents: 1, Liquidations: 1). No earlier decisions were invented and no unrelated migrations ran.

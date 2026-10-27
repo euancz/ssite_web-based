@@ -36,7 +36,7 @@ Browser evidence uses rendered fixture pages, not a live Microsoft-authenticated
 
 ## Remaining work
 
-Private text/metadata drafts are implemented following approval and application of the targeted migration. See [Private drafts progress](DRAFTS_PROGRESS.md). The current suite passes 85 tests with 1,289 assertions, including document academic years, featured articles, article formatting, and staged review history.
+Private text/metadata drafts are implemented following approval and application of the targeted migration. See [Private drafts progress](DRAFTS_PROGRESS.md). The latest full suite passes 94 tests with 1,362 assertions, including document academic years, featured articles, article formatting, review history, history browsing, and scoped content activity reports.
 
 Durable draft attachments, scheduling, full content version history, broader activity logs, and additional analytics remain later work. Do not run pending migrations against the installed database without the reconciliation and explicit review described in `DATABASE_BASELINE_REVIEW.md`.
 
@@ -46,4 +46,12 @@ President-only featured-article controls and safe Home/Discover prioritization a
 
 Article formatting is implemented and enabled as an optional Markdown source editor with safe server rendering, formatted previews, draft persistence, and readable excerpts. The user approved the scoped migration; schema, default, ledger, and unchanged existing article values were verified. See [article formatting review](ARTICLE_FORMATTING_REVIEW.md). Legacy articles remain plain text. Other modules still use plain text.
 
-Append-only application review history is implemented for explicit decisions across all five modules. The new table is prepared but not applied; see [review history migration review](REVIEW_HISTORY_REVIEW.md). It is not a tamper-proof ledger or full content revision history.
+Append-only application review history is implemented and enabled for explicit decisions across all five modules. The user approved the scoped migration; columns, index, ledger, empty initial history, and unchanged existing content were verified. See [review history migration review](REVIEW_HISTORY_REVIEW.md). It is not a tamper-proof ledger or full content revision history.
+
+The workspace now offers searchable, filterable, paginated review history with per-post links and current editor-only access. This uses the existing table without new migrations. See [history browsing progress](REVIEW_HISTORY_BROWSING.md).
+
+Content activity now reports 7/30-day submission and recorded-review trends from existing data, with a daily table and explicit coverage limits. No migration was needed. Tests, responsive checks, and the read-only MySQL aggregation check pass. See [content activity progress](CONTENT_ACTIVITY_PROGRESS.md).
+
+All five content forms now display an unsaved-change status and register a browser navigation warning while edited. Reverting edits clears the warning; normal submissions can proceed, while canceled submissions restore protection and enabled buttons. No content is copied into browser storage. See [unsaved content progress](UNSAVED_CONTENT_PROGRESS.md).
+
+Attachment selection now shares filename/size feedback, a clear-selection action, and browser size validation matching the existing server limits. See [content upload progress](CONTENT_UPLOADS_PROGRESS.md). Server validation and private PDF viewing remain authoritative.

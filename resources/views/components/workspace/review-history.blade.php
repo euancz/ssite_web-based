@@ -17,6 +17,11 @@
             @empty
                 <p>No decisions have been recorded in this history yet.</p>
             @endforelse
+            @foreach (\App\Support\ContentModules::all() as $key => $module)
+                @if ($post::class === $module['model'])
+                    <a class="dashboard-text-button" href="{{ route('workspace.review-history.index', ['module' => $key, 'post' => $post->getKey()]) }}">Browse all decisions for this post</a>
+                @endif
+            @endforeach
         </details>
     @endif
 @endcan

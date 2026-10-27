@@ -61,7 +61,7 @@
         <label for="document-file">{{ $document ? 'Replace PDF (optional)' : 'PDF file' }}@unless ($document) <span class="post-form-required-mark" aria-hidden="true">*</span>@endunless</label>
         <input id="document-file" name="file" @error('file') aria-invalid="true" aria-describedby="document-file-error" @enderror type="file" accept=".pdf,application/pdf" @required(! $document)>
         <span class="profile-field-help">PDF only; maximum {{ config('school.max_pdf_size_kb', 10240) }} KB.</span>
-        <span id="document-file-info" class="profile-field-help"></span>
+        <x-workspace.upload-status input-id="document-file" :max-kb="config('school.max_pdf_size_kb', 10240)" />
         @error('file') <span id="document-file-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
 
@@ -74,14 +74,3 @@
         <a class="dashboard-button dashboard-button-secondary" href="{{ route('workspace.posts.documents.index') }}">Back to submissions</a>
     </div>
 </form>
-
-{{-- Show the selected client name and size without uploading or exposing a storage path. --}}
-@push('scripts')
-    <script>
-        document.getElementById('document-file')?.addEventListener('change', event => {
-            const file = event.target.files?.[0];
-            const info = document.getElementById('document-file-info');
-            if (info) info.textContent = file ? `${file.name} · ${(file.size / 1024).toFixed(1)} KB` : '';
-        });
-    </script>
-@endpush

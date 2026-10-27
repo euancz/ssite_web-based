@@ -86,6 +86,16 @@
 .workspace-review-history p { max-width: 70ch; overflow-wrap: anywhere; }
 .workspace-review-history-entry { padding-block: var(--space-3); border-top: 1px solid var(--color-border-control); }
 .workspace-review-history-entry time { display: block; font-size: var(--type-meta); color: var(--color-text-secondary); }
+.review-history-area { display: block; font-size: var(--type-meta); font-weight: 400; }
+.content-activity-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+.content-activity-plot { display: flex; align-items: stretch; gap: 3px; height: 10rem; border-bottom: 1px solid var(--color-border-control); }
+.content-activity-column { flex: 1; min-width: 0; display: flex; align-items: end; }
+.content-activity-column span { width: 100%; background: var(--color-accent); }
+.content-activity-axis { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-2); font-size: var(--type-meta); }
+.content-activity-data summary { cursor: pointer; min-height: 44px; padding-block: var(--space-3); font-weight: 600; }
+@media (max-width: 800px) { .content-activity-charts { grid-template-columns: minmax(0, 1fr); } }
+.review-history-table :is(th, td) { max-width: 28rem; white-space: normal; overflow-wrap: anywhere; }
+.review-history-table th a { display: inline-flex; align-items: center; min-height: 44px; }
 .article-format-tools { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .article-format-tools[hidden], .article-preview-panel[hidden] { display: none; }
 .article-format-tools button, .article-preview-panel button { min-height: 44px; }
@@ -119,6 +129,10 @@
     .site-body .profile-form-actions > :is(button, a) { flex: 1 1 auto; justify-content: center; }
     .workspace-content .post-feed-module-filter { width: 100%; justify-content: space-between; }
 }
+.workspace-upload-status { min-width: 0; }
+.workspace-upload-status [data-upload-summary] { overflow-wrap: anywhere; margin: 0 0 var(--space-2); }
+.workspace-upload-status[hidden], .workspace-upload-status [hidden] { display: none; }
+
 @media (prefers-reduced-motion: reduce) {
     .site-body { scroll-behavior: auto; }
     .site-body :is(.dashboard-button, .post-card, .news-card, .document-tile, .site-skip-link) { transition: none; animation: none; }

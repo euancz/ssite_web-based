@@ -117,7 +117,7 @@ class ContentReviewHistoryTest extends TestCase
         app(ContentReview::class)->decide($post, $reviewer, true);
         $this->get(route('articles.show', $post))->assertOk()->assertDontSee('Review history');
         $this->actingAs($owner)->get(route('workspace.posts.articles.show', $post))->assertOk()->assertSee('Review history');
-        $this->actingAs($other)->get(route('workspace.posts.articles.show', $post))->assertOk()->assertDontSee('Review history');
+        $this->actingAs($other)->get(route('workspace.posts.articles.show', $post))->assertOk()->assertDontSee('class="workspace-review-history"', false);
         try {
             app(ContentReviewHistory::class)->recentFor($post, $other);
             $this->fail('Another author must not read history.');
