@@ -34,7 +34,7 @@ class Article extends Model
     protected $keyType = 'int';
 
     // SECURITY: Status, ownership, and review fields can only be changed by trusted controller actions.
-    protected $fillable = ['title', 'content', 'image', 'content_format'];
+    protected $fillable = ['title', 'content', 'image', 'content_format', 'category'];
 
     public function displayText(): string
     {

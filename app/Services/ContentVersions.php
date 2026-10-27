@@ -35,7 +35,7 @@ final class ContentVersions
     public function snapshot(Model $post): array
     {
         $fields = match ($post->getTable()) {
-            'articles' => ['title', 'content', 'content_format'],
+            'articles' => ['title', 'content', 'content_format', 'category'],
             'activities' => ['title', 'description', 'activity_date', 'location'],
             'achievements' => ['title', 'description', 'achievement_date', 'awardee', 'category'],
             'documents' => ['title', 'description', 'category', 'semester', 'academic_year'],

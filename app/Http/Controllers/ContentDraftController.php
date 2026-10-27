@@ -33,9 +33,9 @@ class ContentDraftController extends Controller
 
     public function save(SaveContentDraftRequest $request, string $module, ContentDrafts $service)
     {
-        $draft = $service->save($request->user(), $module, $request->validated());
+        $draft = $service->save($request->user(), $module, $request->validated(), $request->file('image') ?: $request->file('file'));
 
-        return redirect()->route('workspace.drafts.edit', $draft)->with('status', 'Draft saved. Text and details are saved; images and PDFs must be selected again before submitting.');
+        return redirect()->route('workspace.drafts.edit', $draft)->with('status', 'Draft saved, including its selected attachment.');
     }
 
     public function destroy(Request $request, string $draft, ContentDrafts $service)
@@ -44,7 +44,7 @@ class ContentDraftController extends Controller
         DB::transaction(function () use ($request, $draft, $service, $values) {
             $record = $service->owned($request->user())->whereKey($draft)->lockForUpdate()->firstOrFail();
             $service->checkVersion($record, (int) $values['draft_version']);
-            $record->delete();
+            $service->delete($record);
         });
 
         return redirect()->route('workspace.drafts.index')->with('status', 'Draft deleted.');

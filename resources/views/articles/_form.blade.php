@@ -18,6 +18,15 @@
         @error('title') <span id="article-title-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
 
+    @if (\App\Support\ArticleCategory::available())
+        <div class="dashboard-form-field">
+            <label for="article-category">Category (optional)</label>
+            <input id="article-category" name="category" type="text" maxlength="100" value="{{ old('category', $draftValues['category'] ?? $article?->category) }}" @error('category') aria-invalid="true" aria-describedby="article-category-error" @enderror>
+            <span class="profile-field-help">Use a short, consistent category name to help readers find related articles.</span>
+            @error('category')<span id="article-category-error" class="profile-field-error">{{ $message }}</span>@enderror
+        </div>
+    @endif
+
     {{-- Blade escapes article content on redisplay and the server validates it as required text. --}}
     @if ($formattingEnabled)
         <div class="dashboard-form-field">

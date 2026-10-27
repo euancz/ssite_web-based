@@ -17,6 +17,11 @@
     :pending-count="$pendingCount"
     :sort="$sort"
     :sort-options="$sortOptions"
+    :filter-name="$categoriesEnabled ? 'category' : null"
+    :filter="$category"
+    :filter-options="$categoryOptions"
+    filter-label="Category"
+    filter-default="All categories"
 >
     @if (session('status'))
         <p class="dashboard-success" role="status" data-flash-toast>{{ session('status') }}</p>
@@ -91,7 +96,7 @@
                 </x-slot:footerActions>
             </x-posts.card>
         @empty
-            @if ($sort !== 'recent')
+            @if ($sort !== 'recent' || $category !== '')
                 <div class="post-feed-empty">
                     <p>No articles match this sort. <a href="{{ route('articles.index', ['tab' => $tab]) }}">Reset</a></p>
                 </div>

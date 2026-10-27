@@ -15,4 +15,11 @@ class ContentDraft extends Model
     {
         return ['payload' => 'array', 'lock_version' => 'integer'];
     }
+
+    public function attachment(): ?array
+    {
+        $attachment = $this->payload['attachment'] ?? null;
+
+        return is_array($attachment) && isset($attachment['path'], $attachment['type']) ? $attachment : null;
+    }
 }

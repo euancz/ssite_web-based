@@ -68,6 +68,9 @@
                 <p class="post-card-rejection">Rejection reason: {{ $post->rejection_reason }}</p>
             @endif
         @endcan
+        @if ($post instanceof \App\Models\Article && filled($post->category))
+            <p class="post-card-body">Category: {{ $post->category }}</p>
+        @endif
         @if ($full)
             <h1 class="post-card-title">{{ $post->title }}</h1>
             @if ($formattedArticle)

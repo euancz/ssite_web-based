@@ -12,7 +12,7 @@ Implemented October 27, 2026 following explicit approval to apply the draft-stor
 - Final submission uses the existing module Form Request, upload validation, authorization, approval settings, and notifications. Draft deletion and content insertion share one transaction. Validation or persistence failure retains the draft; transaction failure removes a newly stored upload. Repeating a consumed draft submission cannot create another post.
 - Deleting a draft uses an explicit confirmation disclosure and a CSRF-protected DELETE request with the current version.
 
-**Attachment limitation:** Drafts retain text and metadata only. Selected images/PDFs are not stored by Save draft and must be selected again on final submission. The controls and save confirmation explain this. Existing private PDF viewing restrictions remain intact. This feature creates new submissions; it does not stage revisions of already published posts.
+**Draft attachments:** Each draft may retain one selected image or PDF. Attachments are stored under a private, generated draft path and are replaced only when the author saves a new selection. Failed saves and failed submissions retain the existing staged file; successful submission promotes it into the existing public-image or private-PDF location and removes the draft copy. Draft deletion also removes its staged attachment.
 
 ## Architecture
 
@@ -33,9 +33,14 @@ On creation, each content controller delegates its save to `ContentDrafts::submi
 - Headless Chrome checked draft list, resume form, and create form at 1440px and 320px with no page overflow. Save draft reached the expected endpoint with JavaScript enabled and disabled, despite incomplete required publication fields. Screenshots used isolated SQLite fixtures; browser POST destinations were stubbed, while real Laravel mutations were exercised by feature tests.
 - Chrome emitted two view-transition opt-in warnings when navigating to the minimal stub POST responses; the submitted destination checks passed. This is not a claim of a full live Microsoft-authenticated browser session.
 
+## Durable attachment follow-up
+
+The attachment follow-up was implemented on October 27, 2026 after the owner selected one attachment per draft with replacement on save. Images use the existing 2,048 KB validation limit; PDFs use the configured private-PDF limit plus the existing MIME and `%PDF-` header checks. Original filenames are stored only as metadata and are escaped in the draft form. No new table or dependency was required because the existing draft JSON payload stores the staged attachment metadata.
+
+The existing draft integration suite now covers private staging, failed-submit retention, successful promotion, and cleanup. Public and private post file authorization remains unchanged.
+
 ## Remaining work
 
-Rich text and server sanitization, featured posts, durable draft attachments, scheduling, immutable history, and additional analytics remain separate work. Do not run unrelated pending migrations or drop `content_drafts` as a routine rollback. Saved drafts must be preserved unless their deletion is explicitly authorized.
+Rich text and server sanitization, featured posts, scheduling, immutable history, and additional analytics remain separate work. Do not run unrelated pending migrations or drop `content_drafts` as a routine rollback. Saved drafts must be preserved unless their deletion is explicitly authorized.
 
 Document academic years are now prepared separately; see [migration review](DOCUMENT_ACADEMIC_YEAR_REVIEW.md).
-

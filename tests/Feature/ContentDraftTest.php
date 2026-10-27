@@ -105,9 +105,11 @@ class ContentDraftTest extends TestCase
     {
         Storage::fake('local');
         $owner = $this->actor('Secretary');
-        $draft = $this->saveDraft($owner, 'documents', ['title' => 'Minutes', 'file' => UploadedFile::fake()->create('record.pdf', 1, 'application/pdf'), 'semester' => '2']);
-        $this->assertSame([], Storage::disk('local')->allFiles());
+        $draftPdf = UploadedFile::fake()->createWithContent('record.pdf', "%PDF-1.4\n1 0 obj\n<<>>\nendobj\n%%EOF");
+        $draft = $this->saveDraft($owner, 'documents', ['title' => 'Minutes', 'file' => $draftPdf, 'semester' => '2']);
+        $this->assertCount(1, Storage::disk('local')->allFiles());
         $this->assertArrayNotHasKey('file', $draft->payload);
+        $this->assertSame('pdf', $draft->payload['attachment']['type']);
         $values = ['draft_id' => $draft->getKey(), 'draft_version' => 1, 'title' => 'Minutes', 'semester' => '2'];
         $this->post(route('documents.store'), $values)->assertSessionHasErrors('file');
         $this->assertSame(1, ContentDraft::count());
@@ -115,6 +117,8 @@ class ContentDraftTest extends TestCase
         $this->post(route('documents.store'), $values + ['file' => $pdf])->assertRedirect(route('workspace.posts.documents.show', 1));
         $this->assertSame(0, ContentDraft::count());
         $this->assertSame(1, DB::table('documents')->count());
+        $this->assertSame('minutes.pdf', DB::table('documents')->value('original_name'));
+        $this->assertSame([], Storage::disk('local')->allFiles('drafts'));
     }
 
     public function test_role_changes_hide_drafts_and_cross_module_submission_is_rejected(): void

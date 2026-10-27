@@ -4,9 +4,11 @@
 **Plan:** `docs/DESIGN_UPGRADE.md`  
 **Updated:** 2026-10-27
 
-The original T-01 through T-05 batches below are complete. Later CMS work is tracked in [Priority 2 progress](PRIORITY_2_PROGRESS.md), including [review-history browsing](REVIEW_HISTORY_BROWSING.md), [unsaved-change protection](UNSAVED_CONTENT_PROGRESS.md), and [attachment selection improvements](CONTENT_UPLOADS_PROGRESS.md).
+The original T-01 through T-05 batches below are complete. Later CMS work is tracked in [Priority 2 progress](PRIORITY_2_PROGRESS.md), including [review-history browsing](REVIEW_HISTORY_BROWSING.md), [unsaved-change protection](UNSAVED_CONTENT_PROGRESS.md), [attachment selection improvements](CONTENT_UPLOADS_PROGRESS.md), [durable draft attachments](DRAFTS_PROGRESS.md), and [article categories](ARTICLE_CATEGORIES_PROGRESS.md).
 
-Latest completed batch: [read-only content version history](CONTENT_VERSIONS_PROGRESS.md) for all five modules. Its additive migration is applied; existing data checksums are unchanged. Scheduling, article categories/tags, durable draft attachments, and broader activity logging remain unfinished.
+Latest completed batch: [durable draft attachments](DRAFTS_PROGRESS.md), following [article categories](ARTICLE_CATEGORIES_PROGRESS.md) and [read-only content version history](CONTENT_VERSIONS_PROGRESS.md) for all five modules. The additive category migration is applied; scheduled publishing is intentionally skipped. Tags and broader activity logging remain unfinished.
+
+Scheduled publishing was reviewed on 2026-10-27 and declined. Existing approval and active-content behavior remain unchanged; no scheduling fields, migrations, UI, or scheduler work should be added unless the owner explicitly revisits this decision.
 
 ## Approved tweaks
 

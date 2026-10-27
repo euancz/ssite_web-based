@@ -37,6 +37,22 @@ class ArticleController extends Controller
         [$articles, $allowedTabs, $tab, $pendingCount, $workspaceList] = app(ContentListing::class)
             ->scope(Article::query()->with('author'), $request, 'articles');
 
+        $categoriesEnabled = \App\Support\ArticleCategory::available();
+        $categoryOptions = [];
+        $category = '';
+        if ($categoriesEnabled) {
+            $filters = $request->validate(['category' => ['nullable', 'string', 'max:100']]);
+            $category = $filters['category'] ?? '';
+            // Discover categories only inside the already authorized publication/owner scope.
+            $categoryOptions = (clone $articles)->whereNotNull('category')->where('category', '<>', '')
+                ->distinct()->orderBy('category')->pluck('category', 'category')->all();
+            $categoryOptions = ['' => 'All categories'] + $categoryOptions;
+            if ($category !== '') {
+                $categoryOptions[$category] ??= $category;
+                $articles->where('category', $category);
+            }
+        }
+
         // SECURITY: Engagement queries are limited to Published and require both the feature flag and schema.
         $viewCountsEnabled = $tab === 'published' && $engagement->viewCountsAvailable($articles->getModel());
         // SECURITY: Like controls and ordering require the likes table and this module's counter column.
@@ -77,7 +93,7 @@ class ArticleController extends Controller
         }
         $articles = $articles->orderBy('article_id', 'asc')
             ->paginate(5)
-            ->appends(['q' => is_string($request->query('q')) ? mb_substr(trim($request->query('q')), 0, 100) : '', 'tab' => $tab, 'sort' => $sort]);
+            ->appends(['q' => is_string($request->query('q')) ? mb_substr(trim($request->query('q')), 0, 100) : '', 'tab' => $tab, 'sort' => $sort, 'category' => $category]);
 
         // SECURITY: Visiting Articles clears only this user's unread publication notices for this tab.
         if ($user) {
@@ -88,7 +104,7 @@ class ArticleController extends Controller
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
         $view = $workspaceList ? 'workspace.posts.articles.index' : 'articles.index';
 
-        return view($view, compact('articles', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'pendingCount'));
+        return view($view, compact('articles', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'pendingCount', 'categoriesEnabled', 'categoryOptions', 'category'));
     }
 
     /**

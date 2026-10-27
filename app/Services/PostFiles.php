@@ -26,12 +26,40 @@ class PostFiles
         return $path;
     }
 
+    public function promoteDraft(string $source, Model $post): string
+    {
+        [$disk, $column, $directory] = $this->location($post);
+        $name = Str::random(40).($disk === 'local' ? '.pdf' : '.'.$this->extension($source));
+        $target = $directory.'/'.$name;
+        $stream = Storage::disk('local')->readStream($source);
+        if (! is_resource($stream) || ! Storage::disk($disk)->put($target, $stream)) {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+            throw ValidationException::withMessages([$column === 'image' ? 'image' : 'file' => 'The saved attachment could not be submitted. Please select it again.']);
+        }
+        fclose($stream);
+
+        return $target;
+    }
+
+    public function deleteDraft(string $path): void
+    {
+        if (preg_match('#\Adrafts/[0-9]+/[A-Za-z0-9-]+\.(?:jpg|jpeg|png|webp|pdf)\z#iD', $path)) {
+            try {
+                Storage::disk('local')->delete($path);
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+        }
+    }
+
     public function save(Model $post, ?\Closure $afterSave = null): void
     {
         [$disk, $column, $directory] = $this->location($post);
         $oldPath = $post->getRawOriginal($column);
-        $newPath = $post->getAttribute($column);
-        $replacement = $newPath && $newPath !== $oldPath;
+        $newPath = null;
+        $replacement = false;
         try {
             DB::transaction(function () use ($post, $afterSave): void {
                 $current = null;
@@ -53,7 +81,11 @@ class PostFiles
                 app(ContentVersions::class)->record($post, $current);
                 $afterSave?->__invoke();
             });
+            $newPath = $post->getAttribute($column);
+            $replacement = $newPath && $newPath !== $oldPath;
         } catch (Throwable $exception) {
+            $newPath = $post->getAttribute($column);
+            $replacement = $newPath && $newPath !== $oldPath;
             if ($replacement) {
                 $this->deletePath($disk, $directory, $newPath);
             }
@@ -100,5 +132,12 @@ class PostFiles
         } catch (Throwable $exception) {
             report($exception);
         }
+    }
+
+    private function extension(string $path): string
+    {
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        return in_array($extension, ['jpg', 'jpeg', 'png', 'webp'], true) ? $extension : 'bin';
     }
 }

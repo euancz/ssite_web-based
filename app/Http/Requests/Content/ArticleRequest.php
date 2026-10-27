@@ -17,6 +17,7 @@ class ArticleRequest extends ContentRequest
     {
         return [
             'title' => ['required', 'string', 'max:200'],
+            'category' => \App\Support\ArticleCategory::available() ? ['nullable', 'string', 'max:100'] : ['exclude'],
             'content' => ['required', 'string', 'max:20000', new MaxWords],
             'content_format' => app(ArticleContent::class)->available()
                 ? ['sometimes', 'required', Rule::in(['plain', 'markdown'])] : ['exclude'],
