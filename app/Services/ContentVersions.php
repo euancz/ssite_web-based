@@ -13,6 +13,24 @@ final class ContentVersions
         return Schema::hasTable('content_versions');
     }
 
+    /** Compare stored source values, preserving the distinction between absent and empty fields. */
+    public function changes(string $before, string $after): array
+    {
+        $old = json_decode($before, true, 512, JSON_THROW_ON_ERROR);
+        $new = json_decode($after, true, 512, JSON_THROW_ON_ERROR);
+        $changes = [];
+        foreach (array_unique([...array_keys($old), ...array_keys($new)]) as $field) {
+            $hadField = array_key_exists($field, $old);
+            $hasField = array_key_exists($field, $new);
+            if ($hadField !== $hasField || ($old[$field] ?? null) !== ($new[$field] ?? null)) {
+                $changes[] = ['field' => $field, 'before' => $old[$field] ?? null,
+                    'after' => $new[$field] ?? null, 'had_field' => $hadField, 'has_field' => $hasField];
+            }
+        }
+
+        return $changes;
+    }
+
     /** Only editable text/metadata: never storage paths, file bytes, or workflow fields. */
     public function snapshot(Model $post): array
     {

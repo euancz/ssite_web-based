@@ -57,3 +57,5 @@ All five content forms now display an unsaved-change status and register a brows
 Attachment selection now shares filename/size feedback, a clear-selection action, and browser size validation matching the existing server limits. See [content upload progress](CONTENT_UPLOADS_PROGRESS.md). Server validation and private PDF viewing remain authoritative.
 
 Read-only text/metadata version history now records creations and edits across all five modules, with private per-post pagination and first-edit baselines for existing content. The additive migration was applied under the user's October 27 standing authorization and verified against unchanged existing data. The full suite now passes **98 tests / 1,422 assertions**. See [content version history](CONTENT_VERSIONS_PROGRESS.md). Version restoration and historical attachment retention remain later work.
+
+Version history also offers a private field-by-field comparison with each snapshot's predecessor, using the same table and current authorization. The relevant suite passes six tests / 79 assertions; responsive comparison checks pass. No further migration was needed.

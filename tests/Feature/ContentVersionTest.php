@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Article;
 use App\Models\User;
+use App\Services\ContentVersions;
 use App\Services\PostFiles;
 use App\Support\ContentModules;
 use Illuminate\Database\QueryException;
@@ -130,5 +131,45 @@ class ContentVersionTest extends TestCase
         app(PostFiles::class)->save($post);
         $this->assertSame('Compatible edit', $post->fresh()->title);
         $this->actingAs($owner)->get(route('workspace.content-versions.index', ['module' => 'articles', 'post' => $post->getKey()]))->assertNotFound();
+    }
+
+    public function test_comparison_uses_previous_version_of_same_post_and_escapes_source(): void
+    {
+        $owner = $this->actor('Multimedia');
+        $this->actingAs($owner);
+        $post = $this->articleRecord($owner);
+        $post->title = 'First edit';
+        app(PostFiles::class)->save($post);
+        $other = $this->articleRecord($owner);
+        $other->title = 'Other post secret';
+        app(PostFiles::class)->save($other);
+        $post->content = '<img src=x onerror=alert(1)>';
+        app(PostFiles::class)->save($post);
+        $selected = DB::table('content_versions')->max('id');
+        $url = route('workspace.content-versions.index', ['module' => 'articles', 'post' => $post->getKey()]);
+        $this->get($url.'?compare='.$selected)->assertOk()
+            ->assertSee('&lt;img src=x onerror=alert(1)&gt;', false)->assertDontSee('<img src=x onerror=alert(1)>', false)
+            ->assertDontSee('Other post secret')
+            ->assertViewHas('comparison', fn ($comparison) => $comparison['previous']->id === 2
+                && count($comparison['changes']) === 1 && $comparison['changes'][0]['field'] === 'content');
+        $this->get($url.'?compare=1')->assertOk()->assertSee('There is no earlier version to compare.');
+        $this->get($url.'?compare=3')->assertNotFound();
+        $this->get($url.'?compare=999999')->assertNotFound();
+        $this->getJson($url.'?compare[]=1')->assertUnprocessable();
+        $this->getJson($url.'?compare=-1')->assertUnprocessable();
+        $this->actingAs($this->actor('Multimedia'))->get($url.'?compare='.$selected)->assertForbidden();
+    }
+
+    public function test_comparison_preserves_absent_null_empty_and_zero_values(): void
+    {
+        $history = app(ContentVersions::class);
+        $changes = $history->changes('{"title":"Same","amount":0,"description":null,"removed":"old"}', '{"title":"Same","amount":0,"description":"","new":null}');
+        $this->assertCount(3, $changes);
+        $this->assertSame('description', $changes[0]['field']);
+        $this->assertNull($changes[0]['before']);
+        $this->assertSame('', $changes[0]['after']);
+        $this->assertFalse($changes[1]['has_field']);
+        $this->assertFalse($changes[2]['had_field']);
+        $this->assertSame([], $history->changes('{"amount":0}', '{"amount":0}'));
     }
 }

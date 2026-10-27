@@ -22,4 +22,12 @@ The user authorized safe additive migrations on October 27, 2026 without further
 - Chrome checked empty and populated history pages at 1440px, 768px, and 320px with expanded snapshots and long text. No horizontal overflow or JavaScript exceptions. Fixtures use isolated SQLite data; they do not create application content.
 - PHP formatting and Blade compilation passed. The new schema was verified on MySQL; real content edits were not performed against the application database for this check.
 
-This completes read-only text/metadata version history. Comparing versions, restoring versions, retaining old attachments, and capturing external database writes remain outside this batch.
+This completes read-only text/metadata version history. Restoring versions, retaining old attachments, and capturing external database writes remain outside this batch.
+
+## Comparison follow-up
+
+Each expanded version now offers “Compare with previous version.” A scoped GET query selects that snapshot and the immediately preceding snapshot of the same post, even when other posts have interleaved version IDs. The comparison shows only changed fields, with Before/After source values side by side on larger screens and stacked on phones. Missing, null, and empty fields remain distinguishable. The first version explains that there is no predecessor. Closing the comparison preserves the current history page.
+
+Both version lookups run after current update authorization and constrain post type and post ID. Invalid comparison IDs are validated; missing or foreign-post versions return 404. This introduces no write endpoint, migration, dependency, or JavaScript requirement. Source text is escaped, not interpreted as HTML or Markdown. Version IDs are global storage identifiers, not per-post sequential revision numbers. Comparison is field-level rather than a word-by-word diff, and compares recorded snapshots rather than the current live post.
+
+Verification: six version-history tests pass with 79 assertions (two new comparison tests). They cover interleaved post versions, cross-post IDs, forbidden editors, invalid/missing IDs, first-version behavior, escaped content, and missing/null/empty/zero values. Chrome checked empty and populated comparison fixtures at 1440px, 768px, and 320px, with no overflow or JavaScript exceptions. PHP formatting and Blade compilation pass. The previous full suite remains 98 tests / 1,422 assertions; only the relevant version suite was rerun for this follow-up. Browser fixtures are isolated SQLite renders in `.tmp/version-comparison/`; no application database writes were performed.
