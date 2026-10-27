@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ArticleContent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -33,7 +34,12 @@ class Article extends Model
     protected $keyType = 'int';
 
     // SECURITY: Status, ownership, and review fields can only be changed by trusted controller actions.
-    protected $fillable = ['title', 'content', 'image'];
+    protected $fillable = ['title', 'content', 'image', 'content_format'];
+
+    public function displayText(): string
+    {
+        return app(ArticleContent::class)->text((string) $this->content, $this->content_format ?? 'plain');
+    }
 
     /** Cast the optional SQL-managed counter without making it mass assignable. */
     protected function casts(): array

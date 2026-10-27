@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Rules\ConsecutiveAcademicYear;
+use App\Services\ArticleContent;
 use App\Support\ContentModules;
 use App\Support\DocumentAcademicYear;
 use Illuminate\Foundation\Http\FormRequest;
@@ -29,6 +30,8 @@ class SaveContentDraftRequest extends FormRequest
         $rules[$body] = ['nullable', 'string', 'max:20000'];
 
         return $rules + match ($this->route('module')) {
+            'articles' => ['content_format' => app(ArticleContent::class)->available()
+                ? ['sometimes', 'required', Rule::in(['plain', 'markdown'])] : ['exclude']],
             'activities' => ['activity_date' => ['nullable', 'date_format:Y-m-d'], 'location' => ['nullable', 'string', 'max:200']],
             'achievements' => ['achievement_date' => ['nullable', 'date_format:Y-m-d'], 'awardee' => ['nullable', 'string', 'max:200'], 'category' => ['nullable', 'string', 'max:100']],
             'documents' => ['category' => ['nullable', 'string', 'max:100'], 'semester' => ['nullable', Rule::in(['1', '2'])],

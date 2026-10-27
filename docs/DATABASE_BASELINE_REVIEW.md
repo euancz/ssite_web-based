@@ -40,3 +40,7 @@ The owner approved and the agent applied only `2026_10_27_000001_create_content_
 The user approved the scoped document academic-year migration. It was applied and verified: column, index, and ledger entry are present; document count and the hash of all pre-existing values are unchanged. Existing years remain unassigned. Older pending migrations remain unapplied. See [the scoped migration review](DOCUMENT_ACADEMIC_YEAR_REVIEW.md).
 
 The user approved the scoped article `featured_at` migration. It was applied and verified: nullable timestamp, named index, and ledger entry are present. Article count and a hash of all existing values are unchanged; no article was automatically selected. The MySQL showcase query passed. See [featured articles migration review](FEATURED_ARTICLES_REVIEW.md). Older pending migrations remain unapplied.
+
+The user approved the scoped article `content_format` migration. It was applied and verified: the nonnullable column defaults to `plain`, the ledger entry is present, and feature availability is true. Article count and the checksum of existing values are unchanged; the existing article remains plain text. See [article formatting migration review](ARTICLE_FORMATTING_REVIEW.md). Older pending migrations remain unapplied.
+
+The new `content_review_events` table is prepared but not applied. Read-only inspection confirmed the table and ledger entry are absent. It will retain future explicit review-decision snapshots without backfilling older events. See [review history migration review](REVIEW_HISTORY_REVIEW.md).

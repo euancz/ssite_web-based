@@ -36,10 +36,14 @@ Browser evidence uses rendered fixture pages, not a live Microsoft-authenticated
 
 ## Remaining work
 
-Private text/metadata drafts are implemented following approval and application of the targeted migration. See [Private drafts progress](DRAFTS_PROGRESS.md). The current suite passes 72 tests with 1,148 assertions, including document academic years and staged featured articles.
+Private text/metadata drafts are implemented following approval and application of the targeted migration. See [Private drafts progress](DRAFTS_PROGRESS.md). The current suite passes 85 tests with 1,289 assertions, including document academic years, featured articles, article formatting, and staged review history.
 
-Durable draft attachments and rich-text editing with server sanitization require their own implementation and schema/design review. Scheduling, version history, immutable decision/activity logs, and additional analytics remain later work. Do not run pending migrations against the installed database without the reconciliation and explicit review described in `DATABASE_BASELINE_REVIEW.md`.
+Durable draft attachments, scheduling, full content version history, broader activity logs, and additional analytics remain later work. Do not run pending migrations against the installed database without the reconciliation and explicit review described in `DATABASE_BASELINE_REVIEW.md`.
 
 Document academic-year assignment, draft persistence, and scoped filtering are implemented behind a schema check. The user approved the scoped migration, which was applied and verified without changing existing document values; see [review and validation](DOCUMENT_ACADEMIC_YEAR_REVIEW.md).
 
 President-only featured-article controls and safe Home/Discover prioritization are implemented and enabled after approval of the scoped migration. Schema, migration ledger, unchanged existing article values, and the MySQL showcase query were verified; see [featured articles review](FEATURED_ARTICLES_REVIEW.md). Activities and achievements retain their existing display behavior.
+
+Article formatting is implemented and enabled as an optional Markdown source editor with safe server rendering, formatted previews, draft persistence, and readable excerpts. The user approved the scoped migration; schema, default, ledger, and unchanged existing article values were verified. See [article formatting review](ARTICLE_FORMATTING_REVIEW.md). Legacy articles remain plain text. Other modules still use plain text.
+
+Append-only application review history is implemented for explicit decisions across all five modules. The new table is prepared but not applied; see [review history migration review](REVIEW_HISTORY_REVIEW.md). It is not a tamper-proof ledger or full content revision history.

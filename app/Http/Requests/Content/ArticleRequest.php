@@ -4,6 +4,8 @@ namespace App\Http\Requests\Content;
 
 use App\Models\Article;
 use App\Rules\MaxWords;
+use App\Services\ArticleContent;
+use Illuminate\Validation\Rule;
 
 class ArticleRequest extends ContentRequest
 {
@@ -15,7 +17,9 @@ class ArticleRequest extends ContentRequest
     {
         return [
             'title' => ['required', 'string', 'max:200'],
-            'content' => ['required', 'string', new MaxWords],
+            'content' => ['required', 'string', 'max:20000', new MaxWords],
+            'content_format' => app(ArticleContent::class)->available()
+                ? ['sometimes', 'required', Rule::in(['plain', 'markdown'])] : ['exclude'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ];
     }

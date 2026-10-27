@@ -17,4 +17,5 @@
         <p><strong>Rejection reason:</strong> {{ $post->rejection_reason ?: 'No reason was recorded.' }}</p>
     @endif
     @if ($post->isArchived())<p>This submission is archived and is not visible on the public site.</p>@endif
+    <x-workspace.review-history :post="$post" />
 </section>

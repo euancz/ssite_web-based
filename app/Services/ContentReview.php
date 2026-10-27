@@ -32,6 +32,7 @@ final class ContentReview
             $current->reviewed_by_user_id = $reviewer->user_id;
             $current->reviewed_at = now();
             $current->saveOrFail();
+            app(ContentReviewHistory::class)->record($current, $reviewer, $approve, $reason);
             $post->setRawAttributes($current->getAttributes(), true);
             DB::afterCommit(function () use ($current, $reviewer, $approve, $reason): void {
                 $notifications = app(PostNotificationRecipients::class);

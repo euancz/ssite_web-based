@@ -392,7 +392,7 @@
                         <div class="discover-featured-copy">
                             <div class="discover-tag-row"><span class="discover-tag">{{ $featuredType }}</span></div>
                             <h2><a href="{{ route($featuredRoute, $featured) }}">{{ $featured->title }}</a></h2>
-                            <p>{{ \Illuminate\Support\Str::limit($featured->content ?? $featured->description ?? '', 180) }}</p>
+                            <p>{{ \Illuminate\Support\Str::limit($featured instanceof \App\Models\Article ? $featured->displayText() : ($featured->description ?? ''), 180) }}</p>
                             <div class="discover-author">By {{ $featured->author?->name ?? 'Former member' }} • {{ $featured->created_at?->format('F j, Y') }}</div>
                         </div>
                     </article>

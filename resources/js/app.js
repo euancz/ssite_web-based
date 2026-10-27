@@ -1,7 +1,9 @@
 import './bootstrap';
 import { initContentForms } from './content-forms';
+import { initArticleFormatting } from './article-formatting';
 
 initContentForms();
+initArticleFormatting();
 import { initMotion } from './motion';
 import { initFlashToasts } from './flash-toasts';
 

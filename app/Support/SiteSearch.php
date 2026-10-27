@@ -133,7 +133,11 @@ class SiteSearch
     {
         $this->applyWords($builder, $fields, $words);
         $this->applyTitleOrder($builder, 'title', $query);
-        $rows = $builder->get(array_values(array_unique(array_merge($fields, [$key, $dateField, 'created_at']))));
+        $columns = array_values(array_unique(array_merge($fields, [$key, $dateField, 'created_at'])));
+        if ($type === 'articles' && app(\App\Services\ArticleContent::class)->available()) {
+            $columns[] = 'content_format';
+        }
+        $rows = $builder->get($columns);
 
         return $rows->map(function ($row) use ($fields, $type, $route, $key, $dateField, $meta, $words): ?array {
             $date = $row->{$dateField} ?? $row->created_at;
@@ -175,7 +179,8 @@ class SiteSearch
         $text = strip_tags($title);
         foreach ($fields as $field) {
             if ($field !== 'title' && trim((string) ($row->{$field} ?? '')) !== '') {
-                $text .= ' · ' . strip_tags((string) $row->{$field});
+                $value = $field === 'content' && $row instanceof Article ? $row->displayText() : (string) $row->{$field};
+                $text .= ' · ' . strip_tags($value);
             }
         }
         $text = preg_replace('/\s+/u', ' ', trim($text)) ?? trim($text);
