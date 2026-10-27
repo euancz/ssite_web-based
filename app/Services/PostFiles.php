@@ -34,6 +34,7 @@ class PostFiles
         $replacement = $newPath && $newPath !== $oldPath;
         try {
             DB::transaction(function () use ($post, $afterSave): void {
+                $current = null;
                 if ($post->exists) {
                     $current = $post->newQuery()->whereKey($post->getKey())->lockForUpdate()->firstOrFail();
                     // Do not overwrite a review or edit that completed after this request read the record.
@@ -49,6 +50,7 @@ class PostFiles
                 if (! $post->save()) {
                     throw new \RuntimeException('The post could not be saved.');
                 }
+                app(ContentVersions::class)->record($post, $current);
                 $afterSave?->__invoke();
             });
         } catch (Throwable $exception) {

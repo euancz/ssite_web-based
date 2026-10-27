@@ -6,6 +6,8 @@
 
 The original T-01 through T-05 batches below are complete. Later CMS work is tracked in [Priority 2 progress](PRIORITY_2_PROGRESS.md), including [review-history browsing](REVIEW_HISTORY_BROWSING.md), [unsaved-change protection](UNSAVED_CONTENT_PROGRESS.md), and [attachment selection improvements](CONTENT_UPLOADS_PROGRESS.md).
 
+Latest completed batch: [read-only content version history](CONTENT_VERSIONS_PROGRESS.md) for all five modules. Its additive migration is applied; existing data checksums are unchanged. Scheduling, article categories/tags, durable draft attachments, and broader activity logging remain unfinished.
+
 ## Approved tweaks
 
 | ID | Status | Files changed | Before audit | After audit | Notes |

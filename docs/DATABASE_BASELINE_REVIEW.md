@@ -35,6 +35,8 @@ Priority 1 needs no new database fields. Proposed future academic-year, draft, r
 
 ## Approved additive change: October 27, 2026
 
+The user subsequently authorized safe additive migrations without separate confirmation. Continue preparing and testing each scoped migration, inspecting its generated SQL, and verifying existing data preservation; this does not authorize destructive operations or running the unrelated legacy migration backlog.
+
 The owner approved and the agent applied only `2026_10_27_000001_create_content_drafts_table`. Artisan reported successful completion. The subsequent October 27 read-only schema recheck succeeded: ledger, columns, index, and owner foreign key are present. This does not adopt or reconcile the older pending migrations. Existing content tables remain unchanged. See [draft storage review](DRAFT_STORAGE_REVIEW.md) and [implementation progress](DRAFTS_PROGRESS.md).
 
 The user approved the scoped document academic-year migration. It was applied and verified: column, index, and ledger entry are present; document count and the hash of all pre-existing values are unchanged. Existing years remain unassigned. Older pending migrations remain unapplied. See [the scoped migration review](DOCUMENT_ACADEMIC_YEAR_REVIEW.md).
@@ -44,3 +46,5 @@ The user approved the scoped article `featured_at` migration. It was applied and
 The user approved the scoped article `content_format` migration. It was applied and verified: the nonnullable column defaults to `plain`, the ledger entry is present, and feature availability is true. Article count and the checksum of existing values are unchanged; the existing article remains plain text. See [article formatting migration review](ARTICLE_FORMATTING_REVIEW.md). Older pending migrations remain unapplied.
 
 The user approved the scoped `content_review_events` migration. It was applied and verified: nine columns, named composite index, ledger entry, and zero initial events. Counts and checksums of all existing content tables are unchanged. It retains future explicit review-decision snapshots without backfilling older events. See [review history migration review](REVIEW_HISTORY_REVIEW.md). Older pending migrations remain unapplied.
+
+The additive `2026_10_27_000006_create_content_versions_table` migration was applied under that standing authorization. Eight columns, its composite index, ledger entry, and zero initial versions were verified. Counts and checksums of all 12 existing non-ledger tables are unchanged. See [content versions progress](CONTENT_VERSIONS_PROGRESS.md). Older pending migrations remain unapplied.

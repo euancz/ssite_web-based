@@ -130,6 +130,10 @@
     .workspace-content .post-feed-module-filter { width: 100%; justify-content: space-between; }
 }
 .workspace-upload-status { min-width: 0; }
+.workspace-content-version { margin-block: var(--space-4); border-bottom: 1px solid var(--color-border, #b6cbd5); padding-block: var(--space-3); }
+.workspace-content-version summary { cursor: pointer; min-height: 44px; overflow-wrap: anywhere; }
+.workspace-content-version dt { font-weight: 600; margin-top: var(--space-3); }
+.workspace-content-version dd { margin: var(--space-2) 0; white-space: pre-wrap; overflow-wrap: anywhere; max-width: 72ch; }
 .workspace-upload-status [data-upload-summary] { overflow-wrap: anywhere; margin: 0 0 var(--space-2); }
 .workspace-upload-status[hidden], .workspace-upload-status [hidden] { display: none; }
 
