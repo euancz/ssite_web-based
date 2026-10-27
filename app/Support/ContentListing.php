@@ -39,6 +39,18 @@ final class ContentListing
             default => $query,
         };
 
+        // Existing document/report searches include their own module-specific fields.
+        if ($workspace && in_array($module, ['articles', 'activities', 'achievements'], true)) {
+            $search = $request->query('q');
+            $search = is_string($search) ? mb_substr(trim($search), 0, 100) : '';
+            if ($search !== '') {
+                $query->where(function (Builder $searchQuery) use ($module, $search) {
+                    $searchQuery->where('title', 'like', '%'.$search.'%')
+                        ->orWhere($module === 'articles' ? 'content' : 'description', 'like', '%'.$search.'%');
+                });
+            }
+        }
+
         return [$query, $allowedTabs, $tab, $pendingCount, $workspace];
     }
 }

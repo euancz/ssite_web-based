@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Content\LiquidationRequest;
 use App\Models\Liquidation;
+use App\Services\ContentDrafts;
 use App\Services\ContentReview;
 use App\Services\PostFiles;
 use App\Support\ContentListing;
@@ -159,7 +160,7 @@ class LiquidationController extends Controller
             $liquidation->reviewed_at = now();
         }
         [$liquidation->file_path, $liquidation->original_name, $liquidation->file_size] = $this->storePdf($file);
-        app(PostFiles::class)->save($liquidation);
+        app(ContentDrafts::class)->submit($liquidation, $request);
         // SECURITY: Pending submissions notify configured reviewers; President posts follow the school toggle.
         $notifications = app(PostNotificationRecipients::class);
         if ($autoApprove && $liquidation->content_status === Liquidation::CONTENT_ACTIVE) {

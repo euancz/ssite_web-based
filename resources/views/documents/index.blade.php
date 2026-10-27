@@ -18,7 +18,7 @@
         </div>
     </section>
 
-    <form class="documents-filters" method="GET" action="{{ route('documents.index') }}">
+    <form @class(['documents-filters', 'documents-filters-with-year' => $academicYearsEnabled]) method="GET" action="{{ route('documents.index') }}">
         <input type="hidden" name="tab" value="{{ $tab }}">
         <div class="documents-search">
             <label class="visually-hidden" for="document-search">Search title</label>
@@ -43,6 +43,14 @@
             </select>
             <x-icon name="chevron-down" aria-hidden="true" />
         </label>
+        @if ($academicYearsEnabled)
+            <label class="documents-select"><span>Academic year</span>
+                <select name="academic_year" onchange="this.form.requestSubmit()">
+                    @foreach ($academicYearOptions as $value => $label)<option value="{{ $value }}" @selected($academicYear === $value)>{{ $label }}</option>@endforeach
+                </select>
+                <x-icon name="chevron-down" aria-hidden="true" />
+            </label>
+        @endif
         <noscript><button class="site-button" type="submit">Apply filters</button></noscript>
     </form>
 
@@ -72,6 +80,7 @@
                         <span class="document-category">{{ $document->category ?: 'Uncategorized' }}</span>
                         <h2>{{ $document->title }}</h2>
                         <div class="document-tile-meta">
+                            @if ($academicYearsEnabled)<p>Academic year: {{ $document->academic_year ?: 'Not assigned' }}</p>@endif
                             <p>Student Society in Information Technology Education</p>
                             <time datetime="{{ $document->created_at?->toDateString() }}">{{ $document->created_at?->format('F j, Y') }}</time>
                         </div>
@@ -81,9 +90,9 @@
             @include('documents._selection', ['document' => $document])
         @empty
             <div class="documents-empty">
-                <h2>{{ $searchQuery !== '' || $category !== '' || $semester !== '' ? 'No matching documents' : 'No published documents yet' }}</h2>
-                <p>{{ $searchQuery !== '' || $category !== '' || $semester !== '' ? 'Try another title, semester, or category.' : 'Check back soon for official SSITE records.' }}</p>
-                @if ($searchQuery !== '' || $category !== '' || $semester !== '')
+                <h2>{{ $academicYear !== '' || $searchQuery !== '' || $category !== '' || $semester !== '' ? 'No matching documents' : 'No published documents yet' }}</h2>
+                <p>{{ $academicYear !== '' || $searchQuery !== '' || $category !== '' || $semester !== '' ? 'Try another title, semester, category, or academic year.' : 'Check back soon for official SSITE records.' }}</p>
+                @if ($academicYear !== '' || $searchQuery !== '' || $category !== '' || $semester !== '')
                     <a href="{{ route('documents.index') }}">Clear filters</a>
                 @endif
             </div>

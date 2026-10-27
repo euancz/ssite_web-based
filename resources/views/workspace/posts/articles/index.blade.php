@@ -88,7 +88,7 @@
                 </x-slot:footerActions>
             </x-workspace.posts.card>
         @empty
-            @if ($sort !== 'recent')
+            @if ((is_string(request('q')) && trim(request('q')) !== '') || request('semester') || $sort !== 'recent')
                 <div class="post-feed-empty">
                     <p>No articles match this sort. <a href="{{ route(request()->routeIs('workspace.posts.articles.index') ? 'workspace.posts.articles.index' : (request()->routeIs('editorial.articles.index') ? 'editorial.articles.index' : 'articles.index'), ['tab' => $tab]) }}">Reset</a></p>
                 </div>

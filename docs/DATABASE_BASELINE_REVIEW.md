@@ -1,4 +1,4 @@
-# Installed database baseline — review before migration execution
+# Installed database baseline â€” review before migration execution
 
 Source: read-only inspection of the configured MySQL connection, database `ssitecms`, on October 26, 2026. No rows, schema, or migration ledger entries were changed.
 
@@ -32,3 +32,11 @@ The semester migration is now tracked in source and already recorded in this dat
 5. Rehearse on an isolated MySQL copy, verify record counts and representative relationships, then obtain approval for the exact application migration operations.
 
 Priority 1 needs no new database fields. Proposed future academic-year, draft, rich-content, scheduling, revision/event, and role-history migrations remain subject to review. Additional indexes should be justified by query plans. Existing engagement rows must be reconciled before displaying aggregate statistics; missing historical guest activity must not be invented.
+
+## Approved additive change: October 27, 2026
+
+The owner approved and the agent applied only `2026_10_27_000001_create_content_drafts_table`. Artisan reported successful completion. The subsequent October 27 read-only schema recheck succeeded: ledger, columns, index, and owner foreign key are present. This does not adopt or reconcile the older pending migrations. Existing content tables remain unchanged. See [draft storage review](DRAFT_STORAGE_REVIEW.md) and [implementation progress](DRAFTS_PROGRESS.md).
+
+The user approved the scoped document academic-year migration. It was applied and verified: column, index, and ledger entry are present; document count and the hash of all pre-existing values are unchanged. Existing years remain unassigned. Older pending migrations remain unapplied. See [the scoped migration review](DOCUMENT_ACADEMIC_YEAR_REVIEW.md).
+
+The user approved the scoped article `featured_at` migration. It was applied and verified: nullable timestamp, named index, and ledger entry are present. Article count and a hash of all existing values are unchanged; no article was automatically selected. The MySQL showcase query passed. See [featured articles migration review](FEATURED_ARTICLES_REVIEW.md). Older pending migrations remain unapplied.

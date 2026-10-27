@@ -14,10 +14,15 @@ use Illuminate\Support\Facades\Storage;
 class Article extends Model
 {
     public const POST_TYPE = 'article';
+
     public const APPROVAL_PENDING = 'pending';
+
     public const APPROVAL_APPROVED = 'approved';
+
     public const APPROVAL_REJECTED = 'rejected';
+
     public const CONTENT_ACTIVE = 'active';
+
     public const CONTENT_ARCHIVED = 'archived';
 
     protected $table = 'articles';
@@ -33,7 +38,7 @@ class Article extends Model
     /** Cast the optional SQL-managed counter without making it mass assignable. */
     protected function casts(): array
     {
-        return ['view_count' => 'integer'];
+        return ['view_count' => 'integer', 'featured_at' => 'datetime'];
     }
 
     /**
@@ -153,7 +158,7 @@ class Article extends Model
     {
         if ($this->image && Storage::disk('public')->exists($this->image)) {
             // Build from the current request so XAMPP subfolder installs keep their public path.
-            return asset('storage/' . ltrim($this->image, '/'));
+            return asset('storage/'.ltrim($this->image, '/'));
         }
 
         return asset(config('school.default_profile_picture', 'images/Wolf.png'));

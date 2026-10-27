@@ -4,6 +4,7 @@ use App\Http\Controllers\AboutController;
 use App\Http\Controllers\AchievementController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\ContentDraftController;
 use App\Http\Controllers\DiscoverController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\LiquidationController;
@@ -52,6 +53,13 @@ Route::prefix('editorial')->name('editorial.')->middleware(['auth', 'role:office
 });
 
 // SECURITY: Workspace library URLs require a signed-in actor; each controller checks the module capability or review role.
+Route::prefix('workspace/drafts')->name('workspace.drafts.')->middleware(['auth', 'profile.complete'])->group(function () {
+    Route::get('/', [ContentDraftController::class, 'index'])->name('index');
+    Route::get('/{draft}/edit', [ContentDraftController::class, 'edit'])->whereUuid('draft')->name('edit');
+    Route::post('/save/{module}', [ContentDraftController::class, 'save'])->where('module', 'articles|activities|achievements|documents|liquidations')->middleware('throttle:content-writes')->name('save');
+    Route::delete('/{draft}', [ContentDraftController::class, 'destroy'])->whereUuid('draft')->middleware('throttle:content-writes')->name('destroy');
+});
+
 Route::prefix('workspace/posts')->name('workspace.posts.')->middleware(['auth', 'profile.complete'])->group(function () {
     Route::get('/articles/{article}', [ArticleController::class, 'show'])->whereNumber('article')->name('articles.show');
     Route::get('/activities/{activity}', [ActivityController::class, 'show'])->whereNumber('activity')->name('activities.show');
@@ -90,6 +98,8 @@ Route::prefix('liquidation')->name('liquidations.')->middleware(['auth', 'profil
 
 // SECURITY: Route middleware exposes each module capability in route:list; policies repeat authorization in controllers.
 Route::middleware(['auth', 'profile.complete', 'throttle:content-writes'])->group(function () {
+    Route::patch('/workspace/posts/articles/{article}/featured', \App\Http\Controllers\FeaturedArticleController::class)
+        ->whereNumber('article')->name('workspace.posts.articles.featured')->middleware('can:feature,article');
     // SECURITY: Upload routes have a tighter limit in addition to the shared write limit.
     Route::resource('articles', ArticleController::class)->only(['create', 'store'])->whereNumber('article')
         ->middleware('can:create,App\\Models\\Article')->middlewareFor('store', 'throttle:uploads');

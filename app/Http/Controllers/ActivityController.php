@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Content\ActivityRequest;
 use App\Models\Activity;
+use App\Services\ContentDrafts;
 use App\Services\ContentReview;
 use App\Services\PostFiles;
 use App\Support\ContentListing;
@@ -86,7 +87,7 @@ class ActivityController extends Controller
         }
         $activities = $activities->orderBy('activity_id', 'asc')
             ->paginate(5)
-            ->appends(['tab' => $tab, 'sort' => $sort, 'timeframe' => $timeframe]);
+            ->appends(['q' => is_string($request->query('q')) ? mb_substr(trim($request->query('q')), 0, 100) : '', 'tab' => $tab, 'sort' => $sort, 'timeframe' => $timeframe]);
         // SECURITY: Visiting Activities clears only this user's unread publication notices for this tab.
         if ($user) {
             $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
@@ -156,7 +157,7 @@ class ActivityController extends Controller
             $activity->image = $this->storeImage($request);
         }
 
-        app(PostFiles::class)->save($activity);
+        app(ContentDrafts::class)->submit($activity, $request);
         // SECURITY: Pending submissions notify configured reviewers; President posts follow the school toggle.
         $notifications = app(PostNotificationRecipients::class);
         if ($autoApprove && $activity->content_status === Activity::CONTENT_ACTIVE) {

@@ -4,6 +4,8 @@
 
 @section('content')
 <x-posts.feed-frame variant="show" stylesheet="articles">
+    @if ($management)<x-workspace.review-summary :post="$article" />@endif
+    @if ($management)<x-workspace.article-feature :article="$article" />@endif
     @if (session('status'))
         <p class="dashboard-success" role="status" data-flash-toast>{{ session('status') }}</p>
     @endif

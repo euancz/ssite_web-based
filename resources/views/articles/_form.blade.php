@@ -13,14 +13,14 @@
     {{-- Title validation matches the articles table's 200-character limit. --}}
     <div class="dashboard-form-field">
         <label for="article-title">Title <span class="post-form-required-mark" aria-hidden="true">*</span></label>
-        <input id="article-title" name="title" @error('title') aria-invalid="true" aria-describedby="article-title-error" @enderror type="text" maxlength="200" required value="{{ old('title', $article?->title) }}">
+        <input id="article-title" name="title" @error('title') aria-invalid="true" aria-describedby="article-title-error" @enderror type="text" maxlength="200" required value="{{ old('title', $draftValues['title'] ?? $article?->title) }}">
         @error('title') <span id="article-title-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
 
     {{-- Blade escapes article content on redisplay and the server validates it as required text. --}}
     <div class="dashboard-form-field">
         <label for="article-content">Content <span class="post-form-required-mark" aria-hidden="true">*</span></label>
-        <textarea id="article-content" name="content" @error('content') aria-invalid="true" aria-describedby="article-content-error" @enderror rows="14" required>{{ old('content', $article?->content) }}</textarea>
+        <textarea id="article-content" name="content" @error('content') aria-invalid="true" aria-describedby="article-content-error" @enderror rows="14" required>{{ old('content', $draftValues['content'] ?? $article?->content) }}</textarea>
         <span class="profile-field-help">Maximum 300 words.</span>
         @error('content') <span id="article-content-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
@@ -39,11 +39,12 @@
     </div>
 
     {{-- The form submits only editable fields and returns to the saved article. --}}
+    <x-workspace.content-preview :fields="[]" />
+
+    @unless ($article)<x-workspace.draft-controls module="articles" :draft="$draft ?? null" />@endunless
+
     <div class="profile-form-actions">
         <button type="submit" class="dashboard-button">{{ $submitLabel }}</button>
         <a class="dashboard-button dashboard-button-secondary" href="{{ route('workspace.posts.articles.index') }}">Back to submissions</a>
     </div>
 </form>
-
-{{-- Preview local image selections without uploading them before form submission. --}}
-

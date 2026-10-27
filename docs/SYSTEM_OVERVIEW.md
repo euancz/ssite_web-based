@@ -2,7 +2,11 @@
 
 Current public/workspace boundaries and validation/persistence changes are documented in [Priority 1 progress](PRIORITY_1_PROGRESS.md). Review [the installed database baseline](DATABASE_BASELINE_REVIEW.md) before running migrations.
 
+Dashboard counts, review filters, workspace search, private reviewer details, and live form previews are documented in [Priority 2 progress](PRIORITY_2_PROGRESS.md).
+
 SSITE is a Laravel Blade application for the Student Society in Information Technology Education at Mabalacat City College. Users sign in with Microsoft or the existing password login, then complete required student information before using protected pages. The app stores identity, role, and student information on one `users` table with `user_id` as its primary key. Articles, Activities, Achievements, Documents, and Liquidation use a shared posting, review, and archiving workflow.
+
+Private draft saving, resuming, version checks, and submission are documented in [Private drafts progress](DRAFTS_PROGRESS.md). Drafts save text and metadata; attach files when submitting.
 
 ## Roles
 
@@ -31,8 +35,8 @@ Profile editing uses the same authenticated-user pattern: the profile controller
 
 An officer viewing their own pending Articles follows this path:
 
-1. `routes/features.php` matches `articles.index` at `/workspace/posts/articles` with the `tab=pending` query value.
-2. The route applies `profile.complete`, which lets guests pass and redirects incomplete signed-in accounts; write routes separately require authentication and the module policy capability.
+1. `routes/features.php` matches `workspace.posts.articles.index` at `/workspace/posts/articles` with the `tab=pending` query value.
+2. The workspace route applies authentication and `profile.complete`; the controller checks the current module capability and scopes non-President officers to their own submissions. Public article routes expose approved, active records only.
 3. `ArticleController::index` validates the tab against the signed-in role, scopes the query, and searches/paginates only those rows.
 4. `Article` maps `article_id`, relates authors through `users.user_id`, and `ArticlePolicy` governs private article viewing.
 5. `resources/views/workspace/posts/articles/index.blade.php` renders authorized management tabs; public `/articles` URLs always render only approved, active records without management controls.

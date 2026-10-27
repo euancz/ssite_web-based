@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Content\DocumentRequest;
 use App\Models\Document;
+use App\Services\ContentDrafts;
 use App\Services\ContentReview;
 use App\Services\PostFiles;
 use App\Support\ContentListing;
+use App\Support\DocumentAcademicYear;
 use App\Support\PostEngagement;
 use App\Support\PostNotificationRecipients;
 use App\Support\PrivatePdfResponse;
@@ -36,6 +38,18 @@ class DocumentController extends Controller
         [$documents, $allowedTabs, $tab, $pendingCount, $workspaceList] = app(ContentListing::class)
             ->scope(Document::query()->with('author'), $request, 'documents');
 
+        $academicYearsEnabled = DocumentAcademicYear::available();
+        $academicYear = '';
+        $academicYearOptions = ['' => 'All academic years', 'unassigned' => 'Not assigned'];
+        if ($academicYearsEnabled) {
+            // Build choices from permitted rows only, before other discovery filters are applied.
+            foreach ((clone $documents)->whereNotNull('academic_year')->distinct()->orderByDesc('academic_year')->pluck('academic_year') as $year) {
+                $academicYearOptions[$year] = $year;
+            }
+            $requestedYear = $request->query('academic_year');
+            $academicYear = is_string($requestedYear) && array_key_exists($requestedYear, $academicYearOptions) ? $requestedYear : '';
+        }
+
         // SECURITY: Category choices are derived from the already visibility-scoped query for this tab.
         $categories = (clone $documents)->whereNotNull('category')->where('category', '<>', '')
             ->distinct()->orderBy('category')->pluck('category')->all();
@@ -55,6 +69,11 @@ class DocumentController extends Controller
         $semester = in_array($semester, ['1', '2'], true) ? $semester : '';
         if ($semester !== '') {
             $documents->where('semester', $semester);
+        }
+        if ($academicYear === 'unassigned') {
+            $documents->whereNull('academic_year');
+        } elseif ($academicYear !== '') {
+            $documents->where('academic_year', $academicYear);
         }
 
         // Search stays inside the existing visibility scope and uses bound values.
@@ -100,7 +119,7 @@ class DocumentController extends Controller
         }
         $documents = $documents->orderBy('document_id', 'asc')
             ->paginate(5)
-            ->appends(['tab' => $tab, 'sort' => $sort, 'category' => $category, 'q' => $searchQuery, 'semester' => $semester]);
+            ->appends(['tab' => $tab, 'sort' => $sort, 'category' => $category, 'q' => $searchQuery, 'semester' => $semester, 'academic_year' => $academicYear]);
         // SECURITY: Visiting Documents clears only this user's unread publication notices for this tab.
         if ($user) {
             $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
@@ -110,7 +129,7 @@ class DocumentController extends Controller
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
         $view = $workspaceList ? 'workspace.posts.documents.index' : 'documents.index';
 
-        return view($view, compact('documents', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'category', 'categoryOptions', 'pendingCount', 'searchQuery', 'semester'));
+        return view($view, compact('documents', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'category', 'categoryOptions', 'pendingCount', 'searchQuery', 'semester', 'academicYearsEnabled', 'academicYear', 'academicYearOptions'));
     }
 
     public function show(Document $document, Request $request, PostEngagement $engagement): View
@@ -162,7 +181,7 @@ class DocumentController extends Controller
             $document->reviewed_at = now();
         }
         [$document->file_path, $document->original_name, $document->file_size] = $this->storePdf($file);
-        app(PostFiles::class)->save($document);
+        app(ContentDrafts::class)->submit($document, $request);
         // SECURITY: Pending submissions notify configured reviewers; President posts follow the school toggle.
         $notifications = app(PostNotificationRecipients::class);
         if ($autoApprove && $document->content_status === Document::CONTENT_ACTIVE) {

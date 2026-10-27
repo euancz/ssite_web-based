@@ -3,7 +3,9 @@
 namespace App\Http\Requests\Content;
 
 use App\Models\Document;
+use App\Rules\ConsecutiveAcademicYear;
 use App\Rules\MaxWords;
+use App\Support\DocumentAcademicYear;
 use Illuminate\Validation\Rule;
 
 class DocumentRequest extends ContentRequest
@@ -19,6 +21,9 @@ class DocumentRequest extends ContentRequest
             'description' => ['nullable', 'string', new MaxWords],
             'category' => ['nullable', 'string', 'max:100'],
             'semester' => ['nullable', Rule::in(['1', '2'])],
+            'academic_year' => DocumentAcademicYear::available()
+                ? ['nullable', 'string', 'max:9', new ConsecutiveAcademicYear]
+                : ['exclude'],
             'file' => [$this->route('document') ? 'nullable' : 'required', 'file', 'mimes:pdf', 'max:'.config('school.max_pdf_size_kb', 10240)],
         ];
     }

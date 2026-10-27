@@ -10,6 +10,8 @@
             <p>Publishing status and the work that needs your attention.</p>
         </div>
     </header>
+    <p class="workspace-draft-summary"><a class="dashboard-text-button" href="{{ route('workspace.drafts.index') }}">My drafts ({{ $draftCount }})</a> &middot; Private work you have not submitted.</p>
+
 
     <section class="workspace-status-panel" aria-labelledby="workspace-status-title">
         <div class="workspace-status-heading">
@@ -36,6 +38,35 @@
                 <small>Retained outside active listings</small>
             </article>
         </div>
+    </section>
+
+    <section class="workspace-officer-recent" aria-labelledby="workspace-pending-title">
+        <div class="workspace-officer-section-heading">
+            <div><h2 id="workspace-pending-title">Waiting longest for review</h2><p>Start with the oldest submissions across all content areas.</p></div>
+            <a class="dashboard-text-button" href="{{ route('adviser.reviews.index', ['status' => 'pending', 'sort' => 'oldest']) }}">Open review queue</a>
+        </div>
+        <x-ui.data-table label="Oldest pending submissions">
+            <table class="dashboard-table">
+                <thead><tr><th scope="col">Submission</th><th scope="col">Author</th><th scope="col">Submitted</th><th scope="col">Review</th></tr></thead>
+                <tbody>
+                    @forelse ($pendingPosts as $post)
+                        <tr>
+                            <th scope="row">{{ $post->title }} <small>{{ $post->type }}</small>@if ($post->isArchived()) <x-ui.status-badge status="archived" /> @endif</th>
+                            <td>{{ $post->author?->name ?? 'Former member' }}</td>
+                            <td>{{ $post->created_at?->format('M j, Y') ?? 'Not recorded' }}</td>
+                            <td><a class="dashboard-text-button" href="{{ $post->preview_url }}">Preview <span class="visually-hidden">{{ $post->title }}</span></a></td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="4" class="dashboard-empty-state">The review queue is clear. New submissions will appear here.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </x-ui.data-table>
+    </section>
+
+    <section class="workspace-officer-module-status" aria-labelledby="workspace-module-title">
+        <div class="workspace-officer-section-heading"><div><h2 id="workspace-module-title">Content by area</h2><p>Open any count to see the matching submissions.</p></div></div>
+        <x-workspace.content-summary :modules="$moduleStats" />
     </section>
 
     <x-workspace.dashboard-guide />

@@ -9,26 +9,26 @@
     {{-- The title length matches the activities table. --}}
     <div class="dashboard-form-field">
         <label for="activity-title">Title <span class="post-form-required-mark" aria-hidden="true">*</span></label>
-        <input id="activity-title" name="title" @error('title') aria-invalid="true" aria-describedby="activity-title-error" @enderror type="text" maxlength="200" required value="{{ old('title', $activity?->title) }}">
+        <input id="activity-title" name="title" @error('title') aria-invalid="true" aria-describedby="activity-title-error" @enderror type="text" maxlength="200" required value="{{ old('title', $draftValues['title'] ?? $activity?->title) }}">
         @error('title') <span id="activity-title-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
     {{-- The activity description is escaped when redisplayed and when shown publicly. --}}
     <div class="dashboard-form-field">
         <label for="activity-description">Description <span class="post-form-required-mark" aria-hidden="true">*</span></label>
-        <textarea id="activity-description" name="description" @error('description') aria-invalid="true" aria-describedby="activity-description-error" @enderror rows="12" required>{{ old('description', $activity?->description) }}</textarea>
+        <textarea id="activity-description" name="description" @error('description') aria-invalid="true" aria-describedby="activity-description-error" @enderror rows="12" required>{{ old('description', $draftValues['description'] ?? $activity?->description) }}</textarea>
         <span class="profile-field-help">Maximum 300 words.</span>
         @error('description') <span id="activity-description-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
     {{-- The optional date maps to activities.activity_date. --}}
     <div class="dashboard-form-field">
         <label for="activity-date">Activity date</label>
-        <input id="activity-date" name="activity_date" @error('activity_date') aria-invalid="true" aria-describedby="activity-date-error" @enderror type="date" value="{{ old('activity_date', $activity?->activity_date?->format('Y-m-d')) }}">
+        <input id="activity-date" name="activity_date" @error('activity_date') aria-invalid="true" aria-describedby="activity-date-error" @enderror type="date" value="{{ old('activity_date', $draftValues['activity_date'] ?? $activity?->activity_date?->format('Y-m-d')) }}">
         @error('activity_date') <span id="activity-date-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
     {{-- Location is optional and follows the table's 200-character limit. --}}
     <div class="dashboard-form-field">
         <label for="activity-location">Location</label>
-        <input id="activity-location" name="location" @error('location') aria-invalid="true" aria-describedby="activity-location-error" @enderror type="text" maxlength="200" value="{{ old('location', $activity?->location) }}">
+        <input id="activity-location" name="location" @error('location') aria-invalid="true" aria-describedby="activity-location-error" @enderror type="text" maxlength="200" value="{{ old('location', $draftValues['location'] ?? $activity?->location) }}">
         @error('location') <span id="activity-location-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
     {{-- SECURITY: Upload validation and filename generation happen on the server. --}}
@@ -43,9 +43,10 @@
             <span id="activity-image-preview-mount" hidden></span>
         @endif
     </div>
+    <x-workspace.content-preview :fields="['activity_date' => 'Activity date', 'location' => 'Location']" />
+
+    @unless ($activity)<x-workspace.draft-controls module="activities" :draft="$draft ?? null" />@endunless
+
     <div class="profile-form-actions"><button type="submit" class="dashboard-button">{{ $submitLabel }}</button>
         <a class="dashboard-button dashboard-button-secondary" href="{{ route('workspace.posts.activities.index') }}">Back to submissions</a></div>
 </form>
-
-{{-- Preview local image selections without uploading them before submission. --}}
-

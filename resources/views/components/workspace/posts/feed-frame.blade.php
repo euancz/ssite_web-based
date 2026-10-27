@@ -14,6 +14,8 @@
     'filterOptions' => [],
     'filterLabel' => 'Filter posts',
     'filterDefault' => null,
+    'academicYearOptions' => [],
+    'academicYear' => '',
 ])
 
 @php
@@ -75,6 +77,8 @@
                     :filter-options="$filterOptions"
                     :filter-label="$filterLabel"
                     :filter-default="$filterDefault"
+                    :academic-year-options="$academicYearOptions"
+                    :academic-year="$academicYear"
                 />
             </div>
         @else

@@ -59,6 +59,11 @@ class ArticlePolicy
         return $user->isPresident();
     }
 
+    public function feature(User $user, Article $article): bool
+    {
+        return $user->isPresident();
+    }
+
     // SECURITY: Compare post ownership with the custom users.user_id key.
     private function owns(User $user, Article $article): bool
     {

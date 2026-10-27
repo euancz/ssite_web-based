@@ -4,12 +4,30 @@
     'allowedTabs' => [],
     'filterName' => null, 'filter' => null, 'filterOptions' => [],
     'filterLabel' => 'Filter posts', 'filterDefault' => null,
+    'academicYearOptions' => [], 'academicYear' => '',
 ])
 
 {{-- Keep sort controls compact; tab changes discard sort state and the form omits pagination. --}}
 <form class="post-feed-sort" method="GET" action="{{ $action }}" data-auto-submit>
     <input type="hidden" name="tab" value="{{ $tab }}">
     <input type="hidden" name="sort" value="{{ $sort }}">
+    @php($searchValue = is_string(request('q')) ? mb_substr(trim(request('q')), 0, 100) : '')
+    <label class="post-feed-visually-hidden" for="workspace-post-search">Search submissions</label>
+    <input id="workspace-post-search" class="workspace-post-search" type="search" name="q" maxlength="100" value="{{ $searchValue }}" placeholder="Search submissions">
+    @if (str_contains($routeName, '.documents.'))
+        <label class="post-feed-visually-hidden" for="workspace-document-semester">Semester</label>
+        <select id="workspace-document-semester" class="post-feed-filter-control" name="semester">
+            <option value="">All semesters</option>
+            <option value="1" @selected(request('semester') === '1')>1st Semester</option>
+            <option value="2" @selected(request('semester') === '2')>2nd Semester</option>
+        </select>
+    @endif
+    @if ($academicYearOptions)
+        <label class="post-feed-visually-hidden" for="workspace-document-year">Academic year</label>
+        <select id="workspace-document-year" class="post-feed-filter-control" name="academic_year">
+            @foreach ($academicYearOptions as $value => $label)<option value="{{ $value }}" @selected($academicYear === $value)>{{ $label }}</option>@endforeach
+        </select>
+    @endif
     <details class="dashboard-tabs-more post-feed-sort-menu">
         <summary class="dashboard-tab" aria-haspopup="true" aria-expanded="false">
             {{ $options[$sort] ?? 'Sort posts' }}@if ($tab === 'all') <span class="post-feed-sort-current-filter">· All</span>@endif
@@ -17,7 +35,11 @@
         <div class="dashboard-tabs-menu">
             <span class="post-feed-sort-menu-heading">Sort by</span>
             @foreach ($options as $value => $label)
-                @php($sortQuery = ['tab' => $tab, 'sort' => $value])
+                @php($sortQuery = ['tab' => $tab, 'sort' => $value, 'q' => $searchValue])
+                @if ($academicYear !== '')@php($sortQuery['academic_year'] = $academicYear)@endif
+                @if (str_contains($routeName, '.documents.') && in_array(request('semester'), ['1', '2'], true))
+                    @php($sortQuery['semester'] = request('semester'))
+                @endif
                 @if ($filterName && $filter !== null && $filter !== '')
                     @php($sortQuery[$filterName] = $filter)
                 @endif
@@ -37,6 +59,10 @@
                 <option value="{{ $value }}" @selected((string) $filter === (string) $value)>{{ $label }}</option>
             @endforeach
         </select>
+    @endif
+    <button class="dashboard-button dashboard-button-secondary" type="submit">Apply</button>
+    @if ($academicYear !== '' || $searchValue !== '' || request('semester') || ($filter !== null && $filter !== '' && $filter !== $filterDefault))
+        <a class="dashboard-text-button" href="{{ route($routeName, ['tab' => $tab]) }}">Clear filters</a>
     @endif
 </form>
 

@@ -19,6 +19,8 @@
     :filter-options="$categoryOptions"
     filter-label="Filter by category"
     filter-default=""
+    :academic-year-options="$academicYearsEnabled ? $academicYearOptions : []"
+    :academic-year="$academicYear"
 >
     @if (session('status'))
         <p class="dashboard-success" role="status" data-flash-toast>{{ session('status') }}</p>
@@ -102,7 +104,7 @@
                 </x-slot:footerActions>
             </x-workspace.posts.card>
         @empty
-            @if ($sort !== 'recent' || $category !== '')
+            @if ($academicYear !== '' || (is_string(request('q')) && trim(request('q')) !== '') || request('semester') || $sort !== 'recent' || $category !== '')
                 <div class="post-feed-empty">
                     <p>No documents match these settings. <a href="{{ route(request()->routeIs('workspace.posts.documents.index') ? 'workspace.posts.documents.index' : (request()->routeIs('editorial.documents.index') ? 'editorial.documents.index' : 'documents.index'), ['tab' => $tab]) }}">Reset</a></p>
                 </div>

@@ -99,7 +99,7 @@
                 </x-slot:footerActions>
             </x-workspace.posts.card>
         @empty
-            @if ($sort !== 'recent' || $timeframe !== 'all')
+            @if ((is_string(request('q')) && trim(request('q')) !== '') || request('semester') || $sort !== 'recent' || $timeframe !== 'all')
                 <div class="post-feed-empty">
                     <p>No activities match these settings. <a href="{{ route(request()->routeIs('workspace.posts.activities.index') ? 'workspace.posts.activities.index' : (request()->routeIs('editorial.activities.index') ? 'editorial.activities.index' : 'activities.index'), ['tab' => $tab]) }}">Reset</a></p>
                 </div>

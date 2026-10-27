@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Schema;
 trait BuildsContentSchema
 {
     /** The legacy content tables have no baseline migrations. Never build fixtures on application data. */
-    protected function buildContentSchema(): void
+    protected function buildContentSchema(bool $includeDrafts = true): void
     {
         if (DB::connection()->getDriverName() !== 'sqlite' || DB::connection()->getDatabaseName() !== ':memory:') {
             throw new \LogicException('Content fixtures require an isolated SQLite in-memory database.');
@@ -68,6 +68,10 @@ trait BuildsContentSchema
                 $table->timestamps();
                 $table->index(['approval_status', 'content_status']);
             });
+        }
+
+        if ($includeDrafts) {
+            (require database_path('migrations/2026_10_27_000001_create_content_drafts_table.php'))->up();
         }
 
         Schema::create('notifications', function (Blueprint $table): void {

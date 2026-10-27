@@ -99,7 +99,7 @@
                 </x-slot:footerActions>
             </x-workspace.posts.card>
         @empty
-            @if ($sort !== 'recent' || $category !== '')
+            @if ((is_string(request('q')) && trim(request('q')) !== '') || request('semester') || $sort !== 'recent' || $category !== '')
                 <div class="post-feed-empty">
                     <p>No achievements match these settings. <a href="{{ route(request()->routeIs('workspace.posts.achievements.index') ? 'workspace.posts.achievements.index' : (request()->routeIs('editorial.achievements.index') ? 'editorial.achievements.index' : 'achievements.index'), ['tab' => $tab]) }}">Reset</a></p>
                 </div>

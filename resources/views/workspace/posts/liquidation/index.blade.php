@@ -129,7 +129,7 @@
                 </div>
             </article>
         @empty
-            @if ($sort !== 'recent')
+            @if ((is_string(request('q')) && trim(request('q')) !== '') || request('semester') || $sort !== 'recent')
                 <div class="post-feed-empty">
                     <p>No reports match this sort. <a href="{{ route(request()->routeIs('workspace.posts.liquidations.index') ? 'workspace.posts.liquidations.index' : (request()->routeIs('editorial.liquidations.index') ? 'editorial.liquidations.index' : 'liquidations.index'), ['tab' => $tab]) }}">Reset</a></p>
                 </div>

@@ -1,4 +1,12 @@
 /* Shared interaction and form recipes, built on the existing SSITE tokens. */
+@media (min-width: 1100px) {
+    .documents-filters.documents-filters-with-year { grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr)); }
+}
+.workspace-draft-controls { margin-block: var(--space-5); padding-block: var(--space-4); border-block: 1px solid var(--color-border-control); }
+.workspace-draft-controls .profile-form-actions { justify-content: flex-start; }
+.workspace-draft-summary { margin-block: var(--space-4); }
+.draft-delete summary { cursor: pointer; min-height: 44px; padding-block: .75rem; }
+.draft-delete { max-width: 24rem; }
 .site-body {
     accent-color: var(--color-accent);
     caret-color: var(--color-accent);
@@ -27,6 +35,8 @@
 .workspace-content .workspace-composer-panel { overflow: visible; }
 .workspace-content .workspace-composer-panel .profile-form { max-width: 52rem; }
 .site-body .profile-form :is(input, select, textarea) { font: inherit; font-size: var(--type-body); max-width: 100%; }
+.site-body .profile-form .dashboard-form-field { min-width: 0; grid-template-columns: minmax(0, 1fr); }
+.site-body .profile-form input[type="file"] { width: 100%; min-width: 0; }
 .workspace-content .workspace-composer-panel .dashboard-form-field label { font-size: var(--type-meta); }
 .site-body .profile-form :is(input, select) { min-height: 44px; }
 .site-body .profile-form textarea { resize: vertical; line-height: 1.65; }
@@ -43,10 +53,50 @@
 .site-body .form-error-summary ul { margin-block: 0; padding-inline-start: var(--space-5); }
 .workspace-content .dashboard-table :is(th, td) { font-size: var(--type-meta); }
 .site-body .dashboard-table { font-variant-numeric: tabular-nums; }
+.workspace-content .dashboard-table-scroll { position: relative; }
 .site-body .dashboard-table :is(td, th) { overflow-wrap: anywhere; }
 .site-body .post-card-body-full { max-width: 72ch; line-height: 1.75; overflow-wrap: anywhere; }
 .site-body .reject-modal { max-width: min(34rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow-y: auto; }
+.workspace-content .workspace-review-filters {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+    margin-block: var(--space-5);
+    align-items: end;
+}
+.workspace-review-filters .dashboard-form-field { min-width: 0; margin: 0; }
+.workspace-review-filters :is(input, select), .workspace-content .workspace-post-search {
+    width: 100%; min-width: 0; min-height: 44px; padding: .625rem .75rem;
+    border: 1px solid var(--color-border-control); border-radius: var(--radius-control);
+    background: var(--color-surface); color: var(--color-text-primary); font: inherit;
+}
+.workspace-review-filters .profile-form-actions { grid-column: 1 / -1; }
+.workspace-content .president-review-page .dashboard-table-actions :is(.dashboard-button, a),
+.workspace-content .president-review-page .dashboard-tab { min-height: 44px; }
+.workspace-content .post-feed-sort { flex-wrap: wrap; gap: var(--space-2); min-width: 0; max-width: 100%; }
+.workspace-content .workspace-post-search { flex: 1 1 12rem; width: auto; }
+.workspace-content .post-feed-sort :is(button, select, summary) { min-height: 44px; }
+.workspace-content .workspace-content-summary td a { display: inline-flex; min-height: 44px; min-width: 44px; align-items: center; justify-content: center; }
+.workspace-content .workspace-content-summary + .dashboard-table-scroll-hint { margin-bottom: var(--space-2); }
+.workspace-officer-recent th small { display: block; font-weight: 400; color: var(--color-text-secondary); }
+.workspace-review-summary { margin-bottom: var(--space-5); padding: var(--space-5); background: var(--color-surface); border: 1px solid var(--color-border-control); border-radius: var(--radius-control); }
+.workspace-review-summary h2 { font-size: 1.25rem; margin: 0 0 var(--space-3); }
+.workspace-article-feature p { max-width: 65ch; }
+.workspace-article-feature button { min-height: 44px; }
+.workspace-review-summary dl, .content-live-preview dl { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-6); }
+.workspace-review-summary dt, .content-live-preview dt { font-size: var(--type-meta); color: var(--color-text-secondary); }
+.workspace-review-summary dd, .content-live-preview dd { margin: 0; overflow-wrap: anywhere; }
+.site-body .content-live-preview { margin-block: var(--space-5); border: 1px solid var(--color-border-control); border-radius: var(--radius-control); }
+.content-live-preview summary { cursor: pointer; padding: var(--space-4); font-weight: 600; min-height: 44px; }
+.content-live-preview-body { padding: 0 var(--space-4) var(--space-4); }
+.content-live-preview h2 { font-family: var(--font-family-display); font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1.3; overflow-wrap: anywhere; }
+.content-preview-text { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 72ch; line-height: 1.75; }
+.site-body .content-word-count.is-over-limit { color: var(--color-status-danger); font-weight: 600; }
+@media (max-width: 1100px) {
+    .workspace-content .workspace-review-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 600px) {
+    .workspace-content .workspace-review-filters { grid-template-columns: minmax(0, 1fr); }
     .workspace-content .workspace-composer-panel > .profile-form { padding: var(--space-4); }
     .site-body .profile-form-actions > :is(button, a) { flex: 1 1 auto; justify-content: center; }
     .workspace-content .post-feed-module-filter { width: 100%; justify-content: space-between; }

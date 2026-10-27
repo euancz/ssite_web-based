@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Achievement;
 use App\Models\Activity;
-use App\Models\Article;
 use App\Models\OfficerTerm;
+use App\Services\FeaturedArticles;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
@@ -17,7 +17,7 @@ class HomeController extends Controller
         // SECURITY: Every home feature uses its public scope so private posts cannot appear here.
         // Some local environments do not have the content tables installed yet; keep the page renderable.
         $articles = Schema::hasTable('articles')
-            ? Article::publiclyVisible()->with('author')->latest('created_at')->take(1)->get()
+            ? app(FeaturedArticles::class)->forDisplay(1)
             : collect();
         $activities = Schema::hasTable('activities')
             ? Activity::publiclyVisible()->with('author')->latest('activity_date')->take(1)->get()

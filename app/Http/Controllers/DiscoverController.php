@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Achievement;
 use App\Models\Activity;
-use App\Models\Article;
+use App\Services\FeaturedArticles;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
@@ -15,7 +15,7 @@ class DiscoverController extends Controller
     {
         // SECURITY: Discover uses the same public scope as the individual content pages.
         $articles = Schema::hasTable('articles')
-            ? Article::publiclyVisible()->with('author')->latest('created_at')->take(3)->get()
+            ? app(FeaturedArticles::class)->forDisplay(3)
             : collect();
         $activities = Schema::hasTable('activities')
             ? Activity::publiclyVisible()->with('author')->latest('created_at')->take(3)->get()

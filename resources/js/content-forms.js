@@ -2,6 +2,37 @@
 export function initContentForms() {
     document.querySelector('[data-form-errors]')?.focus();
     document.querySelectorAll('[data-content-form]').forEach((form) => {
+        const livePreview = form.querySelector('[data-content-preview]');
+        const body = form.querySelector('textarea[name="content"], textarea[name="description"]');
+        const counter = body ? document.createElement('span') : null;
+        if (counter) {
+            counter.id = `${body.id}-word-count`;
+            counter.className = 'profile-field-help content-word-count';
+            body.after(counter);
+            body.setAttribute('aria-describedby', [body.getAttribute('aria-describedby'), counter.id].filter(Boolean).join(' '));
+        }
+        const updatePreview = () => {
+            const content = body?.value || '';
+            if (counter) {
+                const count = (content.match(/\S+/gu) || []).length;
+                counter.textContent = `${count} / 300 words${count > 300 ? ' — shorten before submitting' : ''}`;
+                counter.classList.toggle('is-over-limit', count > 300);
+            }
+            if (!livePreview) return;
+            livePreview.querySelector('[data-preview-title]').textContent = form.elements.namedItem('title')?.value.trim() || 'Untitled submission';
+            livePreview.querySelector('[data-preview-text]').textContent = content || 'Your content will appear here.';
+            livePreview.querySelectorAll('[data-preview-field]').forEach((output) => {
+                const control = form.elements.namedItem(output.dataset.previewField);
+                const value = control?.value.trim() || '';
+                output.textContent = value && control.tagName === 'SELECT' ? control.selectedOptions[0].textContent : value;
+                output.closest('[data-preview-row]').hidden = !value;
+            });
+        };
+        updatePreview();
+        if (livePreview) livePreview.hidden = false;
+        form.addEventListener('input', updatePreview);
+        form.addEventListener('change', updatePreview);
+        window.addEventListener('pageshow', updatePreview);
         form.querySelectorAll('input[type="file"][data-image-preview]').forEach((input) => {
             let preview = document.getElementById(input.dataset.imagePreview);
             const mount = document.getElementById(`${input.dataset.imagePreview}-mount`);

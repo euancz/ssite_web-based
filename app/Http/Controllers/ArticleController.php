@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Content\ArticleRequest;
 use App\Models\Article;
+use App\Services\ContentDrafts;
 use App\Services\ContentReview;
 use App\Services\PostFiles;
 use App\Support\ContentListing;
@@ -76,7 +77,7 @@ class ArticleController extends Controller
         }
         $articles = $articles->orderBy('article_id', 'asc')
             ->paginate(5)
-            ->appends(['tab' => $tab, 'sort' => $sort]);
+            ->appends(['q' => is_string($request->query('q')) ? mb_substr(trim($request->query('q')), 0, 100) : '', 'tab' => $tab, 'sort' => $sort]);
 
         // SECURITY: Visiting Articles clears only this user's unread publication notices for this tab.
         if ($user) {
@@ -153,7 +154,7 @@ class ArticleController extends Controller
             $article->image = $this->storeImage($request);
         }
 
-        app(PostFiles::class)->save($article);
+        app(ContentDrafts::class)->submit($article, $request);
 
         // SECURITY: Pending submissions notify configured reviewers; President posts follow the school toggle.
         $notifications = app(PostNotificationRecipients::class);

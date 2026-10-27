@@ -12,25 +12,25 @@
     {{-- Keep each label, field, and error together for quick form scanning. --}}
     <div class="dashboard-form-field">
         <label for="liquidation-title">Title <span class="post-form-required-mark" aria-hidden="true">*</span></label>
-        <input id="liquidation-title" name="title" @error('title') aria-invalid="true" aria-describedby="liquidation-title-error" @enderror maxlength="200" required value="{{ old('title', $liquidation?->title) }}">
+        <input id="liquidation-title" name="title" @error('title') aria-invalid="true" aria-describedby="liquidation-title-error" @enderror maxlength="200" required value="{{ old('title', $draftValues['title'] ?? $liquidation?->title) }}">
         @error('title') <span id="liquidation-title-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
 
     <div class="dashboard-form-field">
         <label for="liquidation-amount">Amount (PHP)</label>
-        <input id="liquidation-amount" name="amount" @error('amount') aria-invalid="true" aria-describedby="liquidation-amount-error" @enderror type="number" min="0" max="9999999999.99" step="0.01" value="{{ old('amount', $liquidation?->amount) }}">
+        <input id="liquidation-amount" name="amount" @error('amount') aria-invalid="true" aria-describedby="liquidation-amount-error" @enderror type="number" min="0" max="9999999999.99" step="0.01" value="{{ old('amount', $draftValues['amount'] ?? $liquidation?->amount) }}">
         @error('amount') <span id="liquidation-amount-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
 
     <div class="dashboard-form-field">
         <label for="liquidation-report-date">Report date</label>
-        <input id="liquidation-report-date" name="report_date" @error('report_date') aria-invalid="true" aria-describedby="liquidation-report-date-error" @enderror type="date" value="{{ old('report_date', $liquidation?->report_date?->format('Y-m-d')) }}">
+        <input id="liquidation-report-date" name="report_date" @error('report_date') aria-invalid="true" aria-describedby="liquidation-report-date-error" @enderror type="date" value="{{ old('report_date', $draftValues['report_date'] ?? $liquidation?->report_date?->format('Y-m-d')) }}">
         @error('report_date') <span id="liquidation-report-date-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
 
     <div class="dashboard-form-field">
         <label for="liquidation-description">Description</label>
-        <textarea id="liquidation-description" name="description" @error('description') aria-invalid="true" aria-describedby="liquidation-description-error" @enderror rows="6">{{ old('description', $liquidation?->description) }}</textarea>
+        <textarea id="liquidation-description" name="description" @error('description') aria-invalid="true" aria-describedby="liquidation-description-error" @enderror rows="6">{{ old('description', $draftValues['description'] ?? $liquidation?->description) }}</textarea>
         <span class="profile-field-help">Maximum 300 words.</span>
         @error('description') <span id="liquidation-description-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
@@ -47,6 +47,10 @@
         <span id="liquidation-file-info" class="profile-field-help"></span>
         @error('file') <span id="liquidation-file-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
+
+    <x-workspace.content-preview :fields="['report_date' => 'Report date', 'amount' => 'Amount (PHP)']" />
+
+    @unless ($liquidation)<x-workspace.draft-controls module="liquidations" :draft="$draft ?? null" />@endunless
 
     <div class="profile-form-actions">
         <button type="submit" class="dashboard-button">{{ $submitLabel }}</button>

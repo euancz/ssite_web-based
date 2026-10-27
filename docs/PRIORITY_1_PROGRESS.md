@@ -40,6 +40,17 @@ Blade posts the existing CSRF-protected form to the existing route. Route middle
 
 ## Verification
 
-Results are recorded after the final checks. Automated coverage includes public/private content boundaries for all five modules, workspace ownership, direct unauthorized mutation requests, review/restore behavior, private signed PDF delivery and expiry, upload validation, failed-save cleanup, stale updates, duplicate review notifications, escaped content, Microsoft callback/domain/profile behavior, and notification ownership/JSON shape.
+Verified October 27, 2026:
+
+- Full PHPUnit suite: **39 tests, 779 assertions, all passing** (original inspection: 25 tests, 8 failures).
+- Production Vite build: passed; no dependencies added.
+- Blade compilation and subsequent cache clear: passed.
+- PHP syntax: 28 changed/new PHP files, no errors.
+- JavaScript syntax check: passed.
+- Read-only MySQL checks: all five public visibility queries and notification JSON aggregation accepted; no application data written. The optional-column check confirmed semester is present and engagement counters remain absent.
+- UI detector confirmation: only the grid-paper advisory remains; the grid is an explicit owner requirement. Empty preview image sources were replaced with lazy image creation.
+- Existing route methods, names, and authorization middleware are retained; five authenticated workspace preview routes are added.
+
+ Automated coverage includes public/private content boundaries for all five modules, workspace ownership, direct unauthorized mutation requests, review/restore behavior, private signed PDF delivery and expiry, upload validation, failed-save cleanup, stale updates, duplicate review notifications, escaped content, Microsoft callback/domain/profile behavior, and notification ownership/JSON shape.
 
 Live Microsoft OAuth and rendered desktop/tablet/mobile browser interaction checks require an interactive browser session; automated callback tests use a mocked Microsoft identity. SQLite tests do not replace MySQL integration or production deployment review.

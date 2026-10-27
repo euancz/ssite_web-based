@@ -14,6 +14,9 @@
                 <span class="post-feed-category-chip">{{ $category }}</span>
             @endif
         </p>
+        @if ($routePrefix === 'documents' && array_key_exists('academic_year', $post->getAttributes()))
+            <p class="post-feed-file-meta">Academic year: {{ $post->academic_year ?: 'Not assigned' }}</p>
+        @endif
     </div>
     <div class="post-feed-attachment-actions">
         @can('viewFile', $post)

@@ -11,21 +11,14 @@
         </div>
         <span class="workspace-dashboard-role">{{ auth()->user()->position() ?? 'Officer' }}</span>
     </header>
+    <p class="workspace-draft-summary"><a class="dashboard-text-button" href="{{ route('workspace.drafts.index') }}">My drafts ({{ $draftCount }})</a> &middot; Private work you have not submitted.</p>
+
 
     <section class="workspace-officer-module-status" aria-labelledby="workspace-module-status-title">
         <div class="workspace-officer-section-heading">
             <div><h2 id="workspace-module-status-title">Your content</h2><p>Counts include only submissions created by your account.</p></div>
         </div>
-        <div class="workspace-metric-grid workspace-officer-metric-grid">
-            @foreach ($moduleStats as $key => $module)
-                <a class="workspace-metric-card workspace-officer-metric-card" href="{{ route($module['index'], ['tab' => 'mine']) }}">
-                    <span class="workspace-metric-icon"><x-workspace.icon :name="$modules[$key]['icon'] ?? 'file'" /></span>
-                    <span class="workspace-metric-label">{{ $module['label'] }}</span>
-                    <strong class="workspace-metric-value"><x-ui.count-up :value="$module['total']" /></strong>
-                    <small><x-ui.count-up :value="$module['pending']" /> pending <span aria-hidden="true">·</span> <x-ui.count-up :value="$module['approved']" /> approved <span aria-hidden="true">·</span> <x-ui.count-up :value="$module['rejected']" /> rejected</small>
-                </a>
-            @endforeach
-        </div>
+        <x-workspace.content-summary :modules="$moduleStats" />
     </section>
 
     <x-workspace.dashboard-guide />
@@ -39,7 +32,7 @@
                 <span class="workspace-officer-attention-mark"><x-workspace.icon name="clock" /></span>
                 <div class="workspace-officer-attention-copy">
                     <h3>{{ $post->title }}</h3>
-                    <p>{{ $post->type }} · Rejected {{ $post->created_at?->format('M j, Y') }}</p>
+                    <p>{{ $post->type }} · Rejected {{ $post->reviewed_at ? \Illuminate\Support\Carbon::parse($post->reviewed_at)->format('M j, Y') : '(date not recorded)' }} &middot; {{ $post->reviewer?->name ?? 'Reviewer not recorded' }}</p>
                     @if ($post->rejection_reason)<p class="workspace-officer-reason">{{ $post->rejection_reason }}</p>@endif
                 </div>
                 <a class="workspace-officer-manage-link" href="{{ $post->preview_url }}">Review feedback <x-workspace.icon name="chevron" /></a>
@@ -61,7 +54,7 @@
                         <tr>
                             <th scope="row">{{ $post->title }}</th>
                             <td>{{ $post->type }}</td>
-                            <td><x-ui.status-badge :status="$post->status" /></td>
+                            <td><x-ui.status-badge :status="$post->status" /> @if ($post->isArchived()) <x-ui.status-badge status="archived" /> @endif</td>
                             <td>{{ $post->created_at?->format('M j, Y') }}</td>
                             <td><a class="workspace-officer-manage-link" href="{{ $post->preview_url }}">View <x-workspace.icon name="external" /></a></td>
                         </tr>

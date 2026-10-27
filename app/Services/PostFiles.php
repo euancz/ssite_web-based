@@ -26,14 +26,14 @@ class PostFiles
         return $path;
     }
 
-    public function save(Model $post): void
+    public function save(Model $post, ?\Closure $afterSave = null): void
     {
         [$disk, $column, $directory] = $this->location($post);
         $oldPath = $post->getRawOriginal($column);
         $newPath = $post->getAttribute($column);
         $replacement = $newPath && $newPath !== $oldPath;
         try {
-            DB::transaction(function () use ($post): void {
+            DB::transaction(function () use ($post, $afterSave): void {
                 if ($post->exists) {
                     $current = $post->newQuery()->whereKey($post->getKey())->lockForUpdate()->firstOrFail();
                     // Do not overwrite a review or edit that completed after this request read the record.
@@ -49,6 +49,7 @@ class PostFiles
                 if (! $post->save()) {
                     throw new \RuntimeException('The post could not be saved.');
                 }
+                $afterSave?->__invoke();
             });
         } catch (Throwable $exception) {
             if ($replacement) {

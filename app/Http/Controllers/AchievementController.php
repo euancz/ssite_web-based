@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Content\AchievementRequest;
 use App\Models\Achievement;
+use App\Services\ContentDrafts;
 use App\Services\ContentReview;
 use App\Services\PostFiles;
 use App\Support\ContentListing;
@@ -83,7 +84,7 @@ class AchievementController extends Controller
         }
         $achievements = $achievements->orderBy('achievement_id', 'asc')
             ->paginate(5)
-            ->appends(['tab' => $tab, 'sort' => $sort, 'category' => $category]);
+            ->appends(['q' => is_string($request->query('q')) ? mb_substr(trim($request->query('q')), 0, 100) : '', 'tab' => $tab, 'sort' => $sort, 'category' => $category]);
         // SECURITY: Visiting Achievements clears only this user's unread publication notices for this tab.
         if ($user) {
             $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
@@ -153,7 +154,7 @@ class AchievementController extends Controller
             $achievement->image = $this->storeImage($request);
         }
 
-        app(PostFiles::class)->save($achievement);
+        app(ContentDrafts::class)->submit($achievement, $request);
         // SECURITY: Pending submissions notify configured reviewers; President posts follow the school toggle.
         $notifications = app(PostNotificationRecipients::class);
         if ($autoApprove && $achievement->content_status === Achievement::CONTENT_ACTIVE) {
