@@ -5,8 +5,12 @@ use App\Http\Middleware\EnsureProfileCompleted;
 use App\Http\Middleware\RequireAuthentication;
 use Illuminate\Support\Facades\Route;
 
-// Holds the public home page and its authenticated, profile-complete alias.
-Route::get('/', HomeController::class)->middleware('profile.complete');
+// The public landing page is separate from the authenticated CMS homepage.
+Route::get('/', function () {
+    return auth()->check()
+        ? redirect()->route('home')
+        : view('pages.landing');
+})->name('landing');
 
 Route::get('/home', HomeController::class)
     ->middleware([RequireAuthentication::class, EnsureProfileCompleted::class])

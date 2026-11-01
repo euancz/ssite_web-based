@@ -24,3 +24,4 @@ yarn-error.log
 /.agents/
 /.tmp/
 /.github/
+/.claude/

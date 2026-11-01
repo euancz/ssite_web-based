@@ -29,27 +29,28 @@
 
     {{-- Blade escapes article content on redisplay and the server validates it as required text. --}}
     @if ($formattingEnabled)
-        <div class="dashboard-form-field">
-            <label for="article-content-format">Content format</label>
-            <select id="article-content-format" name="content_format" aria-describedby="article-format-help @error('content_format') article-format-error @enderror" @error('content_format') aria-invalid="true" @enderror>
-                <option value="plain" @selected(old('content_format', $draftValues['content_format'] ?? $article?->content_format ?? 'plain') === 'plain')>Plain text</option>
-                <option value="markdown" @selected(old('content_format', $draftValues['content_format'] ?? $article?->content_format) === 'markdown')>Formatted text (Markdown)</option>
-            </select>
-            <span id="article-format-help" class="profile-field-help">Choose formatted text to use headings, emphasis, lists, and HTTPS links. HTML stays literal; add images using the upload field.</span>
-            @error('content_format')<span id="article-format-error" class="profile-field-error">{{ $message }}</span>@enderror
-        </div>
+        <input type="hidden" id="article-content-format" name="content_format" value="{{ old('content_format', $draftValues['content_format'] ?? $article?->content_format ?? 'markdown') }}">
+        @error('content_format')<span id="article-format-error" class="profile-field-error">{{ $message }}</span>@enderror
     @endif
     <div class="dashboard-form-field">
-        <label for="article-content">Content <span class="post-form-required-mark" aria-hidden="true">*</span></label>
+        <label id="article-content-label" for="article-content">Content <span class="post-form-required-mark" aria-hidden="true">*</span></label>
         @if ($formattingEnabled)
-            <div class="article-format-tools" data-article-tools hidden role="group" aria-label="Format selected text">
-                @foreach (['bold' => 'Bold', 'italic' => 'Italic', 'heading' => 'Heading', 'list' => 'List', 'quote' => 'Quote', 'link' => 'Link'] as $command => $label)
-                    <button type="button" class="dashboard-button dashboard-button-secondary" data-format-command="{{ $command }}">{{ $label }}</button>
+            <div class="article-editor-shell">
+                <div class="article-format-tools" data-article-tools role="toolbar" aria-label="Article formatting tools">
+                @foreach (['bold' => 'Bold', 'italic' => 'Italic', 'heading' => 'Heading', 'quote' => 'Quote', 'code' => 'Inline code', 'link' => 'Link', 'list' => 'Bulleted list', 'ordered-list' => 'Numbered list'] as $command => $label)
+                    <button type="button" class="article-format-tool" data-format-command="{{ $command }}" aria-label="{{ $label }}" title="{{ $label }}">
+                        <x-icon :name="match ($command) { 'heading' => 'heading-2', 'ordered-list' => 'list-ordered', default => $command }" />
+                    </button>
                 @endforeach
+                </div>
+                <div class="article-editor-canvas">
+                    <textarea id="article-content" name="content" @error('content') aria-invalid="true" aria-describedby="article-content-error" @enderror rows="14" maxlength="20000" required>{{ old('content', $draftValues['content'] ?? $article?->content) }}</textarea>
+                </div>
             </div>
-            <span class="profile-field-help">Markdown examples: **bold**, *italic*, ## Heading, and - list item. The 300-word limit counts words in your source, including formatting markers.</span>
+            <span class="profile-field-help">Select text to format it. Use Ctrl+B for bold or Ctrl+I for italic.</span>
+        @else
+            <textarea id="article-content" name="content" @error('content') aria-invalid="true" aria-describedby="article-content-error" @enderror rows="14" maxlength="20000" required>{{ old('content', $draftValues['content'] ?? $article?->content) }}</textarea>
         @endif
-        <textarea id="article-content" name="content" @error('content') aria-invalid="true" aria-describedby="article-content-error" @enderror rows="14" maxlength="20000" required>{{ old('content', $draftValues['content'] ?? $article?->content) }}</textarea>
         <span class="profile-field-help">Maximum 300 words and 20,000 characters.</span>
         @error('content') <span id="article-content-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
@@ -57,8 +58,11 @@
     {{-- SECURITY: The server validates image bytes, extension, and size before storing a generated filename. --}}
     <div class="dashboard-form-field">
         <label for="article-image">{{ $article ? 'Replace image (optional)' : 'Image (optional)' }}</label>
-        <input id="article-image" data-image-preview="article-image-preview" name="image" @error('image') aria-invalid="true" aria-describedby="article-image-error" @enderror type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
-        <span class="profile-field-help">JPG, PNG, or WebP; maximum 2 MB.</span>
+        <div class="article-attachment-dropzone">
+            <span class="article-attachment-icon" aria-hidden="true">↗</span>
+            <span><strong>Attach a feature image</strong><small>JPG, PNG, or WebP up to 2 MB</small></span>
+            <input id="article-image" data-image-preview="article-image-preview" name="image" @error('image') aria-invalid="true" aria-describedby="article-image-error" @enderror type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+        </div>
         <x-workspace.upload-status input-id="article-image" :max-kb="2048" />
         @error('image') <span id="article-image-error" class="profile-field-error">{{ $message }}</span> @enderror
         @if ($article?->image)

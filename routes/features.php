@@ -13,27 +13,25 @@ use App\Http\Controllers\PostLikeController;
 use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
-// Holds public feature pages and protected actions grouped by middleware.
+// Holds authenticated CMS pages and protected actions grouped by middleware.
 
-// Public visitors and completed users can access search and public content pages.
-Route::middleware(['profile.complete', 'throttle:60,1'])->group(function () {
+// Every CMS page except the public landing page requires a completed Microsoft-authenticated session.
+Route::middleware(['auth', 'profile.complete', 'throttle:60,1'])->group(function () {
     Route::get('/search', [SearchController::class, 'index'])->name('search.index');
     Route::get('/search/suggest', [SearchController::class, 'suggest'])->name('search.suggest');
 });
-Route::get('/about', AboutController::class)->name('about');
-Route::get('/discover', DiscoverController::class)->name('discover');
+Route::get('/about', AboutController::class)->middleware(['auth', 'profile.complete'])->name('about');
+Route::get('/discover', DiscoverController::class)->middleware(['auth', 'profile.complete'])->name('discover');
 Route::resource('articles', ArticleController::class)->only(['index', 'show'])
-    ->middleware('profile.complete')->whereNumber('article');
+    ->middleware(['auth', 'profile.complete'])->whereNumber('article');
 Route::resource('activities', ActivityController::class)->only(['index', 'show'])
-    ->middleware('profile.complete')->whereNumber('activity');
+    ->middleware(['auth', 'profile.complete'])->whereNumber('activity');
 Route::resource('achievements', AchievementController::class)->only(['index', 'show'])
-    ->middleware('profile.complete')->whereNumber('achievement');
+    ->middleware(['auth', 'profile.complete'])->whereNumber('achievement');
 
-// Document and liquidation list access follows the configured public-list settings.
-$documentListMiddleware = config('school.documents_list_public', true)
-    ? ['profile.complete'] : ['auth', 'profile.complete'];
-$liquidationListMiddleware = config('school.liquidation_list_public', false)
-    ? ['profile.complete'] : ['auth', 'profile.complete'];
+// Documents and financial reports are part of the authenticated CMS.
+$documentListMiddleware = ['auth', 'profile.complete'];
+$liquidationListMiddleware = ['auth', 'profile.complete'];
 Route::get('/transparency', [LiquidationController::class, 'index'])
     ->name('transparency')
     ->middleware($liquidationListMiddleware);
@@ -56,10 +54,18 @@ Route::prefix('editorial')->name('editorial.')->middleware(['auth', 'role:office
 Route::get('/workspace/content-versions/{module}/{post}', \App\Http\Controllers\ContentVersionController::class)
     ->where('module', 'articles|activities|achievements|documents|liquidations')->whereNumber('post')
     ->middleware(['auth', 'profile.complete'])->name('workspace.content-versions.index');
-Route::get('/workspace/review-history', \App\Http\Controllers\ReviewHistoryController::class)
-    ->middleware(['auth', 'profile.complete'])->name('workspace.review-history.index');
+Route::get('/workspace/review-history', function (\Illuminate\Http\Request $request) {
+    $filters = $request->only(['q', 'module', 'post', 'from', 'to', 'sort']);
+    if ($request->filled('decision')) {
+        $filters['action'] = $request->query('decision');
+    }
+
+    return redirect()->route('workspace.content-activity.index', $filters);
+})->middleware(['auth', 'profile.complete'])->name('workspace.review-history.index');
 Route::get('/workspace/content-activity', \App\Http\Controllers\ContentActivityController::class)
     ->middleware(['auth', 'profile.complete'])->name('workspace.content-activity.index');
+Route::get('/workspace/create', \App\Http\Controllers\CreatePostController::class)
+    ->middleware(['auth', 'profile.complete'])->name('workspace.create');
 
 Route::prefix('workspace/drafts')->name('workspace.drafts.')->middleware(['auth', 'profile.complete'])->group(function () {
     Route::get('/', [ContentDraftController::class, 'index'])->name('index');
@@ -85,7 +91,7 @@ Route::prefix('workspace/posts')->name('workspace.posts.')->middleware(['auth', 
 Route::post('/posts/{type}/{post}/like', [PostLikeController::class, 'toggle'])
     ->where('type', 'article|activity|achievement|document|liquidation')
     ->whereNumber('post')
-    ->middleware('throttle:likes')
+    ->middleware(['auth', 'profile.complete', 'throttle:likes'])
     ->name('posts.like');
 
 // Signed-in users with completed profiles can use notifications and PDF delivery routes.

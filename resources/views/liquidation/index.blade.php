@@ -16,14 +16,14 @@
         <p class="dashboard-error transparency-toast" role="alert" data-flash-toast>{{ session('error') }}</p>
     @endif
 
-    <section class="transparency-hero site-hero" aria-labelledby="transparency-title">
-        <div class="transparency-hero-grid" aria-hidden="true"></div>
-        <div class="transparency-hero-content">
-            <p class="transparency-kicker">Financial transparency <span aria-hidden="true">•</span> accountability <span aria-hidden="true">•</span> trust</p>
-            <h1 id="transparency-title">Funds with purpose</h1>
-            <p>Explore SSITE's financial records, expense reports, and liquidation documents to see how organization funds are managed and utilized.</p>
-        </div>
-    </section>
+    <x-ui.page-hero
+        class="transparency-hero"
+        banner="images/heroes/hero-transparency.svg"
+        eyebrow="Financial transparency · accountability · trust"
+        title="Funds with purpose"
+        description="Explore SSITE's financial records, expense reports, and liquidation documents to see how organization funds are managed and utilized."
+        labelledby="transparency-title"
+    />
 
     <form class="transparency-filters" method="GET" action="{{ route('transparency') }}">
         <label class="transparency-search">

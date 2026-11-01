@@ -7,13 +7,12 @@
     'academicYearOptions' => [], 'academicYear' => '',
 ])
 
-{{-- Keep sort controls compact; tab changes discard sort state and the form omits pagination. --}}
+{{-- Keep the controls task-focused; event date ordering is the only explicit sort most workspace lists need. --}}
 <form class="post-feed-sort" method="GET" action="{{ $action }}" data-auto-submit>
     <input type="hidden" name="tab" value="{{ $tab }}">
-    <input type="hidden" name="sort" value="{{ $sort }}">
     @php($searchValue = is_string(request('q')) ? mb_substr(trim(request('q')), 0, 100) : '')
-    <label class="post-feed-visually-hidden" for="workspace-post-search">Search submissions</label>
-    <input id="workspace-post-search" class="workspace-post-search" type="search" name="q" maxlength="100" value="{{ $searchValue }}" placeholder="Search submissions">
+    <label class="post-feed-visually-hidden" for="workspace-post-search">Search by title</label>
+    <input id="workspace-post-search" class="workspace-post-search" type="search" name="q" maxlength="100" value="{{ $searchValue }}" placeholder="Search by title">
     @if (str_contains($routeName, '.documents.'))
         <label class="post-feed-visually-hidden" for="workspace-document-semester">Semester</label>
         <select id="workspace-document-semester" class="post-feed-filter-control" name="semester">
@@ -28,30 +27,14 @@
             @foreach ($academicYearOptions as $value => $label)<option value="{{ $value }}" @selected($academicYear === $value)>{{ $label }}</option>@endforeach
         </select>
     @endif
-    <details class="dashboard-tabs-more post-feed-sort-menu">
-        <summary class="dashboard-tab" aria-haspopup="true" aria-expanded="false">
-            {{ $options[$sort] ?? 'Sort posts' }}@if ($tab === 'all') <span class="post-feed-sort-current-filter">· All</span>@endif
-        </summary>
-        <div class="dashboard-tabs-menu">
-            <span class="post-feed-sort-menu-heading">Sort by</span>
-            @foreach ($options as $value => $label)
-                @php($sortQuery = ['tab' => $tab, 'sort' => $value, 'q' => $searchValue])
-                @if ($academicYear !== '')@php($sortQuery['academic_year'] = $academicYear)@endif
-                @if (str_contains($routeName, '.documents.') && in_array(request('semester'), ['1', '2'], true))
-                    @php($sortQuery['semester'] = request('semester'))
-                @endif
-                @if ($filterName && $filter !== null && $filter !== '')
-                    @php($sortQuery[$filterName] = $filter)
-                @endif
-                <a href="{{ route($routeName, $sortQuery) }}" data-sort-option @if ($sort === $value) aria-current="true" @endif>{{ $label }}</a>
+    @if (str_contains($routeName, '.activities.') && isset($options['event_soonest'], $options['event_latest']))
+        <label class="post-feed-visually-hidden" for="workspace-event-sort">Order by event date</label>
+        <select id="workspace-event-sort" class="post-feed-filter-control" name="sort" aria-label="Order activities">
+            @foreach (['recent' => $options['recent'], 'event_soonest' => $options['event_soonest'], 'event_latest' => $options['event_latest']] as $value => $label)
+                <option value="{{ $value }}" @selected($sort === $value)>{{ $label }}</option>
             @endforeach
-            @if (in_array('all', $allowedTabs, true))
-                <span class="post-feed-sort-menu-divider" aria-hidden="true"></span>
-                <span class="post-feed-sort-menu-heading">Show content</span>
-                <a href="{{ route($routeName, ['tab' => 'all']) }}" data-feed-tab @if ($tab === 'all') aria-current="true" @endif>All</a>
-            @endif
-        </div>
-    </details>
+        </select>
+    @endif
     @if ($filterName && $filterOptions)
         <label class="post-feed-visually-hidden" for="post-filter-{{ str_replace('.', '-', $routeName) }}">{{ $filterLabel }}</label>
         <select id="post-filter-{{ str_replace('.', '-', $routeName) }}" class="post-feed-filter-control" name="{{ $filterName }}" aria-label="{{ $filterLabel }}">
@@ -60,9 +43,22 @@
             @endforeach
         </select>
     @endif
-    <button class="dashboard-button dashboard-button-secondary" type="submit">Apply</button>
-    @if ($academicYear !== '' || $searchValue !== '' || request('semester') || ($filter !== null && $filter !== '' && $filter !== $filterDefault))
+    <button class="dashboard-button dashboard-button-secondary" type="submit">Search</button>
+    @if ($academicYear !== '' || $searchValue !== '' || request('semester') || $sort !== 'recent' || ($filter !== null && $filter !== '' && $filter !== $filterDefault))
         <a class="dashboard-text-button" href="{{ route($routeName, ['tab' => $tab]) }}">Clear filters</a>
+    @endif
+    @php($otherViews = array_values(array_diff($allowedTabs, ['mine', 'published', 'archived'])))
+    @if ($otherViews)
+        <details class="dashboard-tabs-more post-feed-sort-menu">
+            <summary class="dashboard-tab" aria-expanded="false">More views</summary>
+            <div class="dashboard-tabs-menu">
+                @foreach ($otherViews as $view)
+                    <a href="{{ route($routeName, ['tab' => $view]) }}" @if ($tab === $view) aria-current="page" @endif>
+                        {{ ['pending' => 'Pending review', 'rejected' => 'Rejected', 'all' => 'All posts'][$view] }}
+                    </a>
+                @endforeach
+            </div>
+        </details>
     @endif
 </form>
 
@@ -73,6 +69,7 @@
                 const menuBindings = new WeakSet();
                 let activeRequest = null;
                 let requestVersion = 0;
+                let skeletonTimer;
 
                 document.addEventListener('change', (event) => {
                     const control = event.target instanceof Element ? event.target : null;
@@ -99,7 +96,7 @@
                     });
 
                     results.querySelectorAll('[data-selection-bar]').forEach((bar) => {
-                        const page = bar.closest('.dashboard-page');
+                        const page = bar.closest('.post-feed-shell');
                         const form = page?.querySelector('form[id$="-bulk-archive"]');
                         if (!form) return;
                         const update = () => {
@@ -119,7 +116,11 @@
                     if (currentTabs && nextTabs) {
                         currentTabs.querySelectorAll('a').forEach((link) => {
                             const match = [...nextTabs.querySelectorAll('a')].find((nextLink) => nextLink.href === link.href);
-                            link.className = match?.className || 'dashboard-tab';
+                            link.className = match?.className || '';
+                            const count = link.querySelector('.dashboard-tab-count');
+                            const nextCount = match?.querySelector('.dashboard-tab-count');
+                            if (count) count.remove();
+                            if (nextCount) link.append(nextCount.cloneNode(true));
                             if (match?.hasAttribute('aria-current')) link.setAttribute('aria-current', 'page');
                             else link.removeAttribute('aria-current');
                         });
@@ -137,6 +138,14 @@
                         }
                     }
 
+                    const scopeNote = currentShell.querySelector('.workspace-feed-scope-note');
+                    const nextScopeNote = nextShell.querySelector('.workspace-feed-scope-note');
+                    if (scopeNote) scopeNote.remove();
+                    if (nextScopeNote) currentShell.querySelector('.post-feed-tab-row')?.after(nextScopeNote.cloneNode(true));
+                    const moduleFilter = currentShell.querySelector('[data-post-feed-module-filter]');
+                    const nextModuleFilter = nextShell.querySelector('[data-post-feed-module-filter]');
+                    if (moduleFilter && nextModuleFilter) moduleFilter.innerHTML = nextModuleFilter.innerHTML;
+
                     const currentForm = currentShell.querySelector('.post-feed-sort');
                     const nextForm = nextShell.querySelector('.post-feed-sort');
                     if (currentForm && nextForm) {
@@ -153,6 +162,7 @@
                     const currentResults = currentShell?.querySelector('[data-feed-results]');
                     const error = currentShell?.querySelector('[data-feed-error]');
                     if (!currentShell || !currentResults) return;
+                    window.clearTimeout(skeletonTimer);
                     if (activeRequest) activeRequest.abort();
                     activeRequest = new AbortController();
                     const version = ++requestVersion;
@@ -161,8 +171,17 @@
                     const content = currentResults.querySelector('[data-feed-content]');
                     const skeleton = currentResults.querySelector('[data-feed-skeleton]');
                     if (content && skeleton) {
-                        content.hidden = true;
-                        skeleton.hidden = false;
+                        // Reserve the current result height so switching tabs does not move the page.
+                        currentResults.style.minHeight = `${currentResults.getBoundingClientRect().height}px`;
+                        skeletonTimer = window.setTimeout(() => {
+                            if (version !== requestVersion) return;
+                            const cards = content.querySelectorAll('.post-card').length;
+                            [...skeleton.children].forEach((card, index) => {
+                                card.hidden = index >= Math.max(1, Math.min(cards, 3));
+                            });
+                            content.hidden = true;
+                            skeleton.hidden = false;
+                        }, 120);
                     }
                     currentShell.querySelector('[data-feed-status]')?.replaceChildren('Loading posts…');
 
@@ -180,7 +199,19 @@
                         const nextResults = nextShell?.querySelector('[data-feed-results]');
                         if (!nextShell || !nextResults) throw new Error('Feed response was incomplete.');
 
+                        window.clearTimeout(skeletonTimer);
                         syncToolbar(currentShell, nextShell);
+                        const heading = currentShell.querySelector('.post-feed-heading');
+                        const nextHeading = nextShell.querySelector('.post-feed-heading');
+                        if (heading && nextHeading) heading.replaceWith(nextHeading.cloneNode(true));
+                        document.title = nextDocument.title;
+                        document.querySelectorAll('.workspace-library-link').forEach((link) => {
+                            const nextLink = [...nextDocument.querySelectorAll('.workspace-library-link')]
+                                .find((candidate) => candidate.href === link.href);
+                            link.classList.toggle('is-active', nextLink?.classList.contains('is-active') ?? false);
+                            if (nextLink?.hasAttribute('aria-current')) link.setAttribute('aria-current', 'page');
+                            else link.removeAttribute('aria-current');
+                        });
                         const updatedResults = nextResults.cloneNode(true);
                         updatedResults.dataset.ajaxUpdated = 'true';
                         updatedResults.setAttribute('aria-busy', 'false');
@@ -202,6 +233,8 @@
                         }
                     } finally {
                         if (version === requestVersion) {
+                            window.clearTimeout(skeletonTimer);
+                            document.querySelector('.post-feed-shell [data-feed-results]')?.style.removeProperty('min-height');
                             document.querySelector('.post-feed-shell [data-feed-results]')?.setAttribute('aria-busy', 'false');
                             activeRequest = null;
                         }
@@ -227,24 +260,24 @@
                     const target = new URL(link.href, window.location.href);
                     if (target.origin !== window.location.origin) return;
                     event.preventDefault();
-                    link.closest('.post-feed-sort-menu')?.removeAttribute('open');
+                    link.closest('.dashboard-tabs-more')?.removeAttribute('open');
                     loadFeed(target);
                 });
 
                 document.addEventListener('click', (event) => {
-                    document.querySelectorAll('.post-feed-sort-menu[open]').forEach((menu) => {
+                    document.querySelectorAll('.post-feed-shell .dashboard-tabs-more[open]').forEach((menu) => {
                         if (!menu.contains(event.target)) menu.open = false;
                     });
                 });
 
                 document.addEventListener('toggle', (event) => {
-                    if (!event.target.matches?.('details.post-feed-sort-menu')) return;
+                    if (!event.target.matches?.('.post-feed-shell details.dashboard-tabs-more')) return;
                     event.target.querySelector('summary')?.setAttribute('aria-expanded', String(event.target.open));
                 }, true);
 
                 document.addEventListener('keydown', (event) => {
                     if (event.key !== 'Escape') return;
-                    const menu = document.querySelector('.post-feed-sort-menu[open]');
+                    const menu = document.querySelector('.post-feed-shell .dashboard-tabs-more[open]');
                     if (!menu) return;
                     menu.open = false;
                     menu.querySelector('summary')?.focus({ preventScroll: true });
@@ -315,10 +348,10 @@
                 });
 
                 document.addEventListener('change', (event) => {
-                    const root = event.target.closest('[data-feed-results][data-ajax-updated="true"]');
+                    const root = event.target.closest('.post-feed-shell [data-feed-results]');
                     if (!root || !event.target.matches('input[type="checkbox"][form$="-bulk-archive"]')) return;
                     root.querySelectorAll('[data-selection-bar]').forEach((bar) => {
-                        const form = bar.closest('.dashboard-page')?.querySelector('form[id$="-bulk-archive"]');
+                        const form = bar.closest('.post-feed-shell')?.querySelector('form[id$="-bulk-archive"]');
                         if (!form) return;
                         const selected = [...root.querySelectorAll(`input[type="checkbox"][form="${form.id}"]`)].filter((checkbox) => checkbox.checked).length;
                         bar.hidden = selected === 0;

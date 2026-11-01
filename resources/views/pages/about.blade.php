@@ -8,11 +8,14 @@
 
 @section('content')
 <div class="about-page site-page">
-	<section class="about-hero site-hero" aria-labelledby="about-hero-title">
-		<p class="about-hero-label">ABOUT THE ORGANIZATION</p>
-		<h1 id="about-hero-title">GET TO KNOW SSITE</h1>
-		<p>Discover who we are, what we stand for, and the vision that brings our community together.</p>
-	</section>
+	<x-ui.page-hero
+		class="about-hero"
+		banner="images/heroes/hero-about.svg"
+		eyebrow="About the organization"
+		title="Get to know SSITE"
+		description="Discover who we are, what we stand for, and the vision that brings our community together."
+		labelledby="about-hero-title"
+	/>
 
 	<section class="mission-vision-grid" aria-label="SSITE mission and vision">
 		<article class="mission-card">
@@ -32,7 +35,7 @@
 		{{-- Officer snapshots stay independent of later changes to user roles and profiles. --}}
 		<div class="officers-grid">
 			@forelse ($officers as $officer)
-				<article class="officer-card card-hover" tabindex="0">
+				<article class="officer-card card-hover" tabindex="0" data-motion="reveal">
 					@php
 						$officerPhoto = null;
 						if (is_object($officer) && method_exists($officer, 'photoUrl')) {

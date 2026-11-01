@@ -25,6 +25,14 @@
             && ($filterUser->canReview()
                 || ($module['capability'] === 'canPostIn:' . $key && $filterUser->canPostIn($key))));
     $filterModuleKey = $filterModules->search(fn ($module) => in_array($routeName, [$module['workspace'], $module['editorial']], true));
+    $statusTitle = match ($activeTab) {
+        'mine' => 'My submissions',
+        'published' => 'Published posts',
+        'archived' => 'Archived posts',
+        'pending' => 'Pending review',
+        'rejected' => 'Rejected posts',
+        default => 'All posts',
+    };
 @endphp
 
 {{-- Keep one centered feed frame while each page supplies its existing role-filtered content. --}}
@@ -35,23 +43,15 @@
     @endif
 @endpush
 
-<div class="post-feed-shell {{ $stylesheet ? 'post-feed-' . $stylesheet : '' }}">
+<div class="post-feed-shell workspace-library-feed {{ $stylesheet ? 'post-feed-' . $stylesheet : '' }}">
     @if ($variant === 'index')
         <header class="post-feed-heading">
-            <h1>{{ $title }}</h1>
-            @if ($description)
-                <p>{{ $description }}</p>
-            @endif
+            <h1>{{ $statusTitle }}</h1>
+            <p>{{ $title }}@if ($activeTab === 'archived') &middot; Archived posts are hidden from the public site.@endif</p>
         </header>
 
         @if ($sortOptions)
             <div class="post-feed-tab-row">
-                <x-workspace.ui.workflow-tabs
-                    :route-name="$routeName"
-                    :allowed-tabs="$allowedTabs"
-                    :active-tab="$activeTab"
-                    :pending-count="$pendingCount"
-                />
                 @if ($filterModules->count() > 1 && $filterModuleKey !== false)
                     <label class="post-feed-module-filter">
                         <span>Content type</span>
@@ -81,13 +81,6 @@
                     :academic-year="$academicYear"
                 />
             </div>
-        @else
-            <x-workspace.ui.workflow-tabs
-                :route-name="$routeName"
-                :allowed-tabs="$allowedTabs"
-                :active-tab="$activeTab"
-                :pending-count="$pendingCount"
-            />
         @endif
         @if ($activeTab === 'mine')
             <p class="workspace-feed-scope-note">Showing submissions created by your account.</p>

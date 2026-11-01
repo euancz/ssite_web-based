@@ -31,7 +31,7 @@
 
     {{-- President bulk archive remains separate from each card's single-post actions. --}}
     @can('bulkArchive', \App\Models\Document::class)
-        @if ($tab !== 'published' && $documents->isNotEmpty())
+        @if ($tab !== 'archived' && $documents->isNotEmpty())
             <form id="document-bulk-archive" method="POST" action="{{ route('documents.bulk-archive') }}">
                 @csrf
             </form>
@@ -94,7 +94,7 @@
                     @endcan
 
                     @can('bulkArchive', \App\Models\Document::class)
-                        @if ($tab !== 'published' && ! $document->isArchived())
+                        @if ($tab !== 'archived' && ! $document->isArchived())
                             <label class="dashboard-muted">
                                 <input type="checkbox" name="document_ids[]" value="{{ $document->document_id }}" form="document-bulk-archive">
                                 Select
@@ -111,7 +111,7 @@
             @elseif ($tab === 'published')
                 <x-workspace.posts.empty-state title="No published documents yet" message="Check back soon for the latest SSITE documents." />
             @elseif (auth()->user()?->canPostIn('documents'))
-                <x-workspace.posts.empty-state title="No documents in this tab" message="Use Create document in the workspace navigation to start a submission." />
+                <x-workspace.posts.empty-state title="No documents in this tab" message="Use Create post in the workspace navigation to choose a post type and start a submission." />
             @else
                 <x-workspace.posts.empty-state title="No documents found" message="Check back later for new documents." />
             @endif

@@ -43,6 +43,15 @@ class ArticleFormattingTest extends TestCase
         return $article;
     }
 
+    public function test_new_articles_enable_formatting_without_a_format_picker(): void
+    {
+        $this->enable();
+        $this->actingAs($this->author())->get(route('articles.create'))->assertOk()
+            ->assertSee('type="hidden" id="article-content-format" name="content_format" value="markdown"', false)
+            ->assertDontSee('Content format')
+            ->assertSee('data-article-tools', false);
+    }
+
     public function test_migration_keeps_legacy_content_plain_and_pre_migration_workflows_available(): void
     {
         $author = $this->author();
@@ -99,7 +108,7 @@ class ArticleFormattingTest extends TestCase
         $this->post(route('workspace.drafts.save', 'articles'), ['title' => 'Formatted draft', 'content' => '**Saved** body', 'content_format' => 'markdown'])->assertSessionHasNoErrors()->assertRedirect();
         $draft = ContentDraft::firstOrFail();
         $this->assertSame('markdown', $draft->payload['content_format']);
-        $this->get(route('workspace.drafts.edit', $draft))->assertOk()->assertSee('value="markdown" selected', false)->assertSee('**Saved** body');
+        $this->get(route('workspace.drafts.edit', $draft))->assertOk()->assertSee('name="content_format" value="markdown"', false)->assertSee('**Saved** body');
         $this->post(route('articles.store'), ['title' => 'Formatted draft', 'content' => '**Saved** body', 'content_format' => 'markdown', 'draft_id' => $draft->getKey(), 'draft_version' => 1])->assertSessionHasNoErrors()->assertRedirect();
         $article = Article::firstOrFail();
         $this->assertSame('markdown', $article->content_format);

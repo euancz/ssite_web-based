@@ -334,13 +334,14 @@
 @section('content')
     <div class="discover-page">
         <div class="discover-main site-page">
-            <section class="discover-hero site-hero" aria-labelledby="discover-title">
-                <div class="discover-hero-inner">
-                    <p class="discover-kicker">Articles • Activities • Achievements</p>
-                    <h1 class="discover-title" id="discover-title">Stories &amp; Highlights</h1>
-                    <p class="discover-subtitle">Discover the stories, activities, and achievements that highlight student creativity, experience, and accomplishments.</p>
-                </div>
-            </section>
+            <x-ui.page-hero
+                class="discover-hero"
+                banner="images/heroes/hero-discover.svg"
+                eyebrow="Articles · activities · achievements"
+                title="Stories & highlights"
+                description="Discover the stories, activities, and achievements that highlight our students' creativity, experiences, and accomplishments."
+                labelledby="discover-title"
+            />
 
             <section class="discover-filters" aria-label="Discover filters">
                 <div class="discover-field">
@@ -385,7 +386,7 @@
 
             <section class="discover-panel" id="discover-all" role="tabpanel" aria-label="All discover stories">
                 @if ($featured)
-                    <article class="discover-featured">
+                    <article class="discover-featured" data-motion="reveal">
                         <div class="discover-featured-image">
                             <img src="{{ $featured->imageUrl() }}" alt="{{ $featured->title }}">
                         </div>
@@ -414,7 +415,7 @@
                     @foreach ($discoverSections as $section)
                         @php($item = $section['items']->first())
                         @if ($item)
-                            <article class="discover-story-card">
+                            <article class="discover-story-card" data-motion="reveal">
                                 <a href="{{ route($section['route'], $item) }}">
                                     <img src="{{ $item->imageUrl() }}" alt="{{ $item->title }}">
                                 </a>
@@ -425,7 +426,7 @@
                                 </div>
                             </article>
                         @else
-                            <article class="discover-story-card discover-placeholder">
+                            <article class="discover-story-card discover-placeholder" data-motion="reveal">
                                 <img src="{{ asset('images/Wolf.png') }}" alt="">
                                 <div class="discover-story-body">
                                     <div class="discover-story-meta"><span>{{ $section['label'] }}</span></div>

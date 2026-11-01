@@ -4,7 +4,7 @@
             <ul class="site-nav-list">
                 <li class="site-nav-item">
                     <a href="{{ $roleHomeUrl }}"
-                       class="site-nav-link {{ request()->is('/') || request()->routeIs('home') ? 'is-active' : '' }}" @if(request()->is('/') || request()->routeIs('home')) aria-current="page" @endif>
+                       class="site-nav-link {{ request()->routeIs('home') ? 'is-active' : '' }}" @if(request()->routeIs('home')) aria-current="page" @endif>
                         Home
                     </a>
                 </li>
@@ -16,11 +16,12 @@
         </nav>
 
         {{-- Mobile / tablet nav menu (collapsible) --}}
+        <button type="button" class="mobile-nav-scrim hidden" aria-label="Close navigation menu" tabindex="-1"></button>
         <nav aria-label="Main site" id="mobile-nav" class="mobile-navigation hidden">
             <ul class="mobile-nav-list">
                 <li class="mobile-nav-item">
                     <a href="{{ $roleHomeUrl }}"
-                       class="mobile-nav-link {{ request()->is('/') || request()->routeIs('home') ? 'is-active' : '' }}" @if(request()->is('/') || request()->routeIs('home')) aria-current="page" @endif>
+                       class="mobile-nav-link {{ request()->routeIs('home') ? 'is-active' : '' }}" @if(request()->routeIs('home')) aria-current="page" @endif>
                         Home
                     </a>
                 </li>

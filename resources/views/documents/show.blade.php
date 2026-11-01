@@ -3,7 +3,7 @@
 @section('title', $document->title)
 
 @section('content')
-<x-posts.feed-frame variant="show" stylesheet="documents">
+<x-posts.feed-frame variant="show" stylesheet="documents" :back-url="route(($management ? 'workspace.posts.' : '') . 'documents.index')">
     @if ($management)<x-workspace.review-summary :post="$document" />@endif
     @if (session('status'))
         <p class="dashboard-success" role="status" data-flash-toast>{{ session('status') }}</p>

@@ -48,6 +48,57 @@ class ContentWorkspaceTest extends TestCase
         return DB::table($module)->insertGetId($data, $type.'_id');
     }
 
+    public function test_create_post_chooser_only_offers_authorized_modules(): void
+    {
+        foreach (['President', 'Multimedia', 'Secretary', 'Auditor'] as $position) {
+            $actor = $this->actor('officer', $position);
+            $response = $this->actingAs($actor)->get(route('workspace.create'))->assertOk();
+            foreach (config('workspace.modules') as $key => $module) {
+                $link = 'href="'.route($module['create']).'"';
+                if ($actor->canPostIn($key)) {
+                    $response->assertSee($link, false);
+                } else {
+                    $response->assertDontSee($link, false);
+                }
+            }
+            $response->assertSee('aria-label="Create post"', false)
+                ->assertDontSee('aria-label="Create article"', false);
+        }
+    }
+
+    public function test_workspace_library_tabs_keep_visibility_ownership_and_bulk_actions_consistent(): void
+    {
+        $president = $this->actor();
+        foreach (self::MODULES as $module => [$type, $position]) {
+            $owner = $this->actor('officer', $position);
+            $published = $this->makePost($module, $owner->user_id);
+            $archived = $this->makePost($module, $owner->user_id, 'approved', 'archived');
+            $pending = $this->makePost($module, $owner->user_id, 'pending');
+            $foreign = $this->makePost($module, $president->user_id, 'rejected');
+            $route = 'workspace.posts.'.$module.'.index';
+            foreach (['published' => [$published], 'archived' => [$archived], 'mine' => [$published, $archived, $pending]] as $tab => $expected) {
+                $response = $this->actingAs($owner)->get(route($route, ['tab' => $tab]))->assertOk();
+                $records = $response->viewData($module);
+                $this->assertEqualsCanonicalizing($expected, $records->modelKeys());
+                $this->assertNotContains($foreign, $records->modelKeys());
+            }
+            $this->actingAs($president)->get(route($route, ['tab' => 'published']))->assertOk()
+                ->assertSee('<h1>Published posts</h1>', false)
+                ->assertSee('id="'.$type.'-bulk-archive"', false)
+                ->assertSee('name="'.$type.'_ids[]"', false);
+            $this->get(route($route, ['tab' => 'archived']))->assertOk()
+                ->assertSee('<h1>Archived posts</h1>', false)
+                ->assertSee('Restore post?')
+                ->assertDontSee('id="'.$type.'-bulk-archive"', false);
+        }
+    }
+
+    public function test_create_post_chooser_rejects_non_posting_users(): void
+    {
+        $this->get(route('workspace.create'))->assertRedirect();
+        $this->actingAs($this->actor('student', null))->get(route('workspace.create'))->assertForbidden();
+    }
+
     public function test_public_routes_never_expose_private_content_or_management_controls_even_to_president(): void
     {
         $president = $this->actor();

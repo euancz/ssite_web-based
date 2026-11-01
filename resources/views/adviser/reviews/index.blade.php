@@ -39,22 +39,6 @@
                 <option value="archived" @selected(($filters['visibility'] ?? '') === 'archived')>Archived</option>
             </select>
         </div>
-        <div class="dashboard-form-field">
-            <label for="review-from">Submitted from</label>
-            <input id="review-from" type="date" name="from" value="{{ $filters['from'] ?? '' }}">
-        </div>
-        <div class="dashboard-form-field">
-            <label for="review-to">Submitted through</label>
-            <input id="review-to" type="date" name="to" value="{{ $filters['to'] ?? '' }}">
-        </div>
-        <div class="dashboard-form-field">
-            <label for="review-sort">Sort by</label>
-            <select id="review-sort" name="sort">
-                @foreach (['oldest' => 'Oldest submission', 'recent' => 'Newest submission', 'reviewed' => 'Latest decision'] as $key => $label)
-                    <option value="{{ $key }}" @selected($filters['sort'] === $key)>{{ $label }}</option>
-                @endforeach
-            </select>
-        </div>
         <div class="profile-form-actions">
             <button type="submit" class="dashboard-button">Apply filters</button>
             <a class="dashboard-button dashboard-button-secondary" href="{{ route('adviser.reviews.index', ['status' => $activeStatus]) }}">Clear filters</a>

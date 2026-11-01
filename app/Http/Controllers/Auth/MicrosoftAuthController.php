@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 
 /*
  * Microsoft login flow: Socialite verifies the identity, then the callback finds or creates
- * the local user, sends incomplete profiles to completion, and sends completed accounts home by role.
+ * the local user, sends incomplete profiles to completion, and sends completed accounts to the CMS home.
  */
 /**
  * Starts Microsoft sign-in and connects the verified Microsoft identity to a local user.
@@ -109,7 +109,7 @@ class MicrosoftAuthController extends Controller
                 return redirect()->route('profile.complete');
             }
 
-            return redirect()->intended(route($user->dashboardRoute()));
+            return redirect()->route('home');
 
         } catch (InvalidStateException $e) {
             report($e);

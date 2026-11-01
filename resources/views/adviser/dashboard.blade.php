@@ -6,8 +6,9 @@
 <div class="dashboard-page workspace-governance-dashboard">
     @if (auth()->user()->isAdviser())
         <header class="workspace-dashboard-heading">
-            <div><h1>Organization overview</h1><p>Manage student and officer roles. Submission information here is limited to counts.</p></div>
-            <span class="workspace-dashboard-role">Adviser</span>
+        <span class="workspace-dashboard-mark" aria-hidden="true"><x-workspace.icon name="users" /></span>
+            <div><h1>Organization overview</h1><p>Manage student and officer accounts.</p></div>
+            <a class="dashboard-button" href="{{ route('adviser.users.index') }}">Manage accounts</a>
         </header>
 
         <section class="workspace-governance-summary" aria-labelledby="governance-summary-title">
@@ -19,27 +20,18 @@
             </ul>
         </section>
 
-        <x-workspace.dashboard-guide />
 
         @if (! $presidentExists)
             <p class="dashboard-error workspace-governance-alert" role="alert">No President is assigned. Pending submissions cannot be reviewed, and no fallback approver is configured.</p>
         @endif
 
-        <section class="workspace-governance-list" aria-labelledby="pending-counts-heading">
-            <div class="workspace-governance-section-heading"><div><h2 id="pending-counts-heading">Pending submission counts</h2><p>Titles, authors, and private post content are not shown here.</p></div></div>
-            <ul class="workspace-governance-module-counts">
-                @foreach ($pendingByModule as $module)
-                    <li><span>{{ $module['label'] }}</span><strong><x-ui.count-up :value="$module['count']" /></strong></li>
-                @endforeach
-            </ul>
-        </section>
     @else
         <header class="workspace-dashboard-heading">
+        <span class="workspace-dashboard-mark" aria-hidden="true"><x-workspace.icon name="users" /></span>
             <div><h1>Adviser access</h1><p>Manage adviser assignments and review recent role changes.</p></div>
             <span class="workspace-dashboard-role">Superadmin</span>
         </header>
 
-        <x-workspace.dashboard-guide />
 
         <section class="workspace-governance-list" aria-labelledby="current-advisers-title">
             <div class="workspace-governance-section-heading"><div><h2 id="current-advisers-title">Current advisers</h2><p>Advisers can assign student and officer roles.</p></div>
@@ -60,7 +52,7 @@
         </section>
 
         <section class="workspace-governance-list" aria-labelledby="role-history-heading">
-            <div class="workspace-governance-section-heading"><div><h2 id="role-history-heading">Recent role changes</h2><p>History is shown when the optional role history table is configured.</p></div></div>
+            <div class="workspace-governance-section-heading"><div><h2 id="role-history-heading">Recent role changes</h2></div></div>
             @if ($roleHistory->isNotEmpty())
                 <x-ui.data-table label="Recent role changes">
                     <table class="dashboard-table workspace-governance-table">

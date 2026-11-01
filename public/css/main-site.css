@@ -1,6 +1,6 @@
 /* Documents is the visual baseline. Loaded only by the main-site layout. */
 .main-site-body {
-    --site-content-width: 1045px;
+    --site-content-width: var(--public-content-width, 1045px);
     --site-page-top: 46px;
     --site-page-bottom: 146px;
     --site-hero-height: 304px;
@@ -148,7 +148,7 @@ body.main-site-body main :is(.mission-card, .vision-card) { padding: 28px; }
 body.main-site-body main :is(.mission-card, .vision-card) p { font-size: 15px; line-height: 1.6; }
 /* Preserve Home's illustration while aligning its sections with the shared page grid. */
 body.main-site-body .public-home-header ~ main .home-page { background: transparent; }
-body.main-site-body .public-home-header ~ main .home-page .home-hero { height: var(--site-hero-height); min-height: var(--site-hero-height); overflow: hidden; border-radius: var(--site-hero-radius); margin: 0 6px; }
+body.main-site-body .public-home-header ~ main .home-page .home-hero { height: var(--site-hero-height); min-height: var(--site-hero-height); overflow: hidden; border-radius: var(--site-hero-radius); margin: 0; }
 body.main-site-body .public-home-header ~ main .home-page .home-hero-art { height: 432px; transform: scale(.7); transform-origin: center top; }
 body.main-site-body .public-home-header ~ main .home-page :is(.home-section, .home-news, .home-leaders, .home-sponsors) { width: 100%; max-width: none; margin: 68px 0 0; padding: 0; }
 body.main-site-body .public-home-header ~ main .home-page .section-heading { max-width: none; margin-bottom: 28px; }

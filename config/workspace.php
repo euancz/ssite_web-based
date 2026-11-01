@@ -16,8 +16,8 @@ return [
     'sections' => [
         'overview' => 'Overview',
         'create' => 'Create',
-        'library' => 'Post library',
-        'administration' => 'Administration',
+        'library' => 'My work',
+        'administration' => 'People & review',
     ],
     'navigation' => [
         'dashboard' => ['capability' => 'workspace'],

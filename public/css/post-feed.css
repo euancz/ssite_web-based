@@ -791,3 +791,14 @@ a.ssite-page-button:hover {
         transform: none;
     }
 }
+.post-feed-back {
+    margin-bottom: 1rem;
+}
+
+.post-feed-back .dashboard-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+}
+

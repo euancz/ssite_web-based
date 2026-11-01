@@ -5,8 +5,8 @@
 .public-home-header .site-brand { gap: 12px; }
 .public-home-header .site-brand-name { color: #063847; font-size: 18px; }
 .public-home-header .site-header-actions { gap: 16px; }
-.public-home-header .site-search-desktop { width: 210px; }
-.public-home-header .site-search-input { height: 34px; border: 1px solid #155571; border-radius: 4px; background: #fff; font-size: 11px; }
+.public-home-header .site-search-desktop { width: clamp(280px, 25vw, 320px); }
+.public-home-header .site-search-input { height: 34px; border: 1px solid #155571; border-radius: 4px; background: #fff; font-size: 13px; }
 .public-home-header .login-toggle-button { min-height: 36px; padding: 0 20px; border: 1px solid #063847; border-bottom-width: 4px; border-radius: 5px; background: #155571; color: #fff; font-size: 14px; }
 .desktop-navigation { width: fit-content; max-width: calc(100% - 32px); margin: 26px auto 32px; border: 1px solid #063847; border-bottom-width: 5px; border-radius: 11px; background: #155571; }
 .site-nav-list { width: auto; gap: 6px; padding: 4px 16px; color: #fff; font-size: 15px; font-weight: 600; }

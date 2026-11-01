@@ -35,61 +35,62 @@
             </a>
 
             <nav class="workspace-nav" aria-label="Workspace">
-                <span class="workspace-nav-label">{{ $workspaceConfig['sections']['overview'] }}</span>
-                <div class="workspace-nav-group">
+                <section class="workspace-nav-section" aria-label="Overview">
+                    <span class="workspace-nav-label">{{ $workspaceConfig['sections']['overview'] }}</span>
                     <a class="workspace-nav-link {{ request()->routeIs('officer.dashboard', 'adviser.dashboard') ? 'is-active' : '' }}"
                        href="{{ route($user->dashboardRoute()) }}" aria-label="Dashboard" data-tooltip="Dashboard"
                        @if (request()->routeIs('officer.dashboard', 'adviser.dashboard')) aria-current="page" @endif>
                         <x-workspace.icon name="grid" /><span>Dashboard</span>
                     </a>
-                </div>
+                </section>
 
                 @if ($user->canPost())
-                    <span class="workspace-nav-label">{{ $workspaceConfig['sections']['create'] }}</span>
-                    <div class="workspace-nav-group" aria-label="Create content">
-                        @foreach ($availableModules as $moduleKey => $module)
-                            @if ($module['capability'] === 'canPostIn:' . $moduleKey && $user->canPostIn($moduleKey))
-                                <a class="workspace-nav-link {{ request()->routeIs($module['create'], str_replace('.create', '.edit', $module['create'])) ? 'is-active' : '' }}"
-                                   href="{{ route($module['create']) }}" aria-label="Create {{ strtolower($module['singular']) }}"
-                                   data-tooltip="Create {{ strtolower($module['singular']) }}"
-                                   @if (request()->routeIs($module['create'], str_replace('.create', '.edit', $module['create'])) ) aria-current="page" @endif>
-                                    <x-workspace.icon :name="$module['icon']" /><span>Create {{ strtolower($module['singular']) }}</span>
-                                </a>
-                            @endif
-                        @endforeach
-                    </div>
+                    @php
+                        $creatingPost = request()->routeIs('workspace.create', 'articles.create', 'activities.create', 'achievements.create', 'documents.create', 'liquidations.create');
+                    @endphp
+                    <section class="workspace-nav-section" aria-label="Create content">
+                        <span class="workspace-nav-label">{{ $workspaceConfig['sections']['create'] }}</span>
+                        <a class="workspace-nav-link {{ $creatingPost ? 'is-active' : '' }}"
+                           href="{{ route('workspace.create') }}" aria-label="Create post" data-tooltip="Create post"
+                           @if ($creatingPost) aria-current="page" @endif>
+                            <x-workspace.icon name="plus" /><span>Create post</span>
+                        </a>
+                    </section>
                 @endif
-
                 @if ($availableModules->isNotEmpty())
-                    <span class="workspace-nav-label">{{ $workspaceConfig['sections']['library'] }}</span>
-                    <div class="workspace-post-library" aria-label="Content library">
-                        <a class="workspace-nav-link {{ request()->routeIs('workspace.content-activity.*') ? 'is-active' : '' }}" href="{{ route('workspace.content-activity.index') }}" aria-label="Content activity" data-tooltip="Content activity" @if(request()->routeIs('workspace.content-activity.*')) aria-current="page" @endif><x-workspace.icon name="file" /><span>Content activity</span></a>
+                    @php
+                        $libraryRoute = $activeModule ? $availableModules[$activeModule]['workspace'] : null;
+                        $isLibraryRoute = $activeModule && request()->routeIs($activeModule . '.index', 'editorial.' . $activeModule . '.index', 'workspace.posts.' . $activeModule . '.index');
+                        $activeLibraryTab = request('tab', $user->isPresident() ? 'published' : 'mine');
+                    @endphp
+                    <section class="workspace-nav-section" aria-label="Activity">
+                        <span class="workspace-nav-label">Activity</span>
+                        <a class="workspace-nav-link {{ request()->routeIs('workspace.content-activity.*') ? 'is-active' : '' }}" href="{{ route('workspace.content-activity.index') }}" aria-label="Activity log" data-tooltip="Activity log" @if(request()->routeIs('workspace.content-activity.*')) aria-current="page" @endif><x-workspace.icon name="clock" /><span>Activity log</span></a>
+                    </section>
+                    <section class="workspace-nav-section" aria-label="Drafts and submissions">
+                        <span class="workspace-nav-label">Drafts &amp; submissions</span>
                         <a class="workspace-nav-link {{ request()->routeIs('workspace.drafts.*') ? 'is-active' : '' }}" href="{{ route('workspace.drafts.index') }}" aria-label="My drafts" data-tooltip="My drafts" @if(request()->routeIs('workspace.drafts.*')) aria-current="page" @endif><x-workspace.icon name="file" /><span>My drafts</span></a>
-                        @if (app(\App\Services\ContentReviewHistory::class)->available())
-                            <a class="workspace-nav-link {{ request()->routeIs('workspace.review-history.*') ? 'is-active' : '' }}" href="{{ route('workspace.review-history.index') }}" aria-label="Review history" data-tooltip="Review history" @if(request()->routeIs('workspace.review-history.*')) aria-current="page" @endif><x-workspace.icon name="check" /><span>Review history</span></a>
+                        @if ($libraryRoute)
+                            <a class="workspace-nav-link workspace-library-link {{ $isLibraryRoute && $activeLibraryTab === 'mine' ? 'is-active' : '' }}" href="{{ route($libraryRoute, ['tab' => 'mine']) }}" aria-label="My submissions" data-tooltip="My submissions" @if($isLibraryRoute && $activeLibraryTab === 'mine') aria-current="page" @endif><x-workspace.icon name="file" /><span>My submissions</span></a>
                         @endif
-                        @foreach (['mine' => ['My submissions', 'file'], 'published' => ['Published posts', 'check'], 'archived' => ['Archived posts', 'archive']] as $libraryTab => [$libraryLabel, $libraryIcon])
-                            @php
-                                $libraryRoute = $activeModule ? $availableModules[$activeModule]['workspace'] : null;
-                                $isLibraryRoute = $activeModule && request()->routeIs($activeModule . '.index', 'editorial.' . $activeModule . '.index', 'workspace.posts.' . $activeModule . '.index');
-                                $isLibraryActive = $isLibraryRoute && request('tab', $user->isPresident() ? 'published' : 'mine') === $libraryTab;
-                            @endphp
-                            @if ($libraryRoute)
-                                <a class="workspace-nav-link workspace-library-link {{ $isLibraryActive ? 'is-active' : '' }}" href="{{ route($libraryRoute, ['tab' => $libraryTab]) }}"
-                                   aria-label="{{ $libraryLabel }}" data-tooltip="{{ $libraryLabel }}"
-                                   @if ($isLibraryActive) aria-current="page" @endif>
-                                    <x-workspace.icon :name="$libraryIcon" /><span>{{ $libraryLabel }}</span>
-                                </a>
-                            @endif
-                        @endforeach
-                    </div>
+                    </section>
+                    @if ($libraryRoute)
+                        <section class="workspace-nav-section" aria-label="Published posts">
+                            <span class="workspace-nav-label">Published</span>
+                            <a class="workspace-nav-link workspace-library-link {{ $isLibraryRoute && $activeLibraryTab === 'published' ? 'is-active' : '' }}" href="{{ route($libraryRoute, ['tab' => 'published']) }}" aria-label="Published posts" data-tooltip="Published posts" @if($isLibraryRoute && $activeLibraryTab === 'published') aria-current="page" @endif><x-workspace.icon name="check" /><span>Published posts</span></a>
+                        </section>
+                        <section class="workspace-nav-section" aria-label="Archived posts">
+                            <span class="workspace-nav-label">Archived</span>
+                            <a class="workspace-nav-link workspace-library-link {{ $isLibraryRoute && $activeLibraryTab === 'archived' ? 'is-active' : '' }}" href="{{ route($libraryRoute, ['tab' => 'archived']) }}" aria-label="Archived posts" data-tooltip="Archived posts" @if($isLibraryRoute && $activeLibraryTab === 'archived') aria-current="page" @endif><x-workspace.icon name="archive" /><span>Archived posts</span></a>
+                        </section>
+                    @endif
                 @endif
 
                 @if ($user->canReview()
                     || $user->can(config('workspace.navigation.users.gate'))
                     || $user->can(config('workspace.navigation.officers.gate')))
-                    <span class="workspace-nav-label">{{ $workspaceConfig['sections']['administration'] }}</span>
-                    <div class="workspace-nav-group">
+                    <section class="workspace-nav-section" aria-label="People and review">
+                        <span class="workspace-nav-label">{{ $workspaceConfig['sections']['administration'] }}</span>
                         @can(config('workspace.navigation.review.gate'))
                             <a class="workspace-nav-link {{ request()->routeIs('adviser.reviews.*') ? 'is-active' : '' }}"
                                href="{{ route('adviser.reviews.index', ['status' => 'pending']) }}"
@@ -116,7 +117,7 @@
                                 <x-workspace.icon name="users" /><span>{{ $user->isSuperadmin() ? 'Advisers' : 'Officers and positions' }}</span>
                             </a>
                         @endcan
-                    </div>
+                    </section>
                 @endif
             </nav>
 

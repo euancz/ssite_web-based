@@ -17,7 +17,6 @@
         <p><strong>Rejection reason:</strong> {{ $post->rejection_reason ?: 'No reason was recorded.' }}</p>
     @endif
     @if ($post->isArchived())<p>This submission is archived and is not visible on the public site.</p>@endif
-    <x-workspace.review-history :post="$post" />
     @can('update', $post)
         @if (app(\App\Services\ContentVersions::class)->available())
             <p><a href="{{ route('workspace.content-versions.index', ['module' => $post->getTable(), 'post' => $post->getKey()]) }}">View content version history</a></p>

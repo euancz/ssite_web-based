@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'SSITE') | Student Society in Information Technology Education</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- App styles -->
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
@@ -22,13 +22,14 @@
             || $workspaceUser->can('manage-officers')
         );
         $workspaceRoute = request()->routeIs(
-            'officer.*', 'adviser.*', 'editorial.*', 'workspace.posts.*', 'workspace.drafts.*', 'workspace.review-history.*', 'workspace.content-activity.*', 'workspace.content-versions.*',
+            'officer.*', 'adviser.*', 'editorial.*', 'workspace.posts.*', 'workspace.drafts.*', 'workspace.content-activity.*', 'workspace.content-versions.*',
             'notifications.index', 'profile.edit',
             'articles.create', 'articles.edit', 'activities.create', 'activities.edit',
             'achievements.create', 'achievements.edit', 'documents.create', 'documents.edit',
             'liquidations.create', 'liquidations.edit'
         );
         $workspaceEnabled = $workspaceRole && $workspaceRoute;
+        $isPublicLanding = request()->getPathInfo() === '/';
     @endphp
     @if ($workspaceEnabled)
         <link rel="stylesheet" href="{{ asset('css/workspace.css') }}">
@@ -40,8 +41,10 @@
         <link rel="stylesheet" href="{{ asset('css/main-site.css') }}">
     @endunless
     <link rel="stylesheet" href="{{ asset('css/ui-foundation.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/ssite-upgrade.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/mobile-responsive.css') }}">
 </head>
-<body class="{{ $workspaceEnabled ? 'site-body workspace-site-body' : 'site-body main-site-body' }} {{ request()->routeIs('discover') ? 'discover-site-body' : '' }}">
+<body class="{{ $workspaceEnabled ? 'site-body workspace-site-body' : 'site-body main-site-body' }} {{ request()->routeIs('discover') ? 'discover-site-body' : '' }} {{ $isPublicLanding ? 'home-landing-body' : '' }}">
     <template id="search-icon-articles"><x-icon name="file-text" size="sm" /></template>
     <template id="search-icon-activities"><x-icon name="calendar-days" size="sm" /></template>
     <template id="search-icon-achievements"><x-icon name="award" size="sm" /></template>
@@ -63,8 +66,8 @@
         @include('layouts.partials.workspace')
     @else
     <a class="site-skip-link" href="#main-content">Skip to content</a>
-    {{-- Role shortcuts live in the account menu; the shared Home destination stays public for every role. --}}
-    @php($roleHomeUrl = url('/'))
+    {{-- The public landing page is omitted from CMS navigation; authenticated logo links return to CMS Home. --}}
+    @php($roleHomeUrl = auth()->check() ? route('home') : route('landing'))
 
     {{-- ============================= NAVBAR ============================= --}}
     {{-- The completion screen hides site navigation so an incomplete account cannot browse away. --}}
@@ -93,6 +96,7 @@
                 </span>
             </a>
 
+            @unless ($isPublicLanding)
             <div class="site-header-actions">
                 {{-- SECURITY: Both search forms use the public suggestions endpoint; suggestions contain visible content only. --}}
                 <div class="site-search-desktop search-shell">
@@ -100,7 +104,7 @@
                         <input type="text" name="q" value="{{ request()->routeIs('search.index') && isset($query) ? $query : (is_string(request()->query('q')) ? mb_substr(request()->query('q'), 0, 100) : '') }}" placeholder="Discover something from SSITE..."
                                class="site-search-input" role="combobox" aria-autocomplete="list" aria-expanded="false"
                                aria-controls="desktop-search-list" autocomplete="off">
-                        <button type="submit" class="search-submit-icon" aria-label="Search" data-tooltip="Search">
+                        <button type="submit" class="search-submit-icon" aria-label="Search">
                             <x-icon name="search" size="sm" class="site-search-icon" />
                         </button>
                     </form>
@@ -113,83 +117,13 @@
                         aria-label="Open search"
                         aria-controls="mobile-search"
                         aria-expanded="false"
-                        class="icon-button mobile-search-toggle" data-tooltip="Open search">
+                        class="icon-button mobile-search-toggle">
                     <x-icon name="search" class="icon" />
                 </button>
 
-                {{-- LOGGED OUT: Login button --}}
-                {{-- Guests see sign-in controls; authenticated users instead see their account menu below. --}}
+                {{-- Only Microsoft sign-in is available to guests. --}}
                 @guest
-                    <div class="login-area">
-                        <button type="button"
-                                id="login-toggle"
-                                aria-controls="login-popover"
-                                aria-expanded="{{ $errors->any() || session()->has('error') ? 'true' : 'false' }}"
-                                class="site-button login-toggle-button">
-                            Login
-                        </button>
-
-                        <section id="login-popover"
-                                 aria-label="Log in to your account"
-                                 class="login-popover {{ $errors->any() || session()->has('error') ? '' : 'hidden' }}">
-                            <div class="login-popover-image" aria-hidden="true"></div>
-                            <div class="login-popover-content">
-                                <h2>Welcome</h2>
-                                <p class="login-popover-subtitle">Log in to your account to continue</p>
-                                {{-- Show login or Microsoft callback errors inside the open sign-in panel. --}}
-                                @if(session('error'))
-                                    <p class="login-popover-error" role="alert">{{ session('error') }}</p>
-                                @endif
-
-                                <form method="POST" action="{{ route('login') }}">
-                                    @csrf
-                                    <div class="login-popover-field">
-                                        <label for="popover-email">Email</label>
-                                        <input type="email"
-                                               id="popover-email"
-                                               name="email"
-                                               value="{{ old('email') }}"
-                                               autocomplete="email"
-                                               required
-                                               autofocus>
-                                        @error('email')
-                                            <span class="login-popover-error">{{ $message }}</span>
-                                        @enderror
-                                    </div>
-
-                                    <div class="login-popover-field">
-                                        <label for="popover-password">Password</label>
-                                        <input type="password"
-                                               id="popover-password"
-                                               name="password"
-                                               autocomplete="current-password"
-                                               required>
-                                        @error('password')
-                                            <span class="login-popover-error">{{ $message }}</span>
-                                        @enderror
-                                    </div>
-
-                                    <label class="login-popover-remember">
-                                        <input type="checkbox" name="remember">
-                                        <span>Remember me</span>
-                                    </label>
-
-                                    <button type="submit" class="login-popover-submit">Login</button>
-                                </form>
-
-                                <div class="login-popover-divider" aria-hidden="true">
-                                    <span>OR</span>
-                                </div>
-
-                                <a href="{{ route('microsoft.login') }}" class="login-popover-microsoft">
-                                    <span class="microsoft-mark" aria-hidden="true">
-                                        <span></span><span></span><span></span><span></span>
-                                    </span>
-                                    <span>Continue with Microsoft</span>
-                                </a>
-                            </div>
-                        </section>
-                    </div>
+                    <a href="{{ route('microsoft.login') }}" class="site-button login-toggle-button"><span class="login-label-full">Sign in with Microsoft</span><span class="login-label-short">Sign in</span></a>
                 @endguest
 
                 {{-- LOGGED IN: notifications + account icons --}}
@@ -200,7 +134,7 @@
                          data-read-url-template="{{ route('notifications.read', '00000000-0000-4000-8000-000000000000') }}"
                          data-avatar-url-template="{{ route('notifications.avatar', '00000000-0000-4000-8000-000000000000') }}">
                         <button type="button" id="notifications-toggle" aria-label="Notifications"
-                                aria-controls="notifications-dropdown" aria-expanded="false" class="icon-button account-notifications" data-tooltip="Notifications">
+                                aria-controls="notifications-dropdown" aria-expanded="false" class="icon-button account-notifications">
                             <x-icon name="bell" class="icon" />
                             {{-- SECURITY: Seed count-change detection with the server-rendered unread total; visible text stays capped. --}}
                             <span id="notification-badge" class="notification-badge {{ $notificationUnreadCount ? '' : 'hidden' }}" data-motion="badge" data-unread-count="{{ $notificationUnreadCount }}">{{ $notificationUnreadCount > 99 ? '99+' : $notificationUnreadCount }}</span>
@@ -227,7 +161,7 @@
                                 aria-haspopup="menu"
                                 aria-controls="account-menu"
                                 aria-expanded="false"
-                                class="icon-button account-toggle" data-tooltip="Account menu">
+                                class="icon-button account-toggle">
                             {{-- Keep the existing circular account button styling while showing the signed-in user's avatar. --}}
                             <x-ui.avatar :user="auth()->user()" size="sm" />
                         </button>
@@ -273,7 +207,6 @@
                 {{-- hamburger (mobile/tablet only) --}}
                 <button type="button"
                         aria-label="Open menu"
-                        data-tooltip="Open menu"
                         aria-expanded="false"
                         aria-controls="mobile-nav"
                         class="icon-button mobile-menu-toggle">
@@ -281,33 +214,37 @@
                     <x-icon name="x" class="icon hidden" id="icon-close" />
                 </button>
             </div>
+            @endunless
         </div>
 
-        {{-- mobile search field --}}
-        {{-- Blade comment: the mobile search row reuses the desktop suggestion behavior and touch-sized results. --}}
+        @unless ($isPublicLanding)
+        {{-- Mobile search field reuses the public suggestions endpoint. --}}
         <div id="mobile-search" class="mobile-search hidden search-shell">
             <div class="mobile-search-field">
                 <form method="GET" action="{{ route('search.index') }}" class="search-form">
                     <input type="text" name="q" value="{{ request()->routeIs('search.index') && isset($query) ? $query : (is_string(request()->query('q')) ? mb_substr(request()->query('q'), 0, 100) : '') }}" placeholder="Discover something from SSITE..."
                            class="site-search-input" role="combobox" aria-autocomplete="list" aria-expanded="false"
                            aria-controls="mobile-search-list" autocomplete="off">
-                    <button type="submit" class="search-submit-icon" aria-label="Search" data-tooltip="Search">
+                    <button type="submit" class="search-submit-icon" aria-label="Search">
                         <x-icon name="search" size="sm" class="site-search-icon" />
                     </button>
                 </form>
                 <div id="mobile-search-list" class="search-suggestions hidden" role="listbox" aria-label="Search suggestions"></div>
             </div>
         </div>
+        @endunless
 
     </header>
-    {{-- The nav stays in normal page flow so it scrolls away while the site header remains sticky. --}}
-    @include('layouts.partials.navigation')
+    @unless ($isPublicLanding)
+        @include('layouts.partials.navigation')
+    @endunless
     @endif
 
     <script>
         (() => {
             const menuToggle = document.querySelector('.mobile-menu-toggle');
             const mobileNav = document.getElementById('mobile-nav');
+            const mobileNavScrim = document.querySelector('.mobile-nav-scrim');
             const openIcon = document.getElementById('icon-open');
             const closeIcon = document.getElementById('icon-close');
             const searchToggle = document.getElementById('mobile-search-toggle');
@@ -332,7 +269,7 @@
                 });
             }
 
-            if (!menuToggle || !mobileNav || !openIcon || !closeIcon) return;
+            if (!menuToggle || !mobileNav || !mobileNavScrim || !openIcon || !closeIcon) return;
 
             const setMenuOpen = (open) => {
                 menuToggle.setAttribute('aria-expanded', String(open));
@@ -340,21 +277,23 @@
                 menuToggle.setAttribute('aria-label', label);
                 menuToggle.dataset.tooltip = label;
                 mobileNav.classList.toggle('hidden', !open);
+                mobileNavScrim.classList.toggle('hidden', !open);
+                document.body.classList.toggle('mobile-nav-open', open);
                 openIcon.classList.toggle('hidden', open);
                 closeIcon.classList.toggle('hidden', !open);
+                if (open) mobileNav.querySelector('a[href]')?.focus();
             };
 
             menuToggle.addEventListener('click', () => {
                 setMenuOpen(menuToggle.getAttribute('aria-expanded') !== 'true');
             });
 
-            document.addEventListener('click', (event) => {
-                if (mobileNav.classList.contains('hidden')
-                    || menuToggle.contains(event.target)
-                    || mobileNav.contains(event.target)) return;
-
+            mobileNavScrim.addEventListener('click', () => {
                 setMenuOpen(false);
+                menuToggle.focus();
             });
+
+            mobileNav.querySelectorAll('a[href]').forEach((link) => link.addEventListener('click', () => setMenuOpen(false)));
 
             document.addEventListener('keydown', (event) => {
                 if (event.key !== 'Escape' || mobileNav.classList.contains('hidden')) return;
@@ -403,6 +342,7 @@
     </main>
 
     {{-- ============================= FOOTER ============================= --}}
+    @unless ($isPublicLanding)
     <footer class="site-footer">
         <div class="site-footer-content">
             {{-- Left: org info --}}
@@ -455,9 +395,10 @@
             </p>
         </div>
     </footer>
+    @endunless
     @endif
 
-    <button type="button" id="back-to-top" class="back-to-top hidden" aria-label="Back to top" data-tooltip="Back to top">
+    <button type="button" id="back-to-top" class="back-to-top hidden" aria-label="Back to top">
         <x-icon name="arrow-up" size="md" />
     </button>
 
@@ -510,7 +451,16 @@
             let showTimer;
             const show = () => {
                 window.clearTimeout(showTimer);
-                showTimer = window.setTimeout(() => skeleton.classList.remove('hidden'), 140);
+                showTimer = window.setTimeout(() => {
+                    const workspace = document.querySelector('.workspace-content');
+                    if (workspace) {
+                        const bounds = workspace.getBoundingClientRect();
+                        skeleton.style.left = `${Math.max(0, bounds.left)}px`;
+                        const headerBottom = document.querySelector('.workspace-topbar')?.getBoundingClientRect().bottom || 0;
+                        skeleton.style.top = `${Math.max(0, bounds.top, headerBottom)}px`;
+                    }
+                    skeleton.classList.remove('hidden');
+                }, 140);
             };
             const hide = () => {
                 window.clearTimeout(showTimer);

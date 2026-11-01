@@ -3,7 +3,7 @@
 @section('title', $article->title)
 
 @section('content')
-<x-posts.feed-frame variant="show" stylesheet="articles">
+<x-posts.feed-frame variant="show" stylesheet="articles" :back-url="route(($management ? 'workspace.posts.' : '') . 'articles.index')">
     @if ($management)<x-workspace.review-summary :post="$article" />@endif
     @if ($management)<x-workspace.article-feature :article="$article" />@endif
     @if (session('status'))

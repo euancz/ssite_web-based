@@ -9,14 +9,14 @@
 
 @section('content')
 <div class="documents-page site-page">
-    <section class="documents-hero site-hero" aria-labelledby="documents-title">
-        <div class="documents-hero-grid" aria-hidden="true"></div>
-        <div class="documents-hero-copy">
-            <p class="documents-eyebrow">DOCUMENTS &bull; RECORDS &bull; ARCHIVES</p>
-            <h1 id="documents-title">OFFICIAL RECORDS</h1>
-            <p>Browse SSITE's official documents and organizational records in one accessible location.</p>
-        </div>
-    </section>
+    <x-ui.page-hero
+        class="documents-hero"
+        banner="images/heroes/hero-documents.svg"
+        eyebrow="Documents · records · archives"
+        title="Official records"
+        description="Browse SSITE's official documents and organizational records in one accessible location."
+        labelledby="documents-title"
+    />
 
     <form @class(['documents-filters', 'documents-filters-with-year' => $academicYearsEnabled]) method="GET" action="{{ route('documents.index') }}">
         <input type="hidden" name="tab" value="{{ $tab }}">

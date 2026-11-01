@@ -29,7 +29,7 @@
 
     {{-- President bulk archive remains separate from each card's single-post actions. --}}
     @can('bulkArchive', \App\Models\Article::class)
-        @if ($tab !== 'published' && $articles->isNotEmpty())
+        @if ($tab !== 'archived' && $articles->isNotEmpty())
             <form id="article-bulk-archive" method="POST" action="{{ route('articles.bulk-archive') }}">
                 @csrf
             </form>
@@ -83,7 +83,7 @@
                     @endcan
 
                     @can('bulkArchive', \App\Models\Article::class)
-                        @if ($tab !== 'published' && ! $article->isArchived())
+                        @if ($tab !== 'archived' && ! $article->isArchived())
                             <label class="dashboard-muted">
                                 <input type="checkbox" name="article_ids[]" value="{{ $article->article_id }}" form="article-bulk-archive">
                                 Select
@@ -100,7 +100,7 @@
             @elseif ($tab === 'published')
                 <x-workspace.posts.empty-state title="No published articles yet" message="Check back soon for the latest SSITE articles." />
             @elseif (auth()->user()?->canPostIn('articles'))
-                <x-workspace.posts.empty-state title="No articles in this tab" message="Use Create article in the workspace navigation to start a submission." />
+                <x-workspace.posts.empty-state title="No articles in this tab" message="Use Create post in the workspace navigation to choose a post type and start a submission." />
             @else
                 <x-workspace.posts.empty-state title="No articles found" message="Check back later for new articles." />
             @endif

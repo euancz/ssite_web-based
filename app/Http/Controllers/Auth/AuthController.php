@@ -5,60 +5,14 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 
-/**
- * Handles password sign-in and logout for accounts that also support Microsoft login.
- */
+/** Handles the landing redirect and logout for authenticated accounts. */
 class AuthController extends Controller
 {
-    /** Redirect a direct login-page visit to the public home page. */
+    /** Redirect protected-route sign-in requests to the public Microsoft landing page. */
     public function redirectToHome()
     {
         return redirect('/')->with('error', 'Sign in first before proceeding.');
-    }
-
-    // Process login
-    /**
-     * Validate credentials, regenerate the session, then enforce profile and role routing.
-     */
-    public function login(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
-
-        if ($validator->fails()) {
-            return redirect('/')
-                ->withErrors($validator)
-                ->withInput($request->only('email'));
-        }
-
-        $credentials = $validator->validated();
-
-        // Attempt login
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
-
-            // Regenerate session after successful login
-            $request->session()->regenerate();
-
-            $user = Auth::user();
-
-            // Profile completion must precede the normal role dashboard redirect.
-            if ($user && ! $user->hasCompletedProfile()) {
-                return redirect()->route('profile.complete');
-            }
-
-            return redirect()->intended(route($user?->dashboardRoute() ?? 'home'));
-        }
-
-        // Incorrect credentials
-        return redirect('/')
-            ->withErrors([
-                'email' => 'The email or password is incorrect.',
-            ])
-            ->withInput($request->only('email'));
     }
 
     // Logout

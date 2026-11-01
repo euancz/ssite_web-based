@@ -9,12 +9,11 @@ use App\Services\FeaturedArticles;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
-/** Shows the home page using only public content. */
+/** Shows the authenticated CMS homepage using public content. */
 class HomeController extends Controller
 {
     public function __invoke(): View
     {
-        // SECURITY: Every home feature uses its public scope so private posts cannot appear here.
         // Some local environments do not have the content tables installed yet; keep the page renderable.
         $articles = Schema::hasTable('articles')
             ? app(FeaturedArticles::class)->forDisplay(1)

@@ -24,7 +24,7 @@
 
     {{-- President bulk archive remains separate from each card's single-post actions. --}}
     @can('bulkArchive', \App\Models\Liquidation::class)
-        @if ($tab !== 'published' && $liquidations->isNotEmpty())
+        @if ($tab !== 'archived' && $liquidations->isNotEmpty())
             <form id="liquidation-bulk-archive" method="POST" action="{{ route('liquidations.bulk-archive') }}">
                 @csrf
             </form>
@@ -98,7 +98,7 @@
                     @guest<a href="{{ route('workspace.posts.liquidations.show', $liquidation) }}">View report</a>@endguest
                 </div>
                 <div class="liquidation-report-review">
-                    @if ($tab !== 'published' || $liquidation->isArchived())<x-ui.status-badge :status="$liquidation->approval_status" />@endif
+                    @if ($tab !== 'archived' || $liquidation->isArchived())<x-ui.status-badge :status="$liquidation->approval_status" />@endif
                     @if ($liquidation->isArchived())<x-ui.status-badge status="archived" />@endif
                 </div>
                 <div class="liquidation-report-admin">
@@ -119,7 +119,7 @@
                     @endcan
 
                     @can('bulkArchive', \App\Models\Liquidation::class)
-                        @if ($tab !== 'published' && ! $liquidation->isArchived())
+                        @if ($tab !== 'archived' && ! $liquidation->isArchived())
                             <label class="dashboard-muted">
                                 <input type="checkbox" name="liquidation_ids[]" value="{{ $liquidation->liquidation_id }}" form="liquidation-bulk-archive">
                                 Select
@@ -136,7 +136,7 @@
             @elseif ($tab === 'published')
                 <x-workspace.posts.empty-state title="No published reports yet" message="Check back soon for the latest liquidation reports." />
             @elseif (auth()->user()?->canPostIn('liquidations'))
-                <x-workspace.posts.empty-state title="No reports in this tab" message="Use Create liquidation report in the workspace navigation to start a submission." />
+                <x-workspace.posts.empty-state title="No reports in this tab" message="Use Create post in the workspace navigation to choose a post type and start a submission." />
             @else
                 <x-workspace.posts.empty-state title="No reports found" message="Check back later for new reports." />
             @endif

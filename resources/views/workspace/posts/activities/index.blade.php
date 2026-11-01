@@ -29,7 +29,7 @@
 
     {{-- President bulk archive remains separate from each card's single-post actions. --}}
     @can('bulkArchive', \App\Models\Activity::class)
-        @if ($tab !== 'published' && $activities->isNotEmpty())
+        @if ($tab !== 'archived' && $activities->isNotEmpty())
             <form id="activity-bulk-archive" method="POST" action="{{ route('activities.bulk-archive') }}">
                 @csrf
             </form>
@@ -89,7 +89,7 @@
                     @endcan
 
                     @can('bulkArchive', \App\Models\Activity::class)
-                        @if ($tab !== 'published' && ! $activity->isArchived())
+                        @if ($tab !== 'archived' && ! $activity->isArchived())
                             <label class="dashboard-muted">
                                 <input type="checkbox" name="activity_ids[]" value="{{ $activity->activity_id }}" form="activity-bulk-archive">
                                 Select
@@ -106,7 +106,7 @@
             @elseif ($tab === 'published')
                 <x-workspace.posts.empty-state title="No published activities yet" message="Check back soon for the latest SSITE activities." />
             @elseif (auth()->user()?->canPostIn('activities'))
-                <x-workspace.posts.empty-state title="No activities in this tab" message="Use Create activity in the workspace navigation to start a submission." />
+                <x-workspace.posts.empty-state title="No activities in this tab" message="Use Create post in the workspace navigation to choose a post type and start a submission." />
             @else
                 <x-workspace.posts.empty-state title="No activities found" message="Check back later for new activities." />
             @endif

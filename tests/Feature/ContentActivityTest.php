@@ -110,11 +110,37 @@ class ContentActivityTest extends TestCase
         $this->assertSame(2, $all['totals']['submissions']);
         $this->assertCount(30, $all['daily']);
         $response = $this->actingAs($president)->get(route('workspace.content-activity.index', ['days' => 7, 'module' => 'documents']))->assertOk();
-        $this->assertSame(['submissions' => 1, 'approved' => 1, 'rejected' => 0], $response->viewData('report')['totals']);
-        $response->assertSee(route('workspace.review-history.index', ['module' => 'documents', 'from' => '2026-10-21', 'to' => '2026-10-27']));
+        $this->assertSame(2, $response->viewData('log')['events']->total());
+        $response->assertSee('Activity log')->assertSee('Reviewer')->assertDontSee('Daily values');
         $empty = app(ContentActivity::class)->forUser($president, 7, 'activities');
         $this->assertSame(1, $empty['peak']);
         $this->assertSame(0, array_sum($empty['totals']));
+    }
+
+    public function test_log_combines_named_actions_and_filters_edits_without_exposing_other_owners(): void
+    {
+        $this->enableHistory();
+        (require database_path('migrations/2026_10_27_000006_create_content_versions_table.php'))->up();
+        $owner = $this->actor();
+        $post = $this->record($owner, '2026-10-25 12:00:00');
+        $this->event($post, 'approved', '2026-10-26 12:00:00');
+        $private = $this->record($this->actor(), '2026-10-25 12:00:00');
+        foreach ([$post, $private] as $item) {
+            DB::table('content_versions')->insert([
+                'post_type' => $item::POST_TYPE, 'post_id' => $item->getKey(),
+                'editor_name' => $item->is($post) ? 'Actual editor' : 'Private editor',
+                'kind' => 'edited', 'snapshot' => '{}', 'created_at' => '2026-10-27 11:00:00',
+            ]);
+        }
+        $response = $this->actingAs($owner)->get(route('workspace.content-activity.index'))->assertOk();
+        $response->assertSee('Actual editor')->assertSee('Reviewer')->assertSee('Posted')->assertDontSee('Private editor');
+        $events = $response->viewData('log')['events'];
+        $this->assertSame(3, $events->total());
+        $this->assertSame('edited', $events->first()->action);
+        $filtered = $this->get(route('workspace.content-activity.index', ['action' => 'edited']))->assertOk();
+        $this->assertSame(1, $filtered->viewData('log')['events']->total());
+        $post->delete();
+        $this->get(route('workspace.content-activity.index'))->assertOk()->assertDontSee('Actual editor')->assertDontSee('Reviewer');
     }
 
     public function test_role_and_filter_validation_prevent_scope_bypass(): void
@@ -125,7 +151,7 @@ class ContentActivityTest extends TestCase
         }
         $owner = $this->actor();
         $this->actingAs($owner);
-        foreach ([['days' => 365], ['days' => ['7']], ['module' => 'documents'], ['module' => ['articles']]] as $filters) {
+        foreach ([['action' => 'invalid'], ['days' => 365], ['days' => ['7']], ['module' => 'documents'], ['module' => ['articles']]] as $filters) {
             $this->getJson(route('workspace.content-activity.index', $filters))->assertUnprocessable();
         }
         $this->record($owner, '2026-10-25 12:00:00');

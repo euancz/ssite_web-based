@@ -29,7 +29,7 @@
 
     {{-- President bulk archive remains separate from each card's single-post actions. --}}
     @can('bulkArchive', \App\Models\Achievement::class)
-        @if ($tab !== 'published' && $achievements->isNotEmpty())
+        @if ($tab !== 'archived' && $achievements->isNotEmpty())
             <form id="achievement-bulk-archive" method="POST" action="{{ route('achievements.bulk-archive') }}">
                 @csrf
             </form>
@@ -89,7 +89,7 @@
                     @endcan
 
                     @can('bulkArchive', \App\Models\Achievement::class)
-                        @if ($tab !== 'published' && ! $achievement->isArchived())
+                        @if ($tab !== 'archived' && ! $achievement->isArchived())
                             <label class="dashboard-muted">
                                 <input type="checkbox" name="achievement_ids[]" value="{{ $achievement->achievement_id }}" form="achievement-bulk-archive">
                                 Select
@@ -106,7 +106,7 @@
             @elseif ($tab === 'published')
                 <x-workspace.posts.empty-state title="No published achievements yet" message="Check back soon for the latest SSITE achievements." />
             @elseif (auth()->user()?->canPostIn('achievements'))
-                <x-workspace.posts.empty-state title="No achievements in this tab" message="Use Create achievement in the workspace navigation to start a submission." />
+                <x-workspace.posts.empty-state title="No achievements in this tab" message="Use Create post in the workspace navigation to choose a post type and start a submission." />
             @else
                 <x-workspace.posts.empty-state title="No achievements found" message="Check back later for new achievements." />
             @endif

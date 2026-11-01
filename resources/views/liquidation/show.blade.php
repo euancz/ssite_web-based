@@ -3,7 +3,7 @@
 @section('title', $liquidation->title)
 
 @section('content')
-<x-posts.feed-frame variant="show" stylesheet="liquidation">
+<x-posts.feed-frame variant="show" stylesheet="liquidation" :back-url="route(($management ? 'workspace.posts.' : '') . 'liquidations.index')">
     @if ($management)<x-workspace.review-summary :post="$liquidation" />@endif
     @if (session('status'))
         <p class="dashboard-success" role="status" data-flash-toast>{{ session('status') }}</p>
