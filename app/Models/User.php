@@ -28,8 +28,7 @@ class User extends Authenticatable
 
     protected $table = 'users';
 
-    // SECURITY: User records use the schema's user_id key, not Laravel's default id.
-    protected $primaryKey = 'user_id';
+    protected $primaryKey = 'id';
 
     public $incrementing = true;
 
@@ -118,7 +117,7 @@ class User extends Authenticatable
 
         $version = $this->updated_at?->timestamp ?? 0;
 
-        return asset('storage/' . $picture) . '?v=' . $version . '-' . substr(sha1($picture), 0, 8);
+        return Storage::disk('public')->url($picture) . '?v=' . $version . '-' . substr(sha1($picture), 0, 8);
     }
 
     /**

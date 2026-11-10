@@ -113,7 +113,7 @@ class ExampleTest extends TestCase
         $officer = User::factory()->make();
         $officer->role = 'officer';
         $officer->officer_position = 'Multimedia';
-        $officer->user_id = 101;
+        $officer->id = 101;
         $officer->profile_completed_at = now();
 
         $this->actingAs($officer)

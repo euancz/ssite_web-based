@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Support\PrivatePdfResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /* Verify private PDF delivery supports bounded byte ranges and safe response headers. */
@@ -11,8 +12,9 @@ class PrivatePdfResponseTest extends TestCase
 {
     public function test_it_streams_requested_byte_ranges_with_private_inline_headers(): void
     {
-        $path = tempnam(sys_get_temp_dir(), 'private-pdf-');
-        file_put_contents($path, '%PDF-0123456789');
+        Storage::fake('local');
+        $path = 'documents/sample.pdf';
+        Storage::disk('local')->put($path, '%PDF-0123456789');
 
         try {
             $request = Request::create('/documents/1/view', 'GET', server: ['HTTP_RANGE' => 'bytes=5-9']);
@@ -29,14 +31,15 @@ class PrivatePdfResponseTest extends TestCase
             $this->assertSame('nosniff', $response->headers->get('X-Content-Type-Options'));
             $this->assertSame('01234', $content);
         } finally {
-            @unlink($path);
+            Storage::disk('local')->delete($path);
         }
     }
 
     public function test_it_marks_out_of_bounds_ranges_unsatisfiable(): void
     {
-        $path = tempnam(sys_get_temp_dir(), 'private-pdf-');
-        file_put_contents($path, '%PDF-0123456789');
+        Storage::fake('local');
+        $path = 'documents/sample.pdf';
+        Storage::disk('local')->put($path, '%PDF-0123456789');
 
         try {
             $request = Request::create('/documents/1/view', 'GET', server: ['HTTP_RANGE' => 'bytes=99-']);
@@ -45,7 +48,7 @@ class PrivatePdfResponseTest extends TestCase
             $this->assertSame(416, $response->getStatusCode());
             $this->assertSame('bytes */15', $response->headers->get('Content-Range'));
         } finally {
-            @unlink($path);
+            Storage::disk('local')->delete($path);
         }
     }
 }

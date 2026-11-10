@@ -68,9 +68,9 @@ class DocumentPolicy
         return $user->isPresident();
     }
 
-    // SECURITY: Ownership always compares created_by_user_id with users.user_id.
+    // SECURITY: Ownership always compares created_by_user_id with users.id.
     private function owns(User $user, Document $document): bool
     {
-        return $document->created_by_user_id !== null && (int) $document->created_by_user_id === (int) $user->user_id;
+        return $document->created_by_user_id !== null && (int) $document->created_by_user_id === (int) $user->id;
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -11,7 +12,8 @@ final class PrivatePdfResponse
 {
     public function make(string $path, string $filename, Request $request): StreamedResponse
     {
-        $size = filesize($path);
+        $disk = Storage::disk('local');
+        $size = $disk->size($path);
         abort_if($size === false, 404);
 
         $start = 0;
@@ -38,7 +40,7 @@ final class PrivatePdfResponse
             $status = 206;
         }
 
-        $length = $end - $start + 1;
+        $length = $size === 0 ? 0 : $end - $start + 1;
         $headers = [
             'Accept-Ranges' => 'bytes',
             'Cache-Control' => 'private, no-store',
@@ -50,11 +52,21 @@ final class PrivatePdfResponse
         ];
         if ($status === 206) $headers['Content-Range'] = "bytes {$start}-{$end}/{$size}";
 
-        return new StreamedResponse(static function () use ($path, $start, $length): void {
-            $handle = @fopen($path, 'rb');
+        return new StreamedResponse(static function () use ($disk, $path, $start, $length): void {
+            $handle = $disk->readStream($path);
             if (! $handle) return;
             try {
-                fseek($handle, $start);
+                // Cloud streams may not support seeking. Discard the prefix in bounded chunks.
+                if (stream_get_meta_data($handle)['seekable']) {
+                    fseek($handle, $start);
+                } else {
+                    $skip = $start;
+                    while ($skip > 0 && ! feof($handle)) {
+                        $chunk = fread($handle, min(8192, $skip));
+                        if ($chunk === false || $chunk === '') return;
+                        $skip -= strlen($chunk);
+                    }
+                }
                 $remaining = $length;
                 while ($remaining > 0 && ! feof($handle)) {
                     $chunk = fread($handle, min(8192, $remaining));

@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            // SECURITY: Match the established user_id INT key used by models and foreign keys.
-            $table->increments('user_id');
+            // SECURITY: Use an INT id key used by models and foreign keys.
+            $table->increments('id');
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();

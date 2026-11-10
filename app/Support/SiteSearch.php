@@ -86,31 +86,31 @@ class SiteSearch
     /** Articles search only their public title and body, never author or account fields. */
     private function articles(string $query, array $words): array
     {
-        return $this->contentResults(Article::query()->publiclyVisible(), ['title', 'content'], 'articles', 'articles.show', 'article_id', 'created_at', $query, $words);
+        return $this->contentResults(Article::query()->publiclyVisible(), ['title', 'content'], 'articles', 'articles.show', 'id', 'created_at', $query, $words);
     }
 
     /** Activities use the persisted event date and location columns. */
     private function activities(string $query, array $words): array
     {
-        return $this->contentResults(Activity::query()->publiclyVisible(), ['title', 'description', 'location'], 'activities', 'activities.show', 'activity_id', 'activity_date', $query, $words, fn ($row) => $row->location);
+        return $this->contentResults(Activity::query()->publiclyVisible(), ['title', 'description', 'location'], 'activities', 'activities.show', 'id', 'activity_date', $query, $words, fn ($row) => $row->location);
     }
 
     /** Achievements use their awardee and category metadata without joining user profiles. */
     private function achievements(string $query, array $words): array
     {
-        return $this->contentResults(Achievement::query()->publiclyVisible(), ['title', 'description', 'awardee', 'category'], 'achievements', 'achievements.show', 'achievement_id', 'achievement_date', $query, $words, fn ($row) => trim(implode(' · ', array_filter([$row->category, $row->awardee]))));
+        return $this->contentResults(Achievement::query()->publiclyVisible(), ['title', 'description', 'awardee', 'category'], 'achievements', 'achievements.show', 'id', 'achievement_date', $query, $words, fn ($row) => trim(implode(' · ', array_filter([$row->category, $row->awardee]))));
     }
 
     /** Documents search public metadata only and never select or expose file_path. */
     private function documents(string $query, array $words): array
     {
-        return $this->contentResults(Document::query()->publiclyVisible(), ['title', 'description', 'category'], 'documents', 'documents.show', 'document_id', 'created_at', $query, $words, fn ($row) => $row->category);
+        return $this->contentResults(Document::query()->publiclyVisible(), ['title', 'description', 'category'], 'documents', 'documents.show', 'id', 'created_at', $query, $words, fn ($row) => $row->category);
     }
 
     /** Liquidation searches title and description only; amounts and file paths are excluded. */
     private function liquidation(string $query, array $words): array
     {
-        return $this->contentResults(Liquidation::query()->publiclyVisible(), ['title', 'description'], 'liquidation', 'liquidations.show', 'liquidation_id', 'report_date', $query, $words);
+        return $this->contentResults(Liquidation::query()->publiclyVisible(), ['title', 'description'], 'liquidation', 'liquidations.show', 'id', 'report_date', $query, $words);
     }
 
     /** Officer snapshots are public About content and may outlive their linked user account. */
@@ -120,8 +120,8 @@ class SiteSearch
         $this->applyWords($builder, ['name', 'position', 'academic_year'], $words);
         $this->applyTitleOrder($builder, 'name', $query);
 
-        return $builder->get(['term_id', 'name', 'position', 'academic_year'])->map(function ($row): ?array {
-            return $this->shape('officers', $row->name, $row->position, 'about', 'term_id', $row, null, $row->position . ' | ' . $row->academic_year);
+        return $builder->get(['id', 'name', 'position', 'academic_year'])->map(function ($row): ?array {
+            return $this->shape('officers', $row->name, $row->position, 'about', 'id', $row, null, $row->position . ' | ' . $row->academic_year);
         })->filter()->all();
     }
 

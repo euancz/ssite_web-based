@@ -2717,6 +2717,8 @@ body.main-site-body .public-home-header ~ main .home-page.site-page {
 
 body.main-site-body main .site-page .page-hero--banner {
     display: block;
+    width: 100%;
+    height: auto;
     min-height: 0;
     margin: 0;
     border: 0;
@@ -2746,11 +2748,24 @@ body.main-site-body .public-home-header ~ main .home-page .home-hero.page-hero--
 
 body.main-site-body main .site-page .page-hero-banner-art {
     display: block;
-    width: 100%;
+    width: min(100%, 1419px);
     height: auto;
-    max-width: none;
+    max-width: 100%;
     margin: 0 auto;
     object-fit: contain;
+}
+
+/* Keep the wide banner artwork comfortably sized on large screens and fluid below that. */
+@media (min-width: 1440px) {
+    body.main-site-body main .site-page .page-hero-banner-art {
+        width: min(92vw, 1419px);
+    }
+}
+
+@media (max-width: 1024px) {
+    body.main-site-body main .site-page .page-hero-banner-art {
+        width: 100%;
+    }
 }
 
 /* Keep navigation outside the masthead and overlap the hero by one nav height. */

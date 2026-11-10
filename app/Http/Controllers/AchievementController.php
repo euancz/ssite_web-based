@@ -56,7 +56,7 @@ class AchievementController extends Controller
         if ($likesEnabled) {
             $achievements->withCount('likes');
             if ($user) {
-                $achievements->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->user_id)]);
+                $achievements->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->id)]);
             }
         }
 
@@ -82,13 +82,13 @@ class AchievementController extends Controller
         if (in_array($sort, ['viewed', 'liked'], true)) {
             $achievements->orderBy('created_at', 'desc');
         }
-        $achievements = $achievements->orderBy('achievement_id', 'asc')
+        $achievements = $achievements->orderBy('id', 'asc')
             ->paginate(5)
             ->appends(['q' => is_string($request->query('q')) ? mb_substr(trim($request->query('q')), 0, 100) : '', 'tab' => $tab, 'sort' => $sort, 'category' => $category]);
         // SECURITY: Visiting Achievements clears only this user's unread publication notices for this tab.
         if ($user) {
-            $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
-                ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['achievement'])->update(['read_at' => now()]);
+            $user->unreadNotifications()->whereRaw(\App\Support\NotificationSql::field('type').' = ?', ['published'])
+                ->whereRaw(\App\Support\NotificationSql::field('post_type').' = ?', ['achievement'])->update(['read_at' => now()]);
         }
 
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
@@ -139,13 +139,13 @@ class AchievementController extends Controller
         $this->authorize('create', Achievement::class);
         $user = $request->user();
         $achievement = new Achievement($validated);
-        $achievement->created_by_user_id = $user->user_id;
+        $achievement->created_by_user_id = $user->id;
         $achievement->content_status = Achievement::CONTENT_ACTIVE;
         $autoApprove = $user->postsAutoApproved();
         $achievement->approval_status = $autoApprove ? Achievement::APPROVAL_APPROVED : Achievement::APPROVAL_PENDING;
 
         if ($autoApprove) {
-            $achievement->reviewed_by_user_id = $user->user_id;
+            $achievement->reviewed_by_user_id = $user->id;
             $achievement->reviewed_at = now();
         }
 
@@ -286,15 +286,15 @@ class AchievementController extends Controller
         $this->authorize('bulkArchive', Achievement::class);
         $validated = $request->validate([
             'achievement_ids' => ['required', 'array', 'min:1', 'max:100'],
-            'achievement_ids.*' => ['required', 'integer', 'distinct', Rule::exists('achievements', 'achievement_id')],
+            'achievement_ids.*' => ['required', 'integer', 'distinct', Rule::exists('achievements', 'id')],
         ]);
 
-        $achievements = Achievement::query()->whereIn('achievement_id', $validated['achievement_ids'])->get();
+        $achievements = Achievement::query()->whereIn('id', $validated['achievement_ids'])->get();
         foreach ($achievements as $achievement) {
             $this->authorize('archive', $achievement);
         }
 
-        Achievement::query()->whereIn('achievement_id', $achievements->modelKeys())
+        Achievement::query()->whereIn('id', $achievements->modelKeys())
             ->update(['content_status' => Achievement::CONTENT_ARCHIVED, 'updated_at' => now()]);
 
         return back()->with('status', 'The selected achievements were archived.');

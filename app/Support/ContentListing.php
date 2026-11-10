@@ -17,7 +17,7 @@ final class ContentListing
         if ($workspace) {
             abort_unless($user && $user->canPostIn($module), 403);
             if (! $user->isPresident()) {
-                $query->where('created_by_user_id', $user->user_id);
+                $query->where('created_by_user_id', $user->id);
             }
             $allowedTabs = ['mine', 'published', 'pending', 'rejected', 'archived'];
             if ($user->canReview()) {
@@ -32,7 +32,7 @@ final class ContentListing
         }
         match ($tab) {
             'published' => $query->publiclyVisible(),
-            'mine' => $query->where('created_by_user_id', $user->user_id),
+            'mine' => $query->where('created_by_user_id', $user->id),
             'pending' => $query->pending(),
             'rejected' => $query->rejected(),
             'archived' => $query->archived(),

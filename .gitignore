@@ -9,6 +9,10 @@
 .env
 .env.backup
 .env.production
+# Local environment variants; keep configuration templates in Git.
+.env.*
+!.env.example
+!.env.*.example
 .phpactor.json
 .phpunit.result.cache
 Homestead.json
@@ -25,3 +29,25 @@ yarn-error.log
 /.tmp/
 /.github/
 /.claude/
+
+# Local tool state and generated audit snapshots.
+/.impeccable/
+/audit/*.txt
+/audit/*.json
+
+# Test reports and local development caches.
+/coverage/
+/.phpunit-watcher.yml
+.php-cs-fixer.cache
+.php-cs-fixer.*.cache
+__pycache__/
+*.py[cod]
+*.log
+
+# Editor backups and operating system files.
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini

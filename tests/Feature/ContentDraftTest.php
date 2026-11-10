@@ -33,7 +33,7 @@ class ContentDraftTest extends TestCase
     {
         $this->actingAs($owner)->post(route('workspace.drafts.save', $module), $values)->assertRedirect();
 
-        return ContentDraft::where('created_by_user_id', $owner->user_id)->latest('created_at')->firstOrFail();
+        return ContentDraft::where('created_by_user_id', $owner->id)->latest('created_at')->firstOrFail();
     }
 
     public function test_all_modules_save_and_resume_incomplete_private_drafts_without_publishing_or_notifying(): void
@@ -43,7 +43,7 @@ class ContentDraftTest extends TestCase
             $draft = $this->saveDraft($owner, $module, ['title' => 'Private '.$module, 'created_by_user_id' => 999,
                 'approval_status' => 'approved', 'file_path' => 'secret.pdf', 'image' => 'forged.jpg']);
             $this->assertSame(['title' => 'Private '.$module], $draft->payload);
-            $this->assertSame($owner->user_id, $draft->created_by_user_id);
+            $this->assertSame($owner->id, $draft->created_by_user_id);
             $this->assertSame(0, DB::table($module)->count());
             $this->get(route('workspace.drafts.edit', $draft))->assertOk()->assertSee('Private '.$module)->assertSee('name="draft_version"', false);
             $this->get(route('workspace.drafts.index'))->assertOk()->assertSee('Private '.$module);
@@ -93,7 +93,7 @@ class ContentDraftTest extends TestCase
         $this->post(route('articles.store'), $values)->assertRedirect(route('workspace.posts.articles.show', 1));
         $this->assertSame(0, ContentDraft::count());
         $this->assertSame('pending', DB::table('articles')->value('approval_status'));
-        $this->assertSame($owner->user_id, DB::table('articles')->value('created_by_user_id'));
+        $this->assertSame($owner->id, DB::table('articles')->value('created_by_user_id'));
         $notifications = DB::table('notifications')->count();
         $this->assertGreaterThan(0, $notifications);
         $this->post(route('articles.store'), $values)->assertNotFound();

@@ -36,13 +36,6 @@ return new class extends Migration
             }
         }
 
-        // Preserve existing IDs while adapting Laravel's default key name to this app's user_id key.
-        if (! Schema::hasColumn('users', 'user_id') && Schema::hasColumn('users', 'id')) {
-            Schema::table('users', function (Blueprint $table): void {
-                $table->renameColumn('id', 'user_id');
-            });
-        }
-
         // Nullable profile columns let new Microsoft accounts exist before they submit the form.
         $nullableColumns = [
             'student_number' => 20,

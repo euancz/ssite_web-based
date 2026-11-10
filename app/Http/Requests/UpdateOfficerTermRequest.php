@@ -22,7 +22,7 @@ class UpdateOfficerTermRequest extends FormRequest
             }],
             'position' => ['required', 'string', 'max:100', Rule::in(config('school.officer_positions', []))],
             'name' => ['required', 'string', 'max:100'],
-            'user_id' => ['nullable', 'integer', 'exists:users,user_id'],
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'sort_order' => ['required', 'integer', 'min:0', 'max:255'],
         ];

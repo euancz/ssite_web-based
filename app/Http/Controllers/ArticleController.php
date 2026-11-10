@@ -61,7 +61,7 @@ class ArticleController extends Controller
         if ($likesEnabled) {
             $articles->withCount('likes');
             if ($user) {
-                $articles->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->user_id)]);
+                $articles->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->id)]);
             }
         }
 
@@ -91,14 +91,14 @@ class ArticleController extends Controller
         if (in_array($sort, ['viewed', 'liked'], true)) {
             $articles->orderBy('created_at', 'desc');
         }
-        $articles = $articles->orderBy('article_id', 'asc')
+        $articles = $articles->orderBy('id', 'asc')
             ->paginate(5)
             ->appends(['q' => is_string($request->query('q')) ? mb_substr(trim($request->query('q')), 0, 100) : '', 'tab' => $tab, 'sort' => $sort, 'category' => $category]);
 
         // SECURITY: Visiting Articles clears only this user's unread publication notices for this tab.
         if ($user) {
-            $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
-                ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['article'])->update(['read_at' => now()]);
+            $user->unreadNotifications()->whereRaw(\App\Support\NotificationSql::field('type').' = ?', ['published'])
+                ->whereRaw(\App\Support\NotificationSql::field('post_type').' = ?', ['article'])->update(['read_at' => now()]);
         }
 
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
@@ -155,13 +155,13 @@ class ArticleController extends Controller
         $this->authorize('create', Article::class);
         $user = $request->user();
         $article = new Article($validated);
-        $article->created_by_user_id = $user->user_id;
+        $article->created_by_user_id = $user->id;
         $article->content_status = Article::CONTENT_ACTIVE;
         $autoApprove = $user->postsAutoApproved();
         $article->approval_status = $autoApprove ? Article::APPROVAL_APPROVED : Article::APPROVAL_PENDING;
 
         if ($autoApprove) {
-            $article->reviewed_by_user_id = $user->user_id;
+            $article->reviewed_by_user_id = $user->id;
             $article->reviewed_at = now();
         }
 
@@ -319,15 +319,15 @@ class ArticleController extends Controller
         $this->authorize('bulkArchive', Article::class);
         $validated = $request->validate([
             'article_ids' => ['required', 'array', 'min:1', 'max:100'],
-            'article_ids.*' => ['required', 'integer', 'distinct', Rule::exists('articles', 'article_id')],
+            'article_ids.*' => ['required', 'integer', 'distinct', Rule::exists('articles', 'id')],
         ]);
 
-        $articles = Article::query()->whereIn('article_id', $validated['article_ids'])->get();
+        $articles = Article::query()->whereIn('id', $validated['article_ids'])->get();
         foreach ($articles as $article) {
             $this->authorize('archive', $article);
         }
 
-        Article::query()->whereIn('article_id', $articles->modelKeys())
+        Article::query()->whereIn('id', $articles->modelKeys())
             ->update(['content_status' => Article::CONTENT_ARCHIVED, 'updated_at' => now()]);
 
         return back()->with('status', 'The selected articles were archived.');

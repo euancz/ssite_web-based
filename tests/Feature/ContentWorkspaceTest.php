@@ -45,7 +45,7 @@ class ContentWorkspaceTest extends TestCase
             $data += ['file_path' => ($type === 'document' ? 'documents' : 'liquidation').'/'.str_repeat('a', 40).'.pdf', 'original_name' => 'record.pdf', 'file_size' => 15];
         }
 
-        return DB::table($module)->insertGetId($data, $type.'_id');
+        return DB::table($module)->insertGetId($data, 'id');
     }
 
     public function test_create_post_chooser_only_offers_authorized_modules(): void
@@ -71,10 +71,10 @@ class ContentWorkspaceTest extends TestCase
         $president = $this->actor();
         foreach (self::MODULES as $module => [$type, $position]) {
             $owner = $this->actor('officer', $position);
-            $published = $this->makePost($module, $owner->user_id);
-            $archived = $this->makePost($module, $owner->user_id, 'approved', 'archived');
-            $pending = $this->makePost($module, $owner->user_id, 'pending');
-            $foreign = $this->makePost($module, $president->user_id, 'rejected');
+            $published = $this->makePost($module, $owner->id);
+            $archived = $this->makePost($module, $owner->id, 'approved', 'archived');
+            $pending = $this->makePost($module, $owner->id, 'pending');
+            $foreign = $this->makePost($module, $president->id, 'rejected');
             $route = 'workspace.posts.'.$module.'.index';
             foreach (['published' => [$published], 'archived' => [$archived], 'mine' => [$published, $archived, $pending]] as $tab => $expected) {
                 $response = $this->actingAs($owner)->get(route($route, ['tab' => $tab]))->assertOk();
@@ -104,8 +104,8 @@ class ContentWorkspaceTest extends TestCase
         $president = $this->actor();
         $student = $this->actor('student', null);
         foreach (self::MODULES as $module => [$type]) {
-            $published = $this->makePost($module, $president->user_id);
-            $private = [$this->makePost($module, $president->user_id, 'pending'), $this->makePost($module, $president->user_id, 'rejected'), $this->makePost($module, $president->user_id, 'approved', 'archived')];
+            $published = $this->makePost($module, $president->id);
+            $private = [$this->makePost($module, $president->id, 'pending'), $this->makePost($module, $president->id, 'rejected'), $this->makePost($module, $president->id, 'approved', 'archived')];
             foreach ([$student, $president] as $actor) {
                 $this->actingAs($actor);
                 foreach (['published', 'archived', 'pending', 'mine', 'all'] as $tab) {
@@ -127,7 +127,7 @@ class ContentWorkspaceTest extends TestCase
     {
         $owner = $this->actor();
         foreach (['articles', 'activities', 'achievements', 'documents'] as $module) {
-            $id = $this->makePost($module, $owner->user_id, 'approved', 'archived');
+            $id = $this->makePost($module, $owner->id, 'approved', 'archived');
             $this->get(route($module.'.index', ['tab' => 'archived']))->assertOk()->assertDontSee("$module approved archived record");
             $this->get(route($module.'.show', $id))->assertNotFound();
         }
@@ -138,8 +138,8 @@ class ContentWorkspaceTest extends TestCase
         foreach (self::MODULES as $module => [$type, $position]) {
             $owner = $this->actor('officer', $position);
             $other = $this->actor('officer', $position);
-            $id = $this->makePost($module, $owner->user_id, 'pending');
-            $foreign = $this->makePost($module, $other->user_id, 'rejected');
+            $id = $this->makePost($module, $owner->id, 'pending');
+            $foreign = $this->makePost($module, $other->id, 'rejected');
             $this->actingAs($owner)->get(route('workspace.posts.'.$module.'.index'))->assertOk()
                 ->assertSee('My submissions')->assertSee("$module pending active record")->assertDontSee("$module rejected active record");
             $this->get(route('workspace.posts.'.$module.'.show', $id))->assertOk()->assertSee('Edit post');
@@ -158,12 +158,12 @@ class ContentWorkspaceTest extends TestCase
         $president = $this->actor();
         foreach (self::MODULES as $module => [$type, $position]) {
             $owner = $this->actor('officer', $position);
-            $id = $this->makePost($module, $owner->user_id, 'pending');
+            $id = $this->makePost($module, $owner->id, 'pending');
             $this->actingAs($president)->post(route($module.'.reject', $id), [])->assertSessionHasErrors('rejection_reason');
             $this->post(route($module.'.reject', $id), ['rejection_reason' => 'Please add the event details.'])->assertRedirect();
             $this->post(route($module.'.archive', $id))->assertRedirect();
             $this->post(route($module.'.restore', $id))->assertRedirect();
-            $this->assertDatabaseHas($module, [$type.'_id' => $id, 'approval_status' => 'rejected', 'content_status' => 'active']);
+            $this->assertDatabaseHas($module, ['id' => $id, 'approval_status' => 'rejected', 'content_status' => 'active']);
             $this->get(route($module.'.show', $id))->assertNotFound();
         }
     }
@@ -172,7 +172,7 @@ class ContentWorkspaceTest extends TestCase
     {
         Storage::fake('local');
         $owner = $this->actor('officer', 'Secretary');
-        $id = $this->makePost('documents', $owner->user_id, 'pending');
+        $id = $this->makePost('documents', $owner->id, 'pending');
         Storage::disk('local')->put('documents/'.str_repeat('a', 40).'.pdf', '%PDF-0123456789');
         $url = URL::temporarySignedRoute('documents.view', now()->addMinutes(5), ['document' => $id]);
         $this->actingAs($owner)->get(route('documents.view', $id))->assertNotFound();
@@ -187,7 +187,7 @@ class ContentWorkspaceTest extends TestCase
     {
         $owner = $this->actor('officer', 'Multimedia');
         $president = $this->actor();
-        $id = $this->makePost('articles', $owner->user_id, 'pending');
+        $id = $this->makePost('articles', $owner->id, 'pending');
         $notificationId = (string) Str::uuid();
         $owner->notifications()->create([
             'id' => $notificationId, 'type' => PostRejected::class,

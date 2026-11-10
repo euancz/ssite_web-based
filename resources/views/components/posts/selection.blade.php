@@ -26,7 +26,7 @@
     <section class="document-selection-preview document-pdf-viewer" tabindex="0" aria-label="Document preview"
         @if (auth()->user()?->can('viewFile', $post))
             data-selection-viewer
-            data-pdf-url="{{ \Illuminate\Support\Facades\URL::temporarySignedRoute($routePrefix . '.view', now()->addMinutes(15), [$post->getRouteKeyName() === 'liquidation_id' ? 'liquidation' : 'document' => $post]) }}"
+            data-pdf-url="{{ \Illuminate\Support\Facades\URL::temporarySignedRoute($routePrefix . '.view', now()->addMinutes(15), [$post instanceof \App\Models\Liquidation ? 'liquidation' : 'document' => $post]) }}"
         @endif>
         <div class="document-selection-preview-heading">
             <h3>Document Preview</h3>

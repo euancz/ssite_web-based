@@ -91,7 +91,7 @@
                     @can('bulkArchive', \App\Models\Achievement::class)
                         @if ($tab !== 'archived' && ! $achievement->isArchived())
                             <label class="dashboard-muted">
-                                <input type="checkbox" name="achievement_ids[]" value="{{ $achievement->achievement_id }}" form="achievement-bulk-archive">
+                                <input type="checkbox" name="achievement_ids[]" value="{{ $achievement->id }}" form="achievement-bulk-archive">
                                 Select
                             </label>
                         @endif

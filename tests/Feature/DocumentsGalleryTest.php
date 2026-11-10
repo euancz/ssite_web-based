@@ -13,7 +13,7 @@ class DocumentsGalleryTest extends TestCase
     {
         parent::setUp();
         Schema::create('documents', function (Blueprint $table) {
-            $table->id('document_id');
+            $table->id('id');
             $table->string('title');
             $table->string('category')->nullable();
             $table->unsignedBigInteger('created_by_user_id')->nullable();

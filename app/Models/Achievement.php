@@ -20,8 +20,7 @@ class Achievement extends Model
 
     protected $table = 'achievements';
 
-    // SECURITY: The SQL table uses achievement_id instead of Laravel's default id key.
-    protected $primaryKey = 'achievement_id';
+    protected $primaryKey = 'id';
 
     protected $keyType = 'int';
 
@@ -37,25 +36,25 @@ class Achievement extends Model
     /** Return the database key used in achievement URLs. */
     public function getRouteKeyName(): string
     {
-        return 'achievement_id';
+        return 'id';
     }
 
-    /** Find the author through users.user_id; views label a missing author Former member. */
+    /** Find the author through users.id; views label a missing author Former member. */
     public function author(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by_user_id', 'user_id');
+        return $this->belongsTo(User::class, 'created_by_user_id', 'id');
     }
 
     /** Find the adviser who last reviewed this achievement. */
     public function reviewer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'reviewed_by_user_id', 'user_id');
+        return $this->belongsTo(User::class, 'reviewed_by_user_id', 'id');
     }
 
-    /** Keep likes scoped to this module and its custom achievement_id key. */
+    /** Keep likes scoped to this module and its id key. */
     public function likes(): HasMany
     {
-        return $this->hasMany(PostLike::class, 'post_id', 'achievement_id')->where('post_type', self::POST_TYPE);
+        return $this->hasMany(PostLike::class, 'post_id', 'id')->where('post_type', self::POST_TYPE);
     }
 
     /** Limit achievements to those awaiting adviser review. */
@@ -122,7 +121,7 @@ class Achievement extends Model
     public function imageUrl(): string
     {
         if ($this->image && Storage::disk('public')->exists($this->image)) {
-            return asset('storage/' . ltrim($this->image, '/'));
+            return Storage::disk('public')->url($this->image);
         }
 
         return asset(config('school.default_profile_picture', 'images/Wolf.png'));

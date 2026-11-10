@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+use App\Support\MobileLogin;
 use Laravel\Socialite\Two\InvalidStateException;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
@@ -23,6 +25,32 @@ class MicrosoftAuthController extends Controller
      * Start the Microsoft OAuth flow and request an interactive account selection.
      */
     public function redirect()
+    {
+        return $this->startMicrosoftSignIn();
+    }
+
+    public function redirectForMobile(Request $request)
+    {
+        $returnUrl = $request->query('return_url');
+        if ($returnUrl !== null) {
+            abort_unless(MobileLogin::allowsWebReturnUrl($returnUrl), 422, 'The app return address is not allowed.');
+        }
+        $request->session()->put('mobile_login_return_url', $returnUrl);
+        $request->session()->put('mobile_login', true);
+
+        if (Auth::check()) {
+            $user = $request->user();
+            if (! $user->hasCompletedProfile()) {
+                return redirect()->route('profile.complete');
+            }
+
+            return MobileLogin::redirectToApp($request, $user);
+        }
+
+        return $this->startMicrosoftSignIn();
+    }
+
+    private function startMicrosoftSignIn()
     {
         return Socialite::driver('microsoft')
             ->with([
@@ -103,6 +131,13 @@ class MicrosoftAuthController extends Controller
             Auth::login($user);
 
             request()->session()->regenerate();
+
+            if ($user->hasCompletedProfile()) {
+                $mobileRedirect = MobileLogin::redirectToApp(request(), $user);
+                if ($mobileRedirect) {
+                    return $mobileRedirect;
+                }
+            }
 
             // Profile enforcement happens before role routing so unfinished accounts cannot browse.
             if (! $user->hasCompletedProfile()) {

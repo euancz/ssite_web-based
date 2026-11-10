@@ -22,7 +22,7 @@ final class ContentActivityLog
         // Normalize only the result expressions; no stored data or schema is changed.
         $text = static fn (string $expression): string => in_array(DB::connection()->getDriverName(), ['mysql', 'mariadb'], true)
             ? "CONVERT($expression USING utf8mb4) COLLATE utf8mb4_unicode_ci"
-            : $expression;
+            : (DB::connection()->getDriverName() === 'pgsql' ? "CAST($expression AS text)" : $expression);
         $title = $text('posts.title');
         $author = $text('authors.name');
         $posted = $text("'posted'");
@@ -43,7 +43,7 @@ final class ContentActivityLog
             if (! $viewer->isPresident()) {
                 $posts->where('posts.created_by_user_id', $viewer->getKey());
             }
-            $queries = [(clone $posts)->leftJoin('users as authors', 'authors.user_id', '=', 'posts.created_by_user_id')
+            $queries = [(clone $posts)->leftJoin('users as authors', 'authors.id', '=', 'posts.created_by_user_id')
                 ->whereBetween('posts.created_at', [$start, $end])
                 ->selectRaw("posts.{$model->getKeyName()} as post_id, $title as title, $author as actor, $posted as action, posts.created_at as occurred_at, $module as module, 0 as event_id, $noReason as reason", [$key])];
             if ($historyAvailable) {

@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Models\User;
+use App\Support\MobileLogin;
 
 /**
  * Shows and saves the signed-in user's student information in the users table.
@@ -49,6 +50,11 @@ class ProfileController extends Controller
         $user->profile_completed_at = now();
         $user->save();
 
+        $mobileRedirect = MobileLogin::redirectToApp($request, $user);
+        if ($mobileRedirect) {
+            return $mobileRedirect;
+        }
+
         return redirect()->intended(route($user->dashboardRoute()))
             ->with('status', 'Your profile has been completed.');
     }
@@ -84,7 +90,7 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         $upload = $request->file('picture');
-        $filename = $user->user_id . '-' . Str::random(40) . '.' . $upload->extension();
+        $filename = $user->id . '-' . Str::random(40) . '.' . $upload->extension();
         $path = $upload->storeAs('profile-pictures', $filename, 'public');
 
         // Delete only a prior local file after the replacement has been stored successfully.

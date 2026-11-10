@@ -28,8 +28,7 @@ class Article extends Model
 
     protected $table = 'articles';
 
-    // SECURITY: The schema uses article_id as its primary key instead of Laravel's default id.
-    protected $primaryKey = 'article_id';
+    protected $primaryKey = 'id';
 
     protected $keyType = 'int';
 
@@ -52,15 +51,15 @@ class Article extends Model
      */
     public function getRouteKeyName(): string
     {
-        return 'article_id';
+        return 'id';
     }
 
     /**
-     * Find the author through the users table's custom user_id key; views use Former member when absent.
+     * Find the author through the users table's id key; views use Former member when absent.
      */
     public function author(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by_user_id', 'user_id');
+        return $this->belongsTo(User::class, 'created_by_user_id', 'id');
     }
 
     /**
@@ -68,13 +67,13 @@ class Article extends Model
      */
     public function reviewer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'reviewed_by_user_id', 'user_id');
+        return $this->belongsTo(User::class, 'reviewed_by_user_id', 'id');
     }
 
-    /** Keep likes scoped to this module and its custom article_id key. */
+    /** Keep likes scoped to this module and its id key. */
     public function likes(): HasMany
     {
-        return $this->hasMany(PostLike::class, 'post_id', 'article_id')->where('post_type', self::POST_TYPE);
+        return $this->hasMany(PostLike::class, 'post_id', 'id')->where('post_type', self::POST_TYPE);
     }
 
     /**
@@ -164,7 +163,7 @@ class Article extends Model
     {
         if ($this->image && Storage::disk('public')->exists($this->image)) {
             // Build from the current request so XAMPP subfolder installs keep their public path.
-            return asset('storage/'.ltrim($this->image, '/'));
+            return Storage::disk('public')->url($this->image);
         }
 
         return asset(config('school.default_profile_picture', 'images/Wolf.png'));

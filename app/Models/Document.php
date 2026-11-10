@@ -24,7 +24,7 @@ class Document extends Model
 
     protected $table = 'documents';
 
-    protected $primaryKey = 'document_id';
+    protected $primaryKey = 'id';
 
     // SECURITY: Workflow and file metadata are set by trusted controller actions only.
     protected $fillable = ['title', 'description', 'category', 'semester', 'academic_year'];
@@ -36,23 +36,23 @@ class Document extends Model
 
     public function getRouteKeyName(): string
     {
-        return 'document_id';
+        return 'id';
     }
 
     public function author(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by_user_id', 'user_id');
+        return $this->belongsTo(User::class, 'created_by_user_id', 'id');
     }
 
     public function reviewer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'reviewed_by_user_id', 'user_id');
+        return $this->belongsTo(User::class, 'reviewed_by_user_id', 'id');
     }
 
-    /** Keep likes scoped to this module and its custom document_id key. */
+    /** Keep likes scoped to this module and its id key. */
     public function likes(): HasMany
     {
-        return $this->hasMany(PostLike::class, 'post_id', 'document_id')->where('post_type', self::POST_TYPE);
+        return $this->hasMany(PostLike::class, 'post_id', 'id')->where('post_type', self::POST_TYPE);
     }
 
     public function scopePending(Builder $query): Builder

@@ -93,9 +93,9 @@ class UserController extends Controller
 
         DB::transaction(function () use ($actor, $user, $newRole, $newPosition): void {
             // SECURITY: Lock assignment rows together so concurrent requests cannot create two Presidents.
-            $lockedUsers = User::query()->orderBy('user_id')->lockForUpdate()->get();
-            $lockedActor = $lockedUsers->firstWhere('user_id', $actor->user_id);
-            $target = $lockedUsers->firstWhere('user_id', $user->user_id);
+            $lockedUsers = User::query()->orderBy('id')->lockForUpdate()->get();
+            $lockedActor = $lockedUsers->firstWhere('id', $actor->id);
+            $target = $lockedUsers->firstWhere('id', $user->id);
             abort_unless($lockedActor && $target, 404);
             Gate::forUser($lockedActor)->authorize('changeRole', $target);
 
@@ -113,7 +113,7 @@ class UserController extends Controller
             $singleHolderPositions = config('school.single_holder_positions', []);
             if ($newRole === User::ROLE_OFFICER && in_array($newPosition, $singleHolderPositions, true)) {
                 $alreadyAssigned = $lockedUsers->contains(function (User $candidate) use ($target, $newPosition): bool {
-                    return (int) $candidate->user_id !== (int) $target->user_id
+                    return (int) $candidate->id !== (int) $target->id
                         && $candidate->isOfficer()
                         && $candidate->position() === $newPosition;
                 });
@@ -130,8 +130,8 @@ class UserController extends Controller
 
             if (Schema::hasTable('role_changes')) {
                 DB::table('role_changes')->insert([
-                    'user_id' => $target->user_id,
-                    'changed_by_user_id' => $lockedActor->user_id,
+                    'user_id' => $target->id,
+                    'changed_by_user_id' => $lockedActor->id,
                     'old_role' => $oldRole,
                     'new_role' => $newRole,
                     'old_officer_position' => $oldPosition,

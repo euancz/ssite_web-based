@@ -38,7 +38,7 @@ class ContentPersistenceTest extends TestCase
     private function article(User $owner): Article
     {
         $article = new Article(['title' => 'Original post', 'content' => 'Original content', 'image' => 'articles/original.jpg']);
-        $article->created_by_user_id = $owner->user_id;
+        $article->created_by_user_id = $owner->id;
         $article->save();
         Storage::disk('public')->put($article->image, 'original bytes');
 
@@ -89,7 +89,7 @@ class ContentPersistenceTest extends TestCase
         $this->assertFalse(app(ContentReview::class)->decide($article, $president, true));
         $this->assertDatabaseCount('notifications', 0);
         $this->actingAs($president)->post(route('articles.approve', $article))->assertRedirect();
-        $this->assertDatabaseHas('articles', ['article_id' => $article->getKey(), 'approval_status' => 'approved', 'reviewed_by_user_id' => $president->user_id]);
+        $this->assertDatabaseHas('articles', ['id' => $article->getKey(), 'approval_status' => 'approved', 'reviewed_by_user_id' => $president->id]);
         $count = DB::table('notifications')->count();
         $this->assertGreaterThan(0, $count);
         $this->post(route('articles.approve', $article))->assertRedirect();
@@ -102,10 +102,10 @@ class ContentPersistenceTest extends TestCase
         $president = $this->actor('President');
         $this->actingAs($owner)->post(route('articles.store'), [
             'title' => 'Submitted title', 'content' => '<script>alert(1)</script>',
-            'approval_status' => 'approved', 'created_by_user_id' => $president->user_id,
+            'approval_status' => 'approved', 'created_by_user_id' => $president->id,
         ])->assertRedirect();
         $article = Article::firstOrFail();
-        $this->assertSame($owner->user_id, $article->created_by_user_id);
+        $this->assertSame($owner->id, $article->created_by_user_id);
         $this->assertSame('pending', $article->approval_status);
         $this->get(route('workspace.posts.articles.show', $article))->assertOk()
             ->assertDontSee('<script>alert(1)</script>', false)->assertSee('&lt;script&gt;alert(1)&lt;/script&gt;', false);

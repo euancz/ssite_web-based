@@ -47,7 +47,7 @@ class PostEngagement
 
         $post->loadCount('likes');
         if ($user = $request->user()) {
-            $post->loadCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->user_id)]);
+            $post->loadCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->id)]);
         }
     }
 
@@ -71,7 +71,7 @@ class PostEngagement
                 $inserted = DB::table('post_views')->insertOrIgnore([
                     'post_type' => $post::POST_TYPE,
                     'post_id' => $post->getKey(),
-                    'user_id' => $user->user_id,
+                    'user_id' => $user->id,
                     'created_at' => now(),
                 ]);
                 if (! $inserted) return false;

@@ -56,7 +56,7 @@ class LiquidationController extends Controller
         if ($likesEnabled) {
             $liquidations->withCount('likes');
             if ($user) {
-                $liquidations->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->user_id)]);
+                $liquidations->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->id)]);
             }
         }
 
@@ -97,13 +97,13 @@ class LiquidationController extends Controller
         if (in_array($sort, ['viewed', 'liked'], true)) {
             $liquidations->orderBy('created_at', 'desc');
         }
-        $liquidations = $liquidations->orderBy('liquidation_id', 'asc')
+        $liquidations = $liquidations->orderBy('id', 'asc')
             ->paginate(5)
             ->appends(['tab' => $tab, 'sort' => $sort, 'q' => $searchQuery, 'academic_year' => $request->query('academic_year')]);
         // SECURITY: Visiting Liquidation clears only this user's unread publication notices for this tab.
         if ($user) {
-            $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
-                ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['liquidation'])->update(['read_at' => now()]);
+            $user->unreadNotifications()->whereRaw(\App\Support\NotificationSql::field('type').' = ?', ['published'])
+                ->whereRaw(\App\Support\NotificationSql::field('post_type').' = ?', ['liquidation'])->update(['read_at' => now()]);
         }
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
         $view = $workspaceList ? 'workspace.posts.liquidation.index' : 'liquidation.index';
@@ -151,12 +151,12 @@ class LiquidationController extends Controller
         $this->assertPdf($file);
         unset($validated['file']);
         $liquidation = new Liquidation($validated);
-        $liquidation->created_by_user_id = $request->user()->user_id;
+        $liquidation->created_by_user_id = $request->user()->id;
         $liquidation->content_status = Liquidation::CONTENT_ACTIVE;
         $autoApprove = $request->user()->postsAutoApproved();
         $liquidation->approval_status = $autoApprove ? Liquidation::APPROVAL_APPROVED : Liquidation::APPROVAL_PENDING;
         if ($autoApprove) {
-            $liquidation->reviewed_by_user_id = $request->user()->user_id;
+            $liquidation->reviewed_by_user_id = $request->user()->id;
             $liquidation->reviewed_at = now();
         }
         [$liquidation->file_path, $liquidation->original_name, $liquidation->file_size] = $this->storePdf($file);
@@ -278,13 +278,13 @@ class LiquidationController extends Controller
         $this->authorize('bulkArchive', Liquidation::class);
         $validated = $request->validate([
             'liquidation_ids' => ['required', 'array', 'min:1', 'max:100'],
-            'liquidation_ids.*' => ['required', 'integer', 'distinct', Rule::exists('liquidations', 'liquidation_id')],
+            'liquidation_ids.*' => ['required', 'integer', 'distinct', Rule::exists('liquidations', 'id')],
         ]);
-        $items = Liquidation::query()->whereIn('liquidation_id', $validated['liquidation_ids'])->get();
+        $items = Liquidation::query()->whereIn('id', $validated['liquidation_ids'])->get();
         foreach ($items as $item) {
             $this->authorize('archive', $item);
         }
-        Liquidation::query()->whereIn('liquidation_id', $items->modelKeys())->update(['content_status' => Liquidation::CONTENT_ARCHIVED, 'updated_at' => now()]);
+        Liquidation::query()->whereIn('id', $items->modelKeys())->update(['content_status' => Liquidation::CONTENT_ARCHIVED, 'updated_at' => now()]);
 
         return back()->with('status', 'The selected reports were archived.');
     }
@@ -305,7 +305,7 @@ class LiquidationController extends Controller
             abort(404);
         }
 
-        return $pdfResponse->make(Storage::disk('local')->path($liquidation->file_path), $this->safeOriginalName($liquidation->original_name), $request);
+        return $pdfResponse->make($liquidation->file_path, $this->safeOriginalName($liquidation->original_name), $request);
     }
 
     private function assertPdf(UploadedFile $file): void

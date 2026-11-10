@@ -91,7 +91,7 @@
                     @can('bulkArchive', \App\Models\Activity::class)
                         @if ($tab !== 'archived' && ! $activity->isArchived())
                             <label class="dashboard-muted">
-                                <input type="checkbox" name="activity_ids[]" value="{{ $activity->activity_id }}" form="activity-bulk-archive">
+                                <input type="checkbox" name="activity_ids[]" value="{{ $activity->id }}" form="activity-bulk-archive">
                                 Select
                             </label>
                         @endif

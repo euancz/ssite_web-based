@@ -14,20 +14,20 @@ use Illuminate\Support\Facades\Storage;
 class OfficerTerm extends Model
 {
     protected $table = 'officer_terms';
-    protected $primaryKey = 'term_id';
+    protected $primaryKey = 'id';
     protected $fillable = ['academic_year', 'name', 'position', 'photo', 'sort_order'];
 
     // SECURITY: Linked user IDs are assigned only by trusted controller logic, never by mass assignment.
 
     public function getRouteKeyName(): string
     {
-        return 'term_id';
+        return 'id';
     }
 
     /** The nullable relationship allows a historical snapshot to outlive an account. */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id', 'user_id');
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     public function scopeForYear(Builder $query, string $ay): Builder
@@ -63,7 +63,7 @@ class OfficerTerm extends Model
             return null;
         }
 
-        return asset('storage/' . ltrim($photo, '/'));
+        return Storage::disk('public')->url($photo);
     }
 
     /** Apply configured position order, then adviser-defined order for duplicate positions. */

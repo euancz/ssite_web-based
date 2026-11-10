@@ -55,7 +55,7 @@ class AppServiceProvider extends ServiceProvider
         });
         RateLimiter::for('likes', function (Request $request) use ($rateLimitedResponse): array {
             $ip = $request->ip() ?: 'unknown';
-            $userKey = $request->user()?->user_id;
+            $userKey = $request->user()?->id;
 
             return [
                 Limit::perMinute(30)->by('likes:user:' . ($userKey ?? $ip))->response($rateLimitedResponse),
@@ -64,7 +64,7 @@ class AppServiceProvider extends ServiceProvider
         });
         RateLimiter::for('content-writes', function (Request $request) use ($rateLimitedResponse): array {
             $ip = $request->ip() ?: 'unknown';
-            $userKey = $request->user()?->user_id;
+            $userKey = $request->user()?->id;
 
             return [
                 Limit::perMinute(30)->by('content:user:' . ($userKey ?? $ip))->response($rateLimitedResponse),
@@ -73,7 +73,7 @@ class AppServiceProvider extends ServiceProvider
         });
         RateLimiter::for('uploads', function (Request $request) use ($rateLimitedResponse): array {
             $ip = $request->ip() ?: 'unknown';
-            $userKey = $request->user()?->user_id;
+            $userKey = $request->user()?->id;
 
             return [
                 Limit::perMinute(6)->by('uploads:user:' . ($userKey ?? $ip))->response($rateLimitedResponse),
@@ -90,8 +90,8 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('layouts.app', function ($view): void {
             $user = auth()->user();
-            $rows = $user ? $user->notifications()->whereNull('read_at')
-                ->selectRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) AS notification_type, JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) AS post_type, COUNT(*) AS total")
+            $rows = $user ? $user->notifications()->reorder()->whereNull('read_at')
+                ->selectRaw(\App\Support\NotificationSql::counts())
                 ->groupBy('notification_type', 'post_type')->get() : collect();
             // SECURITY: One grouped query supplies this user's nav dots and bell count; review notices never make tab dots.
             $view->with('notificationNavCounts', $rows->where('notification_type', 'published')->pluck('total', 'post_type'));

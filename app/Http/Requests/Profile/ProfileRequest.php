@@ -32,7 +32,7 @@ abstract class ProfileRequest extends FormRequest
     }
 
     /**
-     * Validate a unique student number using user_id so the current row is ignored safely.
+     * Validate a unique student number using id so the current row is ignored safely.
      */
     protected function studentNumberRules(bool $required): array
     {
@@ -41,7 +41,7 @@ abstract class ProfileRequest extends FormRequest
             'string',
             'max:20',
             'regex:' . config('school.student_number_regex'),
-            Rule::unique('users', 'student_number')->ignore($this->user()->user_id, 'user_id'),
+            Rule::unique('users', 'student_number')->ignore($this->user()->id, 'id'),
         ];
     }
 

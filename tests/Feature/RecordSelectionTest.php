@@ -12,7 +12,7 @@ class RecordSelectionTest extends TestCase
     {
         $report = new Liquidation();
         $report->forceFill([
-            'liquidation_id' => 42, 'title' => 'Gastos 1', 'description' => 'Event expenses',
+            'id' => 42, 'title' => 'Gastos 1', 'description' => 'Event expenses',
             'amount' => '10000.00', 'report_date' => '2025-08-10',
             'created_at' => '2026-01-01', 'approval_status' => 'approved', 'content_status' => 'active',
         ]);
@@ -37,7 +37,7 @@ class RecordSelectionTest extends TestCase
     public function test_member_preview_uses_a_signed_liquidation_url(): void
     {
         $user = new User();
-        $user->forceFill(['user_id' => 15, 'role' => User::ROLE_STUDENT]);
+        $user->forceFill(['id' => 15, 'role' => User::ROLE_STUDENT]);
         $this->actingAs($user);
         $html = $this->renderReport();
         $this->assertStringContainsString('data-pdf-url=', $html);

@@ -10,14 +10,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('post_views', function (Blueprint $table): void {
-            $table->increments('view_id');
+            $table->increments('id');
             $table->string('post_type', 32);
             $table->unsignedInteger('post_id');
             $table->unsignedInteger('user_id');
             $table->timestamp('created_at')->useCurrent();
             $table->unique(['post_type', 'post_id', 'user_id'], 'uq_post_views_user_post');
             $table->index(['post_type', 'post_id'], 'idx_post_views_post');
-            $table->foreign('user_id')->references('user_id')->on('users')
+            $table->foreign('user_id')->references(Schema::hasColumn('users', 'id') ? 'id' : 'user_id')->on('users')
                 ->cascadeOnDelete()->cascadeOnUpdate();
         });
     }

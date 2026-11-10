@@ -96,7 +96,7 @@
                     @can('bulkArchive', \App\Models\Document::class)
                         @if ($tab !== 'archived' && ! $document->isArchived())
                             <label class="dashboard-muted">
-                                <input type="checkbox" name="document_ids[]" value="{{ $document->document_id }}" form="document-bulk-archive">
+                                <input type="checkbox" name="document_ids[]" value="{{ $document->id }}" form="document-bulk-archive">
                                 Select
                             </label>
                         @endif

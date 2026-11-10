@@ -29,7 +29,7 @@ final class ContentReview
             }
             $current->approval_status = $approve ? 'approved' : 'rejected';
             $current->rejection_reason = $approve ? null : $reason;
-            $current->reviewed_by_user_id = $reviewer->user_id;
+            $current->reviewed_by_user_id = $reviewer->id;
             $current->reviewed_at = now();
             $current->saveOrFail();
             app(ContentReviewHistory::class)->record($current, $reviewer, $approve, $reason);

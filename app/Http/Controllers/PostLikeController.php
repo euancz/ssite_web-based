@@ -20,11 +20,11 @@ class PostLikeController extends Controller
     use AuthorizesRequests;
 
     private const TARGETS = [
-        'article' => [Article::class, 'article_id', 'articles.show', 'article'],
-        'activity' => [Activity::class, 'activity_id', 'activities.show', 'activity'],
-        'achievement' => [Achievement::class, 'achievement_id', 'achievements.show', 'achievement'],
-        'document' => [Document::class, 'document_id', 'documents.show', 'document'],
-        'liquidation' => [Liquidation::class, 'liquidation_id', 'liquidations.show', 'liquidation'],
+        'article' => [Article::class, 'id', 'articles.show', 'article'],
+        'activity' => [Activity::class, 'id', 'activities.show', 'activity'],
+        'achievement' => [Achievement::class, 'id', 'achievements.show', 'achievement'],
+        'document' => [Document::class, 'id', 'documents.show', 'document'],
+        'liquidation' => [Liquidation::class, 'id', 'liquidations.show', 'liquidation'],
     ];
 
     /** Store the requested like state so duplicate submissions from open tabs stay idempotent. */
@@ -60,7 +60,7 @@ class PostLikeController extends Controller
 
             $like = PostLike::query()->where('post_type', $type)
                 ->where('post_id', $lockedPost->getKey())
-                ->where('user_id', $user->user_id)
+                ->where('user_id', $user->id)
                 ->lockForUpdate()
                 ->first();
 
@@ -68,7 +68,7 @@ class PostLikeController extends Controller
                 $like = new PostLike();
                 $like->post_type = $type;
                 $like->post_id = $lockedPost->getKey();
-                $like->user_id = $user->user_id;
+                $like->user_id = $user->id;
                 $like->created_at = now();
                 $like->save();
                 DB::table($lockedPost->getTable())->where($keyName, $lockedPost->getKey())->increment('like_count');

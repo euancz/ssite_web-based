@@ -21,6 +21,6 @@ class FeaturedArticles
             $query->orderByDesc('featured_at');
         }
 
-        return $query->latest('created_at')->orderByDesc('article_id')->limit($limit)->get();
+        return $query->latest('created_at')->orderByDesc('id')->limit($limit)->get();
     }
 }

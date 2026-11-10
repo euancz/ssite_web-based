@@ -26,8 +26,8 @@
             @forelse ($officers as $officer)
                 <tr><td>@if ($officer->photoUrl())<img src="{{ $officer->photoUrl() }}" alt="{{ $officer->name }}" width="52" height="52">@else Photo @endif</td><td>{{ $officer->name }}</td><td>{{ $officer->position }}</td><td>{{ $officer->sort_order }}</td><td>
                     <a href="{{ route('adviser.officers.edit', $officer) }}">Edit</a>
-                    <button type="button" class="dashboard-button dashboard-button-secondary" onclick="document.getElementById('delete-officer-{{ $officer->term_id }}').showModal()">Delete</button>
-                    <dialog id="delete-officer-{{ $officer->term_id }}" class="reject-modal"><div class="reject-modal-content"><h2>Delete officer?</h2><p>This removes this year's officer snapshot.</p>
+                    <button type="button" class="dashboard-button dashboard-button-secondary" onclick="document.getElementById('delete-officer-{{ $officer->id }}').showModal()">Delete</button>
+                    <dialog id="delete-officer-{{ $officer->id }}" class="reject-modal"><div class="reject-modal-content"><h2>Delete officer?</h2><p>This removes this year's officer snapshot.</p>
                         <div class="reject-modal-actions"><button type="button" class="dashboard-button dashboard-button-secondary" onclick="this.closest('dialog').close()">Cancel</button>
                             <form method="POST" action="{{ route('adviser.officers.destroy', $officer) }}">@csrf @method('DELETE')<button class="dashboard-button" type="submit">Delete</button></form>
                         </div></div></dialog>

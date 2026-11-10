@@ -21,7 +21,7 @@ final class ContentDashboard
             }
             $owned = $module['model']::query();
             if (! $user->canReview()) {
-                $owned->where('created_by_user_id', $user->user_id);
+                $owned->where('created_by_user_id', $user->id);
             }
 
             // One aggregate per permitted module; archived approval states remain separate.

@@ -18,7 +18,7 @@ class ContentDrafts
     {
         $modules = array_keys(array_filter(ContentModules::all(), fn ($module) => $user->can('create', $module['model'])));
 
-        return ContentDraft::query()->where('created_by_user_id', $user->user_id)->whereIn('module', $modules);
+        return ContentDraft::query()->where('created_by_user_id', $user->id)->whereIn('module', $modules);
     }
 
     public function checkVersion(ContentDraft $draft, int $version): void
@@ -49,7 +49,7 @@ class ContentDrafts
             } elseif ($oldAttachment) {
                 $values['attachment'] = $oldAttachment;
             }
-            $draft->forceFill(['created_by_user_id' => $user->user_id, 'module' => $module,
+            $draft->forceFill(['created_by_user_id' => $user->id, 'module' => $module,
                 'payload' => $values, 'lock_version' => $draft->exists ? $draft->lock_version + 1 : 1])->save();
             if ($stored && $oldAttachment && $oldAttachment['path'] !== $stored['path']) {
                 DB::afterCommit(fn () => app(PostFiles::class)->deleteDraft($oldAttachment['path']));
@@ -118,7 +118,7 @@ class ContentDrafts
             }
         }
         $extension = $isPdf ? 'pdf' : strtolower($file->guessExtension() ?: 'bin');
-        $path = app(PostFiles::class)->store($file, 'drafts/'.$user->user_id, 'local', $isPdf);
+        $path = app(PostFiles::class)->store($file, 'drafts/'.$user->id, 'local', $isPdf);
         $name = basename(str_replace('\\', '/', (string) $file->getClientOriginalName()));
         $name = preg_replace('/[\x00-\x1F\x7F"\\\\\/]+/u', '', $name) ?? '';
 

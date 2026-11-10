@@ -41,7 +41,7 @@ class ActivityController extends Controller
         if ($likesEnabled) {
             $activities->withCount('likes');
             if ($user) {
-                $activities->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->user_id)]);
+                $activities->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->id)]);
             }
         }
 
@@ -85,13 +85,13 @@ class ActivityController extends Controller
         if (in_array($sort, ['viewed', 'liked'], true)) {
             $activities->orderBy('created_at', 'desc');
         }
-        $activities = $activities->orderBy('activity_id', 'asc')
+        $activities = $activities->orderBy('id', 'asc')
             ->paginate(5)
             ->appends(['q' => is_string($request->query('q')) ? mb_substr(trim($request->query('q')), 0, 100) : '', 'tab' => $tab, 'sort' => $sort, 'timeframe' => $timeframe]);
         // SECURITY: Visiting Activities clears only this user's unread publication notices for this tab.
         if ($user) {
-            $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
-                ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['activity'])->update(['read_at' => now()]);
+            $user->unreadNotifications()->whereRaw(\App\Support\NotificationSql::field('type').' = ?', ['published'])
+                ->whereRaw(\App\Support\NotificationSql::field('post_type').' = ?', ['activity'])->update(['read_at' => now()]);
         }
 
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
@@ -142,13 +142,13 @@ class ActivityController extends Controller
         $this->authorize('create', Activity::class);
         $user = $request->user();
         $activity = new Activity($validated);
-        $activity->created_by_user_id = $user->user_id;
+        $activity->created_by_user_id = $user->id;
         $activity->content_status = Activity::CONTENT_ACTIVE;
         $autoApprove = $user->postsAutoApproved();
         $activity->approval_status = $autoApprove ? Activity::APPROVAL_APPROVED : Activity::APPROVAL_PENDING;
 
         if ($autoApprove) {
-            $activity->reviewed_by_user_id = $user->user_id;
+            $activity->reviewed_by_user_id = $user->id;
             $activity->reviewed_at = now();
         }
 
@@ -289,15 +289,15 @@ class ActivityController extends Controller
         $this->authorize('bulkArchive', Activity::class);
         $validated = $request->validate([
             'activity_ids' => ['required', 'array', 'min:1', 'max:100'],
-            'activity_ids.*' => ['required', 'integer', 'distinct', Rule::exists('activities', 'activity_id')],
+            'activity_ids.*' => ['required', 'integer', 'distinct', Rule::exists('activities', 'id')],
         ]);
 
-        $activities = Activity::query()->whereIn('activity_id', $validated['activity_ids'])->get();
+        $activities = Activity::query()->whereIn('id', $validated['activity_ids'])->get();
         foreach ($activities as $activity) {
             $this->authorize('archive', $activity);
         }
 
-        Activity::query()->whereIn('activity_id', $activities->modelKeys())
+        Activity::query()->whereIn('id', $activities->modelKeys())
             ->update(['content_status' => Activity::CONTENT_ARCHIVED, 'updated_at' => now()]);
 
         return back()->with('status', 'The selected activities were archived.');

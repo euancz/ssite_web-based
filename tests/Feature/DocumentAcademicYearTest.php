@@ -39,16 +39,16 @@ class DocumentAcademicYearTest extends TestCase
 
     private function record(User $owner, array $values = []): int
     {
-        return DB::table('documents')->insertGetId(array_merge(['title' => 'Document fixture', 'created_by_user_id' => $owner->user_id,
+        return DB::table('documents')->insertGetId(array_merge(['title' => 'Document fixture', 'created_by_user_id' => $owner->id,
             'approval_status' => 'approved', 'content_status' => 'active', 'created_at' => '2026-10-01 12:00:00',
-            'file_path' => 'documents/private.pdf', 'original_name' => 'record.pdf', 'file_size' => 100], $values), 'document_id');
+            'file_path' => 'documents/private.pdf', 'original_name' => 'record.pdf', 'file_size' => 100], $values), 'id');
     }
 
     public function test_migration_preserves_records_and_leaves_existing_years_unassigned(): void
     {
         $owner = $this->actor();
         $id = $this->record($owner);
-        $before = DB::table('documents')->where('document_id', $id)->first();
+        $before = DB::table('documents')->where('id', $id)->first();
         $migration = $this->migration();
         $migration->up();
         $this->assertNull(DB::table('documents')->value('academic_year'));
@@ -57,7 +57,7 @@ class DocumentAcademicYearTest extends TestCase
         $this->assertTrue(collect(Schema::getIndexes('documents'))->contains(fn ($index) => $index['name'] === 'documents_academic_year_index'));
         $migration->down();
         $this->assertFalse(Schema::hasColumn('documents', 'academic_year'));
-        $this->assertEquals($before, DB::table('documents')->where('document_id', $id)->first());
+        $this->assertEquals($before, DB::table('documents')->where('id', $id)->first());
     }
 
     public function test_public_year_choices_and_results_do_not_reveal_private_records(): void

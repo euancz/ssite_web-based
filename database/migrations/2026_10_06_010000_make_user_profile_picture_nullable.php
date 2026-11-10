@@ -19,7 +19,9 @@ return new class extends Migration
             return;
         }
 
-        DB::statement('ALTER TABLE `users` MODIFY `profile_picture` VARCHAR(255) NULL');
+        Schema::table('users', function (\Illuminate\Database\Schema\Blueprint $table): void {
+            $table->string('profile_picture')->nullable()->change();
+        });
         DB::table('users')
             ->whereIn('profile_picture', ['', 'images/Wolf.png', 'default.png'])
             ->update(['profile_picture' => null]);

@@ -88,7 +88,7 @@
                     @can('bulkArchive', \App\Models\Article::class)
                         @if ($tab !== 'published' && ! $article->isArchived())
                             <label class="dashboard-muted">
-                                <input type="checkbox" name="article_ids[]" value="{{ $article->article_id }}" form="article-bulk-archive">
+                                <input type="checkbox" name="article_ids[]" value="{{ $article->id }}" form="article-bulk-archive">
                                 Select
                             </label>
                         @endif

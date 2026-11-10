@@ -17,11 +17,11 @@ use Illuminate\Http\Request;
 class NotificationController extends Controller
 {
     private const POST_TYPES = [
-        'article' => [Article::class, 'article_id', 'articles.index', 'articles.show'],
-        'activity' => [Activity::class, 'activity_id', 'activities.index', 'activities.show'],
-        'achievement' => [Achievement::class, 'achievement_id', 'achievements.index', 'achievements.show'],
-        'document' => [Document::class, 'document_id', 'documents.index', 'documents.show'],
-        'liquidation' => [Liquidation::class, 'liquidation_id', 'liquidations.index', 'liquidations.show'],
+        'article' => [Article::class, 'id', 'articles.index', 'articles.show'],
+        'activity' => [Activity::class, 'id', 'activities.index', 'activities.show'],
+        'achievement' => [Achievement::class, 'id', 'achievements.index', 'achievements.show'],
+        'document' => [Document::class, 'id', 'documents.index', 'documents.show'],
+        'liquidation' => [Liquidation::class, 'id', 'liquidations.index', 'liquidations.show'],
     ];
 
     public function index(Request $request): View
@@ -39,8 +39,8 @@ class NotificationController extends Controller
     {
         $user = $request->user();
         // SECURITY: Counts and payload rows are always scoped through this session's notification owner.
-        $grouped = $user->notifications()->whereNull('read_at')
-            ->selectRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) AS notification_type, JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) AS post_type, COUNT(*) AS total")
+        $grouped = $user->notifications()->reorder()->whereNull('read_at')
+            ->selectRaw(\App\Support\NotificationSql::counts())
             ->groupBy('notification_type', 'post_type')->get();
         $counts = $grouped->where('notification_type', 'published')->pluck('total', 'post_type');
         $latest = $user->notifications()->latest()->take(10)->get();

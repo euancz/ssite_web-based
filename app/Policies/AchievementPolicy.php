@@ -59,9 +59,9 @@ class AchievementPolicy
         return $user->isPresident();
     }
 
-    // SECURITY: Compare post ownership with the custom users.user_id key.
+    // SECURITY: Compare post ownership with the custom users.id key.
     private function owns(User $user, Achievement $achievement): bool
     {
-        return $achievement->created_by_user_id !== null && (int) $achievement->created_by_user_id === (int) $user->user_id;
+        return $achievement->created_by_user_id !== null && (int) $achievement->created_by_user_id === (int) $user->id;
     }
 }

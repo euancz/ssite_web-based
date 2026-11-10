@@ -68,9 +68,9 @@ class LiquidationPolicy
         return $user->isPresident();
     }
 
-    // SECURITY: Ownership always compares created_by_user_id with users.user_id.
+    // SECURITY: Ownership always compares created_by_user_id with users.id.
     private function owns(User $user, Liquidation $liquidation): bool
     {
-        return $liquidation->created_by_user_id !== null && (int) $liquidation->created_by_user_id === (int) $user->user_id;
+        return $liquidation->created_by_user_id !== null && (int) $liquidation->created_by_user_id === (int) $user->id;
     }
 }

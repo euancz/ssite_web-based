@@ -75,20 +75,20 @@
                                 @if (auth()->user()->is($user) || $user->isSuperadmin())
                                     <span class="dashboard-muted">{{ auth()->user()->is($user) ? 'Your role is protected' : 'Superadmin role is protected' }}</span>
                                 @else
-                                    <button type="button" class="dashboard-text-button workspace-role-change" data-role-dialog-open="role-dialog-{{ $user->user_id }}">Change role</button>
-                                    <dialog id="role-dialog-{{ $user->user_id }}" class="reject-modal" aria-labelledby="role-title-{{ $user->user_id }}">
-                                        <div class="reject-modal-content"><h2 id="role-title-{{ $user->user_id }}">Change role for {{ $user->name }}</h2>
+                                    <button type="button" class="dashboard-text-button workspace-role-change" data-role-dialog-open="role-dialog-{{ $user->id }}">Change role</button>
+                                    <dialog id="role-dialog-{{ $user->id }}" class="reject-modal" aria-labelledby="role-title-{{ $user->id }}">
+                                        <div class="reject-modal-content"><h2 id="role-title-{{ $user->id }}">Change role for {{ $user->name }}</h2>
                                             <form method="POST" action="{{ route('adviser.users.update-role', $user) }}" class="dashboard-role-form">
                                                 @csrf @method('PUT')
-                                                <label for="role-{{ $user->user_id }}">Role</label>
-                                                <select id="role-{{ $user->user_id }}" name="role" data-position-id="position-{{ $user->user_id }}" required>
+                                                <label for="role-{{ $user->id }}">Role</label>
+                                                <select id="role-{{ $user->id }}" name="role" data-position-id="position-{{ $user->id }}" required>
                                                     @foreach ($assignableRoles as $role)
                                                         <option value="{{ $role }}" @selected($user->role === $role)>{{ ucfirst($role) }}</option>
                                                     @endforeach
                                                 </select>
-                                                <div data-position-field="position-{{ $user->user_id }}" @if ($user->role !== 'officer') hidden @endif>
-                                                    <label for="position-{{ $user->user_id }}">Officer position</label>
-                                                    <select id="position-{{ $user->user_id }}" name="officer_position">
+                                                <div data-position-field="position-{{ $user->id }}" @if ($user->role !== 'officer') hidden @endif>
+                                                    <label for="position-{{ $user->id }}">Officer position</label>
+                                                    <select id="position-{{ $user->id }}" name="officer_position">
                                                         <option value="">Choose position</option>
                                                         @foreach ($positions as $position)
                                                             <option value="{{ $position }}" @selected($user->position() === $position)>{{ $position }}</option>

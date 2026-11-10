@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class PostLike extends Model
 {
     protected $table = 'post_likes';
-    protected $primaryKey = 'like_id';
+    protected $primaryKey = 'id';
     protected $keyType = 'int';
     protected $fillable = [];
     public $timestamps = false;

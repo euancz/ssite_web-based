@@ -116,7 +116,7 @@ class OfficerTermController extends Controller
             'officer' => $officer,
             'years' => AcademicYear::options(),
             'positions' => config('school.officer_positions', []),
-            'users' => User::query()->whereIn('role', ['student', 'officer'])->orderBy('name')->get(['user_id', 'name', 'profile_picture']),
+            'users' => User::query()->whereIn('role', ['student', 'officer'])->orderBy('name')->get(['id', 'name', 'profile_picture']),
         ];
     }
 
@@ -129,7 +129,7 @@ class OfficerTermController extends Controller
 
     private function linkedPhoto(?int $userId): ?string
     {
-        return $userId ? User::where('user_id', $userId)->value('profile_picture') : null;
+        return $userId ? User::where('id', $userId)->value('profile_picture') : null;
     }
 
     /** SECURITY: Delete only generated local term uploads, never profile files or external URLs. */

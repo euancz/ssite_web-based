@@ -12,15 +12,15 @@ return new class extends Migration
         // Deliberately fail on an existing table rather than silently adopting an unknown schema.
         Schema::create('content_drafts', function (Blueprint $table): void {
             $table->engine = 'InnoDB';
-            $table->uuid('draft_id')->primary();
-            // The installed legacy users table uses INT UNSIGNED user_id, not a BIGINT id.
+            $table->uuid('id')->primary();
+            // The users primary key remains INT UNSIGNED; retain the matching foreign key type.
             $table->unsignedInteger('created_by_user_id');
             $table->string('module', 24);
             $table->json('payload');
             $table->unsignedInteger('lock_version')->default(1);
             $table->timestamps();
 
-            $table->foreign('created_by_user_id')->references('user_id')->on('users')->restrictOnDelete();
+            $table->foreign('created_by_user_id')->references(Schema::hasColumn('users', 'id') ? 'id' : 'user_id')->on('users')->restrictOnDelete();
             $table->index(['created_by_user_id', 'module', 'updated_at'], 'content_drafts_owner_module_updated_index');
         });
     }

@@ -9,7 +9,7 @@ class ContentDraft extends Model
 {
     use HasUuids;
 
-    protected $primaryKey = 'draft_id';
+    protected $primaryKey = 'id';
 
     protected function casts(): array
     {

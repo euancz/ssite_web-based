@@ -31,7 +31,7 @@ class ContentAuthorizationTest extends TestCase
         $secretary = $this->user(10, User::ROLE_OFFICER, 'Multimedia');
         $president = $this->user(11, User::ROLE_OFFICER, 'President');
         $article = new Article();
-        $article->created_by_user_id = $secretary->user_id;
+        $article->created_by_user_id = $secretary->id;
         $article->approval_status = Article::APPROVAL_PENDING;
         $article->content_status = Article::CONTENT_ACTIVE;
 
@@ -66,7 +66,7 @@ class ContentAuthorizationTest extends TestCase
         $owner = $this->user(40, User::ROLE_OFFICER, 'Multimedia');
         $other = $this->user(41, User::ROLE_STUDENT);
         $article = new Article();
-        $article->created_by_user_id = $owner->user_id;
+        $article->created_by_user_id = $owner->id;
         $article->content_status = Article::CONTENT_ACTIVE;
 
         $article->approval_status = Article::APPROVAL_PENDING;
@@ -92,7 +92,7 @@ class ContentAuthorizationTest extends TestCase
         $president = $this->user(21, User::ROLE_OFFICER, 'President');
         $student = $this->user(22, User::ROLE_STUDENT);
         $document = new Document();
-        $document->created_by_user_id = $owner->user_id;
+        $document->created_by_user_id = $owner->id;
         $document->approval_status = Document::APPROVAL_PENDING;
         $document->content_status = Document::CONTENT_ACTIVE;
         $document->file_path = 'private/documents/example.pdf';
@@ -105,7 +105,7 @@ class ContentAuthorizationTest extends TestCase
     private function user(int $id, string $role, ?string $position = null): User
     {
         $user = new User();
-        $user->user_id = $id;
+        $user->id = $id;
         $user->role = $role;
         $user->officer_position = $position;
 

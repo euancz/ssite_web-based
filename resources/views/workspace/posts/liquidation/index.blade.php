@@ -121,7 +121,7 @@
                     @can('bulkArchive', \App\Models\Liquidation::class)
                         @if ($tab !== 'archived' && ! $liquidation->isArchived())
                             <label class="dashboard-muted">
-                                <input type="checkbox" name="liquidation_ids[]" value="{{ $liquidation->liquidation_id }}" form="liquidation-bulk-archive">
+                                <input type="checkbox" name="liquidation_ids[]" value="{{ $liquidation->id }}" form="liquidation-bulk-archive">
                                 Select
                             </label>
                         @endif

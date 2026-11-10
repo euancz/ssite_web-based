@@ -17,7 +17,7 @@ return new class extends Migration
         }
 
         Schema::create('officer_terms', function (Blueprint $table): void {
-            $table->increments('term_id');
+            $table->increments('id');
             $table->unsignedInteger('user_id')->nullable();
             $table->string('academic_year', 9)->index();
             $table->string('name', 100);
@@ -28,7 +28,7 @@ return new class extends Migration
             $table->timestamp('updated_at')->nullable();
             // SECURITY: One account can hold only one roster entry per academic year.
             $table->unique(['user_id', 'academic_year'], 'uq_terms_user_year');
-            $table->foreign('user_id')->references('user_id')->on('users')
+            $table->foreign('user_id')->references(Schema::hasColumn('users', 'id') ? 'id' : 'user_id')->on('users')
                 ->nullOnDelete()->cascadeOnUpdate();
         });
     }

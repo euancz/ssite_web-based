@@ -19,7 +19,7 @@ trait BuildsContentSchema
         DB::connection()->getPdo()->sqliteCreateFunction('JSON_UNQUOTE', static fn ($value) => $value);
 
         Schema::create('users', function (Blueprint $table): void {
-            $table->increments('user_id');
+            $table->increments('id');
             foreach (['name', 'email', 'password', 'role', 'officer_position', 'student_number', 'institute', 'program', 'year_level', 'gender', 'contact_number', 'address', 'profile_picture', 'microsoft_id', 'remember_token'] as $column) {
                 $table->string($column)->nullable();
             }
@@ -30,7 +30,7 @@ trait BuildsContentSchema
 
         foreach (['articles' => 'article', 'activities' => 'activity', 'achievements' => 'achievement', 'documents' => 'document', 'liquidations' => 'liquidation'] as $name => $type) {
             Schema::create($name, function (Blueprint $table) use ($type): void {
-                $table->increments($type.'_id');
+                $table->increments('id');
                 $table->unsignedInteger('created_by_user_id')->nullable();
                 $table->string('title', 200);
                 $table->text($type === 'article' ? 'content' : 'description')->nullable();
@@ -83,7 +83,7 @@ trait BuildsContentSchema
             $table->timestamps();
         });
         Schema::create('officer_terms', function (Blueprint $table): void {
-            $table->increments('term_id');
+            $table->increments('id');
             $table->unsignedInteger('user_id')->nullable();
             $table->string('academic_year', 9);
             $table->string('name', 100);

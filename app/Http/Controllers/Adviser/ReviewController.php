@@ -46,7 +46,7 @@ class ReviewController extends Controller
             if ($filters['q'] !== '') {
                 $query->where(function ($search) use ($filters, $table) {
                     $search->where('title', 'like', '%'.$filters['q'].'%')->orWhereExists(function ($author) use ($filters, $table) {
-                        $author->selectRaw('1')->from('users')->whereColumn('users.user_id', $table.'.created_by_user_id')
+                        $author->selectRaw('1')->from('users')->whereColumn('users.id', $table.'.created_by_user_id')
                             ->where('users.name', 'like', '%'.$filters['q'].'%');
                     });
                 });
@@ -76,9 +76,9 @@ class ReviewController extends Controller
         };
         // A stable tie-breaker prevents duplicate or missing rows across page boundaries.
         $posts = $posts->orderBy('post_type')->orderBy('post_id')->paginate(10)->appends($filters);
-        $people = User::query()->whereIn('user_id', $posts->getCollection()->pluck('created_by_user_id')
+        $people = User::query()->whereIn('id', $posts->getCollection()->pluck('created_by_user_id')
             ->merge($posts->getCollection()->pluck('reviewed_by_user_id'))->filter()->unique())
-            ->get(['user_id', 'name'])->keyBy('user_id');
+            ->get(['id', 'name'])->keyBy('id');
         foreach ($posts as $post) {
             $post->author = $people->get($post->created_by_user_id);
             $post->reviewer = $people->get($post->reviewed_by_user_id);

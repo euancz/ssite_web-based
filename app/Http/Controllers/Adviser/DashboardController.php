@@ -33,17 +33,17 @@ class DashboardController extends Controller
             $pendingTotal += $count;
         }
 
-        $presidentExists = User::query()->where('role', User::ROLE_OFFICER)->get(['user_id', 'role', 'officer_position'])
+        $presidentExists = User::query()->where('role', User::ROLE_OFFICER)->get(['id', 'role', 'officer_position'])
             ->contains(fn (User $user): bool => $user->isPresident());
         $advisers = auth()->user()->isSuperadmin()
-            ? User::query()->where('role', User::ROLE_ADVISER)->orderBy('name')->get(['user_id', 'name', 'email'])
+            ? User::query()->where('role', User::ROLE_ADVISER)->orderBy('name')->get(['id', 'name', 'email'])
             : collect();
         $roleHistory = collect();
         if (auth()->user()->isSuperadmin()
             && Schema::hasColumns('role_changes', ['user_id', 'changed_by_user_id', 'old_role', 'new_role', 'old_officer_position', 'new_officer_position', 'created_at'])) {
             $roleHistory = DB::table('role_changes as changes')
-                ->leftJoin('users as target', 'target.user_id', '=', 'changes.user_id')
-                ->leftJoin('users as actor', 'actor.user_id', '=', 'changes.changed_by_user_id')
+                ->leftJoin('users as target', 'target.id', '=', 'changes.user_id')
+                ->leftJoin('users as actor', 'actor.id', '=', 'changes.changed_by_user_id')
                 ->orderByDesc('changes.created_at')
                 ->limit(10)
                 ->get([

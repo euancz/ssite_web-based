@@ -17,7 +17,7 @@ class ContentDraftController extends Controller
         $modules = array_filter(ContentModules::all(), fn ($module) => $request->user()->can('create', $module['model']));
         $filters = $request->validate(['module' => ['nullable', Rule::in(array_keys($modules))]]);
         $drafts = $service->owned($request->user())->when($filters['module'] ?? null, fn ($query, $module) => $query->where('module', $module))
-            ->latest('updated_at')->orderBy('draft_id')->paginate(10)->appends($filters);
+            ->latest('updated_at')->orderBy('id')->paginate(10)->appends($filters);
 
         return view('workspace.drafts.index', compact('drafts', 'modules', 'filters'));
     }

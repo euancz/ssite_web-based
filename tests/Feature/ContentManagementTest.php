@@ -30,7 +30,7 @@ class ContentManagementTest extends TestCase
     private function makePost(string $module, User $author, array $attributes = []): int
     {
         $model = new (ContentModules::all()[$module]['model']);
-        $data = ['title' => $module.' submission', 'created_by_user_id' => $author->user_id,
+        $data = ['title' => $module.' submission', 'created_by_user_id' => $author->id,
             'approval_status' => 'pending', 'content_status' => 'active',
             'created_at' => '2026-10-01 12:00:00', 'updated_at' => '2026-10-01 12:00:00',
             $module === 'articles' ? 'content' : 'description' => 'Submission text'];
@@ -47,7 +47,7 @@ class ContentManagementTest extends TestCase
         $other = $this->actor('Multimedia');
         $this->makePost('articles', $owner, ['title' => 'My published article', 'approval_status' => 'approved']);
         $this->makePost('articles', $owner, ['approval_status' => 'approved', 'content_status' => 'archived']);
-        $this->makePost('articles', $owner, ['title' => 'Fix this article', 'approval_status' => 'rejected', 'reviewed_at' => '2026-10-20 10:30:00', 'reviewed_by_user_id' => $other->user_id, 'rejection_reason' => 'Add the venue']);
+        $this->makePost('articles', $owner, ['title' => 'Fix this article', 'approval_status' => 'rejected', 'reviewed_at' => '2026-10-20 10:30:00', 'reviewed_by_user_id' => $other->id, 'rejection_reason' => 'Add the venue']);
         $this->makePost('articles', $other, ['title' => 'Private foreign title']);
         $this->makePost('documents', $owner, ['title' => 'Former secretary submission']);
         $response = $this->actingAs($owner)->get(route('officer.dashboard'))->assertOk()
@@ -89,7 +89,7 @@ class ContentManagementTest extends TestCase
             $response->assertSee(route($key.'.approve', 1), false)->assertSee('Reject '.strtolower($module['singular']));
         }
         $this->makePost('articles', $president, ['title' => 'Reviewed article', 'approval_status' => 'rejected',
-            'reviewed_at' => '2026-10-20 14:30:00', 'reviewed_by_user_id' => $president->user_id,
+            'reviewed_at' => '2026-10-20 14:30:00', 'reviewed_by_user_id' => $president->id,
             'rejection_reason' => '<script>alert("unsafe")</script>']);
         $this->get(route('adviser.reviews.index', ['status' => 'rejected']))->assertOk()
             ->assertSee('Current reviewer')->assertSee('Oct 20, 2026 2:30 PM')
@@ -162,7 +162,7 @@ class ContentManagementTest extends TestCase
     {
         $president = $this->actor('President', 'Reviewer identity');
         foreach (array_keys(ContentModules::all()) as $module) {
-            $id = $this->makePost($module, $president, ['approval_status' => 'approved', 'reviewed_by_user_id' => $president->user_id, 'reviewed_at' => now()]);
+            $id = $this->makePost($module, $president, ['approval_status' => 'approved', 'reviewed_by_user_id' => $president->id, 'reviewed_at' => now()]);
             $this->actingAs($president)->get(route('workspace.posts.'.$module.'.show', $id))->assertOk()->assertSee('Latest decision');
             $this->get(route($module.'.show', $id))->assertOk()->assertDontSee('Latest decision');
             $this->get(route($module.'.create'))->assertOk()->assertSee('data-content-preview', false)->assertSee('Preview unsaved content');

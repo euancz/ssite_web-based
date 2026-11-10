@@ -91,7 +91,7 @@ class DocumentController extends Controller
         if ($likesEnabled) {
             $documents->withCount('likes');
             if ($user) {
-                $documents->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->user_id)]);
+                $documents->withCount(['likes as liked_by_viewer' => fn ($query) => $query->where('user_id', $user->id)]);
             }
         }
 
@@ -117,13 +117,13 @@ class DocumentController extends Controller
         if (in_array($sort, ['viewed', 'liked'], true)) {
             $documents->orderBy('created_at', 'desc');
         }
-        $documents = $documents->orderBy('document_id', 'asc')
+        $documents = $documents->orderBy('id', 'asc')
             ->paginate(5)
             ->appends(['tab' => $tab, 'sort' => $sort, 'category' => $category, 'q' => $searchQuery, 'semester' => $semester, 'academic_year' => $academicYear]);
         // SECURITY: Visiting Documents clears only this user's unread publication notices for this tab.
         if ($user) {
-            $user->unreadNotifications()->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type')) = ?", ['published'])
-                ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.post_type')) = ?", ['document'])->update(['read_at' => now()]);
+            $user->unreadNotifications()->whereRaw(\App\Support\NotificationSql::field('type').' = ?', ['published'])
+                ->whereRaw(\App\Support\NotificationSql::field('post_type').' = ?', ['document'])->update(['read_at' => now()]);
         }
 
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
@@ -172,12 +172,12 @@ class DocumentController extends Controller
         $this->assertPdf($file);
         unset($validated['file']);
         $document = new Document($validated);
-        $document->created_by_user_id = $request->user()->user_id;
+        $document->created_by_user_id = $request->user()->id;
         $document->content_status = Document::CONTENT_ACTIVE;
         $autoApprove = $request->user()->postsAutoApproved();
         $document->approval_status = $autoApprove ? Document::APPROVAL_APPROVED : Document::APPROVAL_PENDING;
         if ($autoApprove) {
-            $document->reviewed_by_user_id = $request->user()->user_id;
+            $document->reviewed_by_user_id = $request->user()->id;
             $document->reviewed_at = now();
         }
         [$document->file_path, $document->original_name, $document->file_size] = $this->storePdf($file);
@@ -299,13 +299,13 @@ class DocumentController extends Controller
         $this->authorize('bulkArchive', Document::class);
         $validated = $request->validate([
             'document_ids' => ['required', 'array', 'min:1', 'max:100'],
-            'document_ids.*' => ['required', 'integer', 'distinct', Rule::exists('documents', 'document_id')],
+            'document_ids.*' => ['required', 'integer', 'distinct', Rule::exists('documents', 'id')],
         ]);
-        $documents = Document::query()->whereIn('document_id', $validated['document_ids'])->get();
+        $documents = Document::query()->whereIn('id', $validated['document_ids'])->get();
         foreach ($documents as $document) {
             $this->authorize('archive', $document);
         }
-        Document::query()->whereIn('document_id', $documents->modelKeys())->update(['content_status' => Document::CONTENT_ARCHIVED, 'updated_at' => now()]);
+        Document::query()->whereIn('id', $documents->modelKeys())->update(['content_status' => Document::CONTENT_ARCHIVED, 'updated_at' => now()]);
 
         return back()->with('status', 'The selected documents were archived.');
     }
@@ -326,7 +326,7 @@ class DocumentController extends Controller
             abort(404);
         }
 
-        return $pdfResponse->make(Storage::disk('local')->path($document->file_path), $this->safeOriginalName($document->original_name), $request);
+        return $pdfResponse->make($document->file_path, $this->safeOriginalName($document->original_name), $request);
     }
 
     private function assertPdf(UploadedFile $file): void

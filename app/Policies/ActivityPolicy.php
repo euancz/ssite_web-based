@@ -59,9 +59,9 @@ class ActivityPolicy
         return $user->isPresident();
     }
 
-    // SECURITY: Compare post ownership with the custom users.user_id key.
+    // SECURITY: Compare post ownership with the custom users.id key.
     private function owns(User $user, Activity $activity): bool
     {
-        return $activity->created_by_user_id !== null && (int) $activity->created_by_user_id === (int) $user->user_id;
+        return $activity->created_by_user_id !== null && (int) $activity->created_by_user_id === (int) $user->id;
     }
 }

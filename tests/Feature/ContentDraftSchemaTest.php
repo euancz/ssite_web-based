@@ -27,18 +27,18 @@ class ContentDraftSchemaTest extends TestCase
 
     public function test_additive_migration_preserves_content_and_supports_private_draft_payloads(): void
     {
-        $owner = DB::table('users')->insertGetId(['name' => 'Draft author'], 'user_id');
+        $owner = DB::table('users')->insertGetId(['name' => 'Draft author'], 'id');
         DB::table('articles')->insert(['title' => 'Existing published article', 'content' => 'Keep this text',
             'created_by_user_id' => $owner, 'approval_status' => 'approved', 'content_status' => 'active']);
         $before = DB::table('articles')->get()->toJson();
 
         $this->migration()->up();
         $id = (string) Str::uuid();
-        DB::table('content_drafts')->insert(['draft_id' => $id, 'created_by_user_id' => $owner,
+        DB::table('content_drafts')->insert(['id' => $id, 'created_by_user_id' => $owner,
             'module' => 'articles', 'payload' => json_encode(['title' => 'Unfinished', 'content' => 'Private text']),
             'created_at' => now(), 'updated_at' => now()]);
 
-        $draft = DB::table('content_drafts')->where('draft_id', $id)->first();
+        $draft = DB::table('content_drafts')->where('id', $id)->first();
         $this->assertSame(1, (int) $draft->lock_version);
         $this->assertSame('Private text', json_decode($draft->payload, true)['content']);
         $this->assertSame($before, DB::table('articles')->get()->toJson());
@@ -53,19 +53,19 @@ class ContentDraftSchemaTest extends TestCase
     {
         $this->migration()->up();
         $this->expectException(QueryException::class);
-        DB::table('content_drafts')->insert(['draft_id' => (string) Str::uuid(),
+        DB::table('content_drafts')->insert(['id' => (string) Str::uuid(),
             'created_by_user_id' => 999, 'module' => 'articles', 'payload' => '{}']);
     }
 
     public function test_deleting_an_owner_does_not_silently_delete_their_drafts(): void
     {
-        $owner = DB::table('users')->insertGetId(['name' => 'Draft author'], 'user_id');
+        $owner = DB::table('users')->insertGetId(['name' => 'Draft author'], 'id');
         $this->migration()->up();
-        DB::table('content_drafts')->insert(['draft_id' => (string) Str::uuid(),
+        DB::table('content_drafts')->insert(['id' => (string) Str::uuid(),
             'created_by_user_id' => $owner, 'module' => 'documents', 'payload' => '{}']);
 
         try {
-            DB::table('users')->where('user_id', $owner)->delete();
+            DB::table('users')->where('id', $owner)->delete();
             $this->fail('A user with saved drafts must not be deleted implicitly.');
         } catch (QueryException) {
             $this->assertSame(1, DB::table('content_drafts')->count());
@@ -82,7 +82,7 @@ class ContentDraftSchemaTest extends TestCase
 
     public function test_isolated_rollback_removes_only_the_new_draft_table(): void
     {
-        $owner = DB::table('users')->insertGetId(['name' => 'Preserved user'], 'user_id');
+        $owner = DB::table('users')->insertGetId(['name' => 'Preserved user'], 'id');
         DB::table('articles')->insert(['title' => 'Preserved article', 'created_by_user_id' => $owner]);
         $migration = $this->migration();
         $migration->up();

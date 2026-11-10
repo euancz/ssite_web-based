@@ -92,7 +92,7 @@
                      class="site-logo">
                 <span class="site-brand-name">
                     <span class="brand-full">STUDENT SOCIETY IN INFORMATION<br>TECHNOLOGY EDUCATION</span>
-                    <span class="brand-short">SSITE</span>
+                    <span class="brand-short">SSITE</span><span class="brand-campus">Mabalacat City College</span>
                 </span>
             </a>
 
@@ -204,15 +204,6 @@
                     </div>
                 @endauth
 
-                {{-- hamburger (mobile/tablet only) --}}
-                <button type="button"
-                        aria-label="Open menu"
-                        aria-expanded="false"
-                        aria-controls="mobile-nav"
-                        class="icon-button mobile-menu-toggle">
-                    <x-icon name="menu" class="icon" id="icon-open" />
-                    <x-icon name="x" class="icon hidden" id="icon-close" />
-                </button>
             </div>
             @endunless
         </div>
@@ -242,11 +233,6 @@
 
     <script>
         (() => {
-            const menuToggle = document.querySelector('.mobile-menu-toggle');
-            const mobileNav = document.getElementById('mobile-nav');
-            const mobileNavScrim = document.querySelector('.mobile-nav-scrim');
-            const openIcon = document.getElementById('icon-open');
-            const closeIcon = document.getElementById('icon-close');
             const searchToggle = document.getElementById('mobile-search-toggle');
             const mobileSearch = document.getElementById('mobile-search');
 
@@ -269,42 +255,6 @@
                 });
             }
 
-            if (!menuToggle || !mobileNav || !mobileNavScrim || !openIcon || !closeIcon) return;
-
-            const setMenuOpen = (open) => {
-                menuToggle.setAttribute('aria-expanded', String(open));
-                const label = open ? 'Close menu' : 'Open menu';
-                menuToggle.setAttribute('aria-label', label);
-                menuToggle.dataset.tooltip = label;
-                mobileNav.classList.toggle('hidden', !open);
-                mobileNavScrim.classList.toggle('hidden', !open);
-                document.body.classList.toggle('mobile-nav-open', open);
-                openIcon.classList.toggle('hidden', open);
-                closeIcon.classList.toggle('hidden', !open);
-                if (open) mobileNav.querySelector('a[href]')?.focus();
-            };
-
-            menuToggle.addEventListener('click', () => {
-                setMenuOpen(menuToggle.getAttribute('aria-expanded') !== 'true');
-            });
-
-            mobileNavScrim.addEventListener('click', () => {
-                setMenuOpen(false);
-                menuToggle.focus();
-            });
-
-            mobileNav.querySelectorAll('a[href]').forEach((link) => link.addEventListener('click', () => setMenuOpen(false)));
-
-            document.addEventListener('keydown', (event) => {
-                if (event.key !== 'Escape' || mobileNav.classList.contains('hidden')) return;
-
-                setMenuOpen(false);
-                menuToggle.focus();
-            });
-
-            window.matchMedia('(min-width: 768px)').addEventListener('change', (event) => {
-                if (event.matches) setMenuOpen(false);
-            });
         })();
     </script>
 

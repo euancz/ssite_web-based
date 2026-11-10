@@ -1,5 +1,16 @@
 <?php
 
+$supabase = [
+    'driver' => 's3',
+    'key' => env('SUPABASE_S3_ACCESS_KEY_ID'),
+    'secret' => env('SUPABASE_S3_SECRET_ACCESS_KEY'),
+    'region' => env('SUPABASE_S3_REGION'),
+    'endpoint' => env('SUPABASE_S3_ENDPOINT'),
+    'use_path_style_endpoint' => true,
+    'throw' => true,
+    'report' => true,
+];
+
 return [
 
     /*
@@ -30,7 +41,10 @@ return [
 
     'disks' => [
 
-        'local' => [
+        // Keep logical disk names stable so existing attachment paths still work.
+        'local' => env('MEDIA_STORAGE', 'local') === 'supabase' ? array_merge($supabase, [
+            'bucket' => env('SUPABASE_PRIVATE_BUCKET', 'ssite-private'),
+        ]) : [
             'driver' => 'local',
             'root' => storage_path('app/private'),
             'serve' => true,
@@ -38,7 +52,10 @@ return [
             'report' => false,
         ],
 
-        'public' => [
+        'public' => env('MEDIA_STORAGE', 'local') === 'supabase' ? array_merge($supabase, [
+            'bucket' => env('SUPABASE_PUBLIC_BUCKET', 'ssite-public'),
+            'url' => env('SUPABASE_PUBLIC_URL'),
+        ]) : [
             'driver' => 'local',
             'root' => storage_path('app/public'),
             'url' => env('APP_URL').'/storage',

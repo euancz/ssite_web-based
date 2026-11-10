@@ -16,6 +16,9 @@ Route::middleware('guest')->group(function () {
         ->name('microsoft.callback');
 });
 
+Route::get('/auth/microsoft/mobile', [MicrosoftAuthController::class, 'redirectForMobile'])
+    ->name('microsoft.mobile.login');
+
 Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware(RequireAuthentication::class)
     ->name('logout');

@@ -16,11 +16,11 @@ use Throwable;
 class PostNotificationRecipients
 {
     private const POST_ROUTES = [
-        'article' => ['articles.show', 'article_id'],
-        'activity' => ['activities.show', 'activity_id'],
-        'achievement' => ['achievements.show', 'achievement_id'],
-        'document' => ['documents.show', 'document_id'],
-        'liquidation' => ['liquidations.show', 'liquidation_id'],
+        'article' => ['articles.show', 'id'],
+        'activity' => ['activities.show', 'id'],
+        'achievement' => ['achievements.show', 'id'],
+        'document' => ['documents.show', 'id'],
+        'liquidation' => ['liquidations.show', 'id'],
     ];
 
     public function submitted(string $postType, Model $post, User $actor, bool $needsReviewAgain = false): void
@@ -36,7 +36,7 @@ class PostNotificationRecipients
         // A publication notice requires both states; archiving and later restoring are never publication events.
         if ($post->getAttribute('approval_status') !== 'approved' || $post->getAttribute('content_status') !== 'active') return;
         $this->safely(function () use ($postType, $post, $actor, $exceptUserIds): void {
-            $this->sendToEveryoneExcept(array_merge([$actor->user_id], $exceptUserIds),
+            $this->sendToEveryoneExcept(array_merge([$actor->id], $exceptUserIds),
                 new PostPublished($this->payload($postType, $post, $actor)));
         }, $postType, $post);
     }
@@ -49,7 +49,7 @@ class PostNotificationRecipients
             if ($author) $this->safely(fn () => $author->notify(new PostApproved($payload)), $postType, $post);
             if ($post->getAttribute('approval_status') === 'approved' && $post->getAttribute('content_status') === 'active') {
                 // The author already receives the approval notice, so they are omitted from the new-post broadcast.
-                $this->published($postType, $post, $actor, $author ? [$author->user_id] : []);
+                $this->published($postType, $post, $actor, $author ? [$author->id] : []);
             }
         }, $postType, $post);
     }
@@ -92,17 +92,17 @@ class PostNotificationRecipients
                         $this->safely(fn () => $user->notify($notification), 'post', null);
                     }
                 }
-            }, 'user_id');
+            }, 'id');
     }
 
     private function sendToEveryoneExcept(array $excludedIds, object $notification): void
     {
         User::query()->whereIn('role', User::ROLES)
-            ->when($excludedIds !== [], fn ($query) => $query->whereNotIn('user_id', array_unique($excludedIds)))
-            // SECURITY: The broadcast is chunked by the custom user_id key to bound memory use.
+            ->when($excludedIds !== [], fn ($query) => $query->whereNotIn('id', array_unique($excludedIds)))
+            // SECURITY: The broadcast is chunked by the id key to bound memory use.
             ->chunkById(100, function ($users) use ($notification): void {
                 foreach ($users as $user) $this->safely(fn () => $user->notify($notification), 'post', null);
-            }, 'user_id');
+            }, 'id');
     }
 
     private function safely(callable $send, string $postType, ?Model $post): void
