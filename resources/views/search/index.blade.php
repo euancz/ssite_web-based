@@ -7,6 +7,15 @@
 <div class="dashboard-page search-page">
     <x-ui.page-header title="Search SSITE" :subtitle="$validQuery ? 'Results for “' . $query . '”' : 'Find articles, activities, achievements, and more.'" />
 
+    <form method="GET" action="{{ route('search.index') }}" class="dashboard-panel" role="search" aria-label="Search all SSITE content">
+        <label for="results-query">Search all content</label>
+        <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:8px">
+            <input id="results-query" name="q" type="search" value="{{ $query }}" placeholder="Search articles, documents, and more" minlength="2" required class="site-search-input" style="flex:1 1 220px; min-width:0" aria-describedby="results-search-help">
+            <button type="submit" class="dashboard-button">Search</button>
+        </div>
+        <p id="results-search-help">Enter at least 2 characters. A new search includes all content types.</p>
+    </form>
+
     @if (! $validQuery)
         <section class="dashboard-panel search-state" role="status">
             <h2>Search needs at least 2 characters</h2>
@@ -30,6 +39,9 @@
             <section class="dashboard-panel search-state">
                 <h2>No results for “{{ $query }}”.</h2>
                 <p>Try different keywords.</p>
+                @if ($activeType !== 'all')
+                    <a class="dashboard-button" href="{{ route('search.index', ['q' => $query]) }}">Search all content types</a>
+                @endif
             </section>
         @else
             <section class="search-results" aria-label="Search results">

@@ -4,6 +4,8 @@ namespace App\Http\Requests\Content;
 
 use App\Models\Activity;
 use App\Rules\MaxWords;
+use App\Services\ArticleContent;
+use Illuminate\Validation\Rule;
 
 class ActivityRequest extends ContentRequest
 {
@@ -15,7 +17,9 @@ class ActivityRequest extends ContentRequest
     {
         return [
             'title' => ['required', 'string', 'max:200'],
-            'description' => ['required', 'string', new MaxWords],
+            'description' => ['required', 'string', 'max:20000', new MaxWords],
+            'content_format' => app(ArticleContent::class)->availableFor('activities')
+                ? ['sometimes', 'required', Rule::in(['plain', 'markdown'])] : ['exclude'],
             'activity_date' => ['nullable', 'date'],
             'location' => ['nullable', 'string', 'max:200'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],

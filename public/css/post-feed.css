@@ -802,3 +802,19 @@ a.ssite-page-button:hover {
     min-height: 44px;
 }
 
+
+/* Separate category metadata from the article excerpt. */
+.post-card-category {
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 0 10px;
+    padding: 4px 10px;
+    border: 1px solid var(--ssite-line);
+    border-radius: 6px;
+    background: var(--color-brand-surface);
+    color: var(--ssite-navy);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}

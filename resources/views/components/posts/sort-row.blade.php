@@ -22,7 +22,7 @@
             @endforeach
         </select>
     @endif
-    @if ($filterName === 'category')<noscript><button type="submit" class="dashboard-button">Apply filters</button></noscript>@endif
+    <noscript><button type="submit" class="dashboard-button">Apply filters</button></noscript>
 </form>
 
 @once

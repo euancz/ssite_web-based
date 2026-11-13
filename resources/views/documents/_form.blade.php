@@ -59,8 +59,9 @@
     {{-- SECURITY: The server checks the real MIME and %PDF header, then stores a generated filename privately. --}}
     <div class="dashboard-form-field">
         <label for="document-file">{{ $document ? 'Replace PDF (optional)' : 'PDF file' }}@unless ($document) <span class="post-form-required-mark" aria-hidden="true">*</span>@endunless</label>
-        <input id="document-file" name="file" @error('file') aria-invalid="true" aria-describedby="document-file-error" @enderror type="file" accept=".pdf,application/pdf" @required(! $document)>
-        <span class="profile-field-help">PDF only; maximum {{ config('school.max_pdf_size_kb', 10240) }} KB.</span>
+        <x-workspace.attachment title="Attach a PDF" :help="'PDF only; maximum '.config('school.max_pdf_size_kb', 10240).' KB.'">
+            <input id="document-file" name="file" @error('file') aria-invalid="true" aria-describedby="document-file-error" @enderror type="file" accept=".pdf,application/pdf" @required(! $document)>
+        </x-workspace.attachment>
         <x-workspace.upload-status input-id="document-file" :max-kb="config('school.max_pdf_size_kb', 10240)" />
         @error('file') <span id="document-file-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>

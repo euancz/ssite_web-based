@@ -6,6 +6,14 @@
 @php
     // SECURITY: Names select only this static, allow-listed SVG map; no request or database value becomes markup.
     $icons = [
+        'table' => '<rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M3 15h18M9 3v18M15 3v18" />',
+        'clear-format' => '<path d="M4 4h14M11 4l-4 16M3 20h9m4-7 6 6m0-6-6 6" />',
+        'redo' => '<path d="M21 10H10a7 7 0 0 0 0 14m11-14-5-5m5 5-5 5" transform="translate(0 -2)" />',
+        'undo' => '<path d="M3 10h11a7 7 0 0 1 0 14M3 10l5-5M3 10l5 5" transform="translate(0 -2)" />',
+        'code-block' => '<rect x="2" y="3" width="20" height="18" rx="2" /><path d="m8 8-4 4 4 4m8-8 4 4-4 4m-3-9-2 10" />',
+        'indent' => '<path d="M10 5h11M10 12h11M10 19h11M2 8l4 4-4 4" />',
+        'outdent' => '<path d="M10 5h11M10 12h11M10 19h11M6 8l-4 4 4 4" />',
+        'strikethrough' => '<path d="M16 5c-2-2-9-2-9 2 0 2 2 3 5 3M8 19c3 2 9 1 9-3 0-2-2-3-4-3M3 12h18" />',
         'home' => '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z" />',
         'compass' => '<circle cx="12" cy="12" r="10" /><path d="m16 8-2 6-6 2 2-6z" />',
         'receipt' => '<path d="M4 3l2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1v18l-2-1-2 1-2-1-2 1-2-1-2 1-2-1-2 1z" /><path d="M8 8h8M8 12h8M8 16h5" />',
@@ -42,6 +50,7 @@
         'log-out' => '<path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>',
         'map-pin' => '<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle>',
         'mail' => '<path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"></path><rect x="2" y="4" width="20" height="16" rx="2"></rect>',
+        'facebook' => '<path fill="currentColor" stroke="none" d="M14 22v-9h3l.5-4H14V7c0-1.16.32-2 2-2h2V1.4A26 26 0 0 0 15 1c-3 0-5 1.82-5 5v3H7v4h3v9z" />',
         'ellipsis' => '<circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle>',
         'heart' => '<path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"></path>',
         'trash-2' => '<path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>',

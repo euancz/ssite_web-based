@@ -10,6 +10,9 @@ export function initFlashToasts(root = typeof document === 'undefined' ? null : 
     region.tabIndex = -1;
 
     const entries = messages.map((message) => {
+        const placeholder = document.createComment('flash-toast');
+        message.replaceWith(placeholder);
+
         const entry = document.createElement('div');
         entry.className = 'flash-toast-entry';
 
@@ -23,21 +26,30 @@ export function initFlashToasts(root = typeof document === 'undefined' ? null : 
         region.append(entry);
         dismiss.addEventListener('click', () => {
             const nextDismiss = entry.nextElementSibling?.querySelector('button');
-            entry.hidden = true;
+            entry.remove();
+            placeholder.remove();
             if (nextDismiss) nextDismiss.focus();
-            else region.focus();
+            else if (region.querySelector('.flash-toast-entry')) region.focus();
+            else {
+                region.remove();
+                document.getElementById('main-content')?.focus();
+            }
         });
 
-        return { message, entry };
+        return { message, entry, placeholder };
     });
 
     document.body.append(region);
     entries.forEach(({ message }) => message.classList.add('flash-toast'));
 
     return () => {
-        entries.forEach(({ message, entry }) => {
+        entries.forEach(({ message, entry, placeholder }) => {
             message.classList.remove('flash-toast');
-            entry.before(message);
+            if (placeholder.isConnected) {
+                placeholder.replaceWith(message);
+            } else if (entry.isConnected) {
+                entry.before(message);
+            }
             entry.remove();
         });
         region.remove();

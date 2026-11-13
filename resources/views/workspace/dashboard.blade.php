@@ -4,13 +4,7 @@
 
 @section('content')
 <div class="workspace-dashboard workspace-president-dashboard">
-    <header class="workspace-dashboard-heading">
-        <span class="workspace-dashboard-mark" aria-hidden="true"><x-workspace.icon name="grid" /></span>
-        <div>
-            <h1>Dashboard</h1>
-            <p>Publishing status and the work that needs your attention.</p>
-        </div>
-    </header>
+    <x-workspace.welcome description="A clear view of your community. Review submissions and keep great stories moving." :action-url="route('adviser.reviews.index', ['status' => 'pending'])" action-label="Open review queue" />
     <x-workspace.dashboard-summary :status="$dashboardStatus" :draft-count="$draftCount" :reviewer="true" />
 
     <section class="workspace-officer-recent" aria-labelledby="workspace-pending-title">
@@ -37,5 +31,7 @@
         </x-ui.data-table>
     </section>
 
+    <x-workspace.content-areas :modules="$moduleStats" />
+    <x-workspace.dashboard-guide />
 </div>
 @endsection

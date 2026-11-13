@@ -134,7 +134,8 @@ class SiteSearch
         $this->applyWords($builder, $fields, $words);
         $this->applyTitleOrder($builder, 'title', $query);
         $columns = array_values(array_unique(array_merge($fields, [$key, $dateField, 'created_at'])));
-        if ($type === 'articles' && app(\App\Services\ArticleContent::class)->available()) {
+        if (in_array($type, ['articles', 'activities', 'achievements'], true)
+            && app(\App\Services\ArticleContent::class)->availableFor($type === 'articles' ? 'articles' : $type)) {
             $columns[] = 'content_format';
         }
         $rows = $builder->get($columns);
@@ -179,7 +180,11 @@ class SiteSearch
         $text = strip_tags($title);
         foreach ($fields as $field) {
             if ($field !== 'title' && trim((string) ($row->{$field} ?? '')) !== '') {
-                $value = $field === 'content' && $row instanceof Article ? $row->displayText() : (string) $row->{$field};
+                $formatted = in_array($row::class, [\App\Models\Article::class, \App\Models\Activity::class, \App\Models\Achievement::class], true)
+                    && $row->content_format === 'markdown';
+                $value = $formatted
+                    ? app(\App\Services\ArticleContent::class)->text((string) $row->{$field}, 'markdown')
+                    : ($field === 'content' && $row instanceof Article ? $row->displayText() : (string) $row->{$field});
                 $text .= ' · ' . strip_tags($value);
             }
         }

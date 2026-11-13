@@ -2469,7 +2469,6 @@ body.workspace-site-body .workspace-composer-panel .article-editor-canvas textar
 /* Shared interaction baseline: keep the public site and workspace on one system. */
 html {
     scroll-padding-top: calc(var(--site-header-height, 0px) + 1rem);
-    scrollbar-color: var(--ssite-line) var(--upgrade-page);
 }
 
 body :is(a, button, input, select, textarea, summary, [role="button"]):focus-visible {
@@ -2908,6 +2907,11 @@ body.main-site-body .public-home-header ~ main .home-page .home-intro-image::bef
 body.main-site-body .public-home-header ~ main .home-page .home-intro-image img {
     position: relative;
     z-index: 1;
+    height: auto;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
     filter: none;
     mix-blend-mode: multiply;
 }

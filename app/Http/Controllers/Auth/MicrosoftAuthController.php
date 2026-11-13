@@ -24,8 +24,12 @@ class MicrosoftAuthController extends Controller
     /**
      * Start the Microsoft OAuth flow and request an interactive account selection.
      */
-    public function redirect()
+    public function redirect(Request $request)
     {
+        if ($redirect = $this->redirectToCallbackHost($request)) {
+            return $redirect;
+        }
+
         return $this->startMicrosoftSignIn();
     }
 
@@ -35,6 +39,10 @@ class MicrosoftAuthController extends Controller
         if ($returnUrl !== null) {
             abort_unless(MobileLogin::allowsWebReturnUrl($returnUrl), 422, 'The app return address is not allowed.');
         }
+        if ($redirect = $this->redirectToCallbackHost($request, true)) {
+            return $redirect;
+        }
+
         $request->session()->put('mobile_login_return_url', $returnUrl);
         $request->session()->put('mobile_login', true);
 
@@ -48,6 +56,28 @@ class MicrosoftAuthController extends Controller
         }
 
         return $this->startMicrosoftSignIn();
+    }
+
+    private function redirectToCallbackHost(Request $request, bool $mobile = false): ?\Illuminate\Http\RedirectResponse
+    {
+        $callback = (string) config('services.microsoft.redirect');
+        if (! Str::startsWith($callback, ['http://', 'https://'])
+            || ! Str::endsWith($callback, '/auth/microsoft/callback')) {
+            return null;
+        }
+
+        // Establish the session on the callback host before storing OAuth state or app return data.
+        // localhost and 127.0.0.1 do not share browser cookies.
+        $target = Str::beforeLast($callback, '/callback') . ($mobile ? '/mobile' : '');
+        if ($request->url() === $target) {
+            return null;
+        }
+
+        if ($mobile && $request->query('return_url') !== null) {
+            $target .= '?' . http_build_query(['return_url' => $request->query('return_url')]);
+        }
+
+        return redirect()->away($target);
     }
 
     private function startMicrosoftSignIn()

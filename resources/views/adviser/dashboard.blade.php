@@ -5,11 +5,7 @@
 @section('content')
 <div class="dashboard-page workspace-governance-dashboard">
     @if (auth()->user()->isAdviser())
-        <header class="workspace-dashboard-heading">
-        <span class="workspace-dashboard-mark" aria-hidden="true"><x-workspace.icon name="users" /></span>
-            <div><h1>Organization overview</h1><p>Manage student and officer accounts.</p></div>
-            <a class="dashboard-button" href="{{ route('adviser.users.index') }}">Manage accounts</a>
-        </header>
+        <x-workspace.welcome title="Organization overview" description="Support the people behind SSITE. Manage student and officer accounts, and stay connected to the organization." :action-url="route('adviser.users.index')" action-label="Manage accounts" />
 
         <section class="workspace-governance-summary" aria-labelledby="governance-summary-title">
             <div class="workspace-governance-section-heading"><div><h2 id="governance-summary-title">People and publishing</h2><p>Quick counts for your organization.</p></div></div>
@@ -26,11 +22,7 @@
         @endif
 
     @else
-        <header class="workspace-dashboard-heading">
-        <span class="workspace-dashboard-mark" aria-hidden="true"><x-workspace.icon name="users" /></span>
-            <div><h1>Adviser access</h1><p>Manage adviser assignments and review recent role changes.</p></div>
-            <span class="workspace-dashboard-role">Superadmin</span>
-        </header>
+        <x-workspace.welcome title="Adviser access" description="Keep your organization in good hands. Manage adviser assignments and review recent role changes." :action-url="route('adviser.users.index')" action-label="Manage adviser access" />
 
 
         <section class="workspace-governance-list" aria-labelledby="current-advisers-title">
@@ -74,5 +66,6 @@
             @endif
         </section>
     @endif
+    <x-workspace.dashboard-guide />
 </div>
 @endsection

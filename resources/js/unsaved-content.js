@@ -1,7 +1,7 @@
 // A navigation warning only: content is never copied to browser storage.
 export function protectUnsavedContent(form) {
     const snapshot = () => JSON.stringify(Array.from(form.elements)
-        .filter((control) => control.matches('input, select, textarea')
+        .filter((control) => control.name && control.matches('input, select, textarea')
             && !control.matches(':disabled')
             && !['hidden', 'submit', 'button', 'reset'].includes(control.type))
         .map((control) => {

@@ -2,7 +2,9 @@
 @section('title', 'My drafts')
 @section('content')
 <div class="dashboard-page">
-    <x-ui.page-header title="My drafts" subtitle="Private work in progress. Resume a draft, attach any files, then submit when it is ready." />
+    <x-ui.page-header title="My drafts" subtitle="Private work in progress. Resume a draft, attach any files, then submit when it is ready.">
+        <x-slot:actions><a class="dashboard-button" href="{{ route('workspace.create') }}"><x-workspace.icon name="plus" /> Create post</a></x-slot:actions>
+    </x-ui.page-header>
     <x-ui.form-errors />
     @if (session('status'))<p class="dashboard-success" role="status">{{ session('status') }}</p>@endif
     <form method="GET" action="{{ route('workspace.drafts.index') }}" class="dashboard-filter-form">

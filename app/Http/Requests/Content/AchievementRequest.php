@@ -4,6 +4,8 @@ namespace App\Http\Requests\Content;
 
 use App\Models\Achievement;
 use App\Rules\MaxWords;
+use App\Services\ArticleContent;
+use Illuminate\Validation\Rule;
 
 class AchievementRequest extends ContentRequest
 {
@@ -15,7 +17,9 @@ class AchievementRequest extends ContentRequest
     {
         return [
             'title' => ['required', 'string', 'max:200'],
-            'description' => ['required', 'string', new MaxWords],
+            'description' => ['required', 'string', 'max:20000', new MaxWords],
+            'content_format' => app(ArticleContent::class)->availableFor('achievements')
+                ? ['sometimes', 'required', Rule::in(['plain', 'markdown'])] : ['exclude'],
             'awardee' => ['nullable', 'string', 'max:200'],
             'category' => ['nullable', 'string', 'max:100'],
             'achievement_date' => ['nullable', 'date'],

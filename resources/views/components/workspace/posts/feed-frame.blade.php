@@ -46,9 +46,16 @@
 <div class="post-feed-shell workspace-library-feed {{ $stylesheet ? 'post-feed-' . $stylesheet : '' }}">
     @if ($variant === 'index')
         <header class="post-feed-heading">
-            <h1>{{ $statusTitle }}</h1>
-            <p>{{ $title }}@if ($activeTab === 'archived') &middot; Archived posts are hidden from the public site.@endif</p>
+            <div><span class="workspace-eyebrow">CONTENT LIBRARY / {{ $title }}</span><h1>{{ $statusTitle }}</h1>
+            <p>{{ $description }}@if ($activeTab === 'archived') Archived posts are hidden from the public site.@endif</p></div>
+            @if ($filterModuleKey !== false && $filterUser?->canPostIn($filterModuleKey))
+                <a class="dashboard-button" href="{{ route($filterModules[$filterModuleKey]['create']) }}"><x-workspace.icon name="plus" /> Create {{ strtolower($filterModules[$filterModuleKey]['singular']) }}</a>
+            @endif
         </header>
+
+        @if ($routeName && $allowedTabs)
+            <x-workspace.ui.workflow-tabs :route-name="$routeName" :allowed-tabs="$allowedTabs" :active-tab="$activeTab" :pending-count="$pendingCount" />
+        @endif
 
         @if ($sortOptions)
             <div class="post-feed-tab-row">

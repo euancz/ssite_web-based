@@ -6,13 +6,14 @@
     $libraryModule = $visibleModules->first();
 @endphp
 
-<section class="workspace-dashboard-guide" aria-labelledby="workspace-guide-title">
-    <header class="workspace-dashboard-guide-heading">
+<details class="workspace-dashboard-guide">
+    <summary class="workspace-dashboard-guide-heading">
         <div>
-            <h2 id="workspace-guide-title">Workspace guide</h2>
-            <p>A quick explanation of the sections in your sidebar.</p>
+            <h2>Need a little direction?</h2>
+            <p>Explore your workspace guide and publishing workflow.</p>
         </div>
-    </header>
+        <x-workspace.icon name="chevron-down" />
+    </summary>
 
     <div class="workspace-dashboard-guide-grid">
         @if ($creatableModules->isNotEmpty())
@@ -51,7 +52,7 @@
                 <span class="workspace-guide-icon"><x-workspace.icon name="users" /></span>
                 <div class="workspace-guide-copy">
                     <h3>Administration</h3>
-                    <p>Review submissions and manage workspace accounts and officer information.</p>
+                    <p>{{ $guideUser->canReview() ? 'Review submissions and manage officer information.' : 'Manage organization accounts and access for the people you support.' }}</p>
                     <div class="workspace-guide-links">
                         @can(config('workspace.navigation.review.gate'))
                             <a href="{{ route('adviser.reviews.index', ['status' => 'pending']) }}">Review queue <x-workspace.icon name="chevron" /></a>
@@ -67,4 +68,4 @@
             </article>
         @endif
     </div>
-</section>
+</details>

@@ -42,8 +42,9 @@
     {{-- SECURITY: Server verifies finfo MIME and the %PDF header, then generates a private stored filename. --}}
     <div class="dashboard-form-field">
         <label for="liquidation-file">{{ $liquidation ? 'Replace PDF (optional)' : 'PDF file' }}@unless ($liquidation) <span class="post-form-required-mark" aria-hidden="true">*</span>@endunless</label>
-        <input id="liquidation-file" name="file" @error('file') aria-invalid="true" aria-describedby="liquidation-file-error" @enderror type="file" accept=".pdf,application/pdf" @required(! $liquidation)>
-        <span class="profile-field-help">PDF only; maximum {{ config('school.max_pdf_size_kb', 10240) }} KB.</span>
+        <x-workspace.attachment title="Attach a PDF" :help="'PDF only; maximum '.config('school.max_pdf_size_kb', 10240).' KB.'">
+            <input id="liquidation-file" name="file" @error('file') aria-invalid="true" aria-describedby="liquidation-file-error" @enderror type="file" accept=".pdf,application/pdf" @required(! $liquidation)>
+        </x-workspace.attachment>
         <x-workspace.upload-status input-id="liquidation-file" :max-kb="config('school.max_pdf_size_kb', 10240)" />
         @error('file') <span id="liquidation-file-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>

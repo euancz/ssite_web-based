@@ -31,7 +31,7 @@
         <aside class="workspace-sidebar" id="workspace-sidebar" aria-label="Workspace navigation">
             <a class="workspace-brand" href="{{ route($user->dashboardRoute()) }}">
                 <img src="{{ asset('images/SSITE LOGO.png') }}" alt="SSITE">
-                <span class="workspace-brand-copy"><strong>{{ $workspaceConfig['brand'] }}</strong></span>
+                <span class="workspace-brand-copy"><strong>{{ $workspaceConfig['brand'] }}</strong><small>Content &amp; publishing</small></span>
             </a>
 
             <nav class="workspace-nav" aria-label="Workspace">
@@ -63,27 +63,28 @@
                         $isLibraryRoute = $activeModule && request()->routeIs($activeModule . '.index', 'editorial.' . $activeModule . '.index', 'workspace.posts.' . $activeModule . '.index');
                         $activeLibraryTab = request('tab', $user->isPresident() ? 'published' : 'mine');
                     @endphp
-                    <section class="workspace-nav-section" aria-label="Activity">
-                        <span class="workspace-nav-label">Activity</span>
-                        <a class="workspace-nav-link {{ request()->routeIs('workspace.content-activity.*') ? 'is-active' : '' }}" href="{{ route('workspace.content-activity.index') }}" aria-label="Activity log" data-tooltip="Activity log" @if(request()->routeIs('workspace.content-activity.*')) aria-current="page" @endif><x-workspace.icon name="clock" /><span>Activity log</span></a>
-                    </section>
                     <section class="workspace-nav-section" aria-label="Drafts and submissions">
-                        <span class="workspace-nav-label">Drafts &amp; submissions</span>
+                        <span class="workspace-nav-label">My work</span>
                         <a class="workspace-nav-link {{ request()->routeIs('workspace.drafts.*') ? 'is-active' : '' }}" href="{{ route('workspace.drafts.index') }}" aria-label="My drafts" data-tooltip="My drafts" @if(request()->routeIs('workspace.drafts.*')) aria-current="page" @endif><x-workspace.icon name="file" /><span>My drafts</span></a>
                         @if ($libraryRoute)
                             <a class="workspace-nav-link workspace-library-link {{ $isLibraryRoute && $activeLibraryTab === 'mine' ? 'is-active' : '' }}" href="{{ route($libraryRoute, ['tab' => 'mine']) }}" aria-label="My submissions" data-tooltip="My submissions" @if($isLibraryRoute && $activeLibraryTab === 'mine') aria-current="page" @endif><x-workspace.icon name="file" /><span>My submissions</span></a>
                         @endif
-                    </section>
                     @if ($libraryRoute)
-                        <section class="workspace-nav-section" aria-label="Published posts">
-                            <span class="workspace-nav-label">Published</span>
                             <a class="workspace-nav-link workspace-library-link {{ $isLibraryRoute && $activeLibraryTab === 'published' ? 'is-active' : '' }}" href="{{ route($libraryRoute, ['tab' => 'published']) }}" aria-label="Published posts" data-tooltip="Published posts" @if($isLibraryRoute && $activeLibraryTab === 'published') aria-current="page" @endif><x-workspace.icon name="check" /><span>Published posts</span></a>
-                        </section>
-                        <section class="workspace-nav-section" aria-label="Archived posts">
-                            <span class="workspace-nav-label">Archived</span>
                             <a class="workspace-nav-link workspace-library-link {{ $isLibraryRoute && $activeLibraryTab === 'archived' ? 'is-active' : '' }}" href="{{ route($libraryRoute, ['tab' => 'archived']) }}" aria-label="Archived posts" data-tooltip="Archived posts" @if($isLibraryRoute && $activeLibraryTab === 'archived') aria-current="page" @endif><x-workspace.icon name="archive" /><span>Archived posts</span></a>
-                        </section>
                     @endif
+                        <a class="workspace-nav-link {{ request()->routeIs('workspace.content-activity.*') ? 'is-active' : '' }}" href="{{ route('workspace.content-activity.index') }}" aria-label="Activity log" data-tooltip="Activity log" @if(request()->routeIs('workspace.content-activity.*')) aria-current="page" @endif><x-workspace.icon name="clock" /><span>Activity log</span></a>
+                    </section>
+                    <section class="workspace-nav-section" aria-label="Content library">
+                        <span class="workspace-nav-label">Content library</span>
+                        @foreach ($availableModules as $moduleKey => $module)
+                            <a class="workspace-nav-link workspace-module-link {{ $isLibraryRoute && $activeModule === $moduleKey ? 'is-active' : '' }}"
+                               href="{{ route($module['workspace'], ['tab' => 'published']) }}"
+                               aria-label="{{ $module['label'] }}" data-tooltip="{{ $module['label'] }}">
+                                <x-workspace.icon :name="$module['icon']" /><span>{{ $module['label'] }}</span>
+                            </a>
+                        @endforeach
+                    </section>
                 @endif
 
                 @if ($user->canReview()
@@ -131,6 +132,7 @@
                 </button>
                 <div class="workspace-topbar-title"><span>SSITE Workspace</span><span aria-hidden="true">/</span><strong>@yield('title', 'Dashboard')</strong></div>
                 <div class="workspace-topbar-actions">
+                    <button class="workspace-jump-trigger" type="button" data-workspace-open="workspace-jump" aria-haspopup="dialog" aria-controls="workspace-jump" aria-label="Jump to a workspace page" hidden><x-workspace.icon name="search" /><span>Jump to?</span><kbd>Ctrl K</kbd></button>
                     <a class="workspace-view-site" href="{{ url('/') }}" aria-label="View site" data-tooltip="View site"><x-workspace.icon name="external" /><span>View site</span></a>
                     <div class="notification-menu-wrapper workspace-notification" id="notification-menu-wrapper"
                          data-summary-url="{{ route('notifications.summary') }}"
@@ -173,7 +175,7 @@
                             @if ($user->hasCompletedProfile())
                                 <a href="{{ route('profile.edit') }}" class="account-menu-action" role="menuitem">Profile</a>
                             @endif
-                            <button type="button" class="account-menu-action" role="menuitem">Settings</button>
+                            <button type="button" class="account-menu-action" role="menuitem" data-workspace-open="workspace-preferences" aria-haspopup="dialog" aria-controls="workspace-preferences" hidden>Workspace settings</button>
                             <div class="account-menu-divider" role="separator"></div>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
@@ -189,6 +191,9 @@
             </main>
         </div>
     </div>
+
+    @include('layouts.partials.workspace-tools')
+    <script src="{{ asset('js/workspace-ui.js') }}" defer></script>
 
     <script>
         (() => {

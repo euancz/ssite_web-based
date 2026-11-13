@@ -12,11 +12,22 @@
         <input id="activity-title" name="title" @error('title') aria-invalid="true" aria-describedby="activity-title-error" @enderror type="text" maxlength="200" required value="{{ old('title', $draftValues['title'] ?? $activity?->title) }}">
         @error('title') <span id="activity-title-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
-    {{-- The activity description is escaped when redisplayed and when shown publicly. --}}
+    @php($formattingEnabled = app(\App\Services\ArticleContent::class)->availableFor('activities'))
     <div class="dashboard-form-field">
-        <label for="activity-description">Description <span class="post-form-required-mark" aria-hidden="true">*</span></label>
-        <textarea id="activity-description" name="description" @error('description') aria-invalid="true" aria-describedby="activity-description-error" @enderror rows="12" required>{{ old('description', $draftValues['description'] ?? $activity?->description) }}</textarea>
-        <span class="profile-field-help">Maximum 300 words.</span>
+        <label id="activity-description-label" for="activity-description">Description <span class="post-form-required-mark" aria-hidden="true">*</span></label>
+        <x-rich-content-editor
+            id="activity-description"
+            name="description"
+            format-id="activity-content-format"
+            label-id="activity-description-label"
+            :value="$draftValues['description'] ?? $activity?->description"
+            :format-value="$draftValues['content_format'] ?? $activity?->content_format ?? 'markdown'"
+            :formatting-enabled="$formattingEnabled"
+        />
+        @if ($formattingEnabled)
+            <span class="profile-field-help">Use the toolbar or paste formatted text.</span>
+        @endif
+        <span class="profile-field-help">Maximum 300 words and 20,000 characters.</span>
         @error('description') <span id="activity-description-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
     {{-- The optional date maps to activities.activity_date. --}}
@@ -34,8 +45,9 @@
     {{-- SECURITY: Upload validation and filename generation happen on the server. --}}
     <div class="dashboard-form-field">
         <label for="activity-image">{{ $activity ? 'Replace image (optional)' : 'Image (optional)' }}</label>
-        <input id="activity-image" data-image-preview="activity-image-preview" name="image" @error('image') aria-invalid="true" aria-describedby="activity-image-error" @enderror type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
-        <span class="profile-field-help">JPG, PNG, or WebP; maximum 2 MB.</span>
+        <x-workspace.attachment title="Attach a feature image" help="JPG, PNG, or WebP up to 2 MB">
+            <input id="activity-image" data-image-preview="activity-image-preview" name="image" @error('image') aria-invalid="true" aria-describedby="activity-image-error" @enderror type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+        </x-workspace.attachment>
         <x-workspace.upload-status input-id="activity-image" :max-kb="2048" />
         @error('image') <span id="activity-image-error" class="profile-field-error">{{ $message }}</span> @enderror
         @if ($activity?->image)

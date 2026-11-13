@@ -10,7 +10,6 @@
 .site-body {
     accent-color: var(--color-accent);
     caret-color: var(--color-accent);
-    scrollbar-color: var(--color-border-control) var(--color-surface-page);
 }
 .site-body ::selection { background: var(--color-brand-surface); color: var(--color-text-primary); }
 .site-body a { text-underline-offset: .2em; }

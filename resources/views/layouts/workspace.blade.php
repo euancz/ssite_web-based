@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="{{ asset('css/ui-foundation.css') }}">
     <link rel="stylesheet" href="{{ asset('css/ssite-upgrade.css') }}">
     <link rel="stylesheet" href="{{ asset('css/mobile-responsive.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/workspace-experience.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/workspace-refresh.css') }}">
 </head>
 <body class="site-body workspace-site-body">
     @include('layouts.partials.workspace')

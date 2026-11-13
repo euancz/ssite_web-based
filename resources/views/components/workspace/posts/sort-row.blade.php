@@ -7,7 +7,7 @@
     'academicYearOptions' => [], 'academicYear' => '',
 ])
 
-{{-- Keep the controls task-focused; event date ordering is the only explicit sort most workspace lists need. --}}
+{{-- Expose server-supported sort choices while preserving the current filters. --}}
 <form class="post-feed-sort" method="GET" action="{{ $action }}" data-auto-submit>
     <input type="hidden" name="tab" value="{{ $tab }}">
     @php($searchValue = is_string(request('q')) ? mb_substr(trim(request('q')), 0, 100) : '')
@@ -27,10 +27,10 @@
             @foreach ($academicYearOptions as $value => $label)<option value="{{ $value }}" @selected($academicYear === $value)>{{ $label }}</option>@endforeach
         </select>
     @endif
-    @if (str_contains($routeName, '.activities.') && isset($options['event_soonest'], $options['event_latest']))
-        <label class="post-feed-visually-hidden" for="workspace-event-sort">Order by event date</label>
-        <select id="workspace-event-sort" class="post-feed-filter-control" name="sort" aria-label="Order activities">
-            @foreach (['recent' => $options['recent'], 'event_soonest' => $options['event_soonest'], 'event_latest' => $options['event_latest']] as $value => $label)
+    @if ($options)
+        <label class="post-feed-visually-hidden" for="workspace-post-sort">Sort posts</label>
+        <select id="workspace-post-sort" class="post-feed-filter-control" name="sort" aria-label="Sort posts">
+            @foreach ($options as $value => $label)
                 <option value="{{ $value }}" @selected($sort === $value)>{{ $label }}</option>
             @endforeach
         </select>
@@ -46,19 +46,6 @@
     <button class="dashboard-button dashboard-button-secondary" type="submit">Search</button>
     @if ($academicYear !== '' || $searchValue !== '' || request('semester') || $sort !== 'recent' || ($filter !== null && $filter !== '' && $filter !== $filterDefault))
         <a class="dashboard-text-button" href="{{ route($routeName, ['tab' => $tab]) }}">Clear filters</a>
-    @endif
-    @php($otherViews = array_values(array_diff($allowedTabs, ['mine', 'published', 'archived'])))
-    @if ($otherViews)
-        <details class="dashboard-tabs-more post-feed-sort-menu">
-            <summary class="dashboard-tab" aria-expanded="false">More views</summary>
-            <div class="dashboard-tabs-menu">
-                @foreach ($otherViews as $view)
-                    <a href="{{ route($routeName, ['tab' => $view]) }}" @if ($tab === $view) aria-current="page" @endif>
-                        {{ ['pending' => 'Pending review', 'rejected' => 'Rejected', 'all' => 'All posts'][$view] }}
-                    </a>
-                @endforeach
-            </div>
-        </details>
     @endif
 </form>
 
@@ -76,6 +63,11 @@
                     const select = control?.closest('select.post-feed-filter-control');
                     if (select?.closest('form.post-feed-sort[data-auto-submit]')) {
                         select.form?.requestSubmit();
+                    }
+
+                    const moduleFilter = control?.closest('[data-post-feed-module-filter]');
+                    if (moduleFilter instanceof HTMLSelectElement && moduleFilter.value) {
+                        window.location.assign(moduleFilter.value);
                     }
                 });
 

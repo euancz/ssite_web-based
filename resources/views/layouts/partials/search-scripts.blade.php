@@ -108,6 +108,7 @@
                 }
                 list.classList.remove('hidden');
                 shell.querySelector('[role="combobox"]').setAttribute('aria-expanded', 'true');
+                shell.querySelector('[role="combobox"]').removeAttribute('aria-activedescendant');
                 activeIndex = -1;
             };
 
@@ -121,6 +122,8 @@
                 if (request) request.abort();
                 if (query.length < 2) { close(shell); return; }
 
+                activeIndex = -1;
+                input.removeAttribute('aria-activedescendant');
                 list.replaceChildren();
                 const loading = document.createElement('div');
                 loading.className = 'search-suggestion-loading';
@@ -160,10 +163,8 @@
 
             inputs.forEach((input) => {
                 input.addEventListener('input', () => fetchSuggestions(input));
-                input.closest('form')?.addEventListener('submit', (event) => {
-                    event.preventDefault();
-                    fetchSuggestions(input, true);
-                });
+                // Keep native submission: Enter and Search open the complete results.
+                input.closest('form')?.addEventListener('submit', () => close(input.closest('.search-shell')));
                 input.addEventListener('keydown', (event) => {
                     const shell = input.closest('.search-shell');
                     const list = shell.querySelector('[role="listbox"]');

@@ -19,6 +19,43 @@ class MicrosoftAuthenticationTest extends TestCase
         config(['school.microsoft_email_domain' => 'mcc.edu.ph']);
     }
 
+    public function test_web_login_switches_to_callback_host_before_starting_oauth(): void
+    {
+        config(['services.microsoft.redirect' => 'http://localhost:8000/auth/microsoft/callback']);
+        Socialite::shouldReceive('driver')->never();
+
+        $this->get('http://127.0.0.1:8000/auth/microsoft')
+            ->assertRedirect('http://localhost:8000/auth/microsoft')
+            ->assertSessionMissing('state');
+    }
+
+    public function test_flutter_web_login_preserves_return_url_when_switching_hosts(): void
+    {
+        config([
+            'services.microsoft.redirect' => 'http://localhost:8000/auth/microsoft/callback',
+            'mobile.web_origins' => ['http://127.0.0.1:54321'],
+        ]);
+        Socialite::shouldReceive('driver')->never();
+        $query = http_build_query(['return_url' => 'http://127.0.0.1:54321/']);
+
+        $this->get('http://127.0.0.1:8000/auth/microsoft/mobile?' . $query)
+            ->assertRedirect('http://localhost:8000/auth/microsoft/mobile?' . $query)
+            ->assertSessionMissing('state')
+            ->assertSessionMissing('mobile_login');
+    }
+
+    public function test_matching_callback_host_starts_oauth_without_a_redirect_loop(): void
+    {
+        config(['services.microsoft.redirect' => 'http://localhost:8000/auth/microsoft/callback']);
+        $provider = \Mockery::mock();
+        Socialite::shouldReceive('driver')->with('microsoft')->once()->andReturn($provider);
+        $provider->shouldReceive('with')->with(['prompt' => 'login'])->once()->andReturnSelf();
+        $provider->shouldReceive('redirect')->once()->andReturn(redirect()->away('https://login.microsoftonline.com/'));
+
+        $this->get('http://localhost:8000/auth/microsoft')
+            ->assertRedirect('https://login.microsoftonline.com/');
+    }
+
     private function microsoft(string $email): void
     {
         $identity = (new MicrosoftUser)->map(['id' => 'verified-microsoft-id', 'email' => $email, 'name' => 'Microsoft member']);

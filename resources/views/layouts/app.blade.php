@@ -21,13 +21,14 @@
             || $workspaceUser->can('manage-users')
             || $workspaceUser->can('manage-officers')
         );
-        $workspaceRoute = request()->routeIs(
+        $workspaceRoutePatterns = [
             'officer.*', 'adviser.*', 'editorial.*', 'workspace.posts.*', 'workspace.drafts.*', 'workspace.content-activity.*', 'workspace.content-versions.*',
             'notifications.index', 'profile.edit',
             'articles.create', 'articles.edit', 'activities.create', 'activities.edit',
             'achievements.create', 'achievements.edit', 'documents.create', 'documents.edit',
             'liquidations.create', 'liquidations.edit'
-        );
+        ];
+        $workspaceRoute = request()->routeIs(...$workspaceRoutePatterns);
         $workspaceEnabled = $workspaceRole && $workspaceRoute;
         $isPublicLanding = request()->getPathInfo() === '/';
     @endphp
@@ -43,6 +44,10 @@
     <link rel="stylesheet" href="{{ asset('css/ui-foundation.css') }}">
     <link rel="stylesheet" href="{{ asset('css/ssite-upgrade.css') }}">
     <link rel="stylesheet" href="{{ asset('css/mobile-responsive.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/workspace-experience.css') }}">
+    @if ($workspaceEnabled)
+        <link rel="stylesheet" href="{{ asset('css/workspace-refresh.css') }}">
+    @endif
 </head>
 <body class="{{ $workspaceEnabled ? 'site-body workspace-site-body' : 'site-body main-site-body' }} {{ request()->routeIs('discover') ? 'discover-site-body' : '' }} {{ $isPublicLanding ? 'home-landing-body' : '' }}">
     <template id="search-icon-articles"><x-icon name="file-text" size="sm" /></template>
@@ -324,16 +329,22 @@
                 <h4 class="footer-heading">Contact Us</h4>
                 <ul class="footer-contact-list">
                     <li class="footer-contact-item">
-                        <x-icon name="map-pin" size="md" class="footer-contact-icon" />
-                        <span>Dolores, Mabalacat City College</span>
+                        <a href="https://www.google.com/maps/search/?api=1&amp;query=Mabalacat%20City%20College%20Dolores" class="footer-contact-button" target="_blank" rel="noopener noreferrer">
+                            <x-icon name="map-pin" size="md" class="footer-contact-icon" />
+                            <span>Dolores, Mabalacat City College</span>
+                        </a>
                     </li>
                     <li class="footer-contact-item">
-                        <x-icon name="external-link" size="md" class="footer-contact-icon" />
-                        <a href="https://www.facebook.com/ICSSSITE" class="footer-facebook-link" target="_blank" rel="noopener noreferrer">Student Society in Information Technology Education</a>
+                        <a href="https://www.facebook.com/ICSSSITE" class="footer-contact-button" target="_blank" rel="noopener noreferrer">
+                            <x-icon name="facebook" size="md" class="footer-contact-icon" />
+                            <span>SSITE on Facebook</span>
+                        </a>
                     </li>
                     <li class="footer-contact-item">
-                        <x-icon name="mail" size="md" class="footer-contact-icon" />
-                        <a href="mailto:ssite@gmail.com" class="footer-email-link">ssite@gmail.com</a>
+                        <a href="mailto:ssite@gmail.com" class="footer-contact-button">
+                            <x-icon name="mail" size="md" class="footer-contact-icon" />
+                            <span>ssite@gmail.com</span>
+                        </a>
                     </li>
                 </ul>
             </div>
@@ -358,19 +369,14 @@
             <span class="skeleton-block skeleton-brand-name"></span>
             <span class="skeleton-block skeleton-header-action"></span>
         </div>
-        <div class="page-loading-skeleton-content" aria-hidden="true">
-            <span class="skeleton-block skeleton-title"></span>
-            <span class="skeleton-block skeleton-subtitle"></span>
-            <div class="skeleton-card-grid">
-                <span class="skeleton-block skeleton-card"></span>
-                <span class="skeleton-block skeleton-card"></span>
-                <span class="skeleton-block skeleton-card"></span>
-            </div>
-            <span class="skeleton-block skeleton-row"></span>
-            <span class="skeleton-block skeleton-row"></span>
-            <span class="skeleton-block skeleton-row"></span>
+        <div class="loading-shell-sidebar" aria-hidden="true">
+            @for ($loadingItem = 0; $loadingItem < 7; $loadingItem++)
+                <span class="skeleton-block loading-input"></span>
+            @endfor
         </div>
+        <div class="page-loading-skeleton-content" aria-hidden="true"></div>
     </div>
+    @include('layouts.partials.page-loading')
 
     @stack('scripts')
     @include('layouts.partials.account-scripts')
@@ -391,58 +397,6 @@
                     behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
                 });
             });
-        })();
-    </script>
-    <script>
-        (() => {
-            const skeleton = document.getElementById('page-loading-skeleton');
-            if (!skeleton) return;
-
-            let showTimer;
-            const show = () => {
-                window.clearTimeout(showTimer);
-                showTimer = window.setTimeout(() => {
-                    const workspace = document.querySelector('.workspace-content');
-                    if (workspace) {
-                        const bounds = workspace.getBoundingClientRect();
-                        skeleton.style.left = `${Math.max(0, bounds.left)}px`;
-                        const headerBottom = document.querySelector('.workspace-topbar')?.getBoundingClientRect().bottom || 0;
-                        skeleton.style.top = `${Math.max(0, bounds.top, headerBottom)}px`;
-                    }
-                    skeleton.classList.remove('hidden');
-                }, 140);
-            };
-            const hide = () => {
-                window.clearTimeout(showTimer);
-                skeleton.classList.add('hidden');
-            };
-
-            document.addEventListener('click', (event) => {
-                if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-                const clickedElement = event.target instanceof Element ? event.target : null;
-                const link = clickedElement?.closest('a[href]');
-                if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
-                // Feed tabs and pagination replace only their own result region and show its local skeleton.
-                if (link.closest('.post-feed-shell .dashboard-tabs, .post-feed-shell .dashboard-pagination')) return;
-
-                const destination = new URL(link.href, window.location.href);
-                if (destination.origin !== window.location.origin) return;
-                if (destination.pathname === window.location.pathname && destination.search === window.location.search && destination.hash) return;
-                if (destination.href !== window.location.href) show();
-            });
-
-            document.addEventListener('submit', (event) => {
-                if (event.defaultPrevented) return;
-                const form = event.target;
-                if (!(form instanceof HTMLFormElement) || form.target && form.target !== '_self' || form.method.toLowerCase() === 'dialog') return;
-                // Feed sort and filter controls use the same result-only loading state as tab changes.
-                if (form.matches('.post-feed-sort')) return;
-                const destination = new URL(form.action || window.location.href, window.location.href);
-                if (destination.origin === window.location.origin) show();
-            });
-
-            window.addEventListener('pageshow', hide);
-            window.addEventListener('pagehide', () => window.clearTimeout(showTimer));
         })();
     </script>
 </body>

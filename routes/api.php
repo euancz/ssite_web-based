@@ -43,6 +43,24 @@ Route::prefix('mobile/v1')->name('api.mobile.')->group(function () {
     })->middleware('throttle:10,1')->name('auth.exchange');
 
     Route::middleware(AuthenticateMobileToken::class)->group(function () {
+    Route::post('/account/session', function (Request $request) {
+        $validated = $request->validate(['destination' => ['required', \Illuminate\Validation\Rule::in(array_keys(\App\Support\MobileAccountSession::DESTINATIONS))]]);
+        return response()->json(['url' => \App\Support\MobileAccountSession::issue(
+            $request->attributes->get('mobile_user'),
+            $request->attributes->get('mobile_token_id'),
+            $validated['destination'],
+        )])->header('Cache-Control', 'no-store, private');
+    })->middleware('throttle:10,1')->name('account.session');
+
+    Route::get('/discover', function () {
+        $data = app(\App\Http\Controllers\DiscoverController::class)()->getData();
+        return response()->json(['data' => [
+            'articles' => $data['articles']->map(fn ($post) => \App\Support\MobilePost::serialize($post, 'created_at'))->values(),
+            'activities' => $data['activities']->map(fn ($post) => \App\Support\MobilePost::serialize($post, 'activity_date'))->values(),
+            'achievements' => $data['achievements']->map(fn ($post) => \App\Support\MobilePost::serialize($post, 'achievement_date'))->values(),
+        ]])->header('Cache-Control', 'no-store, private');
+    })->name('discover');
+
     Route::get('/auth/me', function (Request $request) {
         $user = $request->attributes->get('mobile_user');
         return response()->json(['user' => [

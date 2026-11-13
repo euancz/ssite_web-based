@@ -4,14 +4,7 @@
 
 @section('content')
 <div class="dashboard-page workspace-officer-dashboard">
-    <header class="workspace-dashboard-heading">
-        <span class="workspace-dashboard-mark" aria-hidden="true"><x-workspace.icon name="grid" /></span>
-        <div>
-            <h1>Dashboard</h1>
-            <p>Your submissions and next steps.</p>
-        </div>
-        <a class="dashboard-button" href="{{ route('workspace.create') }}">Create post</a>
-    </header>
+    <x-workspace.welcome description="Your next story starts here. Create, refine, and share what matters to the SSITE community." :action-url="route('workspace.create')" action-label="Create post" />
     <x-workspace.dashboard-summary :status="$dashboardStatus" :draft-count="$draftCount" />
 
     @if ($rejectedPosts->isNotEmpty())
@@ -24,7 +17,7 @@
                 <span class="workspace-officer-attention-mark"><x-workspace.icon name="clock" /></span>
                 <div class="workspace-officer-attention-copy">
                     <h3>{{ $post->title }}</h3>
-                    <p>{{ $post->type }} Â&middot; Rejected {{ $post->reviewed_at ? \Illuminate\Support\Carbon::parse($post->reviewed_at)->format('M j, Y') : '(date not recorded)' }} &middot; {{ $post->reviewer?->name ?? 'Reviewer not recorded' }}</p>
+                    <p>{{ $post->type }} Ã‚&middot; Rejected {{ $post->reviewed_at ? \Illuminate\Support\Carbon::parse($post->reviewed_at)->format('M j, Y') : '(date not recorded)' }} &middot; {{ $post->reviewer?->name ?? 'Reviewer not recorded' }}</p>
                     @if ($post->rejection_reason)<p class="workspace-officer-reason">{{ $post->rejection_reason }}</p>@endif
                 </div>
                 <a class="workspace-officer-manage-link" href="{{ $post->preview_url }}">Review feedback <x-workspace.icon name="chevron" /></a>
@@ -59,5 +52,7 @@
             </table>
         </x-ui.data-table>
     </section>
+    <x-workspace.content-areas :modules="$moduleStats" />
+    <x-workspace.dashboard-guide />
 </div>
 @endsection

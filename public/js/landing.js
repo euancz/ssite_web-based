@@ -6,29 +6,28 @@
     const activeAnimations = new Set();
     const enter = (element, delay = 0) => {
         const animation = element.animate([
-            { opacity: 0, transform: 'translateY(22px)' },
+            { opacity: 0, transform: 'translateY(8px)' },
             { opacity: 1, transform: 'translateY(0)' },
-        ], { duration: 720, delay, easing: 'cubic-bezier(.22, 1, .36, 1)', fill: 'backwards' });
+        ], { duration: 400, delay, easing: 'ease-out', fill: 'backwards' });
         activeAnimations.add(animation);
         animation.finished.then(() => activeAnimations.delete(animation)).catch(() => {});
     };
 
-    document.querySelectorAll('.hero-copy > *').forEach((element, index) => enter(element, index * 85));
+    const copy = document.querySelector('.hero-copy');
+    if (copy) enter(copy);
     const visual = document.querySelector('.hero-visual');
-    if (visual) enter(visual, 180);
+    if (visual) enter(visual, 80);
 
     let observer;
     if ('IntersectionObserver' in window) {
         observer = new IntersectionObserver(entries => {
             entries.forEach(entry => {
                 if (!entry.isIntersecting) return;
-                const siblings = entry.target.parentElement;
-                const index = siblings.classList.contains('feature-grid') ? [...siblings.children].indexOf(entry.target) : 0;
-                enter(entry.target, index * 100);
+                enter(entry.target);
                 observer.unobserve(entry.target);
             });
         }, { threshold: 0.12, rootMargin: '0px 0px -20px 0px' });
-        document.querySelectorAll('.section-heading, .feature-card, .access-art, .access-copy, .faq-section > div, .join-section').forEach(element => observer.observe(element));
+        document.querySelectorAll('.app-art, .section-heading').forEach(element => observer.observe(element));
     }
 
     motionPreference.addEventListener('change', event => {

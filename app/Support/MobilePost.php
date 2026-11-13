@@ -3,13 +3,19 @@
 namespace App\Support;
 
 use App\Models\Article;
+use App\Models\Achievement;
+use App\Models\Activity;
 use Illuminate\Support\Facades\Storage;
 
 class MobilePost
 {
     public static function serialize($post, string $dateField): array
     {
-        $description = $post instanceof Article ? $post->displayText() : (string) ($post->description ?? '');
+        $formatted = ($post instanceof Article || $post instanceof Activity || $post instanceof Achievement)
+            && $post->content_format === 'markdown';
+        $description = $formatted
+            ? app(\App\Services\ArticleContent::class)->text((string) ($post->content ?? $post->description ?? ''), 'markdown')
+            : ($post instanceof Article ? $post->displayText() : (string) ($post->description ?? ''));
         $module = match (class_basename($post)) {
             'Article' => 'articles',
             'Activity' => 'activities',
@@ -30,6 +36,9 @@ class MobilePost
             'author_role' => $post->author?->role === 'adviser' ? 'Adviser' : $post->author?->officer_position,
             'created_at' => $post->created_at?->toIso8601String(),
             'description' => $description,
+            'content_html' => $formatted
+                ? app(\App\Services\ArticleContent::class)->html((string) ($post->content ?? $post->description ?? ''), 'markdown')
+                : null,
             'image_url' => $imageUrl,
             'date' => $post->{$dateField}?->toDateString(),
             'category' => $post->category ?? null,

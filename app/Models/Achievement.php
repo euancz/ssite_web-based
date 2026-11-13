@@ -25,7 +25,7 @@ class Achievement extends Model
     protected $keyType = 'int';
 
     // SECURITY: Ownership, status, rejection, and review fields are set only by trusted actions.
-    protected $fillable = ['title', 'description', 'awardee', 'category', 'achievement_date', 'image'];
+    protected $fillable = ['title', 'description', 'content_format', 'awardee', 'category', 'achievement_date', 'image'];
 
     /** Cast optional achievement dates for consistent formatting in lists and detail pages. */
     protected function casts(): array

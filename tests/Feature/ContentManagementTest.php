@@ -174,12 +174,19 @@ class ContentManagementTest extends TestCase
         $owner = $this->actor('Secretary');
         $other = $this->actor('Secretary');
         $this->makePost('documents', $owner, ['title' => 'Match semester two', 'semester' => 2, 'category' => 'Minutes']);
+        $this->makePost('documents', $owner, ['title' => 'Match agenda', 'semester' => 2, 'category' => 'Minutes']);
         $this->makePost('documents', $owner, ['title' => 'Match semester one', 'semester' => 1, 'category' => 'Minutes']);
         $this->makePost('documents', $other, ['title' => 'Match private document', 'semester' => 2, 'category' => 'Minutes']);
         $filters = ['tab' => 'mine', 'q' => 'Match', 'semester' => '2', 'category' => 'Minutes'];
         $response = $this->actingAs($owner)->get(route('workspace.posts.documents.index', $filters))->assertOk()
             ->assertSee('Match semester two')->assertDontSee('Match semester one')->assertDontSee('Match private document');
-        $this->assertSame(1, $response->viewData('documents')->total());
-        $response->assertSee(route('workspace.posts.documents.index', ['tab' => 'mine', 'sort' => 'title', 'q' => 'Match', 'semester' => '2', 'category' => 'Minutes']));
+        $this->assertSame(2, $response->viewData('documents')->total());
+
+        // Sorting is submitted through the filter form; verify records and retained filters.
+        $sorted = $this->get(route('workspace.posts.documents.index', $filters + ['sort' => 'title']))->assertOk()
+            ->assertDontSee('Match semester one')->assertDontSee('Match private document')
+            ->assertSee('value="title" selected', false)->assertSee('value="Match"', false)
+            ->assertSee('value="2" selected', false)->assertSee('value="Minutes" selected', false);
+        $this->assertSame(['Match agenda', 'Match semester two'], $sorted->viewData('documents')->pluck('title')->all());
     }
 }

@@ -14,8 +14,9 @@
 ])
 
 @php
-    $formattedArticle = $post instanceof \App\Models\Article && $post->content_format === 'markdown';
-    if ($formattedArticle && ! $full) $content = $post->displayText();
+    $formattedPost = in_array($post::class, [\App\Models\Article::class, \App\Models\Activity::class, \App\Models\Achievement::class], true)
+        && $post->content_format === 'markdown';
+    if ($formattedPost && ! $full) $content = app(\App\Services\ArticleContent::class)->text((string) $content, 'markdown');
 @endphp
 
 {{-- One escaped, role-aware card keeps list and detail anatomy consistent across all post types. --}}
@@ -69,11 +70,11 @@
             @endif
         @endcan
         @if ($post instanceof \App\Models\Article && filled($post->category))
-            <p class="post-card-body">Category: {{ $post->category }}</p>
+            <p class="post-card-category"><span class="visually-hidden">Category: </span>{{ $post->category }}</p>
         @endif
         @if ($full)
             <h1 class="post-card-title">{{ $post->title }}</h1>
-            @if ($formattedArticle)
+            @if ($formattedPost)
                 <div class="post-card-body post-card-body-full article-rich-content" @if ($readingProgress) data-reading-content @endif>{!! app(\App\Services\ArticleContent::class)->html((string) $content, 'markdown') !!}</div>
             @else
                 <div class="post-card-body post-card-body-full" @if ($readingProgress) data-reading-content @endif>{{ $content }}</div>

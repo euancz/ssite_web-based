@@ -1,17 +1,20 @@
 // Source stays in the normal textarea; only server-rendered, restricted HTML enters the preview.
 export function initArticleFormatting() {
-    const format = document.getElementById('article-content-format');
-    const body = document.getElementById('article-content');
-    if (!format || !body) return;
-    const form = body.form;
+    document.querySelectorAll('[data-content-form]').forEach((form) => initRichForm(form));
+}
+
+function initRichForm(form) {
+    const format = form.querySelector('[data-rich-format], #article-content-format');
+    const body = form.querySelector('[data-rich-body], #article-content');
     const tools = form.querySelector('[data-article-tools]');
+    if (!format || !body || !tools) return;
     const editor = form.querySelector('[data-article-editor]');
     const modes = [...form.querySelectorAll('[data-editor-mode]')];
     const panel = form.querySelector('[data-article-preview]');
     const plainPreview = form.querySelector('[data-content-preview]');
-    const output = panel.querySelector('[data-article-preview-output]');
-    const status = panel.querySelector('[data-article-preview-status]');
-    const previewButton = panel.querySelector('[data-render-article]');
+    const output = panel?.querySelector('[data-article-preview-output]');
+    const status = panel?.querySelector('[data-article-preview-status]');
+    const previewButton = panel?.querySelector('[data-render-article]');
     let revision = 0;
     let pending = null;
 
@@ -30,13 +33,15 @@ export function initArticleFormatting() {
         revision += 1;
         pending?.abort();
         tools.hidden = !tools.dataset.visualReady && !editor && format.value !== 'markdown';
-        panel.hidden = format.value !== 'markdown';
-        if (plainPreview) plainPreview.hidden = format.value === 'markdown';
-        output.hidden = true;
-        output.replaceChildren();
-        status.textContent = 'Refresh preview to check your current text.';
-        previewButton.disabled = false;
-        panel.removeAttribute('aria-busy');
+        if (panel) panel.hidden = format.value !== 'markdown';
+        if (plainPreview) plainPreview.hidden = Boolean(panel) && format.value === 'markdown';
+        if (output) {
+            output.hidden = true;
+            output.replaceChildren();
+        }
+        if (status) status.textContent = 'Refresh preview to check your current text.';
+        if (previewButton) previewButton.disabled = false;
+        panel?.removeAttribute('aria-busy');
     };
     format.addEventListener('change', invalidate);
     body.addEventListener('input', invalidate);
@@ -63,7 +68,7 @@ export function initArticleFormatting() {
             const prefix = { heading: '## ', list: '- ', quote: '> ' }[command];
             selected = (body.value.slice(start, end) || 'Text').split('\n').map((line, index) => (command === 'ordered-list' ? `${index + 1}. ` : prefix) + line).join('\n');
         } else {
-            const wrappers = { bold: ['**', '**'], italic: ['*', '*'], code: ['`', '`'], link: ['[', '](https://example.com)'] };
+            const wrappers = { strike: ['~~', '~~'], 'code-block': ['\n\n```\n', '\n```\n\n'], divider: ['\n\n---\n\n', ''], table: ['\n\n| Column 1 | Column 2 |\n| --- | --- |\n| ', ' | Cell |\n\n'], bold: ['**', '**'], italic: ['*', '*'], code: ['`', '`'], link: ['[', '](https://example.com)'] };
             const pair = wrappers[command];
             if (!pair) return;
             selected = pair[0] + selected + pair[1];
@@ -72,7 +77,7 @@ export function initArticleFormatting() {
         body.setRangeText(selected, start, end, 'select');
         body.dispatchEvent(new Event('input', { bubbles: true }));
     });
-    previewButton.addEventListener('click', async () => {
+    previewButton?.addEventListener('click', async () => {
         pending?.abort();
         const controller = new AbortController();
         pending = controller;
@@ -114,5 +119,8 @@ export function initArticleFormatting() {
     }).catch(() => {
         // Keep the original textarea usable if the editor bundle cannot load.
         tools.hidden = format.value !== 'markdown';
+        tools.querySelectorAll('[data-format-command]').forEach(button => {
+            button.disabled = ['undo', 'redo', 'indent', 'outdent', 'clear'].includes(button.dataset.formatCommand);
+        });
     });
 }

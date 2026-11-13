@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Schema;
 use League\CommonMark\CommonMarkConverter;
 use League\CommonMark\Extension\CommonMark\Node\Inline\Image;
 use League\CommonMark\Extension\CommonMark\Node\Inline\Link;
+use League\CommonMark\Extension\Strikethrough\StrikethroughExtension;
+use League\CommonMark\Extension\Table\TableExtension;
 
 class ArticleContent
 {
@@ -15,7 +17,13 @@ class ArticleContent
 
     public function available(): bool
     {
-        return Schema::hasColumn('articles', 'content_format');
+        return $this->availableFor('articles');
+    }
+
+    public function availableFor(string $table): bool
+    {
+        return in_array($table, ['articles', 'activities', 'achievements'], true)
+            && Schema::hasColumn($table, 'content_format');
     }
 
     public function html(string $source, string $format = 'plain'): string
@@ -28,6 +36,8 @@ class ArticleContent
                 'html_input' => 'escape', 'allow_unsafe_links' => false,
                 'max_nesting_level' => 20, 'max_delimiters_per_line' => 1000,
             ]);
+            $this->converter->getEnvironment()->addExtension(new StrikethroughExtension);
+            $this->converter->getEnvironment()->addExtension(new TableExtension);
             $this->converter->getEnvironment()->addRenderer(Link::class, new ArticleLinkRenderer, 100);
             $this->converter->getEnvironment()->addRenderer(Image::class, new ArticleImageRenderer, 100);
         }

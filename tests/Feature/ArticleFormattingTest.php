@@ -137,9 +137,27 @@ class ArticleFormattingTest extends TestCase
         $author = $this->author();
         $article = $this->article($author, ['content_format' => 'markdown', 'content' => '**Readable** summary']);
         $private = $this->article($author, ['title' => 'Private readable', 'content_format' => 'markdown', 'content' => '**Private** body', 'approval_status' => 'pending']);
-        $this->get(route('articles.index'))->assertOk()->assertSee('Readable summary')->assertDontSee('**Readable**')->assertDontSee('Private readable');
+        $this->actingAs($author)->get(route('articles.index'))->assertOk()->assertSee('Readable summary')->assertDontSee('**Readable**')->assertDontSee('Private readable');
         $this->get(route('discover'))->assertOk()->assertSee('Readable summary')->assertDontSee('**Readable**');
         $this->getJson(route('search.suggest', ['q' => 'Readable']))->assertOk()->assertJsonCount(1, 'results')->assertDontSee('**Readable**')->assertDontSee('Private readable');
         $this->get(route('articles.show', $private))->assertNotFound();
+    }
+    public function test_workspace_cards_share_readable_excerpts_and_keep_review_actions(): void
+    {
+        $this->enable();
+        $author = $this->author();
+        $article = $this->article($author, [
+            'content_format' => 'markdown',
+            'content' => '**Readable** workspace summary',
+            'approval_status' => 'pending',
+        ]);
+
+        $this->actingAs($author)
+            ->get(route('workspace.posts.articles.index', ['tab' => 'pending']))
+            ->assertOk()
+            ->assertSee('Readable workspace summary')
+            ->assertDontSee('**Readable**')
+            ->assertSee(route('articles.approve', $article), false)
+            ->assertSee('Reject');
     }
 }

@@ -28,28 +28,21 @@
     @endif
 
     {{-- Blade escapes article content on redisplay and the server validates it as required text. --}}
-    @if ($formattingEnabled)
-        <input type="hidden" id="article-content-format" name="content_format" value="{{ old('content_format', $draftValues['content_format'] ?? $article?->content_format ?? 'markdown') }}">
-        @error('content_format')<span id="article-format-error" class="profile-field-error">{{ $message }}</span>@enderror
-    @endif
     <div class="dashboard-form-field">
         <label id="article-content-label" for="article-content">Content <span class="post-form-required-mark" aria-hidden="true">*</span></label>
+        <x-rich-content-editor
+            id="article-content"
+            name="content"
+            format-id="article-content-format"
+            label-id="article-content-label"
+            title="Article editor"
+            subtitle="Write, format, and refine your story."
+            :value="$draftValues['content'] ?? $article?->content"
+            :format-value="$draftValues['content_format'] ?? $article?->content_format ?? 'markdown'"
+            :formatting-enabled="$formattingEnabled"
+        />
         @if ($formattingEnabled)
-            <div class="article-editor-shell">
-                <div class="article-format-tools" data-article-tools role="toolbar" aria-label="Article formatting tools">
-                @foreach (['bold' => 'Bold', 'italic' => 'Italic', 'heading' => 'Heading', 'quote' => 'Quote', 'code' => 'Inline code', 'link' => 'Link', 'list' => 'Bulleted list', 'ordered-list' => 'Numbered list'] as $command => $label)
-                    <button type="button" class="article-format-tool" data-format-command="{{ $command }}" aria-label="{{ $label }}" title="{{ $label }}">
-                        <x-icon :name="match ($command) { 'heading' => 'heading-2', 'ordered-list' => 'list-ordered', default => $command }" />
-                    </button>
-                @endforeach
-                </div>
-                <div class="article-editor-canvas">
-                    <textarea id="article-content" name="content" @error('content') aria-invalid="true" aria-describedby="article-content-error" @enderror rows="14" maxlength="20000" required>{{ old('content', $draftValues['content'] ?? $article?->content) }}</textarea>
-                </div>
-            </div>
-            <span class="profile-field-help">Select text to format it. Use Ctrl+B for bold or Ctrl+I for italic.</span>
-        @else
-            <textarea id="article-content" name="content" @error('content') aria-invalid="true" aria-describedby="article-content-error" @enderror rows="14" maxlength="20000" required>{{ old('content', $draftValues['content'] ?? $article?->content) }}</textarea>
+            <span class="profile-field-help">Use the toolbar or paste formatted text. Preview below to check how readers will see your article.</span>
         @endif
         <span class="profile-field-help">Maximum 300 words and 20,000 characters.</span>
         @error('content') <span id="article-content-error" class="profile-field-error">{{ $message }}</span> @enderror
@@ -58,11 +51,9 @@
     {{-- SECURITY: The server validates image bytes, extension, and size before storing a generated filename. --}}
     <div class="dashboard-form-field">
         <label for="article-image">{{ $article ? 'Replace image (optional)' : 'Image (optional)' }}</label>
-        <div class="article-attachment-dropzone">
-            <span class="article-attachment-icon" aria-hidden="true">↗</span>
-            <span><strong>Attach a feature image</strong><small>JPG, PNG, or WebP up to 2 MB</small></span>
+        <x-workspace.attachment title="Attach a feature image" help="JPG, PNG, or WebP up to 2 MB">
             <input id="article-image" data-image-preview="article-image-preview" name="image" @error('image') aria-invalid="true" aria-describedby="article-image-error" @enderror type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
-        </div>
+        </x-workspace.attachment>
         <x-workspace.upload-status input-id="article-image" :max-kb="2048" />
         @error('image') <span id="article-image-error" class="profile-field-error">{{ $message }}</span> @enderror
         @if ($article?->image)

@@ -36,8 +36,8 @@ final class ContentVersions
     {
         $fields = match ($post->getTable()) {
             'articles' => ['title', 'content', 'content_format', 'category'],
-            'activities' => ['title', 'description', 'activity_date', 'location'],
-            'achievements' => ['title', 'description', 'achievement_date', 'awardee', 'category'],
+            'activities' => ['title', 'description', 'content_format', 'activity_date', 'location'],
+            'achievements' => ['title', 'description', 'content_format', 'achievement_date', 'awardee', 'category'],
             'documents' => ['title', 'description', 'category', 'semester', 'academic_year'],
             'liquidations' => ['title', 'description', 'amount', 'report_date'],
             default => throw new \InvalidArgumentException('Unsupported content version module.'),

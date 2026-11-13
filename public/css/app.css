@@ -491,6 +491,66 @@ ol {
 .skeleton-card { min-height: 9rem; }
 .skeleton-row { width: 100%; height: 4rem; }
 
+/* Destination layouts are independent of the stylesheet of the outgoing page. */
+.page-loading-skeleton-content { align-content: start; }
+.loading-shell-sidebar { display: none; }
+.loading-to-workspace .loading-shell-sidebar {
+    display: grid; align-content: start; gap: 18px; position: absolute;
+    top: 4.5rem; bottom: 0; left: 0; width: 264px; padding: 28px 20px;
+    border-right: 1px solid var(--color-border);
+}
+.loading-to-workspace .page-loading-skeleton-content {
+    width: calc(100% - 264px); max-width: none; margin: 0 0 0 264px; padding: 28px;
+}
+.page-loading-skeleton.loading-in-workspace .page-loading-skeleton-header { display: none; }
+.page-loading-skeleton.loading-in-workspace .page-loading-skeleton-content {
+    width: 100%; max-width: 76rem; margin: 0 auto; padding: 28px;
+}
+.page-loading-skeleton:is([data-layout="feed"], [data-layout="detail"]):not(.loading-in-workspace) .page-loading-skeleton-content {
+    max-width: 54rem;
+}
+.page-loading-skeleton[data-layout="form"] .page-loading-skeleton-content { max-width: 64rem; }
+.page-loading-skeleton[data-layout="notifications"] .page-loading-skeleton-content { max-width: 60rem; }
+.loading-heading, .loading-lines, .loading-field { display: grid; gap: 12px; }
+.loading-heading { margin-bottom: 8px; }
+.loading-line { width: 100%; height: 14px; }
+.loading-short { width: 45%; height: 14px; }
+.loading-title { width: min(24rem, 75%); height: 32px; }
+.loading-subtitle { width: min(32rem, 90%); height: 16px; }
+.loading-control { width: 8rem; max-width: 30%; height: 38px; }
+.loading-input { width: 100%; height: 44px; }
+.loading-hero { height: 210px; border-radius: 24px; }
+.loading-media { width: 100%; height: 260px; }
+.loading-editor { height: 240px; }
+.loading-footer { width: 100%; height: 28px; margin-top: 8px; }
+.loading-avatar { width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; }
+.loading-portrait { width: 120px; height: 120px; border-radius: 50%; margin: 0 auto; }
+.loading-panel { display: grid; align-content: start; gap: 20px; min-width: 0; padding: 24px; border: 1px solid var(--color-border); border-radius: 12px; }
+.loading-author { display: flex; align-items: center; gap: 12px; }
+.loading-author .loading-lines { width: min(18rem, 70%); }
+.loading-author .loading-lines > :last-child { display: none; }
+.loading-toolbar { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0; }
+.loading-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.loading-split, .loading-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.loading-split { align-items: center; margin: 16px 0; }
+.loading-profile { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(0, 2fr); align-items: start; gap: 24px; }
+.loading-table { overflow: hidden; border: 1px solid var(--color-border); border-radius: 12px; }
+.loading-table-row { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr; gap: 24px; padding: 24px; border-bottom: 1px solid var(--color-border); }
+.loading-table-row:first-child { background: var(--color-surface); }
+.loading-table-row:last-child { border-bottom: 0; }
+@media (max-width: 700px) {
+    .loading-grid, .loading-split, .loading-profile, .loading-fields { grid-template-columns: 1fr; }
+    .loading-panel { padding: 18px; }
+    .loading-hero { height: 170px; }
+    .loading-media { height: 200px; }
+    .loading-table-row { gap: 12px; padding: 20px 12px; }
+    .page-loading-skeleton.loading-in-workspace .page-loading-skeleton-content { padding: 20px 16px; }
+}
+@media (max-width: 900px) {
+    .loading-to-workspace .loading-shell-sidebar { display: none; }
+    .loading-to-workspace .page-loading-skeleton-content { width: 100%; margin: 0; padding: 20px 16px; }
+}
+
 @keyframes skeleton-shimmer {
     to { background-position-x: -200%; }
 }
@@ -1209,13 +1269,49 @@ ol {
 .footer-contact-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
     color: var(--color-text-primary);
     font-size: 14px;
 }
 
 .footer-contact-item {
+    min-width: 0;
+}
+
+.footer-contact-button {
+    display: flex;
+    align-items: center;
     gap: 12px;
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 16px;
+    border: 1px solid var(--color-text-primary);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--color-text-primary);
+    font-weight: 600;
+    line-height: 1.5;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+    transition: background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.footer-contact-button:hover {
+    background: #fff;
+    box-shadow: 0 3px 10px rgba(23, 50, 77, 0.12);
+}
+
+.footer-contact-button:focus-visible {
+    outline: 3px solid var(--color-text-primary);
+    outline-offset: 3px;
+    background: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .footer-contact-button { transition: none; }
 }
 
 .footer-contact-icon {
@@ -1223,18 +1319,6 @@ ol {
     height: 20px;
     flex: 0 0 auto;
 }
-
-.footer-email-link {
-    text-decoration: underline;
-}
-
-.footer-facebook-link {
-    color: inherit;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-}
-
-.footer-facebook-link:hover { color: var(--ssite-blue); }
 
 .footer-bottom {
     display: flex;
@@ -2052,7 +2136,6 @@ ol {
     width: 100%;
     overflow-x: auto;
     overscroll-behavior-x: contain;
-    scrollbar-color: var(--color-text-secondary) var(--color-surface-page);
     scrollbar-width: thin;
 }
 
@@ -2064,17 +2147,6 @@ ol {
 
 .dashboard-table-scroll::-webkit-scrollbar {
     height: 10px;
-}
-
-.dashboard-table-scroll::-webkit-scrollbar-track {
-    border-radius: 5px;
-    background: var(--color-surface-page);
-}
-
-.dashboard-table-scroll::-webkit-scrollbar-thumb {
-    border: 2px solid var(--color-surface-page);
-    border-radius: 5px;
-    background: var(--color-text-secondary);
 }
 
 .dashboard-table-scroll-hint {
