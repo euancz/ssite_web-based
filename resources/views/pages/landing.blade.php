@@ -10,7 +10,7 @@
 <section class="hero-band" aria-labelledby="landing-title">
     <div class="landing-hero wrap">
         <div class="hero-copy">
-            <p class="eyebrow">MABALACAT CITY COLLEGE <span aria-hidden="true">/</span> SSITE</p>
+            <p class="eyebrow">SSITE at Mabalacat City College</p>
             <h1 id="landing-title">Campus life.<br>All in <span>one place.</span></h1>
             <p class="hero-description">The official home of the Student Society in Information Technology Education. Catch up on announcements, find your next activity, and see what your fellow IT students are building.</p>
             @if (session('error'))

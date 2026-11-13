@@ -70,8 +70,8 @@ body {
 .public-home-header .site-logo {
     width: 58px;
     height: 58px;
-    border: 2px solid #fff;
-    box-shadow: 0 0 0 4px rgb(255 255 255 / 24%);
+    border: 0;
+    box-shadow: none;
 }
 
 .public-home-header .site-search-input {
@@ -1089,8 +1089,8 @@ body.workspace-site-body {
     .public-home-header .site-logo {
         width: 54px;
         height: 54px;
-        border: 2px solid rgb(255 255 255 / 90%);
-        box-shadow: 0 0 0 5px rgb(255 255 255 / 20%);
+        border: 0;
+        box-shadow: none;
     }
 
     .public-home-header .site-brand-name {
@@ -2767,6 +2767,55 @@ body.main-site-body main .site-page .page-hero-banner-art {
     }
 }
 
+/* Filter menus share their controls' typography and rounded blue borders. */
+@supports (appearance: base-select) {
+    body.site-body :is(.documents-filters, .transparency-filters, .discover-filters, .post-feed-sort, .post-feed-module-filter, .workspace-review-filters, .workspace-library-type) select:not([multiple]):not([size]) {
+        appearance: base-select;
+        align-items: center;
+
+        &::picker(select) {
+            appearance: base-select;
+            box-sizing: border-box;
+            min-width: anchor-size(width);
+            max-height: min(320px, 60vh);
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            margin-block: 6px;
+            padding: 5px;
+            border: 1px solid #9bbdca;
+            border-radius: 10px;
+            background: #fff;
+            color: #17324d;
+            box-shadow: 0 8px 24px rgb(23 50 77 / 14%);
+            font: 500 14px/1.5 var(--font-family-body);
+        }
+
+        option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 44px;
+            padding: 10px 12px;
+            border: 0;
+            border-radius: 6px;
+            background: #fff;
+            color: #17324d;
+            font: inherit;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            cursor: pointer;
+        }
+
+        option:checked { background: #e3f3fc; color: #155571; font-weight: 600; }
+        option:hover, option:focus-visible { background: #edf6fa; color: #123e4c; outline: 2px solid #9bbdca; outline-offset: -2px; }
+        option::checkmark { color: #155571; }
+        option:disabled { color: #64748b; opacity: .65; cursor: default; }
+    }
+
+    /* Public filters already draw a single chevron in the control background. */
+    body.main-site-body :is(.documents-filters, .transparency-filters, .discover-filters, .post-feed-sort) select::picker-icon { display: none; }
+}
+
 /* Keep navigation outside the masthead and overlap the hero by one nav height. */
 body.main-site-body:has(.home-page) .public-home-header ~ .desktop-navigation {
     position: relative;
@@ -2782,17 +2831,6 @@ body.main-site-body:has(.home-page) .public-home-header ~ .desktop-navigation {
 body.main-site-body:has(.home-page) .desktop-navigation .site-nav-list {
     gap: 6px;
     padding: 4px 16px;
-}
-
-body.main-site-body:has(.home-page) .desktop-navigation .site-nav-link {
-    min-height: 44px;
-    border-radius: 5px;
-    padding: 0 14px;
-    color: #fff;
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: normal;
-    text-transform: none;
 }
 
 @media (max-width: 767px) {
@@ -2886,34 +2924,75 @@ body.main-site-body .public-home-header ~ main .home-page .home-sponsors {
 
 /* Match the welcome panel in the supplied Home reference. */
 body.main-site-body .public-home-header ~ main .home-page .home-intro {
+    display: grid;
+    grid-template-columns: minmax(0, 320px) minmax(0, 480px);
+    justify-content: center;
+    align-items: center;
+    gap: clamp(32px, 5vw, 72px);
+    min-height: 0;
     margin-top: 0;
+    padding: 48px 32px;
+    border-top: 3px solid #82cdf2;
+    border-radius: 20px 20px 0 0;
+    background: linear-gradient(110deg, #08d2df, #7ce5f3 70%, #30eced);
 }
 
 body.main-site-body .public-home-header ~ main .home-page .home-intro-image {
     position: relative;
+    min-height: 0;
+    clip-path: inset(-20% -5% 5% -5%);
 }
 
 body.main-site-body .public-home-header ~ main .home-page .home-intro-image::before {
     position: absolute;
     z-index: 0;
-    width: min(20rem, 82%);
+    width: 90%;
     aspect-ratio: 1;
     border-radius: 50%;
     background: #a5f3ef;
-    box-shadow: 0 0.5rem 1.25rem rgb(6 56 71 / 12%);
+    box-shadow: none;
     content: '';
 }
 
 body.main-site-body .public-home-header ~ main .home-page .home-intro-image img {
     position: relative;
     z-index: 1;
+    width: 100%;
     height: auto;
     border: 0;
     border-radius: 0;
     background: transparent;
     box-shadow: none;
     filter: none;
-    mix-blend-mode: multiply;
+    mix-blend-mode: normal;
+    transform: none;
+    transition: none;
+    animation: none;
+}
+
+body.main-site-body .public-home-header ~ main .home-page .home-intro .home-hero-copy {
+    max-width: 480px;
+    margin: 0;
+    text-align: left;
+}
+
+body.main-site-body .public-home-header ~ main .home-page .home-intro .home-hero-copy h2 {
+    margin: 0 0 14px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #155571;
+    color: #063847;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(26px, 3vw, 40px);
+    font-weight: 700;
+    letter-spacing: -.025em;
+    line-height: 1.2;
+}
+
+body.main-site-body .public-home-header ~ main .home-page .home-intro .home-hero-copy > p:last-child {
+    margin: 0;
+    color: #063847;
+    font-size: clamp(13px, 1.2vw, 16px);
+    line-height: 1.6;
 }
 
 /* Keep the public navigation dimensions and selected state consistent on every section. */
@@ -2945,12 +3024,24 @@ body.main-site-body .public-home-header ~ main .home-page .home-intro-image img 
 .desktop-navigation .site-nav-link:hover,
 .desktop-navigation .site-nav-link:active,
 .desktop-navigation .site-nav-link.is-active {
-    background: #2b7188;
+    background: transparent;
     color: #fff;
+    opacity: 1;
+    box-shadow: none;
 }
 
-.desktop-navigation .site-nav-link.is-active {
-    box-shadow: inset 0 -3px 0 #70ddea;
+.desktop-navigation .site-nav-link:hover {
+    color: #a8edf5;
+}
+
+.desktop-navigation .site-nav-link:is(:hover, .is-active)::after {
+    content: '';
+    display: block;
+    position: absolute;
+    inset: auto 14px 5px;
+    height: 2px;
+    border-radius: 1px;
+    background: #70ddea;
 }
 
 .desktop-navigation .site-nav-link:focus-visible {
@@ -2965,7 +3056,22 @@ body.main-site-body .public-home-header ~ main .home-page .home-intro-image img 
 }
 
 @media (max-width: 767px) {
+    body.main-site-body .public-home-header ~ main .home-page .home-intro {
+        grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+        gap: 24px;
+        padding: 32px 24px;
+    }
     body.main-site-body .public-home-header ~ main .home-page .home-intro-image::before {
-        width: min(14rem, 75%);
+        width: 90%;
+    }
+}
+
+@media (max-width: 540px) {
+    body.main-site-body .public-home-header ~ main .home-page .home-intro {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    body.main-site-body .public-home-header ~ main .home-page .home-intro-image {
+        width: min(220px, 100%);
+        justify-self: center;
     }
 }

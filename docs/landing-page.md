@@ -1,7 +1,7 @@
 # Public landing page
 
-The landing page uses the site's sky-blue/navy palette, Poppins typography,
-Pixelify Sans wordmarks, and existing SSITE mascot. Its styles are isolated in
+The landing page uses the CMS colors, Poppins typography throughout,
+and the existing SSITE mascot. Its styles are isolated in
 `public/css/landing.css`. The layout and content live in the two landing Blade
 templates; the Microsoft mark is a reusable four-color SVG component.
 

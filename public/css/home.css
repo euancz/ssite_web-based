@@ -1191,9 +1191,6 @@ body.main-site-body .public-home-header ~ main .home-page :is(.news-card, .spons
     body.main-site-body .public-home-header ~ main .home-page :is(.news-card, .leader-card, .sponsor-card):hover img {
         transform: scale(1.035);
     }
-    body.main-site-body .public-home-header ~ main .home-page .home-intro-image:hover img {
-        transform: translateY(-6px) rotate(-1deg);
-    }
     body.main-site-body .public-home-header ~ main .home-page .read-more:hover span {
         transform: translateX(4px);
     }

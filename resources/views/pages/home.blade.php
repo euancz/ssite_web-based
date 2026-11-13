@@ -12,44 +12,25 @@
     <section class="community-hero" aria-labelledby="home-hero-title">
         <div class="community-hero-inner">
             <div class="community-hero-copy">
-                <p class="community-hero-eyebrow"><span aria-hidden="true"></span> Your people. Your possibilities.</p>
-                <h1 id="home-hero-title">Big ideas.<br>Better <span>together.<svg viewBox="0 0 420 22" fill="none" aria-hidden="true"><path d="M5 15C108 2 280 2 414 10M46 20C175 10 308 9 383 17" /></svg></span></h1>
-                <p class="community-hero-description">A space for curious minds, bold creators, and the next generation of IT. Find your inspiration. Make your mark. Grow with SSITE.</p>
+                <h1 id="home-hero-title">SSITE<span>Mabalacat City College</span></h1>
+                <p class="community-hero-description">The Student Society in Information Technology Education. Find organization news, student activities, and achievements in one place.</p>
                 <div class="community-hero-actions">
-                    <a class="community-hero-button" href="{{ route('discover') }}">Explore the community <x-icon name="arrow-right" size="sm" /></a>
-                    <a class="community-hero-more" href="#home-news-title">See what's new <x-icon name="chevron-down" size="sm" /></a>
+                    <a class="community-hero-button" href="{{ route('discover') }}">Browse posts <x-icon name="arrow-right" size="sm" /></a>
+                    <a class="community-hero-more" href="#home-news-title">Latest updates <x-icon name="chevron-down" size="sm" /></a>
                 </div>
-                <p class="community-hero-campus"><x-icon name="map-pin" size="sm" /> Mabalacat City College <span aria-hidden="true">/</span> SSITE</p>
             </div>
-
-            <div class="community-hero-art" aria-hidden="true">
-                <span class="community-hero-spark community-hero-spark--one">&#10035;</span>
-                <span class="community-hero-spark community-hero-spark--two">&#10023;</span>
-                <div class="community-hero-note"><x-icon name="code" /><span>Made of ideas.<br><strong>Powered by us.</strong></span></div>
-                <div class="community-board">
-                    <div class="community-board-bar"><span class="community-board-dots"><i></i><i></i><i></i></span><span>the ssite space</span><x-icon name="heart" size="sm" /></div>
-                    <div class="community-board-body">
-                        <p class="community-board-kicker">Different minds. One community.</p>
-                        <span class="community-board-wordmark">SSITE<span>&#10038;</span></span>
-                        <div class="community-board-rule"><span></span><x-icon name="plus" size="sm" /><span></span></div>
-                        <div class="community-board-interests">
-                            <span><x-icon name="code" /><b>Create</b></span>
-                            <span><x-icon name="users" /><b>Connect</b></span>
-                            <span><x-icon name="award" /><b>Celebrate</b></span>
-                        </div>
-                    </div>
+            <figure class="community-hero-identity">
+                <div class="community-hero-seal">
+                    <img src="{{ asset('images/SSITE LOGO.png') }}" alt="SSITE emblem" width="240" height="240" fetchpriority="high" decoding="async">
                 </div>
-                <div class="community-hero-sticker"><span>Find your</span><strong>people.</strong><svg viewBox="0 0 68 34" fill="none"><path d="M5 5c12 30 46 30 58 0" /></svg></div>
-                <div class="community-hero-cursor"><svg viewBox="0 0 40 48" fill="none"><path d="M5 4v34l9-9 8 15 8-4-8-14 13-2L5 4Z" /></svg><span>You belong here</span></div>
-                <div class="community-hero-ribbon">Learn. Build. Belong. <span>&#8599;</span></div>
-            </div>
+                <figcaption>Student Society in<br>Information Technology Education</figcaption>
+            </figure>
         </div>
-        <div class="community-hero-bottom"><span>Student Society in Information Technology Education</span><span>Ideas into action. Together. <x-icon name="chevron-down" size="sm" /></span></div>
     </section>
 
     <section class="home-intro" aria-labelledby="home-intro-title">
         <div class="home-intro-image">
-            <img src="{{ asset('images/rawri-26-27-community.jpg') }}" alt="SSITE wolf mascot wearing a hoodie" width="360" height="300" loading="eager" fetchpriority="high" decoding="async" data-home-image>
+            <img src="{{ asset('images/rawri-community-cutout.png') }}" alt="SSITE wolf mascot wearing a hoodie" width="360" height="316" loading="eager" fetchpriority="high" decoding="async" data-home-image>
         </div>
         <div class="home-hero-copy">
             <p class="home-eyebrow">Student Society in Information Technology Education</p>

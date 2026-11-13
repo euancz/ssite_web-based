@@ -23,7 +23,7 @@ class AchievementRequest extends ContentRequest
             'awardee' => ['nullable', 'string', 'max:200'],
             'category' => ['nullable', 'string', 'max:100'],
             'achievement_date' => ['nullable', 'date'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'extensions:jpg,png', 'max:2048'],
         ];
     }
 
@@ -37,7 +37,8 @@ class AchievementRequest extends ContentRequest
             'category.max' => 'The category may not be longer than 100 characters.',
             'achievement_date.date' => 'Enter a valid achievement date.',
             'image.image' => 'Choose a valid image file.',
-            'image.mimes' => 'The image must be a JPG, JPEG, PNG, or WebP file.',
+            'image.mimes' => 'The image must be a JPG or PNG file.',
+            'image.extensions' => 'The image must have a .jpg or .png extension.',
             'image.max' => 'The image may not be larger than 2 MB.',
         ];
     }

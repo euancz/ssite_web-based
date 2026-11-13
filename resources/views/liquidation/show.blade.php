@@ -71,7 +71,7 @@
                 <h2 id="liquidation-pdf-heading">Report preview</h2>
                 <button type="button" class="dashboard-button dashboard-button-secondary" data-pdf-dialog-close aria-label="Close report preview"><x-icon name="x" size="sm" /> Close</button>
             </div>
-            <p id="liquidation-pdf-note" class="document-pdf-viewer__note">View only. Text selection is unavailable. Use the arrow keys to change pages, plus/minus to zoom, 0 to fit width, and Escape to exit full screen.</p>
+            <p id="liquidation-pdf-note" class="document-pdf-viewer__note">View only. Text selection is unavailable. Use the arrow keys to change pages, plus or minus to zoom, 0 to fit width, and Escape to exit full screen.</p>
             <div class="document-pdf-toolbar" role="group" aria-label="PDF controls">
                 <button type="button" class="dashboard-button dashboard-button-secondary" data-pdf-previous disabled>Previous</button>
                 <span class="document-pdf-page-status" data-pdf-page-status aria-live="polite">Loading page…</span>

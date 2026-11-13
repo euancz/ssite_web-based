@@ -35,7 +35,7 @@ class WorkspaceExperienceTest extends TestCase
             $user = $this->actor($role, $position);
             $response = $this->actingAs($user)->get(route($user->dashboardRoute()))->assertOk()
                 ->assertSee('workspace-refresh.css')->assertSee('id="workspace-jump"', false)
-                ->assertSee('id="workspace-preferences"', false)->assertSee('Welcome back, Alex.');
+                ->assertSee('id="workspace-preferences"', false)->assertSee('workspace-welcome');
             foreach (config('workspace.modules') as $key => $module) {
                 $link = 'href="'.route($module['create']).'"';
                 if ($user->canPostIn($key)) {

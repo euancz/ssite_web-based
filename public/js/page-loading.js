@@ -18,23 +18,24 @@
     const block = (type = 'line') => `<span class="skeleton-block loading-${type}"></span>`;
     const repeat = (count, render) => Array.from({ length: count }, render).join('');
     const heading = () => `<div class="loading-heading">${block('title')}${block('subtitle')}</div>`;
-    const lines = () => `<div class="loading-lines">${block()}${block()}${block('short')}</div>`;
-    const toolbar = () => `<div class="loading-toolbar">${block('control')}${block('control')}${block('control')}</div>`;
+    const lines = () => `<div class="loading-lines">${block()}${block('short')}</div>`;
+    const toolbar = () => `<div class="loading-toolbar">${repeat(3, () => block('control'))}</div>`;
     const author = () => `<div class="loading-author">${block('avatar')}${lines()}</div>`;
-    const card = () => `<div class="loading-panel">${author()}${block('title')}${lines()}${block('footer')}</div>`;
-    const table = () => `<div class="loading-table">${repeat(6, () => `<div class="loading-table-row">${repeat(4, () => block())}</div>`)}</div>`;
-    const fields = () => `<div class="loading-fields">${repeat(6, () => `<div class="loading-field">${block('short')}${block('input')}</div>`)}</div>`;
+    const card = () => `<div class="loading-panel">${author()}${block('title')}${lines()}</div>`;
+    const fields = () => `<div class="loading-fields">${repeat(4, () => `<div class="loading-lines">${block('short')}${block('input')}</div>`)}</div>`;
+    const table = () => `<div class="loading-table">${repeat(4, () => `<div class="loading-table-row">${repeat(3, () => block())}</div>`)}</div>`;
+    // Suggest the destination's structure with only its main content regions.
     const layouts = {
-        home: () => `${block('hero')}<div class="loading-split">${block('media')}${lines()}</div>${heading()}<div class="loading-grid">${repeat(3, card)}</div>`,
-        about: () => `${block('hero')}<div class="loading-split">${block('media')}${lines()}</div>${heading()}<div class="loading-grid">${repeat(3, () => `<div class="loading-panel">${block('portrait')}${lines()}</div>`)}</div>`,
-        discover: () => `${block('hero')}${toolbar()}<div class="loading-grid">${repeat(6, () => `<div class="loading-panel">${block('media')}${lines()}</div>`)}</div>`,
-        dashboard: () => `${heading()}<div class="loading-grid">${repeat(3, () => `<div class="loading-panel">${block('short')}${block('title')}${block()}</div>`)}</div>${heading()}${table()}`,
-        feed: () => `${heading()}${toolbar()}${repeat(3, card)}`,
-        detail: () => `${block('control')}<div class="loading-panel">${author()}${heading()}${lines()}${block('media')}${lines()}${lines()}${block('footer')}</div>`,
-        form: () => `${heading()}${toolbar()}<div class="loading-panel">${fields()}${block('editor')}${block('control')}</div>`,
-        profile: () => `${heading()}<div class="loading-profile"><div class="loading-panel">${block('portrait')}${lines()}${block('control')}</div><div class="loading-panel">${heading()}${fields()}${block('control')}</div></div>`,
-        notifications: () => `${heading()}${toolbar()}<div class="loading-panel">${repeat(6, author)}</div>`,
-        search: () => `${heading()}${block('input')}${toolbar()}${repeat(4, () => `<div class="loading-panel">${block('title')}${lines()}</div>`)}`,
+        home: () => `${block('hero')}${heading()}<div class="loading-grid">${repeat(3, card)}</div>`,
+        about: () => `${heading()}<div class="loading-split">${block('media')}<div class="loading-panel">${heading()}${lines()}${lines()}</div></div>`,
+        discover: () => `${heading()}${toolbar()}<div class="loading-grid">${repeat(3, () => `<div class="loading-panel">${block('media')}${lines()}</div>`)}</div>`,
+        dashboard: () => `${heading()}<div class="loading-stats">${repeat(4, () => `<div class="loading-panel">${block('short')}${block('number')}</div>`)}</div><div class="loading-split">${table()}<div class="loading-panel">${lines()}${lines()}${lines()}</div></div>`,
+        feed: () => `${heading()}${toolbar()}${repeat(2, card)}`,
+        detail: () => `<div class="loading-panel">${author()}${heading()}${block('media')}${lines()}${lines()}</div>`,
+        form: () => `${heading()}<div class="loading-panel">${fields()}${block('editor')}${block('control')}</div>`,
+        profile: () => `${heading()}<div class="loading-profile"><div class="loading-panel">${block('portrait')}${lines()}</div><div class="loading-panel">${fields()}${block('control')}</div></div>`,
+        notifications: () => `${heading()}${toolbar()}<div class="loading-panel">${repeat(3, author)}</div>`,
+        search: () => `${heading()}${block('input')}${toolbar()}${repeat(3, () => `<div class="loading-panel">${block('subtitle')}${lines()}</div>`)}`,
         table: () => `${heading()}${toolbar()}${table()}`,
     };
 
@@ -59,7 +60,7 @@
                 skeleton.style.left = `${Math.max(0, bounds.left)}px`;
                 skeleton.style.top = `${Math.max(0, bounds.top, headerBottom)}px`;
             }
-            skeleton.querySelector('.page-loading-skeleton-content').innerHTML = layouts[route.kind]();
+            skeleton.querySelector('.page-loading-skeleton-content').innerHTML = (layouts[route.kind] || layouts.feed)();
             skeleton.classList.remove('hidden');
         }, 140);
     };

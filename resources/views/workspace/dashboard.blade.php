@@ -4,12 +4,12 @@
 
 @section('content')
 <div class="workspace-dashboard workspace-president-dashboard">
-    <x-workspace.welcome description="A clear view of your community. Review submissions and keep great stories moving." :action-url="route('adviser.reviews.index', ['status' => 'pending'])" action-label="Open review queue" />
+    <x-workspace.welcome description="Review submissions and manage published content." :action-url="route('adviser.reviews.index', ['status' => 'pending'])" action-label="Open review queue" />
     <x-workspace.dashboard-summary :status="$dashboardStatus" :draft-count="$draftCount" :reviewer="true" />
 
     <section class="workspace-officer-recent" aria-labelledby="workspace-pending-title">
         <div class="workspace-officer-section-heading">
-            <div><h2 id="workspace-pending-title">Waiting longest for review</h2><p>Oldest submissions first.</p></div>
+            <div><h2 id="workspace-pending-title">Pending review</h2><p>Oldest submissions first.</p></div>
             <a class="dashboard-text-button" href="{{ route('adviser.reviews.index', ['status' => 'pending', 'sort' => 'oldest']) }}">Open review queue</a>
         </div>
         <x-ui.data-table label="Oldest pending submissions">
@@ -32,6 +32,5 @@
     </section>
 
     <x-workspace.content-areas :modules="$moduleStats" />
-    <x-workspace.dashboard-guide />
 </div>
 @endsection

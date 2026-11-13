@@ -55,7 +55,7 @@ body:has(.document-selection[open]) { overflow: hidden; }
 .document-selection .document-selection-preview { height: auto; margin: 40px 0 0; padding: 0 22px 24px; overflow: hidden; border: 1px solid #ededed; border-radius: 11px; background: #fafafa; }
 .document-selection-preview-heading { display: flex; min-height: 46px; align-items: center; justify-content: space-between; gap: 12px; padding: 0 4px; }
 .document-selection-preview-heading h3 { margin: 0; font: 600 15px/1.4 'Poppins', sans-serif; }
-.document-selection-preview-heading button { display: grid; width: 40px; height: 40px; place-items: center; border: 0; border-radius: 6px; background: transparent; color: #083747; cursor: pointer; }
+.document-selection-preview-heading .document-selection-open { display: grid; width: 40px; height: 40px; place-items: center; border: 0; border-radius: 6px; background: transparent; color: #083747; cursor: pointer; }
 .document-selection .document-pdf-stage { display: block; flex: none; height: 464px; min-height: 0; max-height: 464px; padding: 0; overflow: auto; border-radius: 9px 9px 0 0; background: #fff; }
 .document-selection .document-pdf-canvas { display: block; margin: 0 auto; max-width: 100%; box-shadow: 0 3px 4px rgb(0 0 0 / 20%); }
 .document-selection-controls { display: none; justify-content: center; align-items: center; flex-wrap: wrap; gap: 16px; padding-top: 16px; font-size: 13px; }

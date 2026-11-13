@@ -38,7 +38,7 @@ class SaveContentDraftRequest extends FormRequest
         // Drafts may exceed the publication word limit while the author is still writing.
         $rules[$body] = ['nullable', 'string', 'max:20000'];
         $rules['image'] = in_array($this->route('module'), ['articles', 'activities', 'achievements'], true)
-            ? ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'] : ['exclude'];
+            ? ['nullable', 'image', 'mimes:jpg,jpeg,png', 'extensions:jpg,png', 'max:2048'] : ['exclude'];
         $rules['file'] = in_array($this->route('module'), ['documents', 'liquidations'], true)
             ? ['nullable', 'file', 'mimes:pdf', 'max:'.config('school.max_pdf_size_kb', 10240)] : ['exclude'];
 

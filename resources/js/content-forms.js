@@ -20,7 +20,7 @@ export function initContentForms() {
             const content = body?.value || '';
             if (counter) {
                 const count = (content.match(/\S+/gu) || []).length;
-                counter.textContent = `${count} / 300 words${count > 300 ? ' — shorten before submitting' : ''}`;
+                counter.textContent = `${count} of 300 words${count > 300 ? ' — shorten before submitting' : ''}`;
                 counter.classList.toggle('is-over-limit', count > 300);
             }
             if (!livePreview) return;

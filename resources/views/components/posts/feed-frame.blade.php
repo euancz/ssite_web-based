@@ -28,7 +28,7 @@
     @endif
 @endpush
 
-<div class="site-page post-feed-shell {{ $stylesheet ? 'post-feed-' . $stylesheet : '' }}">
+<div class="site-page post-feed-shell post-feed-{{ $variant }} {{ $stylesheet ? 'post-feed-' . $stylesheet : '' }}">
     @if ($variant === 'show' && $backUrl)
         <nav class="post-feed-back" aria-label="Post navigation">
             <a href="{{ $backUrl }}" class="dashboard-button dashboard-button-secondary">

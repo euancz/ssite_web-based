@@ -320,8 +320,6 @@ class DocumentController extends Controller
         }
         // SECURITY: Signed URLs expire quickly; range fetches retain the same signature and recheck policy.
         abort_unless($request->hasValidSignature(), 404);
-        // SECURITY: This best-effort header check blocks ordinary top-level PDF navigation.
-        abort_if(strtolower((string) $request->header('Sec-Fetch-Dest')) === 'document', 404);
         if (! $this->isPrivatePdfPath($document->file_path) || ! Storage::disk('local')->exists($document->file_path)) {
             abort(404);
         }

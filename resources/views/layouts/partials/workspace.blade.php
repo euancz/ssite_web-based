@@ -30,7 +30,9 @@
         <button class="workspace-scrim" type="button" aria-label="Close workspace navigation" tabindex="-1" hidden></button>
         <aside class="workspace-sidebar" id="workspace-sidebar" aria-label="Workspace navigation">
             <a class="workspace-brand" href="{{ route($user->dashboardRoute()) }}">
-                <img src="{{ asset('images/SSITE LOGO.png') }}" alt="SSITE">
+                <img src="{{ asset('images/ssite-workspace-44.png') }}"
+                     srcset="{{ asset('images/ssite-workspace-88.png') }} 2x, {{ asset('images/ssite-workspace-132.png') }} 3x"
+                     width="44" height="44" alt="SSITE">
                 <span class="workspace-brand-copy"><strong>{{ $workspaceConfig['brand'] }}</strong><small>Content &amp; publishing</small></span>
             </a>
 
@@ -130,7 +132,7 @@
                 <button class="workspace-menu-toggle" type="button" aria-label="Collapse sidebar" data-tooltip="Collapse sidebar" aria-pressed="false" aria-controls="workspace-sidebar">
                     <x-workspace.icon name="menu" />
                 </button>
-                <div class="workspace-topbar-title"><span>SSITE Workspace</span><span aria-hidden="true">/</span><strong>@yield('title', 'Dashboard')</strong></div>
+                <div class="workspace-topbar-title"><strong>@yield('title', 'Dashboard')</strong></div>
                 <div class="workspace-topbar-actions">
                     <button class="workspace-jump-trigger" type="button" data-workspace-open="workspace-jump" aria-haspopup="dialog" aria-controls="workspace-jump" aria-label="Jump to a workspace page" hidden><x-workspace.icon name="search" /><span>Jump to?</span><kbd>Ctrl K</kbd></button>
                     <a class="workspace-view-site" href="{{ url('/') }}" aria-label="View site" data-tooltip="View site"><x-workspace.icon name="external" /><span>View site</span></a>

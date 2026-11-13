@@ -1,0 +1,33 @@
+.login-success {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: #f2faff;
+    color: #12354a;
+    font-family: 'Poppins', sans-serif;
+    pointer-events: none;
+    transition: opacity 280ms ease, visibility 280ms ease;
+    /* Reveal the CMS even if the script cannot load. */
+    animation: login-success-fallback 0s 6s forwards;
+}
+.login-success.is-finished { opacity: 0; visibility: hidden; }
+.login-success-card { text-align: center; }
+.login-success-mark { position: relative; display: grid; place-items: center; width: 104px; height: 104px; margin: 0 auto 28px; }
+.login-success-mark img { object-fit: contain; }
+.login-success-ring { position: absolute; inset: 0; border: 3px solid #cce8f5; border-top-color: #1676a3; border-radius: 50%; animation: login-success-spin 1s linear infinite; }
+.login-success-eyebrow { margin: 0 0 10px; color: #247458; font-size: 11px; font-weight: 700; letter-spacing: .14em; }
+.login-success-card h2 { margin: 0 0 10px; font-size: clamp(24px, 5vw, 32px); font-weight: 700; }
+.login-success-card > p:last-child { margin: 0; color: #526d7e; font-size: 14px; }
+.login-success-dots span { animation: login-success-dot 1.2s ease-in-out infinite; }
+.login-success-dots span:nth-child(2) { animation-delay: .15s; }
+.login-success-dots span:nth-child(3) { animation-delay: .3s; }
+@keyframes login-success-spin { to { transform: rotate(360deg); } }
+@keyframes login-success-dot { 50% { opacity: .2; } }
+@keyframes login-success-fallback { to { opacity: 0; visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) {
+    .login-success { transition: none; }
+    .login-success-ring, .login-success-dots span { animation: none; }
+}

@@ -39,6 +39,10 @@ body.workspace-site-body .workspace-post-choice:hover { background: #f8fbff; bor
 body.workspace-site-body .workspace-post-choice strong { font-size: 15px; }
 body.workspace-site-body .workspace-post-choice small { font-size: 12px; line-height: 1.6; }
 body.workspace-site-body :is(a, button, select, input, textarea):focus-visible { outline: 3px solid #3b82c4; outline-offset: 3px; }
+/* Account for the rail's right border so the logo sits on whole pixels. */
+body.workspace-site-body .workspace-shell.has-js.is-collapsed .workspace-sidebar { padding-inline: 12px 11px; }
+body.workspace-site-body .workspace-shell.has-js.is-collapsed .workspace-brand { gap: 0; }
+body.workspace-site-body .workspace-shell.has-js.is-collapsed .workspace-brand img { width: 44px; height: 44px; flex: 0 0 44px; transform: none; transition: none; }
 body.workspace-site-body .workspace-shell.has-js.is-collapsed .workspace-brand-copy { display: none; }
 
 body.workspace-site-body .article-editor-shell { min-width: 0; overflow: hidden; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; }

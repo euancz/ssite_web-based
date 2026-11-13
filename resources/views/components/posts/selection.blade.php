@@ -31,7 +31,7 @@
         <div class="document-selection-preview-heading">
             <h3>Document Preview</h3>
             @can('viewFile', $post)
-                <button type="button" data-selection-expand aria-label="Expand document preview" aria-pressed="false"><x-icon name="external-link" size="sm" /></button>
+                <a class="document-selection-open" href="{{ \Illuminate\Support\Facades\URL::temporarySignedRoute($routePrefix . '.view', now()->addMinutes(15), [$post instanceof \App\Models\Liquidation ? 'liquidation' : 'document' => $post]) }}" target="_blank" rel="noopener noreferrer" aria-label="Open full PDF in a new tab"><x-icon name="external-link" size="sm" /></a>
             @endcan
         </div>
         @can('viewFile', $post)

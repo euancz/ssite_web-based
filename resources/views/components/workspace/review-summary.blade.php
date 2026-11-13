@@ -1,8 +1,10 @@
 @props(['post'])
 
 <section class="workspace-review-summary" aria-label="Submission status">
-    <h2>Submission status</h2>
-    <p><x-ui.status-badge :status="$post->approval_status" /> @if ($post->isArchived()) <x-ui.status-badge status="archived" /> @endif</p>
+    <div class="workspace-review-heading">
+        <h2>Submission status</h2>
+        <div class="workspace-review-badges"><x-ui.status-badge :status="$post->approval_status" /> @if ($post->isArchived()) <x-ui.status-badge status="archived" /> @endif</div>
+    </div>
     <dl>
         <div><dt>Submitted</dt><dd>{{ $post->created_at?->format('M j, Y g:i A') ?? 'Not recorded' }}</dd></div>
         <div><dt>Last updated</dt><dd>{{ $post->updated_at?->format('M j, Y g:i A') ?? 'Not recorded' }}</dd></div>
@@ -19,7 +21,7 @@
     @if ($post->isArchived())<p>This submission is archived and is not visible on the public site.</p>@endif
     @can('update', $post)
         @if (app(\App\Services\ContentVersions::class)->available())
-            <p><a href="{{ route('workspace.content-versions.index', ['module' => $post->getTable(), 'post' => $post->getKey()]) }}">View content version history</a></p>
+            <div class="workspace-review-footer"><a href="{{ route('workspace.content-versions.index', ['module' => $post->getTable(), 'post' => $post->getKey()]) }}">View content version history</a></div>
         @endif
     @endcan
 </section>

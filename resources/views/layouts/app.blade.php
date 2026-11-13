@@ -6,6 +6,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'SSITE') | Student Society in Information Technology Education</title>
 
+    @php
+        $showLoginSuccess = auth()->check() && session()->pull('show_login_success', false);
+    @endphp
+    @if ($showLoginSuccess)
+        <link rel="stylesheet" href="{{ asset('css/login-success.css') }}">
+        <script src="{{ asset('js/login-success.js') }}" defer></script>
+    @endif
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -50,6 +57,9 @@
     @endif
 </head>
 <body class="{{ $workspaceEnabled ? 'site-body workspace-site-body' : 'site-body main-site-body' }} {{ request()->routeIs('discover') ? 'discover-site-body' : '' }} {{ $isPublicLanding ? 'home-landing-body' : '' }}">
+    @if ($showLoginSuccess)
+        @include('layouts.partials.login-success')
+    @endif
     <template id="search-icon-articles"><x-icon name="file-text" size="sm" /></template>
     <template id="search-icon-activities"><x-icon name="calendar-days" size="sm" /></template>
     <template id="search-icon-achievements"><x-icon name="award" size="sm" /></template>
@@ -370,7 +380,7 @@
             <span class="skeleton-block skeleton-header-action"></span>
         </div>
         <div class="loading-shell-sidebar" aria-hidden="true">
-            @for ($loadingItem = 0; $loadingItem < 7; $loadingItem++)
+            @for ($loadingItem = 0; $loadingItem < 5; $loadingItem++)
                 <span class="skeleton-block loading-input"></span>
             @endfor
         </div>

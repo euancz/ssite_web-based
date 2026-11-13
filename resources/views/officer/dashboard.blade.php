@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="dashboard-page workspace-officer-dashboard">
-    <x-workspace.welcome description="Your next story starts here. Create, refine, and share what matters to the SSITE community." :action-url="route('workspace.create')" action-label="Create post" />
+    <x-workspace.welcome description="Track your submissions and manage your posts." :action-url="route('workspace.create')" action-label="Create post" />
     <x-workspace.dashboard-summary :status="$dashboardStatus" :draft-count="$draftCount" />
 
     @if ($rejectedPosts->isNotEmpty())
@@ -31,7 +31,7 @@
 
     <section class="workspace-officer-recent" aria-labelledby="workspace-recent-title">
         <div class="workspace-officer-section-heading">
-            <div><h2 id="workspace-recent-title">Recent submissions</h2><p>Your five latest submissions.</p></div>
+            <div><h2 id="workspace-recent-title">Recent submissions</h2></div>
         </div>
         <x-ui.data-table label="Your recent submissions">
             <table class="dashboard-table workspace-officer-table">
@@ -53,6 +53,5 @@
         </x-ui.data-table>
     </section>
     <x-workspace.content-areas :modules="$moduleStats" />
-    <x-workspace.dashboard-guide />
 </div>
 @endsection

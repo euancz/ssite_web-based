@@ -169,6 +169,9 @@ class MicrosoftAuthController extends Controller
                 }
             }
 
+            // Consume this once on the first CMS page after successful authentication.
+            request()->session()->put('show_login_success', true);
+
             // Profile enforcement happens before role routing so unfinished accounts cannot browse.
             if (! $user->hasCompletedProfile()) {
                 return redirect()->route('profile.complete');

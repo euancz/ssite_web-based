@@ -45,8 +45,8 @@
     {{-- SECURITY: Upload validation and filename generation happen on the server. --}}
     <div class="dashboard-form-field">
         <label for="activity-image">{{ $activity ? 'Replace image (optional)' : 'Image (optional)' }}</label>
-        <x-workspace.attachment title="Attach a feature image" help="JPG, PNG, or WebP up to 2 MB">
-            <input id="activity-image" data-image-preview="activity-image-preview" name="image" @error('image') aria-invalid="true" aria-describedby="activity-image-error" @enderror type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+        <x-workspace.attachment title="Attach a feature image" help="JPG or PNG up to 2 MB">
+            <input id="activity-image" data-image-preview="activity-image-preview" name="image" @error('image') aria-invalid="true" aria-describedby="activity-image-error" @enderror type="file" accept=".jpg,.png">
         </x-workspace.attachment>
         <x-workspace.upload-status input-id="activity-image" :max-kb="2048" />
         @error('image') <span id="activity-image-error" class="profile-field-error">{{ $message }}</span> @enderror

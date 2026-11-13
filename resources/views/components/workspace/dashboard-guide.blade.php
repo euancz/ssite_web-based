@@ -9,8 +9,8 @@
 <details class="workspace-dashboard-guide">
     <summary class="workspace-dashboard-guide-heading">
         <div>
-            <h2>Need a little direction?</h2>
-            <p>Explore your workspace guide and publishing workflow.</p>
+            <h2>Workspace guide</h2>
+            <p>How to create, submit, and manage posts.</p>
         </div>
         <x-workspace.icon name="chevron-down" />
     </summary>

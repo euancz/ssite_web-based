@@ -22,7 +22,7 @@ class ActivityRequest extends ContentRequest
                 ? ['sometimes', 'required', Rule::in(['plain', 'markdown'])] : ['exclude'],
             'activity_date' => ['nullable', 'date'],
             'location' => ['nullable', 'string', 'max:200'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'extensions:jpg,png', 'max:2048'],
         ];
     }
 
@@ -35,7 +35,8 @@ class ActivityRequest extends ContentRequest
             'activity_date.date' => 'Enter a valid activity date.',
             'location.max' => 'The location may not be longer than 200 characters.',
             'image.image' => 'Choose a valid image file.',
-            'image.mimes' => 'The image must be a JPG, JPEG, PNG, or WebP file.',
+            'image.mimes' => 'The image must be a JPG or PNG file.',
+            'image.extensions' => 'The image must have a .jpg or .png extension.',
             'image.max' => 'The image may not be larger than 2 MB.',
         ];
     }

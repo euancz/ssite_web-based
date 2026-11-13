@@ -46,7 +46,7 @@
 <div class="post-feed-shell workspace-library-feed {{ $stylesheet ? 'post-feed-' . $stylesheet : '' }}">
     @if ($variant === 'index')
         <header class="post-feed-heading">
-            <div><span class="workspace-eyebrow">CONTENT LIBRARY / {{ $title }}</span><h1>{{ $statusTitle }}</h1>
+            <div><span class="workspace-library-context">{{ $title }}</span><h1>{{ $statusTitle }}</h1>
             <p>{{ $description }}@if ($activeTab === 'archived') Archived posts are hidden from the public site.@endif</p></div>
             @if ($filterModuleKey !== false && $filterUser?->canPostIn($filterModuleKey))
                 <a class="dashboard-button" href="{{ route($filterModules[$filterModuleKey]['create']) }}"><x-workspace.icon name="plus" /> Create {{ strtolower($filterModules[$filterModuleKey]['singular']) }}</a>

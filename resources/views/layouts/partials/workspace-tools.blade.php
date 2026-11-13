@@ -1,6 +1,6 @@
 {{-- Navigation is built from the same authorized destinations as the sidebar. --}}
 <dialog id="workspace-jump" class="workspace-dialog" aria-labelledby="workspace-jump-title">
-    <header class="workspace-dialog-heading"><div><span class="workspace-eyebrow">FIND YOUR WAY</span><h2 id="workspace-jump-title">Jump to your next task</h2></div><button type="button" data-workspace-close aria-label="Close quick navigation"><x-workspace.icon name="x" /></button></header>
+    <header class="workspace-dialog-heading"><div><h2 id="workspace-jump-title">Quick navigation</h2></div><button type="button" data-workspace-close aria-label="Close quick navigation"><x-workspace.icon name="x" /></button></header>
     <label class="workspace-jump-search"><x-workspace.icon name="search" /><span class="visually-hidden">Find a workspace page</span><input type="search" data-workspace-query placeholder="Search pages and actions?" autocomplete="off" maxlength="100"></label>
     <div class="workspace-jump-results" data-workspace-destinations>
         <a href="{{ route($user->dashboardRoute()) }}" data-jump-item><x-workspace.icon name="grid" /><span>Dashboard<small>Your workspace overview</small></span><x-workspace.icon name="arrow-right" /></a>
@@ -30,7 +30,7 @@
     <footer class="workspace-dialog-footer"><span data-workspace-result-count role="status" aria-live="polite"></span><span><kbd>?</kbd> <kbd>?</kbd> to browse ? <kbd>Esc</kbd> to close</span></footer>
 </dialog>
 <dialog id="workspace-preferences" class="workspace-dialog workspace-preferences" aria-labelledby="workspace-preferences-title">
-    <header class="workspace-dialog-heading"><div><span class="workspace-eyebrow">MAKE IT YOURS</span><h2 id="workspace-preferences-title">Workspace settings</h2></div><button type="button" data-workspace-close aria-label="Close workspace settings"><x-workspace.icon name="x" /></button></header>
+    <header class="workspace-dialog-heading"><div><h2 id="workspace-preferences-title">Workspace settings</h2></div><button type="button" data-workspace-close aria-label="Close workspace settings"><x-workspace.icon name="x" /></button></header>
     <p>These display preferences apply to this browser.</p>
     <fieldset><legend>Content spacing</legend><label><input type="radio" name="workspace-density" value="comfortable" checked> Comfortable <small>More breathing room for reading.</small></label><label><input type="radio" name="workspace-density" value="compact"> Compact <small>Fit more rows and cards on screen.</small></label></fieldset>
     <label class="workspace-motion-setting"><input type="checkbox" data-workspace-reduce-motion> Reduce workspace animation</label>
