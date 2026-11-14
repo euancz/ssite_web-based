@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'SSITE') | Student Society in Information Technology Education</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/ssite-favicon.svg') }}">
 
     @php
         $showLoginSuccess = auth()->check() && session()->pull('show_login_success', false);
@@ -29,7 +30,7 @@
             || $workspaceUser->can('manage-officers')
         );
         $workspaceRoutePatterns = [
-            'officer.*', 'adviser.*', 'editorial.*', 'workspace.posts.*', 'workspace.drafts.*', 'workspace.content-activity.*', 'workspace.content-versions.*',
+            'officer.*', 'adviser.*', 'editorial.*', 'workspace.posts.*', 'workspace.drafts.*', 'workspace.content-activity.*', 'workspace.content-versions.*', 'workspace.sponsors.*', 'workspace.sponsors.*',
             'notifications.index', 'profile.edit',
             'articles.create', 'articles.edit', 'activities.create', 'activities.edit',
             'achievements.create', 'achievements.edit', 'documents.create', 'documents.edit',
@@ -55,6 +56,9 @@
     @if ($workspaceEnabled)
         <link rel="stylesheet" href="{{ asset('css/workspace-refresh.css') }}">
     @endif
+    <link rel="stylesheet" href="{{ asset('css/main-site-dropdowns.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/interface-polish.css') }}">
+    <script src="{{ asset('js/dropdown-position.js') }}" defer></script>
 </head>
 <body class="{{ $workspaceEnabled ? 'site-body workspace-site-body' : 'site-body main-site-body' }} {{ request()->routeIs('discover') ? 'discover-site-body' : '' }} {{ $isPublicLanding ? 'home-landing-body' : '' }}">
     @if ($showLoginSuccess)

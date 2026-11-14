@@ -22,11 +22,11 @@
         <input type="hidden" name="tab" value="{{ $tab }}">
         <div class="documents-search">
             <label class="visually-hidden" for="document-search">Search title</label>
-            <input id="document-search" type="search" name="q" value="{{ $searchQuery }}" placeholder="Search Title" maxlength="100">
+            <input id="document-search" type="search" name="q" value="{{ $searchQuery }}" placeholder="Search document titles" maxlength="100">
             <button type="submit" aria-label="Search documents"><x-icon name="search" size="sm" /></button>
         </div>
         <label class="documents-select">
-            <span>Sort By Semester</span>
+            <span>Semester</span>
             <select name="semester" onchange="this.form.requestSubmit()">
                 <option value="">All Semesters</option>
                 <option value="1" @selected($semester === '1')>1st Semester</option>
@@ -51,7 +51,18 @@
                 <x-icon name="chevron-down" aria-hidden="true" />
             </label>
         @endif
+        <label class="documents-select"><span>Sort by</span>
+            <select name="sort" onchange="this.form.requestSubmit()">
+                @foreach ($sortOptions as $value => $label)
+                    <option value="{{ $value }}" @selected($sort === $value)>{{ $label }}</option>
+                @endforeach
+            </select>
+            <x-icon name="chevron-down" aria-hidden="true" />
+        </label>
         <noscript><button class="site-button" type="submit">Apply filters</button></noscript>
+        @if ($academicYear !== '' || $searchQuery !== '' || $category !== '' || $semester !== '' || $sort !== 'recent')
+            <a href="{{ route('documents.index') }}">Clear filters</a>
+        @endif
     </form>
 
     @if (session('status'))

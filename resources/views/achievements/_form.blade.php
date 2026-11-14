@@ -9,7 +9,7 @@
     {{-- The title length matches the achievements table. --}}
     <div class="dashboard-form-field">
         <label for="achievement-title">Title <span class="post-form-required-mark" aria-hidden="true">*</span></label>
-        <input id="achievement-title" name="title" @error('title') aria-invalid="true" aria-describedby="achievement-title-error" @enderror type="text" maxlength="200" required value="{{ old('title', $draftValues['title'] ?? $achievement?->title) }}">
+        <input id="achievement-title" placeholder="e.g. Regional programming competition award" name="title" @error('title') aria-invalid="true" aria-describedby="achievement-title-error" @enderror type="text" maxlength="200" required value="{{ old('title', $draftValues['title'] ?? $achievement?->title) }}">
         @error('title') <span id="achievement-title-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
     @php($formattingEnabled = app(\App\Services\ArticleContent::class)->availableFor('achievements'))

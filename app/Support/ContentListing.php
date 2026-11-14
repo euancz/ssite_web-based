@@ -40,7 +40,7 @@ final class ContentListing
         };
 
         // Existing document/report searches include their own module-specific fields.
-        if ($workspace && in_array($module, ['articles', 'activities', 'achievements'], true)) {
+        if (in_array($module, ['articles', 'activities', 'achievements'], true)) {
             $search = $request->query('q');
             $search = is_string($search) ? mb_substr(trim($search), 0, 100) : '';
             if ($search !== '') {

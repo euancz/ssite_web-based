@@ -100,7 +100,8 @@
             line-height: 1;
         }
 
-        .discover-field select {
+        .discover-field select,
+        .discover-field input {
             appearance: none;
             width: 100%;
             border: 1px solid rgba(17, 114, 132, 0.55);
@@ -116,6 +117,14 @@
             background-size: 6px 6px, 6px 6px;
             background-repeat: no-repeat;
         }
+
+        .discover-field input { background-image: none; padding-right: 1rem; }
+        .discover-filters .site-button { min-height: 44px; padding: 12px 24px; }
+        .discover-card-link { display: block; height: 100%; color: inherit; text-decoration: none; }
+        .discover-card-link:focus-visible { outline: 3px solid #167eaa; outline-offset: -3px; }
+        .discover-card-link:hover h3 { text-decoration: underline; }
+        .discover-card-summary { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; }
+        .discover-read-story { display: inline-block; margin-top: 16px; font-weight: 700; }
 
         .discover-feed {
             margin-top: 28px;
@@ -297,6 +306,7 @@
         }
 
         @media (max-width: 640px) {
+            .discover-filters { grid-template-columns: 1fr; }
 
             .discover-main {
                 padding-left: 14px;
@@ -343,35 +353,40 @@
                 labelledby="discover-title"
             />
 
-            <section class="discover-filters" aria-label="Discover filters">
+            <form class="discover-filters" aria-label="Discover filters" method="GET" action="{{ route('discover') }}">
                 <div class="discover-field">
-                    <label for="discover-category">Category</label>
-                    <select id="discover-category" aria-label="Category filter">
-                        <option value="all">All Categories</option>
-                        <option value="articles">Articles</option>
-                        <option value="activities">Activities</option>
-                        <option value="achievements">Achievements</option>
+                    <label for="discover-search">Search stories</label>
+                    <input id="discover-search" type="search" name="q" maxlength="100" value="{{ $filters['q'] }}" placeholder="Title or description">
+                </div>
+                <div class="discover-field">
+                    <label for="discover-category">Content type</label>
+                    <select id="discover-category" name="type" onchange="this.form.requestSubmit()">
+                        @foreach (['all' => 'All content', 'articles' => 'Articles', 'activities' => 'Activities', 'achievements' => 'Achievements'] as $value => $label)
+                            <option value="{{ $value }}" @selected($filters['type'] === $value)>{{ $label }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div class="discover-field">
-                    <label for="discover-topic">Topic</label>
-                    <select id="discover-topic" aria-label="Topic filter">
-                        <option>All Topics</option>
+                    <label for="discover-date">Date added</label>
+                    <select id="discover-date" name="period" onchange="this.form.requestSubmit()">
+                        @foreach (['all' => 'Any time', 'week' => 'Last 7 days', 'month' => 'Last 30 days', 'year' => 'Last year'] as $value => $label)
+                            <option value="{{ $value }}" @selected($filters['period'] === $value)>{{ $label }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div class="discover-field">
-                    <label for="discover-date">Date Published</label>
-                    <select id="discover-date" aria-label="Date published filter">
-                        <option>Any Time</option>
+                    <label for="discover-sort">Sort by</label>
+                    <select id="discover-sort" name="sort" onchange="this.form.requestSubmit()">
+                        @foreach (['featured' => 'Featured first', 'recent' => 'Newest added', 'oldest' => 'Oldest added', 'title' => 'Title (A to Z)'] as $value => $label)
+                            <option value="{{ $value }}" @selected($filters['sort'] === $value)>{{ $label }}</option>
+                        @endforeach
                     </select>
                 </div>
-                <div class="discover-field">
-                    <label for="discover-sort">Sort By</label>
-                    <select id="discover-sort" aria-label="Sort by filter">
-                        <option>All</option>
-                    </select>
-                </div>
-            </section>
+                <button class="site-button" type="submit">Find stories</button>
+                @if ($filters['q'] !== '' || $filters['type'] !== 'all' || $filters['period'] !== 'all' || $filters['sort'] !== 'featured')
+                    <a href="{{ route('discover') }}">Clear filters</a>
+                @endif
+            </form>
 
             @php
                 $featured = $articles->first() ?? $activities->first() ?? $achievements->first();
@@ -384,7 +399,7 @@
                 ];
             @endphp
 
-            <section class="discover-panel" id="discover-all" role="tabpanel" aria-label="All discover stories">
+            <section class="discover-panel" id="discover-all" aria-label="Discover stories">
                 @if ($featured)
                     <article class="discover-featured" data-motion="reveal">
                         <div class="discover-featured-image">
@@ -404,84 +419,32 @@
                         </div>
                         <div class="discover-featured-copy">
                             <div class="discover-tag-row"><span class="discover-tag">Stories &amp; Highlights</span></div>
-                            <h2>No published stories yet</h2>
-                            <p>New articles, activities, and achievements will appear here after they are published.</p>
+                            <h2>{{ $filters['q'] !== '' || $filters['period'] !== 'all' ? 'No matching stories' : 'No published stories yet' }}</h2>
+                            <p>Try another search or date range, or browse a different content type.</p>
                             <div class="discover-author">Check back soon for the latest SSITE updates.</div>
                         </div>
                     </article>
                 @endif
 
                 <div class="discover-grid">
-                    @foreach ($discoverSections as $section)
-                        @php($item = $section['items']->first())
-                        @if ($item)
-                            <article class="discover-story-card" data-motion="reveal">
-                                <a href="{{ route($section['route'], $item) }}">
-                                    <img src="{{ $item->imageUrl() }}" alt="{{ $item->title }}">
+                    @foreach ($discoverSections as $key => $section)
+                        @continue($filters['type'] !== 'all' && $filters['type'] !== $key)
+                        @foreach ($section['items'] as $item)
+                            <article class="discover-story-card">
+                                <a class="discover-card-link" href="{{ route($section['route'], $item) }}"><img src="{{ $item->imageUrl() }}" alt="">
+                                <div class="discover-story-body">
+                                    <div class="discover-story-meta"><span>{{ $section['label'] }}</span></div>
+                                    <h3>{{ $item->title }}</h3>
+                                    <p class="discover-card-summary">{{ \Illuminate\Support\Str::limit($item instanceof \App\Models\Article ? $item->displayText() : strip_tags($item->description ?? ''), 180) }}</p>
+                                    <div class="discover-story-author">By {{ $item->author?->name ?? 'Former member' }} &middot; {{ $item->created_at?->format('F j, Y') }}</div>
+                                    <span class="discover-read-story">Read story <span aria-hidden="true">&rarr;</span></span>
+                                </div>
                                 </a>
-                                <div class="discover-story-body">
-                                    <div class="discover-story-meta"><span>{{ $section['label'] }}</span></div>
-                                    <h3><a href="{{ route($section['route'], $item) }}">{{ $item->title }}</a></h3>
-                                    <div class="discover-story-author">By {{ $item->author?->name ?? 'Former member' }} • {{ $item->created_at?->format('F j, Y') }}</div>
-                                </div>
                             </article>
-                        @else
-                            <article class="discover-story-card discover-placeholder" data-motion="reveal">
-                                <img src="{{ asset('images/Wolf.png') }}" alt="">
-                                <div class="discover-story-body">
-                                    <div class="discover-story-meta"><span>{{ $section['label'] }}</span></div>
-                                    <h3>No published {{ strtolower($section['label']) }} yet</h3>
-                                    <div class="discover-story-author">New {{ strtolower($section['label']) }} will appear here soon.</div>
-                                </div>
-                            </article>
-                        @endif
+                        @endforeach
                     @endforeach
                 </div>
             </section>
-
-            @foreach ($discoverSections as $key => $section)
-                <section class="discover-panel" id="discover-{{ $key }}" role="tabpanel" aria-label="{{ $section['label'] }}" hidden>
-                    <div class="discover-grid">
-                        @forelse ($section['items'] as $item)
-                            <article class="discover-story-card">
-                                <a href="{{ route($section['route'], $item) }}">
-                                    <img src="{{ $item->imageUrl() }}" alt="{{ $item->title }}">
-                                </a>
-                                <div class="discover-story-body">
-                                    <div class="discover-story-meta"><span>{{ $section['label'] }}</span></div>
-                                    <h3><a href="{{ route($section['route'], $item) }}">{{ $item->title }}</a></h3>
-                                    <div class="discover-story-author">By {{ $item->author?->name ?? 'Former member' }} • {{ $item->created_at?->format('F j, Y') }}</div>
-                                </div>
-                            </article>
-                        @empty
-                            @for ($placeholder = 0; $placeholder < 3; $placeholder++)
-                                <article class="discover-story-card discover-placeholder">
-                                    <img src="{{ asset('images/Wolf.png') }}" alt="">
-                                    <div class="discover-story-body">
-                                        <div class="discover-story-meta"><span>{{ $section['label'] }}</span></div>
-                                        <h3>No published {{ strtolower($section['label']) }} yet</h3>
-                                        <div class="discover-story-author">New {{ strtolower($section['label']) }} will appear here soon.</div>
-                                    </div>
-                                </article>
-                            @endfor
-                        @endforelse
-                    </div>
-                </section>
-            @endforeach
         </div>
     </div>
 @endsection
-
-@push('scripts')
-    <script>
-        const discoverCategory = document.getElementById('discover-category');
-
-        discoverCategory?.addEventListener('change', (event) => {
-            const target = event.target.value;
-
-            document.querySelectorAll('.discover-panel').forEach((panel) => {
-                panel.hidden = target !== 'all' && panel.id !== `discover-${target}`;
-            });
-        });
-    </script>
-@endpush

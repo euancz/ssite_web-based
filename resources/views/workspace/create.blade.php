@@ -4,9 +4,10 @@
 
 @section('content')
 <div class="dashboard-page workspace-composer-page">
-    <x-ui.page-header title="Create post" subtitle="Choose the type of post you want to create." />
+    <x-ui.page-header title="Create post" subtitle="Start with a content type. We will guide you through the rest." />
+    <x-workspace.composer-steps :step="1" />
     <section class="workspace-create-intro" aria-labelledby="workspace-create-intro-title">
-        <div><h2 id="workspace-create-intro-title">Post type</h2><p>Choose a format. You can save a draft and finish it later.</p></div>
+        <div><h2 id="workspace-create-intro-title">What would you like to post?</h2><p>Step 1 of 3: Choose a type to continue to its details.</p></div>
         <a class="dashboard-button dashboard-button-secondary" href="{{ route('workspace.drafts.index') }}"><x-workspace.icon name="file" /> Resume a draft</a>
     </section>
     <section class="dashboard-panel workspace-post-chooser" aria-label="Post type">
@@ -24,10 +25,5 @@
             </a>
         @endforeach
     </section>
-    <ol class="workspace-publishing-steps" aria-label="Publishing workflow">
-        <li><b aria-hidden="true">01</b><div><strong>Add content</strong><p>Add your text, details, and supporting files in the editor.</p></div></li>
-        <li><b aria-hidden="true">02</b><div><strong>Check the details</strong><p>Preview your content and verify titles, dates, and attachments.</p></div></li>
-        <li><b aria-hidden="true">03</b><div><strong>{{ auth()->user()->canReview() ? 'Publish' : 'Submit for review' }}</strong><p>{{ auth()->user()->canReview() ? 'Publish your content when it is ready for the community.' : 'Follow its status and feedback in My submissions.' }}</p></div></li>
-    </ol>
 </div>
 @endsection

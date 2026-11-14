@@ -78,7 +78,8 @@ class ContentDrafts
                 ->whereKey($values['draft_id'])->lockForUpdate()->firstOrFail();
             $this->checkVersion($draft, (int) $values['draft_version']);
             $attachment = $draft->attachment();
-            if ($attachment) {
+            $uploadField = in_array($post->getTable(), ['documents', 'liquidations'], true) ? 'file' : 'image';
+            if ($attachment && ! $request->hasFile($uploadField)) {
                 $path = app(PostFiles::class)->promoteDraft($attachment['path'], $post);
                 if ($post->getTable() === 'documents' || $post->getTable() === 'liquidations') {
                     $post->file_path = $path;
@@ -87,6 +88,8 @@ class ContentDrafts
                 } else {
                     $post->image = $path;
                 }
+            }
+            if ($attachment) {
                 DB::afterCommit(fn () => app(PostFiles::class)->deleteDraft($attachment['path']));
             }
             if (! $draft->delete()) {

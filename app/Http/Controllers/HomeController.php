@@ -28,6 +28,8 @@ class HomeController extends Controller
             ? OfficerTerm::current()->inDisplayOrder()->get()
             : collect();
 
-        return view('pages.home', compact('articles', 'activities', 'achievements', 'officers'));
+        $sponsors = \App\Models\Sponsor::forDisplay();
+
+        return view('pages.home', compact('articles', 'activities', 'achievements', 'officers', 'sponsors'));
     }
 }

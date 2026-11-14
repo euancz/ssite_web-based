@@ -1,15 +1,29 @@
 # Production Deployment and Restore Runbook
 
+For the current PostgreSQL/Supabase setup, also read `SUPABASE_SETUP.md` and use `.env.production.example` as the production configuration template. The local development environment retains its HTTP callback address; never deploy that local `.env` unchanged.
+
 This guide is a host-neutral checklist for deploying SSITECMS and recovering it from a backup. Hosting-specific commands and a restore rehearsal still need to be confirmed with the selected provider. Never use production credentials or student data in a rehearsal.
 
 ## Production requirements
 
-- Use a supported PHP version (8.2 or later) with the extensions required by Laravel 12 and the project dependencies. Install Composer dependencies from the committed `composer.lock`.
-- Use MySQL compatible with the application's configured schema. Create a dedicated database and least-privilege application account; do not use the MySQL root account for web requests.
+- Use a maintained PHP release with current security patches and the extensions required by Laravel 12 and the project dependencies. The local test runtime is PHP 8.2.12; do not reuse that old binary on a public production host. Install Composer dependencies from the committed `composer.lock`.
+- Use the configured PostgreSQL/Supabase database, or a separately validated MySQL deployment. Create a dedicated database and least-privilege application account; do not use the MySQL root account for web requests.
 - Point the web server document root at the deployment's `public/` directory. Enable HTTPS and redirect HTTP to HTTPS.
 - Keep the application code, `.env`, `storage/`, and `bootstrap/cache/` outside public web access. Only `public/` is exposed.
-- Persist `storage/app/private` across releases. It contains private Document and Liquidation PDFs served through authorized application routes. Persist `storage/app/public` too; it contains public uploaded images such as officer photos.
+- Persist `storage/app/private` across releases when using local media storage. It contains private post images, draft attachments, and Document and Liquidation PDFs served through authorized application routes. Persist `storage/app/public` too; it contains public uploaded images such as officer photos.
 - Provide write access to `storage/` and `bootstrap/cache/` for the PHP runtime account. Do not make the whole project writable by the web server.
+
+## Security changes from the November 2026 review
+
+- Production mode disables application debug output, requires secure session cookies, and redirects HTTP to the configured HTTPS host. Set `APP_ENV=production` and the real HTTPS `APP_URL`; the application fails closed if its production URL is still HTTP. Set PHP `display_errors=Off` on the host too.
+- Configure TLS at the web server or proxy. If TLS terminates at a proxy, configure Laravel to trust only that provider's actual proxy addresses, and verify request scheme detection before opening traffic. Do not blindly trust forwarded headers from arbitrary clients.
+- Pages send framing restrictions, MIME-sniffing protection, and a referrer policy. Secure production responses send HSTS. These controls allow same-origin application content and the existing PDF viewers.
+- New post images are private, served through authenticated routes and current publication/editor permissions. The mobile API retains bearer-token delivery. Profile pictures and roster photos remain public by design.
+- Keep the Supabase private bucket marked private. Use distinct public and private buckets. Local media deployments must expose only the public disk through any storage symlink.
+- For older deployments, run `php artisan media:privatize-post-images` to inspect legacy post images, then `php artisan media:privatize-post-images --apply` during deployment. This copies and verifies each image before changing references and deleting its public copy; it is safe to rerun after a cleanup failure. Back up the database and both storage locations first. The configured database in this workspace was migrated successfully (one legacy attachment).
+- Use the patched committed lockfiles. Run `composer audit`, `npm audit`, the PHP test suite, and `npm run build` when preparing a release.
+- The repository-root `.htaccess` restricts XAMPP subfolder access to `public/` and disables directory listings. Production hosting must still set its document root to `public/`; Nginx and other servers do not apply Apache rules.
+- The local app-download link remains intentionally disabled until a real release/store URL is available. Do not substitute a placeholder download URL.
 
 ## Environment configuration
 
@@ -42,7 +56,7 @@ Set the session, cache, queue, mail, Microsoft OAuth, and logging values to matc
 2. Put the new release in a versioned release directory and keep the prior release available for rollback. Link the protected `.env`, persistent `storage/`, and any host-managed secrets into the release as appropriate.
 3. Install locked production dependencies with `composer install --no-dev --prefer-dist --optimize-autoloader`.
 4. Build frontend assets from the committed lockfile when the release changes frontend source; deploy the generated production assets with the release.
-5. Review pending migrations against the target database before applying them. The five content tables are SQL-managed outside this repository's migrations. Do not assume `php artisan migrate --force` creates or upgrades those tables; compare their actual schemas and follow the approved schema procedure first.
+5. Review pending migrations against the target database before applying them. The repository includes a legacy content baseline and later schema migrations. Compare the real schema and migration history before applying changes; never run migration resets or seeders against existing student data.
 6. Apply only reviewed Laravel migrations with `php artisan migrate --force`. Never run seeders against production unless a specific seeder has been reviewed and approved for that environment.
 7. Run `php artisan storage:link` when the public storage symlink is absent. This link exposes only the configured public disk; private PDFs must stay in `storage/app/private` and use the authorized document/liquidation routes.
 8. Run `php artisan optimize` after environment values and release files are in place. Confirm the PHP process can write to `storage/` and `bootstrap/cache/`.

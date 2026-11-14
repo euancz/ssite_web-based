@@ -22,7 +22,7 @@
                         title="Archive post?"
                         message="This post will leave Published and remain available in Archived."
                         form-id="post-archive-{{ $routePrefix }}-{{ $post->getKey() }}"
-                        button-text="Archive"
+                        button-text="Archive post"
                     />
                 @endif
             @endcan
@@ -38,7 +38,7 @@
                         title="Restore post?"
                         message="The post's approval status will stay unchanged."
                         form-id="post-restore-{{ $routePrefix }}-{{ $post->getKey() }}"
-                        button-text="Restore"
+                        button-text="Restore post"
                     />
                 @endif
             @endcan

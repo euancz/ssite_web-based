@@ -24,12 +24,6 @@
     text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
-.public-home-header ~ main .about-page .mission-card,
-.public-home-header ~ main .about-page .vision-card {
-    border-radius: 1rem;
-    box-shadow: 0 8px 18px rgba(17, 83, 101, 0.08);
-}
-
 .public-home-header ~ main .about-page .officers-section {
     margin-top: 2.5rem;
 }
@@ -70,7 +64,7 @@
     margin: 0;
     padding-top: 0.25rem;
     color: #0a3748;
-    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    font-family: var(--font-family-body);
     font-size: clamp(2.1rem, 5vw, 4rem);
     font-weight: 900;
     line-height: 1;
@@ -123,6 +117,65 @@
     line-height: 1.5;
 }
 
+/* Reference treatment, scoped to About to keep shared card rules from overriding it. */
+body.main-site-body main .about-page .mission-vision-grid {
+    gap: clamp(28px, 5vw, 72px);
+    align-items: stretch;
+    margin-top: 40px;
+}
+
+body.main-site-body main .about-page :is(.mission-card, .vision-card) {
+    min-width: 0;
+    min-height: 230px;
+    padding: 22px 20px 26px;
+    border: 1px solid #50d7e5;
+    background: linear-gradient(120deg, #9cecf7 0%, #8bf3fa 60%, #98e9f7 100%);
+    color: #063847;
+}
+
+body.main-site-body main .about-page .mission-card {
+    border-radius: 36px 0 36px 0;
+    box-shadow: -4px 5px 0 #19c7d3, -6px 9px 12px rgb(6 56 71 / 16%);
+}
+
+body.main-site-body main .about-page .vision-card {
+    border-radius: 0 36px 0 36px;
+    box-shadow: 4px 5px 0 #19c7d3, 6px 9px 12px rgb(6 56 71 / 16%);
+}
+
+body.main-site-body main .about-page :is(.mission-card, .vision-card) h2 {
+    margin: 0 0 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #155571;
+    color: #063847;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+body.main-site-body main .about-page :is(.mission-card, .vision-card) p {
+    margin: 0;
+    color: #063847;
+    font-size: 15px;
+    line-height: 1.55;
+}
+
+@media (max-width: 767px) {
+    body.main-site-body main .about-page .mission-vision-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 28px;
+        margin-top: 28px;
+    }
+
+    body.main-site-body main .about-page :is(.mission-card, .vision-card) {
+        min-height: 0;
+        padding: 22px 20px 26px;
+    }
+}
+
 .officers-section {
     margin-top: 3rem;
 }
@@ -168,6 +221,7 @@
 }
 
 .officer-card h3 {
+    overflow-wrap: anywhere;
     margin: 0;
     color: #0d3647;
     font-size: 0.72rem;
@@ -176,6 +230,7 @@
 }
 
 .officer-card p {
+    overflow-wrap: anywhere;
     margin: 0.15rem 0 0;
     color: rgba(11, 65, 84, 0.8);
     font-size: 0.68rem;

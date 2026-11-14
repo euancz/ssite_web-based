@@ -128,8 +128,8 @@ class ContentWorkspaceTest extends TestCase
         $owner = $this->actor();
         foreach (['articles', 'activities', 'achievements', 'documents'] as $module) {
             $id = $this->makePost($module, $owner->id, 'approved', 'archived');
-            $this->get(route($module.'.index', ['tab' => 'archived']))->assertOk()->assertDontSee("$module approved archived record");
-            $this->get(route($module.'.show', $id))->assertNotFound();
+            $this->get(route($module.'.index', ['tab' => 'archived']))->assertRedirect(route('login'));
+            $this->get(route($module.'.show', $id))->assertRedirect(route('login'));
         }
     }
 

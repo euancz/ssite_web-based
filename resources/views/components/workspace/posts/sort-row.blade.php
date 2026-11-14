@@ -12,7 +12,7 @@
     <input type="hidden" name="tab" value="{{ $tab }}">
     @php($searchValue = is_string(request('q')) ? mb_substr(trim(request('q')), 0, 100) : '')
     <label class="post-feed-visually-hidden" for="workspace-post-search">Search by title</label>
-    <input id="workspace-post-search" class="workspace-post-search" type="search" name="q" maxlength="100" value="{{ $searchValue }}" placeholder="Search by title">
+    <input id="workspace-post-search" class="workspace-post-search" type="search" name="q" maxlength="100" value="{{ $searchValue }}" placeholder="{{ str_contains($routeName, '.documents.') ? 'Document title' : (str_contains($routeName, '.liquidations.') ? 'Title, description or filename' : 'Title or description') }}">
     @if (str_contains($routeName, '.documents.'))
         <label class="post-feed-visually-hidden" for="workspace-document-semester">Semester</label>
         <select id="workspace-document-semester" class="post-feed-filter-control" name="semester">

@@ -5,7 +5,6 @@ namespace App\Support;
 use App\Models\Article;
 use App\Models\Achievement;
 use App\Models\Activity;
-use Illuminate\Support\Facades\Storage;
 
 class MobilePost
 {
@@ -24,7 +23,7 @@ class MobilePost
             default => 'achievements',
         };
         $imageUrl = method_exists($post, 'imageUrl') ? $post->imageUrl() : null;
-        if (is_string($post->image) && $post->image !== '' && Storage::disk('public')->exists($post->image)) {
+        if (method_exists($post, 'imageUrl') && \App\Services\PostImages::exists($post)) {
             $imageUrl = route('api.mobile.media', ['module' => $module, 'id' => $post->getKey()]);
         }
     

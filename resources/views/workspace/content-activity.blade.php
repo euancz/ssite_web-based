@@ -12,6 +12,12 @@
         <div class="dashboard-form-field"><label for="activity-action">Action</label>
             <select id="activity-action" name="action"><option value="">All actions</option>@foreach (['posted' => 'Posted', 'approved' => 'Approved', 'edited' => 'Edited', 'rejected' => 'Rejected'] as $key => $label)<option value="{{ $key }}" @selected($filters['action'] === $key)>{{ $label }}</option>@endforeach</select>
         </div>
+        <div class="dashboard-form-field"><label for="activity-days">Period</label>
+            <select id="activity-days" name="days">@foreach ([7, 30] as $days)<option value="{{ $days }}" @selected($filters['days'] === $days)>Last {{ $days }} days</option>@endforeach</select>
+        </div>
+        <div class="dashboard-form-field"><label for="activity-sort">Sort by</label>
+            <select id="activity-sort" name="sort"><option value="newest" @selected($filters['sort'] === 'newest')>Newest first</option><option value="oldest" @selected($filters['sort'] === 'oldest')>Oldest first</option></select>
+        </div>
         <div class="profile-form-actions"><button class="dashboard-button" type="submit">Apply filters</button><a class="dashboard-text-button" href="{{ route('workspace.content-activity.index') }}">Clear filters</a></div>
     </form>
     <section class="dashboard-panel">

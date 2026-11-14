@@ -166,7 +166,7 @@ class ArticleController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            // SECURITY: Generate a unique server-side filename and store only its public-disk path.
+            // SECURITY: Generate a unique server-side filename and store only its private-disk path.
             $article->image = $this->storeImage($request);
         }
 
@@ -342,10 +342,10 @@ class ArticleController extends Controller
     }
 
     /**
-     * Save a validated image under a generated path on the public disk.
+     * Save a validated image under a generated path on the private disk.
      */
     private function storeImage(Request $request): string
     {
-        return app(PostFiles::class)->store($request->file('image'), 'articles', 'public');
+        return app(PostFiles::class)->store($request->file('image'), 'post-media/articles', 'local');
     }
 }

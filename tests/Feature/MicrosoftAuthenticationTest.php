@@ -88,7 +88,7 @@ class MicrosoftAuthenticationTest extends TestCase
         $user = new User;
         $user->forceFill(['name' => 'Locally edited name', 'email' => 'member@mcc.edu.ph', 'microsoft_id' => 'verified-microsoft-id', 'role' => 'officer', 'officer_position' => 'Secretary', 'profile_completed_at' => now()])->save();
         $this->microsoft('member@mcc.edu.ph');
-        $this->get('/auth/microsoft/callback')->assertRedirect(route('officer.dashboard'));
+        $this->get('/auth/microsoft/callback')->assertRedirect(route('home'));
         $this->assertSame('Locally edited name', $user->fresh()->name);
         $this->assertSame('Secretary', $user->fresh()->officer_position);
         $this->assertDatabaseCount('users', 1);

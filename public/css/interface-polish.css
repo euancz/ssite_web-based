@@ -1,0 +1,50 @@
+/* Small shared usability fixes; page layouts and brand colors stay with their own styles. */
+:root {
+    --font-family-body: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+    --font-family-display: var(--font-family-body);
+}
+
+body.site-body,
+body.landing-page {
+    font-family: var(--font-family-body);
+}
+
+body:is(.site-body, .landing-page) :is(button, input, select, option, optgroup, textarea, summary, kbd, code, pre, [contenteditable]) {
+    font-family: var(--font-family-body);
+}
+
+/* Native controls and supporting text should not collide or clip long values. */
+body.site-body .dashboard-form-field { min-width: 0; }
+body.site-body :is(.dashboard-form-field label, .profile-field-help, .profile-field-error) { line-height: 1.5; overflow-wrap: anywhere; }
+body.site-body :is(input, textarea)::placeholder { opacity: 1; color: var(--color-text-secondary, #52697c); }
+body.site-body :is(input[type="checkbox"], input[type="radio"]) { accent-color: var(--color-accent, #0b6b8e); }
+body.site-body label:has(> input:is([type="checkbox"], [type="radio"])) { min-height: 44px; display: flex; align-items: center; gap: 10px; }
+
+/* Keep primary and secondary actions distinct while giving each enough touch space. */
+body.site-body :is(.dashboard-button, .site-button) { min-height: 44px; padding-inline: 20px; white-space: normal; text-align: center; }
+body.site-body :is(.dashboard-actions, .profile-form-actions, .reject-modal-actions) { gap: 12px; flex-wrap: wrap; }
+body.site-body :is(.dashboard-table, .transparency-table) :is(td, th) { overflow-wrap: anywhere; }
+body.site-body .dashboard-table .dashboard-text-button { min-height: 44px; display: inline-flex; align-items: center; }
+body.site-body .post-card-menu-panel > :is(a, button) { min-height: 44px; padding: 10px 16px; }
+body.site-body .post-card-footer { flex-wrap: wrap; gap: 12px; }
+body.site-body :is(.post-card-read-link, .post-card-expand) { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* Only stretch links on cards with a single destination, never over editable or selectable rows. */
+body.main-site-body .news-card:has(h3 a) { position: relative; }
+body.main-site-body .news-card h3 a::after { content: ''; position: absolute; inset: 0; border-radius: inherit; }
+body.main-site-body .news-card .read-more { position: relative; z-index: 1; }
+body.main-site-body .news-card:focus-within { outline: 3px solid var(--color-focus, #0b6b8e); outline-offset: 4px; }
+body.workspace-site-body .workspace-stat:has(.workspace-stat-link) { position: relative; }
+body.workspace-site-body .workspace-stat .workspace-stat-link { inset: 0; width: auto; height: auto; display: flex; align-items: flex-end; justify-content: flex-end; padding: 12px; }
+body.workspace-site-body .workspace-stat .workspace-stat-link:hover { background: transparent; outline: 2px solid var(--color-accent, #0b6b8e); outline-offset: -2px; }
+
+@media (max-width: 640px) {
+    body.site-body :is(.profile-form-grid, .dashboard-form-grid) { grid-template-columns: minmax(0, 1fr); }
+    body.site-body :is(.profile-form-grid, .dashboard-form-grid) > * { grid-column: auto; min-width: 0; }
+    body.site-body :is(.profile-form, .dashboard-form) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), textarea, select) { max-width: 100%; font-size: 16px; }
+    body.site-body :is(.dashboard-actions, .profile-form-actions, .reject-modal-actions) > :is(button, a) { flex: 1 1 auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.site-body :is(.post-feed-skeleton-card, .post-feed-skeleton-block) { animation: none; }
+}

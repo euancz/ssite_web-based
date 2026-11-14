@@ -40,6 +40,10 @@ return [
     */
 
     'disks' => [
+        // Read-only app copies; originals stay on the website's existing disks.
+        'mobile' => array_merge($supabase, [
+            'bucket' => env('SUPABASE_MOBILE_BUCKET', 'ssite-mobile'),
+        ]),
 
         // Keep logical disk names stable so existing attachment paths still work.
         'local' => env('MEDIA_STORAGE', 'local') === 'supabase' ? array_merge($supabase, [

@@ -15,9 +15,10 @@ class ContentDraftController extends Controller
     {
         abort_unless($request->user()->canPost(), 403);
         $modules = array_filter(ContentModules::all(), fn ($module) => $request->user()->can('create', $module['model']));
-        $filters = $request->validate(['module' => ['nullable', Rule::in(array_keys($modules))]]);
+        $filters = $request->validate(['module' => ['nullable', Rule::in(array_keys($modules))], 'sort' => ['nullable', Rule::in(['recent', 'oldest'])]]);
+        $filters['sort'] = $filters['sort'] ?? 'recent';
         $drafts = $service->owned($request->user())->when($filters['module'] ?? null, fn ($query, $module) => $query->where('module', $module))
-            ->latest('updated_at')->orderBy('id')->paginate(10)->appends($filters);
+            ->orderBy('updated_at', $filters['sort'] === 'oldest' ? 'asc' : 'desc')->orderBy('id')->paginate(10)->appends($filters);
 
         return view('workspace.drafts.index', compact('drafts', 'modules', 'filters'));
     }

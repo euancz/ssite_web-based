@@ -22,6 +22,9 @@
         @can(config('workspace.navigation.officers.gate'))
             <a href="{{ route('adviser.officers.index') }}" data-jump-item><x-workspace.icon name="users" /><span>Officer roster<small>Manage officer information</small></span><x-workspace.icon name="arrow-right" /></a>
         @endcan
+        @can('manage-sponsors')
+            <a href="{{ route('workspace.sponsors.index') }}" data-jump-item><x-workspace.icon name="users" /><span>Sponsors<small>Manage homepage partners and sponsors</small></span><x-workspace.icon name="arrow-right" /></a>
+        @endcan
         @can(config('workspace.navigation.users.gate'))
             <a href="{{ route('adviser.users.index') }}" data-jump-item><x-workspace.icon name="users" /><span>{{ $user->isSuperadmin() ? 'Adviser accounts' : 'User accounts' }}<small>Manage organization access</small></span><x-workspace.icon name="arrow-right" /></a>
         @endcan

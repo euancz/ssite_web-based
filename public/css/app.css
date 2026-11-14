@@ -35,7 +35,7 @@
     --color-status-danger: #9B1C1C;
     --color-status-danger-surface: var(--ssite-error-surface);
     --color-focus: #0B6B8E;
-    --font-family-display: 'Pixelify Sans', 'Poppins', sans-serif;
+    --font-family-display: var(--font-family-body);
     --color-grid-line: rgb(23 50 77 / 5%);
     --font-family-body: 'Poppins', ui-sans-serif, system-ui, sans-serif;
     --type-body: 1rem;
@@ -346,7 +346,7 @@
     --color-status-neutral-background: #EEF1F3;
     --color-status-neutral-border: #687985;
     --color-status-neutral-text: #455563;
-    --font-family-display: 'Pixelify Sans', 'Poppins', ui-sans-serif, system-ui, sans-serif;
+    --font-family-display: var(--font-family-body);
     --font-size-eyebrow: 0.75rem;
     --font-size-caption: 0.8rem;
     --font-size-meta: 0.875rem;
@@ -650,7 +650,7 @@ ol {
 .site-brand-name,
 .footer-brand-name {
     color: var(--color-text-primary);
-    font-family: 'Universal', 'Poppins', ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-family-body);
     font-weight: 700;
     line-height: 1.15;
 }

@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="robots" content="noindex, nofollow">
     <title>@yield('title', 'Something went wrong') | SSITE</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/ssite-favicon.svg') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('css/errors.css') }}">
     <link rel="stylesheet" href="{{ asset('css/mobile-responsive.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/interface-polish.css') }}">
 </head>
 <body class="site-body error-page">
     <div class="error-shell">

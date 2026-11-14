@@ -17,7 +17,7 @@ class ContentActivityController extends Controller
         abort_if($modules === [], 403);
         $filters = $request->validate([
             'days' => ['nullable', 'integer', Rule::in([7, 30])],
-            'module' => ['nullable', Rule::in(array_keys($modules))],
+            'module' => ['required_with:post', 'nullable', Rule::in(array_keys($modules))],
             'action' => ['nullable', Rule::in(['posted', 'approved', 'edited', 'rejected'])],
             'q' => ['nullable', 'string', 'max:100'],
             'post' => ['nullable', 'integer', 'min:1'],

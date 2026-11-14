@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 
 /** Stores achievements with separate adviser-review and public-visibility states. */
 class Achievement extends Model
@@ -120,10 +119,6 @@ class Achievement extends Model
     /** Return the stored image URL or the established placeholder when its file is missing. */
     public function imageUrl(): string
     {
-        if ($this->image && Storage::disk('public')->exists($this->image)) {
-            return Storage::disk('public')->url($this->image);
-        }
-
-        return asset(config('school.default_profile_picture', 'images/Wolf.png'));
+        return \App\Services\PostImages::url($this);
     }
 }

@@ -150,7 +150,7 @@ class AchievementController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            // SECURITY: Store a generated filename under this module's public-disk directory.
+            // SECURITY: Store a generated filename under this module's private-disk directory.
             $achievement->image = $this->storeImage($request);
         }
 
@@ -306,9 +306,9 @@ class AchievementController extends Controller
         return $achievement->isApproved() && $achievement->content_status === Achievement::CONTENT_ACTIVE;
     }
 
-    /** Save a validated upload under this module's public-disk image directory. */
+    /** Save a validated upload under this module's private-disk image directory. */
     private function storeImage(Request $request): string
     {
-        return app(PostFiles::class)->store($request->file('image'), 'achievements', 'public');
+        return app(PostFiles::class)->store($request->file('image'), 'post-media/achievements', 'local');
     }
 }

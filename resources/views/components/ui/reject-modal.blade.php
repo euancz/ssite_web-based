@@ -9,7 +9,7 @@
         <form method="POST" action="{{ $action }}">
             @csrf
             <label for="{{ $id }}-reason">Reason</label>
-            <textarea id="{{ $id }}-reason" name="rejection_reason" rows="4" maxlength="255" required></textarea>
+            <textarea id="{{ $id }}-reason" name="rejection_reason" placeholder="Explain what needs to change before this can be approved" rows="4" maxlength="255" required></textarea>
             <div class="reject-modal-actions">
                 <button type="button" class="dashboard-button dashboard-button-secondary" data-modal-close="{{ $id }}">Cancel</button>
                 <button type="submit" class="dashboard-button">Reject {{ $subject }}</button>

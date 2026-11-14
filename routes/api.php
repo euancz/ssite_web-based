@@ -101,6 +101,7 @@ Route::prefix('mobile/v1')->name('api.mobile.')->group(function () {
                     ? \App\Models\OfficerTerm::current()->inDisplayOrder()->get()->map(fn ($officer) => [
                         'name' => $officer->name, 'position' => $officer->position, 'photo_url' => $officer->photoUrl(),
                     ])->values() : [],
+                'sponsors' => \App\Models\Sponsor::forDisplay()->map(fn ($sponsor) => $sponsor->forMobile())->values(),
             ],
         ])->header('Cache-Control', 'private, no-store');
     })->name('home');
@@ -183,15 +184,7 @@ Route::prefix('mobile/v1')->name('api.mobile.')->group(function () {
             'achievements' => Achievement::class,
         ][$module] ?? abort(404);
         $post = $model::publiclyVisible()->findOrFail($id);
-        $path = $post->image;
-        abort_unless(is_string($path) && $path !== '' && Storage::disk('public')->exists($path), 404);
-
-        return Storage::disk('public')->response(
-            $path,
-            basename($path),
-            ['Cache-Control' => 'private, no-store'],
-            'inline',
-        );
+        return app(\App\Services\PostImages::class)->response($post);
     })->where(['module' => 'articles|activities|achievements', 'id' => '[0-9]+'])
         ->name('media');
     });

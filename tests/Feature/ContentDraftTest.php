@@ -101,7 +101,7 @@ class ContentDraftTest extends TestCase
         $this->assertSame($notifications, DB::table('notifications')->count());
     }
 
-    public function test_pdf_draft_requires_file_on_submission_and_never_stores_files_during_draft_save(): void
+    public function test_pdf_draft_replacement_is_used_on_submission_and_saved_attachment_is_cleaned_up(): void
     {
         Storage::fake('local');
         $owner = $this->actor('Secretary');

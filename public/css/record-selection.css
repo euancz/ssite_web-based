@@ -41,7 +41,7 @@ body:has(.document-selection[open]) { overflow: hidden; }
 .document-selection-heading { padding: 0 12px; }
 .document-selection .document-selection-heading h2 {
     margin: 0 24px 12px 0;
-    font-family: 'Times New Roman', Georgia, serif;
+    font-family: var(--font-family-body);
     font-size: 26px;
     line-height: 1.25;
     font-weight: 700;

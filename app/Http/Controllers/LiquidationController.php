@@ -37,6 +37,17 @@ class LiquidationController extends Controller
         [$liquidations, $allowedTabs, $tab, $pendingCount, $workspaceList] = app(ContentListing::class)
             ->scope(Liquidation::query()->with('author'), $request, 'liquidations');
 
+        // Build year choices inside the visibility boundary, before other filters.
+        $yearOptions = ['' => 'All report years'];
+        foreach ((clone $liquidations)->whereNotNull('report_date')->distinct()->pluck('report_date') as $date) {
+            $reportYear = $date->format('Y');
+            $yearOptions[$reportYear] = $reportYear;
+        }
+        krsort($yearOptions);
+        $requestedYear = $request->query('year');
+        $year = is_string($requestedYear) && array_key_exists($requestedYear, $yearOptions) ? $requestedYear : '';
+        if ($year !== '') $liquidations->whereYear('report_date', $year);
+
         $searchQuery = $request->query('q');
         if (is_string($searchQuery) && trim($searchQuery) !== '') {
             $searchQuery = mb_substr(trim($searchQuery), 0, 100);
@@ -66,6 +77,7 @@ class LiquidationController extends Controller
             $sortMap['report_soonest'] = ['report_date', 'asc'];
             $sortMap['report_latest'] = ['report_date', 'desc'];
             $sortMap['amount_high'] = ['amount', 'desc'];
+            $sortMap['amount_low'] = ['amount', 'asc'];
             if ($viewCountsEnabled) {
                 $sortMap['viewed'] = ['view_count', 'desc'];
             }
@@ -78,9 +90,10 @@ class LiquidationController extends Controller
         $sortOptions = ['recent' => 'Most recent', 'oldest' => 'Oldest', 'title' => 'Title (A to Z)'];
         if ($tab === 'published') {
             $sortOptions += [
-                'report_soonest' => 'Report date (soonest)',
-                'report_latest' => 'Report date (latest)',
+                'report_soonest' => 'Report date (oldest first)',
+                'report_latest' => 'Report date (newest first)',
                 'amount_high' => 'Amount (high to low)',
+                'amount_low' => 'Amount (low to high)',
             ];
             if ($viewCountsEnabled) {
                 $sortOptions['viewed'] = 'Most viewed';
@@ -93,13 +106,14 @@ class LiquidationController extends Controller
         if ($sortColumn === 'report_date') {
             $liquidations->orderByRaw('report_date IS NULL ASC');
         }
+        if ($sortColumn === 'amount') $liquidations->orderByRaw('amount IS NULL ASC');
         $liquidations->orderBy($sortColumn, $sortDirection);
         if (in_array($sort, ['viewed', 'liked'], true)) {
             $liquidations->orderBy('created_at', 'desc');
         }
         $liquidations = $liquidations->orderBy('id', 'asc')
             ->paginate(5)
-            ->appends(['tab' => $tab, 'sort' => $sort, 'q' => $searchQuery, 'academic_year' => $request->query('academic_year')]);
+            ->appends(['tab' => $tab, 'sort' => $sort, 'q' => $searchQuery, 'year' => $year]);
         // SECURITY: Visiting Liquidation clears only this user's unread publication notices for this tab.
         if ($user) {
             $user->unreadNotifications()->whereRaw(\App\Support\NotificationSql::field('type').' = ?', ['published'])
@@ -108,7 +122,7 @@ class LiquidationController extends Controller
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
         $view = $workspaceList ? 'workspace.posts.liquidation.index' : 'liquidation.index';
 
-        return view($view, compact('liquidations', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'pendingCount'));
+        return view($view, compact('liquidations', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'pendingCount', 'year', 'yearOptions', 'searchQuery'));
     }
 
     public function show(Liquidation $liquidation, Request $request, PostEngagement $engagement): View

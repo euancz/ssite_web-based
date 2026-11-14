@@ -1,0 +1,11 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Only the public directory may be exposed by a subfolder installation.
+    RewriteRule !^public(?:/|$) - [F,L]
+</IfModule>
+
+<IfModule !mod_rewrite.c>
+    Require all denied
+</IfModule>

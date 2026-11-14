@@ -2,7 +2,7 @@
 .main-site-body {
     --site-content-width: var(--public-content-width, 1045px);
     --site-page-top: 46px;
-    --site-page-bottom: 146px;
+    --site-page-bottom: 72px;
     --site-hero-height: 304px;
     --site-hero-radius: 38px;
     --site-control-height: 54px;
@@ -154,15 +154,24 @@ body.main-site-body .public-home-header ~ main .home-page :is(.home-section, .ho
 body.main-site-body .public-home-header ~ main .home-page .section-heading { max-width: none; margin-bottom: 28px; }
 body.main-site-body .public-home-header ~ main .home-page .home-intro { margin-top: 52px; padding: 40px; border-radius: 12px; }
 body.main-site-body .site-footer { margin-top: 0; border-top: 0; background: linear-gradient(110deg, #63e4f1, #86dbea, #7ce6e6); }
-body.main-site-body .site-footer-content { max-width: 1020px; padding: 32px 24px; grid-template-columns: 1.3fr 1fr; gap: 80px; }
-body.main-site-body .footer-copyright { padding: 30px 24px; font-family: var(--site-display-font); font-weight: 700; }
+body.main-site-body .site-footer-content { max-width: 1020px; padding: 32px 24px; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 48px; align-items: start; }
+body.main-site-body .footer-copyright { max-width: 1020px; margin-inline: auto; padding: 24px; font-family: var(--site-display-font); font-size: 14px; font-weight: 700; line-height: 1.6; text-align: center; }
+@media (min-width: 768px) {
+    body.main-site-body .footer-organization { display: grid; grid-template-columns: 64px minmax(0, 1fr); column-gap: 12px; row-gap: 16px; }
+    body.main-site-body .footer-brand { display: contents; }
+    body.main-site-body .footer-logo { grid-column: 1; grid-row: 1 / 3; }
+    body.main-site-body .footer-brand-name { grid-column: 2; align-self: start; }
+    body.main-site-body .footer-description,
+    body.main-site-body .footer-badges { grid-column: 2; margin: 0; }
+    body.main-site-body .footer-contact { justify-self: stretch; padding-top: 0; }
+}
 @media (max-width: 900px) {
     .main-site-body { --site-filter-gap: 20px; }
     body.main-site-body main .discover-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     body.main-site-body .site-footer-content { gap: 32px; }
 }
 @media (max-width: 600px) {
-    .main-site-body { --site-page-top: 24px; --site-page-bottom: 64px; --site-hero-height: 260px; --site-hero-radius: 24px; }
+    .main-site-body { --site-page-top: 24px; --site-page-bottom: 48px; --site-hero-height: 260px; --site-hero-radius: 24px; }
     body.main-site-body main .site-page .site-hero { margin: 0; padding: 32px 20px; }
     body.main-site-body main .site-page .site-hero p { font-size: 14px; }
     body.main-site-body main .site-page .site-hero :is(.documents-eyebrow, .transparency-kicker, .discover-kicker, .about-hero-label) { font-size: 13px; }

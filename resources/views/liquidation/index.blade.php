@@ -27,26 +27,33 @@
 
     <form class="transparency-filters" method="GET" action="{{ route('transparency') }}">
         <label class="transparency-search">
-            <span class="visually-hidden">Search events</span>
-            <input type="search" name="q" value="{{ is_string(request()->query('q')) ? mb_substr(request()->query('q'), 0, 100) : '' }}" placeholder="Search events..." autocomplete="off">
+            <span class="visually-hidden">Search reports</span>
+            <input type="search" name="q" value="{{ $searchQuery }}" maxlength="100" placeholder="Search reports..." autocomplete="off">
             <x-icon name="search" size="sm" aria-hidden="true" />
         </label>
         <label class="transparency-select">
-            <span>Sort by semester</span>
-            <select name="sort" aria-label="Sort by semester" onchange="this.form.submit()">
-                <option value="recent" @selected($sort === 'recent')>1st Semester</option>
-                <option value="oldest" @selected($sort === 'oldest')>2nd Semester</option>
+            <span>Sort by</span>
+            <select name="sort" aria-label="Sort reports" onchange="this.form.requestSubmit()">
+                @foreach ($sortOptions as $value => $label)
+                    <option value="{{ $value }}" @selected($sort === $value)>{{ $label }}</option>
+                @endforeach
             </select>
             <x-icon name="chevron-down" size="sm" aria-hidden="true" />
         </label>
         <label class="transparency-select">
-            <span>Sort by A.Y</span>
-            <select name="academic_year" aria-label="Sort by academic year" onchange="this.form.submit()">
-                <option value="2025-2026" @selected(request()->query('academic_year', '2025-2026') === '2025-2026')>A.Y. 2025–2026</option>
+            <span>Report year</span>
+            <select name="year" aria-label="Filter by report year" onchange="this.form.requestSubmit()">
+                @foreach ($yearOptions as $value => $label)
+                    <option value="{{ $value }}" @selected((string) $year === (string) $value)>{{ $label }}</option>
+                @endforeach
             </select>
             <x-icon name="chevron-down" size="sm" aria-hidden="true" />
         </label>
         <input type="hidden" name="tab" value="{{ $tab }}">
+        <button class="site-button" type="submit">Search</button>
+        @if ($searchQuery !== '' || $year !== '' || $sort !== 'recent')
+            <a href="{{ route('transparency') }}">Clear filters</a>
+        @endif
     </form>
 
     <section class="transparency-register" aria-labelledby="transactions-title">
@@ -77,7 +84,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="transparency-empty">No published transactions yet. Check back soon for the latest records.</td>
+                            <td colspan="3" class="transparency-empty">{{ $searchQuery !== '' || $year !== '' ? 'No matching transactions. Try another search or report year.' : 'No published transactions yet. Check back soon for the latest records.' }}</td>
                         </tr>
                     @endforelse
                 </tbody>

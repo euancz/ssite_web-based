@@ -51,3 +51,6 @@ __pycache__/
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Generated local test reports.
+/audit/*.xml

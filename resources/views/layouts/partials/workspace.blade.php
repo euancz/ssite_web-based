@@ -112,6 +112,13 @@
                                 <x-workspace.icon name="users" /><span>Officer roster</span>
                             </a>
                         @endcan
+                        @can('manage-sponsors')
+                            <a class="workspace-nav-link {{ request()->routeIs('workspace.sponsors.*') ? 'is-active' : '' }}"
+                               href="{{ route('workspace.sponsors.index') }}" aria-label="Sponsors" data-tooltip="Sponsors"
+                               @if (request()->routeIs('workspace.sponsors.*')) aria-current="page" @endif>
+                                <x-workspace.icon name="users" /><span>Sponsors</span>
+                            </a>
+                        @endcan
                         @can(config('workspace.navigation.users.gate'))
                             <a class="workspace-nav-link {{ request()->routeIs('adviser.users.*') ? 'is-active' : '' }}"
                                href="{{ route('adviser.users.index') }}" aria-label="{{ $user->isSuperadmin() ? 'Advisers' : 'Officers and positions' }}"

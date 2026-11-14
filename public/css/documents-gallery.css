@@ -7,9 +7,9 @@
 .documents-hero-grid::after { bottom: 0; transform: perspective(160px) rotateX(55deg); transform-origin: bottom; }
 .documents-hero-copy { position: relative; padding: 46px 24px; text-align: center; }
 .documents-eyebrow { margin: 0 0 12px; font-size: 20px; font-weight: 600; }
-.documents-hero h1 { margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(36px, 4.7vw, 68px); font-weight: 700; line-height: 1.15; }
+.documents-hero h1 { margin: 0; font-family: var(--font-family-body); font-size: clamp(36px, 4.7vw, 68px); font-weight: 700; line-height: 1.15; }
 .documents-hero-copy > p:last-child { max-width: 640px; margin: 16px auto 0; font-size: 15px; line-height: 1.5; }
-.documents-filters { display: grid; grid-template-columns: 1.66fr 1fr 1fr; align-items: end; gap: var(--site-filter-gap); margin: 52px 0 68px; }
+.documents-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); align-items: end; gap: var(--site-filter-gap); margin: 52px 0 68px; }
 .documents-search { position: relative; }
 .documents-search input, .documents-select select { width: 100%; height: var(--site-control-height); border: 1px solid #083747; border-bottom-width: 5px; border-radius: 11px; padding: 0 48px 0 20px; color: #083747; font: inherit; font-size: 14px; font-weight: 500; }
 .documents-search input { background: #fff; }
@@ -31,11 +31,11 @@
 .document-preview-fallback small { color: #426474; }
 .document-tile-copy { display: flex; flex: 1; flex-direction: column; align-items: flex-start; min-height: 242px; padding: 20px; }
 .document-category { display: inline-block; padding: 4px 10px; border-radius: 20px; background: #b9edfc; font-size: 10px; }
-.document-tile h2 { margin: 14px 0 30px; font-family: Georgia, 'Times New Roman', serif; font-size: 24px; font-weight: 700; line-height: 1.2; text-transform: uppercase; overflow-wrap: anywhere; }
+.document-tile h2 { margin: 14px 0 30px; font-family: var(--font-family-body); font-size: 24px; font-weight: 700; line-height: 1.2; text-transform: uppercase; overflow-wrap: anywhere; }
 .document-tile-meta { margin-top: auto; color: #707070; font-size: 14px; line-height: 1.6; }
 .document-tile-meta p { margin: 0 0 4px; }
 .documents-empty { grid-column: 1 / -1; padding: 52px 24px; text-align: center; }
-.documents-empty h2 { font-family: Georgia, serif; font-size: 26px; }
+.documents-empty h2 { font-family: var(--font-family-body); font-size: 26px; }
 @media (max-width: 900px) {
     .documents-filters { gap: 20px; }
     .documents-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

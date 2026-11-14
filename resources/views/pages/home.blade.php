@@ -123,16 +123,18 @@
             <p>Recognizing the partners and sponsors whose support, collaboration, and shared vision help SSITE create meaningful opportunities for IT students and the community.</p>
         </div>
         <div class="sponsor-grid">
-            @foreach (['Sponsor 1', 'Sponsor 2', 'Sponsor 3'] as $sponsor)
+            @forelse ($sponsors as $sponsor)
                 <article class="sponsor-card" data-motion="reveal">
-                    <div class="sponsor-image"><img src="{{ asset('images/ssite - revamp logo 2.png') }}" alt="" loading="lazy" decoding="async" data-home-image></div>
+                    <div class="sponsor-image"><img src="{{ $sponsor->logoUrl() ?? asset('images/ssite - revamp logo 2.png') }}" alt="" loading="lazy" decoding="async" data-home-image></div>
                     <div class="sponsor-content">
-                        <h3>{{ $sponsor }}</h3>
-                        <p>Supporting SSITE’s programs through generous contributions that help create meaningful experiences and opportunities for students.</p>
-                        <a href="https://www.facebook.com/ICSSSITE" target="_blank" rel="noopener noreferrer">Visit Official Page <span aria-hidden="true">→</span></a>
+                        <h3>{{ $sponsor->name }}</h3>
+                        <p>{{ $sponsor->description }}</p>
+                        @if ($sponsor->website_url)<a href="{{ $sponsor->website_url }}" target="_blank" rel="noopener noreferrer">Visit Official Page <span aria-hidden="true">&rarr;</span></a>@endif
                     </div>
                 </article>
-            @endforeach
+            @empty
+                <p class="sponsors-empty">Our partners and sponsors will be announced soon.</p>
+            @endforelse
         </div>
     </section>
 </div>

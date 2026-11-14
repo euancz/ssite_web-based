@@ -8,6 +8,9 @@
 {{-- Keep sort controls compact; tab changes discard sort state and the form omits pagination. --}}
 <form class="post-feed-sort" method="GET" action="{{ $action }}" data-auto-submit>
     <input type="hidden" name="tab" value="{{ $tab }}">
+    @php($searchValue = is_string(request('q')) ? mb_substr(trim(request('q')), 0, 100) : '')
+    <label class="post-feed-visually-hidden" for="public-post-search">Search posts</label>
+    <input id="public-post-search" class="public-post-search" type="search" name="q" maxlength="100" value="{{ $searchValue }}" placeholder="Title or description">
     <label class="post-feed-visually-hidden" for="post-sort-{{ str_replace('.', '-', $routeName) }}">Sort posts</label>
     <select id="post-sort-{{ str_replace('.', '-', $routeName) }}" class="post-feed-filter-control" name="sort" aria-label="Sort posts">
         @foreach ($options as $value => $label)
@@ -22,7 +25,10 @@
             @endforeach
         </select>
     @endif
-    <noscript><button type="submit" class="dashboard-button">Apply filters</button></noscript>
+    <button type="submit" class="dashboard-button">Search posts</button>
+    @if ($searchValue !== '' || $sort !== 'recent' || ($filter !== null && $filter !== '' && $filter !== $filterDefault))
+        <a href="{{ route($routeName, ['tab' => $tab]) }}">Clear filters</a>
+    @endif
 </form>
 
 @once

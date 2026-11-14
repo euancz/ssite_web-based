@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'sync_enabled' => (bool) env('SSITE_MOBILE_SYNC', false),
     // Public release/store URL. Leave empty until the mobile app is published.
     'download_url' => env('SSITE_APP_DOWNLOAD_URL'),
 

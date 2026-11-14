@@ -153,7 +153,7 @@ class ActivityController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            // SECURITY: Store a generated filename under this module's public-disk directory.
+            // SECURITY: Store a generated filename under this module's private-disk directory.
             $activity->image = $this->storeImage($request);
         }
 
@@ -309,9 +309,9 @@ class ActivityController extends Controller
         return $activity->isApproved() && $activity->content_status === Activity::CONTENT_ACTIVE;
     }
 
-    /** Save a validated upload under this module's public-disk image directory. */
+    /** Save a validated upload under this module's private-disk image directory. */
     private function storeImage(Request $request): string
     {
-        return app(PostFiles::class)->store($request->file('image'), 'activities', 'public');
+        return app(PostFiles::class)->store($request->file('image'), 'post-media/activities', 'local');
     }
 }

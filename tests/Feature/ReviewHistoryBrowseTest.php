@@ -18,6 +18,8 @@ class ReviewHistoryBrowseTest extends TestCase
     {
         parent::setUp();
         $this->buildContentSchema();
+        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-10-27 18:00:00'));
+
     }
 
     private function enable(): void
@@ -59,13 +61,13 @@ class ReviewHistoryBrowseTest extends TestCase
 
     public function test_access_requires_a_current_content_capability_and_installed_history(): void
     {
-        $this->get(route('workspace.review-history.index'))->assertRedirect();
-        $this->actingAs($this->actor())->get(route('workspace.review-history.index'))->assertNotFound();
+        $this->get(route('workspace.content-activity.index'))->assertRedirect();
+        $this->actingAs($this->actor())->get(route('workspace.content-activity.index'))->assertOk()->assertSee('Review tracking is not available');
         $this->enable();
         foreach (['student', 'adviser', 'superadmin'] as $role) {
-            $this->actingAs($this->actor('President', $role))->get(route('workspace.review-history.index'))->assertForbidden();
+            $this->actingAs($this->actor('President', $role))->get(route('workspace.content-activity.index'))->assertForbidden();
         }
-        $this->actingAs($this->actor())->get(route('workspace.review-history.index'))->assertOk()->assertSee('No recorded decisions match')->assertSee('workspace-content', false);
+        $this->actingAs($this->actor())->get(route('workspace.content-activity.index'))->assertOk()->assertSee('No activity matches')->assertSee('workspace-content', false);
     }
 
     public function test_author_scope_prevents_cross_owner_cross_module_and_deleted_post_disclosure(): void
@@ -80,13 +82,13 @@ class ReviewHistoryBrowseTest extends TestCase
         $deleted = $this->record($owner);
         $this->event($deleted, 'Deleted post title');
         $deleted->delete();
-        $response = $this->actingAs($owner)->get(route('workspace.review-history.index'))->assertOk()
+        $response = $this->actingAs($owner)->get(route('workspace.content-activity.index'))->assertOk()
             ->assertSee('My prior title')->assertDontSee('Another author title')->assertDontSee('Lost module title')->assertDontSee('Deleted post title');
-        $this->assertSame(1, $response->viewData('events')->total());
-        $this->get(route('workspace.review-history.index', ['module' => 'articles', 'post' => $other->getKey()]))->assertOk()->assertDontSee('Another author title');
+        $this->assertSame(2, $response->viewData('log')['events']->total());
+        $this->get(route('workspace.content-activity.index', ['module' => 'articles', 'post' => $other->getKey()]))->assertOk()->assertDontSee('Another author title');
         $owner->officer_position = 'Secretary';
         $owner->save();
-        $this->get(route('workspace.review-history.index'))->assertOk()->assertDontSee('My prior title')->assertSee('Lost module title');
+        $this->get(route('workspace.content-activity.index'))->assertOk()->assertDontSee('My prior title')->assertSee('Lost module title');
     }
 
     public function test_president_filters_combine_and_preserve_pagination_with_stable_order(): void
@@ -94,22 +96,22 @@ class ReviewHistoryBrowseTest extends TestCase
         $this->enable();
         $article = $this->record($this->actor());
         $ids = [];
-        for ($i = 0; $i < 22; $i++) {
+        for ($i = 0; $i < 27; $i++) {
             $ids[] = $this->event($article, 'Report '.$i, ['decision' => 'rejected', 'reason' => 'Add sources']);
         }
         $this->event($article, 'Different decision');
         $this->event($article, 'Report outside date', ['created_at' => '2026-10-28 00:00:00', 'decision' => 'rejected']);
         $this->event($this->record($this->actor('Secretary'), Document::class), 'Report other module', ['decision' => 'rejected']);
-        $filters = ['q' => 'Report', 'module' => 'articles', 'decision' => 'rejected', 'from' => '2026-10-27', 'to' => '2026-10-27', 'sort' => 'oldest'];
-        $response = $this->actingAs($this->actor('President'))->get(route('workspace.review-history.index', $filters))->assertOk();
-        $events = $response->viewData('events');
-        $this->assertSame(22, $events->total());
-        $this->assertSame(array_slice($ids, 0, 20), $events->pluck('id')->all());
-        foreach (['module=articles', 'q=Report', 'decision=rejected', 'to=2026-10-27', 'sort=oldest'] as $retained) {
+        $filters = ['q' => 'Report', 'module' => 'articles', 'action' => 'rejected', 'from' => '2026-10-27', 'to' => '2026-10-27', 'sort' => 'oldest'];
+        $response = $this->actingAs($this->actor('President'))->get(route('workspace.content-activity.index', $filters))->assertOk();
+        $events = $response->viewData('log')['events'];
+        $this->assertSame(27, $events->total());
+        $this->assertSame(array_slice($ids, 0, 25), $events->pluck('event_id')->all());
+        foreach (['module=articles', 'q=Report', 'action=rejected', 'to=2026-10-27', 'sort=oldest'] as $retained) {
             $this->assertStringContainsString($retained, $events->nextPageUrl());
         }
-        $pageTwo = $this->get(route('workspace.review-history.index', $filters + ['page' => 2]))->assertOk();
-        $this->assertSame(array_slice($ids, 20), $pageTwo->viewData('events')->pluck('id')->all());
+        $pageTwo = $this->get(route('workspace.content-activity.index', $filters + ['page' => 2]))->assertOk();
+        $this->assertSame(array_slice($ids, 25), $pageTwo->viewData('log')['events']->pluck('event_id')->all());
         $response->assertDontSee('Report outside date')->assertDontSee('Report other module');
     }
 
@@ -117,8 +119,8 @@ class ReviewHistoryBrowseTest extends TestCase
     {
         $this->enable();
         $this->actingAs($this->actor());
-        foreach ([['module' => 'documents'], ['q' => ['bad']], ['decision' => 'pending'], ['sort' => 'id desc'], ['post' => 1], ['from' => '2026-10-28', 'to' => '2026-10-27'], ['from' => '2026-02-30']] as $filters) {
-            $this->getJson(route('workspace.review-history.index', $filters))->assertUnprocessable();
+        foreach ([['module' => 'documents'], ['q' => ['bad']], ['action' => 'pending'], ['sort' => 'id desc'], ['post' => 1], ['from' => '2026-10-28', 'to' => '2026-10-27'], ['from' => '2026-02-30']] as $filters) {
+            $this->getJson(route('workspace.content-activity.index', $filters))->assertUnprocessable();
         }
     }
 
@@ -128,11 +130,11 @@ class ReviewHistoryBrowseTest extends TestCase
         $owner = $this->actor();
         $article = $this->record($owner);
         $this->event($article, '<script>Old title</script>', ['decision' => 'rejected', 'reason' => '<img src=x onerror=alert(1)>', 'reviewer_name' => '<svg onload=alert(1)>']);
-        $this->actingAs($owner)->get(route('workspace.review-history.index'))->assertOk()
+        $this->actingAs($owner)->get(route('workspace.content-activity.index'))->assertOk()
             ->assertSee('&lt;script&gt;Old title&lt;/script&gt;', false)->assertDontSee('<script>Old title</script>', false)
             ->assertDontSee('<img src=x onerror=alert(1)>', false)->assertDontSee('<svg onload=alert(1)>', false)
             ->assertSee(route('workspace.posts.articles.show', $article));
         $this->get(route('workspace.posts.articles.show', $article))->assertOk()
-            ->assertSee(route('workspace.review-history.index', ['module' => 'articles', 'post' => $article->getKey()]));
+            ->assertSee(route('workspace.content-activity.index', ['module' => 'articles', 'post' => $article->getKey()]));
     }
 }

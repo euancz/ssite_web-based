@@ -21,6 +21,7 @@ class DocumentAcademicYearTest extends TestCase
         parent::setUp();
         $this->buildContentSchema();
         Storage::fake('local');
+        $this->actingAs(User::factory()->make(['id' => 99999, 'role' => 'student', 'profile_completed_at' => now()]));
     }
 
     private function migration(): Migration
@@ -89,7 +90,18 @@ class DocumentAcademicYearTest extends TestCase
         $response = $this->actingAs($owner)->get(route('workspace.posts.documents.index', $filters))->assertOk()->assertDontSee('Other owner')->assertDontSee('2020-2021');
         $this->assertSame(6, $response->viewData('documents')->total());
         $this->assertStringContainsString('academic_year=2026-2027', $response->viewData('documents')->nextPageUrl());
-        $response->assertSee(route('workspace.posts.documents.index', ['tab' => 'mine', 'sort' => 'title', 'q' => 'Minutes', 'academic_year' => '2026-2027', 'semester' => '2', 'category' => 'Records']));
+        $xpath = new \DOMXPath(tap(new \DOMDocument, fn ($doc) => @$doc->loadHTML($response->getContent())));
+        $form = $xpath->query('//form[contains(@class,"post-feed-sort")]')->item(0);
+        $this->assertNotNull($form);
+        foreach (['tab' => 'mine', 'q' => 'Minutes', 'academic_year' => '2026-2027', 'semester' => '2', 'category' => 'Records'] as $name => $value) {
+            $control = $xpath->query('.//*[@name="'.$name.'"]', $form)->item(0);
+            $this->assertNotNull($control);
+            $actual = $control->tagName === 'select' ? $xpath->query('.//option[@selected]', $control)->item(0)?->getAttribute('value') : $control->getAttribute('value');
+            $this->assertSame($value, $actual);
+        }
+        $sorted = $this->get(route('workspace.posts.documents.index', $filters + ['sort' => 'title']))->assertOk();
+        $this->assertSame(6, $sorted->viewData('documents')->total());
+        $this->assertSame('Minutes 0', $sorted->viewData('documents')->first()->title);
     }
 
     public function test_year_validation_allows_old_consecutive_years_preserves_omitted_values_and_can_clear_assignment(): void

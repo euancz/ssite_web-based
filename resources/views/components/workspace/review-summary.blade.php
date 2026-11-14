@@ -20,6 +20,7 @@
     @endif
     @if ($post->isArchived())<p>This submission is archived and is not visible on the public site.</p>@endif
     @can('update', $post)
+        <div class="workspace-review-footer"><a href="{{ route('workspace.content-activity.index', ['module' => $post->getTable(), 'post' => $post->getKey()]) }}">View activity log</a></div>
         @if (app(\App\Services\ContentVersions::class)->available())
             <div class="workspace-review-footer"><a href="{{ route('workspace.content-versions.index', ['module' => $post->getTable(), 'post' => $post->getKey()]) }}">View content version history</a></div>
         @endif

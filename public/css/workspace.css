@@ -967,10 +967,6 @@ body.workspace-site-body {
 }
 .workspace-content .workspace-status-menu { position: relative; display: block; }
 .workspace-content .workspace-status-menu > .dashboard-tabs-menu {
-    position: absolute;
-    top: calc(100% + 4px);
-    right: 0;
-    left: auto;
     min-width: 10rem;
     z-index: var(--layer-dropdown);
 }

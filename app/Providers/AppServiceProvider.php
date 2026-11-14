@@ -40,6 +40,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        foreach (\App\Services\MobilePublisher::MODELS as $model) {
+            $model::observe(\App\Observers\MobilePublicationObserver::class);
+        }
         // SECURITY: Apply account-and-IP limits with a short plain-text response when clients exceed them.
         $rateLimitedResponse = static fn (Request $request, array $headers) =>
             response('Too many requests. Please wait a minute before trying again.', 429, $headers);
@@ -85,6 +88,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('view-post-dashboard', fn (User $user): bool => $user->canPost());
         Gate::define('review-posts', fn (User $user): bool => $user->canReview());
         Gate::define('manage-officers', fn (User $user): bool => $user->canManageOfficers());
+        Gate::define('manage-sponsors', fn (User $user): bool => $user->isPresident());
         Gate::define('manage-advisers', fn (User $user): bool => $user->canAssignAdvisers());
         Gate::define('manage-users', fn (User $user): bool => $user->canAssignOfficers() || $user->canAssignAdvisers());
 

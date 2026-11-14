@@ -29,16 +29,23 @@ class PostFiles
     public function promoteDraft(string $source, Model $post): string
     {
         [$disk, $column, $directory] = $this->location($post);
-        $name = Str::random(40).($disk === 'local' ? '.pdf' : '.'.$this->extension($source));
+        if ($column === 'image') {
+            $disk = 'local';
+            $directory = 'post-media/'.$post->getTable();
+        }
+        $name = Str::random(40).($column === 'file_path' ? '.pdf' : '.'.$this->extension($source));
         $target = $directory.'/'.$name;
         $stream = Storage::disk('local')->readStream($source);
-        if (! is_resource($stream) || ! Storage::disk($disk)->put($target, $stream)) {
-            if (is_resource($stream)) {
-                fclose($stream);
+        try {
+            if (! is_resource($stream) || ! Storage::disk($disk)->put($target, $stream)) {
+                throw ValidationException::withMessages([$column === 'image' ? 'image' : 'file' => 'The saved attachment could not be submitted. Please select it again.']);
             }
-            throw ValidationException::withMessages([$column === 'image' ? 'image' : 'file' => 'The saved attachment could not be submitted. Please select it again.']);
+        } catch (Throwable $exception) {
+            $this->deletePath($disk, $directory, $target);
+            throw $exception;
+        } finally {
+            if (is_resource($stream)) fclose($stream);
         }
-        fclose($stream);
 
         return $target;
     }
@@ -78,8 +85,11 @@ class PostFiles
                 if (! $post->save()) {
                     throw new \RuntimeException('The post could not be saved.');
                 }
-                app(ContentVersions::class)->record($post, $current);
                 $afterSave?->__invoke();
+                if ($post->isDirty() && ! $post->save()) {
+                    throw new \RuntimeException('The attachment could not be saved.');
+                }
+                app(ContentVersions::class)->record($post, $current);
             });
             $newPath = $post->getAttribute($column);
             $replacement = $newPath && $newPath !== $oldPath;
@@ -87,12 +97,16 @@ class PostFiles
             $newPath = $post->getAttribute($column);
             $replacement = $newPath && $newPath !== $oldPath;
             if ($replacement) {
-                $this->deletePath($disk, $directory, $newPath);
+                [$newDisk, , $newDirectory] = $this->location($post);
+                $this->deletePath($newDisk, $newDirectory, $newPath);
             }
             throw $exception;
         }
         if ($replacement && $oldPath) {
-            DB::afterCommit(fn () => $this->deletePath($disk, $directory, $oldPath));
+            $oldPost = clone $post;
+            $oldPost->setAttribute($column, $oldPath);
+            [$oldDisk, , $oldDirectory] = $this->location($oldPost);
+            DB::afterCommit(fn () => $this->deletePath($oldDisk, $oldDirectory, $oldPath));
         }
     }
 
@@ -101,6 +115,7 @@ class PostFiles
         [$disk, $column, $directory] = $this->location($post);
         DB::transaction(function () use ($post, $disk, $column, $directory): void {
             $current = $post->newQuery()->whereKey($post->getKey())->lockForUpdate()->firstOrFail();
+            [$disk, $column, $directory] = $this->location($current);
             $path = $current->getAttribute($column);
             app(PostEngagement::class)->deleteLikesForPost($current);
             if (! $current->delete()) {
@@ -113,7 +128,8 @@ class PostFiles
     private function location(Model $post): array
     {
         return match ($post->getTable()) {
-            'articles', 'activities', 'achievements' => ['public', 'image', $post->getTable()],
+            'articles', 'activities', 'achievements' => [PostImages::disk($post->image), 'image',
+                (str_starts_with((string) $post->image, 'post-media/') ? 'post-media/' : '').$post->getTable()],
             'documents' => ['local', 'file_path', 'documents'],
             'liquidations' => ['local', 'file_path', 'liquidation'],
             default => throw new \InvalidArgumentException('Unsupported post type.'),

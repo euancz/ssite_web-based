@@ -9,7 +9,7 @@
     {{-- The title length matches the activities table. --}}
     <div class="dashboard-form-field">
         <label for="activity-title">Title <span class="post-form-required-mark" aria-hidden="true">*</span></label>
-        <input id="activity-title" name="title" @error('title') aria-invalid="true" aria-describedby="activity-title-error" @enderror type="text" maxlength="200" required value="{{ old('title', $draftValues['title'] ?? $activity?->title) }}">
+        <input id="activity-title" placeholder="e.g. Web development workshop" name="title" @error('title') aria-invalid="true" aria-describedby="activity-title-error" @enderror type="text" maxlength="200" required value="{{ old('title', $draftValues['title'] ?? $activity?->title) }}">
         @error('title') <span id="activity-title-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
     @php($formattingEnabled = app(\App\Services\ArticleContent::class)->availableFor('activities'))
@@ -39,7 +39,7 @@
     {{-- Location is optional and follows the table's 200-character limit. --}}
     <div class="dashboard-form-field">
         <label for="activity-location">Location</label>
-        <input id="activity-location" name="location" @error('location') aria-invalid="true" aria-describedby="activity-location-error" @enderror type="text" maxlength="200" value="{{ old('location', $draftValues['location'] ?? $activity?->location) }}">
+        <input id="activity-location" placeholder="e.g. Computer laboratory 1" name="location" @error('location') aria-invalid="true" aria-describedby="activity-location-error" @enderror type="text" maxlength="200" value="{{ old('location', $draftValues['location'] ?? $activity?->location) }}">
         @error('location') <span id="activity-location-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
     {{-- SECURITY: Upload validation and filename generation happen on the server. --}}

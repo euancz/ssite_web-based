@@ -6,11 +6,12 @@
     <meta name="description" content="The official SSITE community at Mabalacat City College. Sign in for student news, activities, achievements, documents, and organization reports.">
     <meta name="theme-color" content="#7bd0ed">
     <title>SSITE | Mabalacat City College</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/ssite - revamp logo 2.png') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/ssite-favicon.svg') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/landing.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/interface-polish.css') }}">
     <script src="{{ asset('js/landing.js') }}" defer></script>
 </head>
 <body class="landing-page" id="top">

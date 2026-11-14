@@ -31,7 +31,7 @@
             </div>
             @include('profile.partials.fields', ['allowStudentNumber' => true])
             <div class="profile-form-actions">
-                <button type="submit" class="dashboard-button">Save changes</button>
+                <button type="submit" class="dashboard-button">Save profile</button>
             </div>
         </form>
     </div>

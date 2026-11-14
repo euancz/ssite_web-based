@@ -6,23 +6,17 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
+use Tests\Concerns\BuildsContentSchema;
+use App\Models\User;
 
 class DocumentsGalleryTest extends TestCase
 {
+    use BuildsContentSchema;
     protected function setUp(): void
     {
         parent::setUp();
-        Schema::create('documents', function (Blueprint $table) {
-            $table->id('id');
-            $table->string('title');
-            $table->string('category')->nullable();
-            $table->unsignedBigInteger('created_by_user_id')->nullable();
-            $table->string('approval_status')->default('approved');
-            $table->string('content_status')->default('active');
-            $table->timestamps();
-        });
-        $migration = require database_path('migrations/2026_10_26_000001_add_semester_to_documents_table.php');
-        $migration->up();
+        $this->buildContentSchema();
+        $this->actingAs(User::factory()->make(['id' => 99999, 'role' => 'student', 'profile_completed_at' => now()]));
         foreach ([
             ['First semester record', 'Activities', 1, 'approved'],
             ['Second semester record', 'Activities', 2, 'approved'],
@@ -32,6 +26,7 @@ class DocumentsGalleryTest extends TestCase
         ] as [$title, $category, $semester, $status]) {
             DB::table('documents')->insert([
                 'title' => $title, 'category' => $category, 'semester' => $semester,
+                'file_path' => 'documents/'.str_repeat('a', 40).'.pdf', 'original_name' => 'fixture.pdf', 'file_size' => 100,
                 'approval_status' => $status, 'created_at' => now(), 'updated_at' => now(),
             ]);
         }
@@ -45,12 +40,11 @@ class DocumentsGalleryTest extends TestCase
             ->assertDontSee('Other category record')
             ->assertDontSee('Pending private record')
             ->assertDontSee('Unassigned record')
-            ->assertSee('OFFICIAL RECORDS')
+            ->assertSee('Official records')
             ->assertSee('aria-haspopup="dialog"', false)
             ->assertSee('Document Preview')
-            ->assertSee('Sign in to preview this document.')
-            ->assertDontSee('data-pdf-url=', false)
-            ->assertDontSee('data-document-preview=', false);
+            ->assertSee('data-document-preview=', false)
+            ->assertDontSee('Sign in to preview this document.');
     }
 
     public function test_all_semesters_include_unassigned_records_and_invalid_semesters_are_ignored(): void

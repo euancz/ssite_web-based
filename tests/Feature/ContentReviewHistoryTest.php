@@ -64,7 +64,7 @@ class ContentReviewHistoryTest extends TestCase
         $this->assertEquals($before, DB::table('articles')->first());
         $this->assertSame(0, DB::table('content_review_events')->count());
         $this->assertTrue(collect(Schema::getIndexes('content_review_events'))->contains(fn ($index) => $index['name'] === 'content_review_events_post_index'));
-        $this->get(route('workspace.posts.articles.show', $post))->assertOk()->assertSee('No decisions have been recorded');
+        $this->get(route('workspace.content-activity.index', ['module' => 'articles', 'post' => $post->getKey(), 'action' => 'approved']))->assertOk()->assertSee('No activity matches');
     }
 
     public function test_all_five_modules_record_decisions_and_repeated_reviews_add_no_event(): void
@@ -101,7 +101,7 @@ class ContentReviewHistoryTest extends TestCase
         $this->assertSame('Original title', $events[1]->post_title);
         $this->assertSame('President', $events[1]->reviewer_name);
         $this->assertSame('<script>Fix sources</script>', $events[1]->reason);
-        $this->actingAs($reviewer)->get(route('workspace.posts.articles.show', $post))->assertOk()
+        $this->actingAs($reviewer)->get(route('workspace.content-activity.index', ['module' => 'articles', 'post' => $post->getKey()]))->assertOk()
             ->assertSee('Original title')->assertSee('&lt;script&gt;Fix sources&lt;/script&gt;', false)->assertDontSee('<script>Fix sources</script>', false);
         $post->forceFill(['content_status' => 'archived'])->save();
         $this->assertCount(2, app(ContentReviewHistory::class)->recentFor($post, $reviewer));
@@ -115,8 +115,8 @@ class ContentReviewHistoryTest extends TestCase
         $reviewer = $this->actor();
         $post = $this->record($owner);
         app(ContentReview::class)->decide($post, $reviewer, true);
-        $this->get(route('articles.show', $post))->assertOk()->assertDontSee('Review history');
-        $this->actingAs($owner)->get(route('workspace.posts.articles.show', $post))->assertOk()->assertSee('Review history');
+        $this->get(route('articles.show', $post))->assertRedirect(route('login'));
+        $this->actingAs($owner)->get(route('workspace.posts.articles.show', $post))->assertOk()->assertSee('View activity log');
         $this->actingAs($other)->get(route('workspace.posts.articles.show', $post))->assertOk()->assertDontSee('class="workspace-review-history"', false);
         try {
             app(ContentReviewHistory::class)->recentFor($post, $other);

@@ -45,6 +45,7 @@ class ArticleCategoryTest extends TestCase
         $this->article($owner, 'Private project', 'Private category');
         $archived = $this->article($owner, 'Archived article', 'Archived category', 'approved');
         $archived->content_status = 'archived';$archived->save();
+        $this->actingAs(User::factory()->make(['id' => 99999, 'role' => 'student', 'profile_completed_at' => now()]));
         $response = $this->get(route('articles.index', ['category' => 'Projects']))->assertOk()
             ->assertSee('Published project')->assertDontSee('Uncategorized legacy')->assertDontSee('Private category')->assertDontSee('Archived category');
         $this->assertSame(['' => 'All categories', 'Projects' => 'Projects'], $response->viewData('categoryOptions'));

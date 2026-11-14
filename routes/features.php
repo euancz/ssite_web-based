@@ -15,6 +15,14 @@ use Illuminate\Support\Facades\Route;
 
 // Holds authenticated CMS pages and protected actions grouped by middleware.
 
+Route::get('/posts/media/{module}/{id}', function (\Illuminate\Http\Request $request, string $module, int $id) {
+    $model = \App\Support\ContentModules::all()[$module]['model'];
+    $post = $model::findOrFail($id);
+    abort_unless(($post->isApproved() && ! $post->isArchived()) || $request->user()->can('update', $post), 404);
+    return app(\App\Services\PostImages::class)->response($post);
+})->where(['module' => 'articles|activities|achievements', 'id' => '[0-9]+'])
+    ->middleware(['auth', 'profile.complete'])->name('posts.media');
+
 // Every CMS page except the public landing page requires a completed Microsoft-authenticated session.
 Route::middleware(['auth', 'profile.complete', 'throttle:60,1'])->group(function () {
     Route::get('/search', [SearchController::class, 'index'])->name('search.index');

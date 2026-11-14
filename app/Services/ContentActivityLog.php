@@ -72,7 +72,7 @@ final class ContentActivityLog
         }
         $direction = $filters['sort'] === 'oldest' ? 'asc' : 'desc';
         $events = $query->orderBy('occurred_at', $direction)->orderBy('module')->orderBy('post_id', $direction)
-            ->orderBy('action')->orderByDesc('event_id')->paginate(25)->withQueryString();
+            ->orderBy('action')->orderBy('event_id', $direction)->paginate(25)->withQueryString();
 
         return compact('events', 'historyAvailable', 'editsAvailable');
     }

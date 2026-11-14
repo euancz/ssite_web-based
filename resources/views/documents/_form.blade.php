@@ -12,13 +12,13 @@
     {{-- Keep each label, field, and error together for quick form scanning. --}}
     <div class="dashboard-form-field">
         <label for="document-title">Title <span class="post-form-required-mark" aria-hidden="true">*</span></label>
-        <input id="document-title" name="title" @error('title') aria-invalid="true" aria-describedby="document-title-error" @enderror maxlength="200" required value="{{ old('title', $draftValues['title'] ?? $document?->title) }}">
+        <input id="document-title" placeholder="e.g. General assembly meeting minutes" name="title" @error('title') aria-invalid="true" aria-describedby="document-title-error" @enderror maxlength="200" required value="{{ old('title', $draftValues['title'] ?? $document?->title) }}">
         @error('title') <span id="document-title-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
 
     <div class="dashboard-form-field">
         <label for="document-category">Category</label>
-        <input id="document-category" name="category" @error('category') aria-invalid="true" aria-describedby="document-category-error" @enderror maxlength="100" value="{{ old('category', $draftValues['category'] ?? $document?->category) }}">
+        <input id="document-category" placeholder="e.g. Meeting minutes" name="category" @error('category') aria-invalid="true" aria-describedby="document-category-error" @enderror maxlength="100" value="{{ old('category', $draftValues['category'] ?? $document?->category) }}">
         @error('category') <span id="document-category-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
 

@@ -13,7 +13,11 @@
                 @foreach ($modules as $key => $module)<option value="{{ $key }}" @selected(($filters['module'] ?? '') === $key)>{{ $module['label'] }}</option>@endforeach
             </select>
         </div>
-        <button class="dashboard-button" type="submit">Apply filter</button>
+        <div class="dashboard-form-field"><label for="draft-sort">Sort by</label>
+            <select id="draft-sort" name="sort"><option value="recent" @selected($filters['sort'] === 'recent')>Recently saved first</option><option value="oldest" @selected($filters['sort'] === 'oldest')>Oldest saved first</option></select>
+        </div>
+        <button class="dashboard-button" type="submit">Apply filters</button>
+        <a class="dashboard-text-button" href="{{ route('workspace.drafts.index') }}">Clear filters</a>
     </form>
     <section class="dashboard-panel">
         <p>{{ $drafts->total() }} {{ \Illuminate\Support\Str::plural('draft', $drafts->total()) }} in your currently assigned content areas.</p>
@@ -26,7 +30,7 @@
                                 <p>Permanently delete this draft?</p>
                                 <form method="POST" action="{{ route('workspace.drafts.destroy', $draft) }}">@csrf @method('DELETE')
                                     <input type="hidden" name="draft_version" value="{{ $draft->lock_version }}">
-                                    <button type="submit" class="dashboard-button dashboard-button-secondary">Confirm deletion</button>
+                                    <button type="submit" class="dashboard-button dashboard-button-secondary">Delete draft</button>
                                 </form>
                             </details>
                         </td>

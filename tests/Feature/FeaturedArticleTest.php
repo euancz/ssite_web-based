@@ -133,7 +133,7 @@ class FeaturedArticleTest extends TestCase
         foreach ([['approval_status' => 'pending'], ['approval_status' => 'rejected'], ['content_status' => 'archived']] as $state) {
             $this->article($owner, $state + ['title' => 'Private selected article', 'featured_at' => '2026-10-27 12:00:00']);
         }
-        $home = $this->get('/')->assertOk()->assertDontSee('Private selected article');
+        $home = $this->actingAs($this->actor('', 'student'))->get(route('home'))->assertOk()->assertDontSee('Private selected article');
         $this->assertSame([$priority->getKey()], $home->viewData('articles')->modelKeys());
         $discover = $this->get(route('discover'))->assertOk()->assertDontSee('Private selected article');
         $this->assertSame([$priority->getKey(), $older->getKey(), $recent->getKey()], $discover->viewData('articles')->modelKeys());

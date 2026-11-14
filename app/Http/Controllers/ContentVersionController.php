@@ -26,7 +26,10 @@ final class ContentVersionController extends Controller
             abort_unless($selected, 404);
             $previous = (clone $query)->where('id', '<', $selected->id)->orderByDesc('id')->first();
             $comparison = ['selected' => $selected, 'previous' => $previous,
-                'changes' => $previous ? $history->changes($previous->snapshot, $selected->snapshot) : []];
+                'changes' => $previous ? array_values(array_filter(
+                    $history->changes($previous->snapshot, $selected->snapshot),
+                    fn (array $change): bool => in_array($change['field'], ['title', 'content', 'description'], true),
+                )) : []];
         }
         $versions = $query->orderByDesc('id')->paginate(10)->appends($request->only('compare'));
 

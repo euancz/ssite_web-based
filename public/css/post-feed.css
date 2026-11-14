@@ -446,6 +446,7 @@ a.ssite-page-button:hover {
 }
 
 .post-card-state {
+    margin-bottom: 10px;
     background: var(--color-status-neutral-background);
     color: var(--color-status-neutral-text);
 }
@@ -818,3 +819,9 @@ a.ssite-page-button:hover {
     line-height: 1.5;
     overflow-wrap: anywhere;
 }
+
+/* Keyword inputs and action targets follow the existing feed control styling. */
+.post-feed-sort { flex-wrap: wrap; }
+.post-feed-sort .public-post-search { min-width: 160px; min-height: 44px; padding: 10px 14px; border: 1px solid #b7cbd8; border-radius: 8px; font: inherit; background: #fff; color: #17364c; }
+.post-feed-sort .dashboard-button { min-height: 44px; padding: 10px 20px; }
+@media (max-width: 600px) { .post-feed-sort .public-post-search { width: 100%; font-size: 16px; } }

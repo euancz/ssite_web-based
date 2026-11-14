@@ -1,0 +1,103 @@
+/* Public and workspace dropdowns share the approved Discover filter appearance. */
+body.site-body.main-site-body select,
+body.site-body.main-site-body main select,
+body.site-body.workspace-site-body .workspace-content select {
+    -webkit-appearance: none;
+    appearance: none;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-height: 54px;
+    border: 1px solid var(--site-ink, #17324d);
+    border-bottom-width: 5px;
+    border-radius: 11px;
+    padding: 0 48px 0 20px;
+    color: var(--site-ink, #17324d);
+    background-color: #a8e4f5;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23083747' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 8 9 9 9-9'/%3E%3C/svg%3E"), linear-gradient(110deg, #a8e4f5, #a2f2fb);
+    background-repeat: no-repeat;
+    background-size: 22px 22px, 100% 100%;
+    background-position: right 20px center, center;
+    box-shadow: none;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+/* Keep the browser's accessible select behavior while fixing the picker below its anchor. */
+@supports (appearance: base-select) {
+    body.site-body select:not([multiple]):not([size]),
+    body.site-body select[size="1"] {
+        appearance: base-select;
+        -webkit-appearance: base-select;
+    }
+
+    body.site-body select::picker(select) {
+        appearance: base-select;
+        position: fixed;
+        position-anchor: var(--dropdown-anchor);
+        position-area: none;
+        position-try-fallbacks: none;
+        position-try-order: normal;
+        inset: auto;
+        top: calc(anchor(bottom) + 6px);
+        left: anchor(left);
+        width: anchor-size(width);
+        min-width: anchor-size(width);
+        max-height: var(--dropdown-available-height, min(18rem, 45dvh));
+        box-sizing: border-box;
+        margin: 0;
+        padding: 4px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        border: 1px solid #778899;
+        border-radius: 10px;
+        background: #fff;
+        color: #17324d;
+        box-shadow: 0 8px 24px rgb(23 50 77 / 14%);
+        font: 400 14px/1.5 'Poppins', sans-serif;
+    }
+
+    body.site-body select::picker-icon { display: none; }
+    body.site-body select option { min-height: 40px; padding: 10px 14px; border-radius: 6px; white-space: normal; }
+    body.site-body select option:checked { background: #eaf8fd; font-weight: 600; }
+    body.site-body select option:not(:disabled):hover { background: #c7ecf9; }
+}
+
+body.site-body select option { background: #fff; color: var(--site-ink, #17324d); }
+body.site-body select:disabled { opacity: .6; cursor: not-allowed; }
+body.site-body select:focus-visible { outline: 3px solid #167eaa; outline-offset: 4px; }
+body.main-site-body main :is(.documents-select, .transparency-select) > svg { display: none; }
+
+/* A multiple-selection listbox has no closed-menu chevron. */
+body.site-body select[multiple],
+body.site-body.main-site-body main select[multiple],
+body.site-body.workspace-site-body .workspace-content select[multiple] {
+    background-image: linear-gradient(110deg, #a8e4f5, #a2f2fb);
+    padding: 12px 20px;
+}
+
+/* Preserve the compact editor toolbar while sharing its dropdown colors and arrow. */
+body.site-body.workspace-site-body .workspace-content select[data-rich-heading] {
+    width: 132px;
+    min-height: 36px;
+    height: 36px;
+    padding: 4px 34px 4px 10px;
+    border-bottom-width: 3px;
+    border-radius: 8px;
+    background-position: right 10px center, center;
+    background-size: 16px 16px, 100% 100%;
+    font-size: 12px;
+}
+
+@media (max-width: 600px) {
+    body.site-body.main-site-body select,
+    body.site-body.main-site-body main select,
+    body.site-body.workspace-site-body .workspace-content select {
+        padding-left: 16px;
+        padding-right: 44px;
+        background-position: right 14px center, center;
+        font-size: 16px;
+    }
+}

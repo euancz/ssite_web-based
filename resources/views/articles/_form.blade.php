@@ -14,7 +14,7 @@
     {{-- Title validation matches the articles table's 200-character limit. --}}
     <div class="dashboard-form-field">
         <label for="article-title">Title <span class="post-form-required-mark" aria-hidden="true">*</span></label>
-        <input id="article-title" name="title" @error('title') aria-invalid="true" aria-describedby="article-title-error" @enderror type="text" maxlength="200" required value="{{ old('title', $draftValues['title'] ?? $article?->title) }}">
+        <input id="article-title" placeholder="e.g. SSITE welcomes its new officers" name="title" @error('title') aria-invalid="true" aria-describedby="article-title-error" @enderror type="text" maxlength="200" required value="{{ old('title', $draftValues['title'] ?? $article?->title) }}">
         @error('title') <span id="article-title-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
 

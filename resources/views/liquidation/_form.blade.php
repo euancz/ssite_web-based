@@ -12,7 +12,7 @@
     {{-- Keep each label, field, and error together for quick form scanning. --}}
     <div class="dashboard-form-field">
         <label for="liquidation-title">Title <span class="post-form-required-mark" aria-hidden="true">*</span></label>
-        <input id="liquidation-title" name="title" @error('title') aria-invalid="true" aria-describedby="liquidation-title-error" @enderror maxlength="200" required value="{{ old('title', $draftValues['title'] ?? $liquidation?->title) }}">
+        <input id="liquidation-title" placeholder="e.g. Workshop expense report" name="title" @error('title') aria-invalid="true" aria-describedby="liquidation-title-error" @enderror maxlength="200" required value="{{ old('title', $draftValues['title'] ?? $liquidation?->title) }}">
         @error('title') <span id="liquidation-title-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
 

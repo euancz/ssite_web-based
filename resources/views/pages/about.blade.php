@@ -49,7 +49,7 @@
 					@if ($officerPhoto)
 						<div class="officer-photo-frame card-media"><img class="officer-photo" src="{{ $officerPhoto }}" alt="Officer portrait for {{ $officer->name ?? ($officer['name'] ?? 'SSITE officer') }}"></div>
 					@else
-						<div class="officer-photo officer-photo-placeholder" role="img" aria-label="Photo unavailable">Photo</div>
+						<div class="officer-photo-frame"><div class="officer-photo officer-photo-placeholder" role="img" aria-label="Photo unavailable">Photo unavailable</div></div>
 					@endif
 					<h3>{{ $officer->name ?? ($officer['name'] ?? 'Officer Name') }}</h3>
 					<p>{{ $officer->position ?? ($officer['position'] ?? 'Officer Role') }}</p>
@@ -86,7 +86,7 @@
 								@if ($yearOfficerPhoto)
 									<div class="officer-photo-frame card-media"><img class="officer-photo" src="{{ $yearOfficerPhoto }}" alt="Officer portrait for {{ $officer->name ?? ($officer['name'] ?? 'SSITE officer') }}"></div>
 								@else
-									<div class="officer-photo officer-photo-placeholder" role="img" aria-label="Photo unavailable">Photo</div>
+									<div class="officer-photo-frame"><div class="officer-photo officer-photo-placeholder" role="img" aria-label="Photo unavailable">Photo unavailable</div></div>
 								@endif
 								<h3>{{ $officer->name ?? ($officer['name'] ?? 'Officer Name') }}</h3>
 								<p>{{ $officer->position ?? ($officer['position'] ?? 'Officer Role') }}</p>

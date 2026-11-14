@@ -14,6 +14,11 @@
     :pending-count="$pendingCount"
     :sort="$sort"
     :sort-options="$sortOptions"
+    filter-name="year"
+    :filter="$year"
+    :filter-options="$yearOptions"
+    filter-label="Report year"
+    filter-default=""
 >
     @if (session('status'))
         <p class="dashboard-success" role="status" data-flash-toast>{{ session('status') }}</p>
