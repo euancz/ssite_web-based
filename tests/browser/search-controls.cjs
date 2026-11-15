@@ -1,0 +1,116 @@
+const { spawn } = require('node:child_process');
+const fs = require('node:fs');
+const path = require('node:path');
+const os = require('node:os');
+const assert = require('node:assert/strict');
+
+// Uses an installed browser and an isolated temporary profile; no app database is accessed.
+const executable = process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'ssite-dropdown-'));
+const browser = spawn(executable, ['--headless=new', '--remote-debugging-pipe', '--no-first-run', '--disable-gpu', `--user-data-dir=${profile}`], {
+    stdio: ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'], windowsHide: true,
+});
+let sequence = 0;
+let buffer = '';
+const pending = new Map();
+browser.stdio[4].on('data', (chunk) => {
+    buffer += chunk.toString();
+    let end;
+    while ((end = buffer.indexOf('\0')) >= 0) {
+        const message = JSON.parse(buffer.slice(0, end));
+        buffer = buffer.slice(end + 1);
+        const request = pending.get(message.id);
+        if (request) {
+            pending.delete(message.id);
+            message.error ? request.reject(new Error(JSON.stringify(message.error))) : request.resolve(message.result);
+        }
+    }
+});
+function send(method, params = {}, sessionId) {
+    if (method === 'Input.dispatchKeyEvent') {
+        const keyCode = { Escape: 27, ArrowDown: 40, Enter: 13 }[params.key];
+        params = { ...params, windowsVirtualKeyCode: keyCode, nativeVirtualKeyCode: keyCode };
+    }
+    const id = ++sequence;
+    return new Promise((resolve, reject) => {
+        pending.set(id, { resolve, reject });
+        browser.stdio[3].write(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) }) + '\0');
+    });
+}
+const timeout = setTimeout(() => { browser.kill(); throw new Error('Browser check timed out'); }, 30000);
+
+(async () => {
+    const { targetId } = await send('Target.createTarget', { url: 'about:blank' });
+    const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });
+    const evaluate = async (expression, userGesture = false) => {
+        const result = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true, userGesture }, sessionId);
+        if (result.exceptionDetails) throw new Error(result.exceptionDetails.text + ': ' + result.exceptionDetails.exception?.description);
+        return result.result.value;
+    };
+    await send('Emulation.setDeviceMetricsOverride', { width: 1100, height: 700, deviceScaleFactor: 1, mobile: false }, sessionId);
+    const cssFiles = ['app','post-feed','documents-gallery','site-navigation','main-site','ui-foundation','ssite-upgrade','mobile-responsive','workspace-experience','main-site-dropdowns','interface-polish'];
+    const fullCss = cssFiles.map(name => fs.readFileSync('public/css/' + name + '.css','utf8')).join('\n');
+    const controlsScript = fs.readFileSync('public/js/search-controls.js','utf8');
+    await evaluate(`document.head.innerHTML='<style></style>';document.querySelector('style').textContent=${JSON.stringify(fullCss)};
+        document.body.className='site-body main-site-body';document.body.innerHTML='<header><form class="search-form" action="/search"><input class="site-search-input" name="q" value="global" role="combobox" aria-expanded="false"><button class="search-submit-icon" type="submit"><svg class="site-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.34-4.34"></path></svg></button></form></header><main><div class="site-page"><form id="filters" class="discover-filters" action="/discover"><div class="discover-field"><label for="keyword">Search stories</label><div class="main-search-field"><input id="keyword" name="q" type="search" value="workshop"><button class="search-submit-icon" type="submit"><svg class="site-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.34-4.34"></path></svg></button></div></div><div class="discover-field"><label for="kind">Content type</label><select id="kind" name="type"><option value="all">All content</option><option value="articles" selected>Articles</option></select></div><div class="discover-field"><label for="period">Date added</label><select id="period" name="period"><option value="all">Any time</option><option value="week" selected>Last 7 days</option></select></div><div class="discover-field"><label for="sort">Sort by</label><select id="sort" name="sort"><option value="featured">Featured first</option><option value="recent">Newest added</option></select></div><a class="site-filter-reset" href="/discover">Clear filters</a></form></div></main>';
+        window.submissions=[];document.addEventListener('submit',event=>{event.preventDefault();submissions.push(Object.fromEntries(new FormData(event.target)))});(0,eval)(${JSON.stringify(controlsScript)});`);
+    const checkAlignment = async () => {
+        const metrics = await evaluate(`Array.from(document.querySelectorAll('.search-form,.main-search-field')).map(field=>{const clear=field.querySelector('.search-clear-button');const search=field.querySelector('.search-submit-icon');const a=clear.querySelector('svg').getBoundingClientRect();const b=search.querySelector('svg').getBoundingClientRect();return {clearY:a.top+a.height/2,searchY:b.top+b.height/2,clearWidth:a.width,searchWidth:b.width,clearTarget:clear.getBoundingClientRect().height,searchTarget:search.getBoundingClientRect().height}})`);
+        for(const metric of metrics){assert.ok(Math.abs(metric.clearY-metric.searchY)<0.5,JSON.stringify(metric));assert.equal(metric.clearWidth,20);assert.equal(metric.searchWidth,20);assert.equal(metric.clearTarget,44);assert.equal(metric.searchTarget,44);}
+    };
+    await checkAlignment();
+    console.log('PASS: header and page search icons share the same center line, 20px icon boxes and 44px targets');
+    assert.equal(await evaluate(`filters.querySelectorAll('.site-filter-chip').length`),3);
+    assert.equal(await evaluate(`filters.querySelector('.site-filter-summary .site-filter-reset').getAttribute('aria-label')`),'Clear all filters');
+    assert.equal(await evaluate(`filters.querySelector('.site-filter-chip').getAttribute('aria-label')`),'Remove Search: workshop');
+    await evaluate(`filters.querySelector('[aria-label="Remove Date added: Last 7 days"]').click()`);
+    assert.deepEqual(await evaluate('submissions[0]'),{q:'workshop',type:'articles',period:'all',sort:'featured'});
+    assert.equal(await evaluate('document.activeElement.id'),'period');
+    console.log('PASS: removable filter chips preserve unrelated filters and retain keyboard focus');
+    await evaluate(`keyword.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}))`);
+    assert.deepEqual(await evaluate('submissions[1]'),{q:'',type:'articles',period:'all',sort:'featured'});
+    assert.equal(await evaluate(`document.querySelector('header input').value`),'global');
+    assert.equal(await evaluate(`keyword.nextElementSibling.dataset.searchClear`),'');
+    assert.equal(await evaluate(`getComputedStyle(keyword.nextElementSibling).display`),'none');
+    console.log('PASS: Escape clears only the scoped keyword; clear is next in the keyboard order and hides when empty');
+    await evaluate(`window.headerInput=document.querySelector('header input');headerInput.setAttribute('aria-expanded','true');headerInput.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}))`);
+    assert.equal(await evaluate('headerInput.value'),'global');
+    await evaluate(`headerInput.setAttribute('aria-expanded','false');headerInput.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}))`);
+    assert.equal(await evaluate('headerInput.value'),'');
+    assert.equal(await evaluate('submissions.length'),2);
+    console.log('PASS: header suggestions get first Escape; clearing header text does not submit a page search');
+    await evaluate(`filters.append(filters.querySelector('.site-filter-reset'));filters.querySelector('[data-active-filters]').remove();filters.querySelector('[data-search-clear]').remove();filters.innerHTML=filters.innerHTML;filters.elements.q.value='new keyword';filters.elements.period.value='week';`);
+    await evaluate('new Promise(resolve=>requestAnimationFrame(resolve))');
+    assert.equal(await evaluate(`filters.querySelectorAll('[data-active-filters]').length`),1);
+    assert.equal(await evaluate(`filters.querySelectorAll('[data-search-clear]').length`),1);
+    assert.equal(await evaluate(`filters.querySelectorAll('.site-filter-chip').length`),3);
+    console.log('PASS: refreshed filter markup recreates working controls without duplicates');
+    await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:false},sessionId);
+    await evaluate(`headerInput.value='global';headerInput.dispatchEvent(new Event('input',{bubbles:true}));`);
+    await checkAlignment();
+    const mobile = await evaluate(`({overflow:document.documentElement.scrollWidth>innerWidth, controls:[...filters.querySelectorAll('.site-filter-chip,.search-clear-button')].filter(el=>!el.hidden).map(el=>({height:el.getBoundingClientRect().height,right:el.getBoundingClientRect().right})),reset:filters.querySelector('.site-filter-reset').getBoundingClientRect().right})`);
+    assert.equal(mobile.overflow,false,JSON.stringify(mobile));
+    for(const c of mobile.controls){assert.ok(c.height>=44,JSON.stringify(c));assert.ok(c.right<=390,JSON.stringify(c));}
+    assert.ok(mobile.reset<=390,JSON.stringify(mobile));
+    console.log('PASS: mobile chips, reset and clear controls fit and retain 44px touch targets');
+    await send('Emulation.setDeviceMetricsOverride',{width:1100,height:700,deviceScaleFactor:1,mobile:false},sessionId);
+    await evaluate(`document.body.innerHTML='<main><div class="documents-page site-page"><form id="documentFilters" class="documents-filters documents-filters-with-year"><div class="documents-search"><label class="visually-hidden" for="docQuery">Search title</label><input class="site-search-input" id="docQuery" name="q" type="search" placeholder="Search document titles"><button type="submit" class="search-submit-icon"><svg class="site-search-icon" viewBox="0 0 24 24"></svg></button></div><label class="documents-select"><span>Sort by</span><select name="sort"><option value="recent">Most recent</option></select></label><label class="documents-select"><span>Academic year</span><select name="academic_year"><option value="">All academic years</option></select></label><details class="documents-more-filters"><summary>More filters</summary><div class="documents-secondary-filters"><label class="documents-select"><span>Category</span><select name="category"><option value="">All categories</option><option value="Minutes">Minutes</option></select></label><label class="documents-select"><span>Semester</span><select name="semester"><option value="">All semesters</option><option value="1">1st Semester</option></select></label></div></details></form></div></main>';(0,eval)(${JSON.stringify(controlsScript)});`);
+    const desktop = await evaluate(`({tops:['q','sort','academic_year'].map(name=>documentFilters.elements[name].getBoundingClientRect().top),hidden:documentFilters.elements.semester.getBoundingClientRect().height,overflow:document.documentElement.scrollWidth>innerWidth})`);
+    assert.ok(Math.max(...desktop.tops)-Math.min(...desktop.tops)<1,JSON.stringify(desktop));
+    assert.equal(desktop.hidden,0);
+    assert.equal(desktop.overflow,false);
+    await evaluate(`documentFilters.querySelector('details').open=true`);
+    assert.ok(await evaluate(`documentFilters.elements.semester.getBoundingClientRect().height>=44`));
+    console.log('PASS: Documents search, sort and academic year share one desktop row; category and semester stay in More filters');
+    for(const width of [390,360]){
+        await send('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:false},sessionId);
+        assert.equal(await evaluate(`document.documentElement.scrollWidth>innerWidth`),false);
+        const bounds=await evaluate(`[...documentFilters.querySelectorAll('input,select,summary')].map(el=>({height:el.getBoundingClientRect().height,right:el.getBoundingClientRect().right}))`);
+        for(const b of bounds){assert.ok(b.height>=44,JSON.stringify(b));assert.ok(b.right<=width,JSON.stringify(b));}
+    }
+    console.log('PASS: simplified Documents filters remain usable at mobile widths');
+})().catch((error) => { console.error(error); process.exitCode = 1; }).finally(async () => {
+    clearTimeout(timeout);
+    try { await send('Browser.close'); } catch {}
+    browser.kill();
+});

@@ -111,24 +111,7 @@
             </table>
         </x-ui.data-table>
 
-        <nav class="dashboard-pagination" aria-label="User pagination">
-            <span>
-                Showing {{ $users->firstItem() ?? 0 }}&ndash;{{ $users->lastItem() ?? 0 }}
-                of {{ $users->total() }} users
-            </span>
-            <div>
-                @if ($users->previousPageUrl())
-                    <a href="{{ $users->previousPageUrl() }}" class="dashboard-button dashboard-button-secondary">
-                        Previous
-                    </a>
-                @endif
-                @if ($users->nextPageUrl())
-                    <a href="{{ $users->nextPageUrl() }}" class="dashboard-button dashboard-button-secondary">
-                        Next
-                    </a>
-                @endif
-            </div>
-        </nav>
+        <div class="dashboard-pagination">{{ $users->links('vendor.pagination.ssite') }}</div>
     </section>
 </div>
 @endsection

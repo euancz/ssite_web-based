@@ -40,6 +40,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \Illuminate\Pagination\Paginator::defaultView('vendor.pagination.ssite');
         foreach (\App\Services\MobilePublisher::MODELS as $model) {
             $model::observe(\App\Observers\MobilePublicationObserver::class);
         }

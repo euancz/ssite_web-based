@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ContentPagination;
+
 use App\Models\Achievement;
 use App\Models\Activity;
 use App\Models\Article;
@@ -28,9 +30,10 @@ class NotificationController extends Controller
     {
         $filter = $request->validate(['filter' => ['nullable', 'in:all,unread']])['filter'] ?? 'all';
         // SECURITY: The authenticated relation scopes pagination to this account only.
-        $notifications = $request->user()->notifications()
+        $query = $request->user()->notifications()
             ->when($filter === 'unread', fn ($query) => $query->whereNull('read_at'))
-            ->latest()->paginate(15)->withQueryString();
+            ->latest()->orderBy('id');
+        $notifications = ContentPagination::paginate($query, 15)->appends(['filter' => $filter]);
 
         return view('notifications.index', compact('notifications', 'filter'));
     }

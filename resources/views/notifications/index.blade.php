@@ -60,6 +60,6 @@
             @endforelse
         </div>
 
-        {{ $notifications->links() }}
+        {{ $notifications->links('vendor.pagination.ssite') }}
     </section>
 @endsection

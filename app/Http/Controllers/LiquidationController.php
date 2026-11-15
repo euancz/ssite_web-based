@@ -8,6 +8,7 @@ use App\Services\ContentDrafts;
 use App\Services\ContentReview;
 use App\Services\PostFiles;
 use App\Support\ContentListing;
+use App\Support\ContentPagination;
 use App\Support\PostEngagement;
 use App\Support\PostNotificationRecipients;
 use App\Support\PrivatePdfResponse;
@@ -52,9 +53,9 @@ class LiquidationController extends Controller
         if (is_string($searchQuery) && trim($searchQuery) !== '') {
             $searchQuery = mb_substr(trim($searchQuery), 0, 100);
             $liquidations->where(function ($query) use ($searchQuery): void {
-                $query->where('title', 'like', '%'.$searchQuery.'%')
-                    ->orWhere('description', 'like', '%'.$searchQuery.'%')
-                    ->orWhere('original_name', 'like', '%'.$searchQuery.'%');
+                \App\Support\SearchText::contains($query, 'title', $searchQuery);
+                \App\Support\SearchText::contains($query, 'description', $searchQuery, 'or');
+                \App\Support\SearchText::contains($query, 'original_name', $searchQuery, 'or');
             });
         } else {
             $searchQuery = '';
@@ -111,14 +112,8 @@ class LiquidationController extends Controller
         if (in_array($sort, ['viewed', 'liked'], true)) {
             $liquidations->orderBy('created_at', 'desc');
         }
-        $liquidations = $liquidations->orderBy('id', 'asc')
-            ->paginate(5)
+        $liquidations = ContentPagination::paginate($liquidations->orderBy('id', 'asc'))
             ->appends(['tab' => $tab, 'sort' => $sort, 'q' => $searchQuery, 'year' => $year]);
-        // SECURITY: Visiting Liquidation clears only this user's unread publication notices for this tab.
-        if ($user) {
-            $user->unreadNotifications()->whereRaw(\App\Support\NotificationSql::field('type').' = ?', ['published'])
-                ->whereRaw(\App\Support\NotificationSql::field('post_type').' = ?', ['liquidation'])->update(['read_at' => now()]);
-        }
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
         $view = $workspaceList ? 'workspace.posts.liquidation.index' : 'liquidation.index';
 
@@ -139,6 +134,7 @@ class LiquidationController extends Controller
             abort_unless($liquidation->isApproved() && $liquidation->content_status === Liquidation::CONTENT_ACTIVE, 404);
         }
         // SECURITY: Count only after show authorization; the service excludes authors, bots, and nonpublic posts.
+        if (! $management) \App\Support\PublicationNotifications::read($request->user(), $liquidation);
         $engagement->recordView($liquidation, $request);
         $engagement->loadLikeState($liquidation, $request);
         $liquidation->load(['author', 'reviewer']);

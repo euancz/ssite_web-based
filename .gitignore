@@ -27,7 +27,6 @@ yarn-error.log
 /.zed
 /.agents/
 /.tmp/
-/.github/
 /.claude/
 
 # Local tool state and generated audit snapshots.
@@ -54,3 +53,36 @@ Desktop.ini
 
 # Generated local test reports.
 /audit/*.xml
+
+# Private credentials and machine-specific tooling.
+*.pem
+*.key
+*.p12
+*.pfx
+/secrets/
+/credentials/
+/.mcp.json
+/skills-lock.json
+/.codex/
+
+# Temporary files, browser reports, and database backups.
+*.tmp
+*.bak
+*.orig
+*.rej
+/tmp/
+/test-results/
+/playwright-report/
+/backups/
+/exports/
+/*.sql
+*.dump
+*.sql.gz
+
+# Runtime data and packaged builds. Keep source SQL in database/sql/.
+/storage/debugbar/
+/storage/clockwork/
+/public/downloads/
+*.apk
+*.aab
+*.ipa

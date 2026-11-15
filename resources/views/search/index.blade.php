@@ -9,9 +9,11 @@
 
     <form method="GET" action="{{ route('search.index') }}" class="dashboard-panel" role="search" aria-label="Search all SSITE content">
         <label for="results-query">Search all content</label>
-        <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:8px">
-            <input id="results-query" name="q" type="search" value="{{ $query }}" placeholder="Search articles, documents, and more" minlength="2" required class="site-search-input" style="flex:1 1 220px; min-width:0" aria-describedby="results-search-help">
-            <button type="submit" class="dashboard-button">Search</button>
+        <div class="search-results-controls">
+            <div class="main-search-field">
+                <input id="results-query" name="q" type="search" value="{{ $query }}" placeholder="Search articles, documents, and more" minlength="2" maxlength="100" required class="site-search-input" aria-describedby="results-search-help">
+                <button type="submit" class="search-submit-icon" aria-label="Search SSITE"><x-icon name="search" size="sm" class="site-search-icon" /></button>
+            </div>
         </div>
         <p id="results-search-help">Enter at least 2 characters. A new search includes all content types.</p>
     </form>
@@ -59,7 +61,7 @@
                 @endforeach
             </section>
 
-            <div class="dashboard-pagination search-pagination">{{ $results->withQueryString()->links() }}</div>
+            <div class="dashboard-pagination search-pagination">{{ $results->links('vendor.pagination.ssite') }}</div>
         @endif
     @endif
 </div>

@@ -26,11 +26,11 @@
     />
 
     <form class="transparency-filters" method="GET" action="{{ route('transparency') }}">
-        <label class="transparency-search">
-            <span class="visually-hidden">Search reports</span>
-            <input type="search" name="q" value="{{ $searchQuery }}" maxlength="100" placeholder="Search reports..." autocomplete="off">
-            <x-icon name="search" size="sm" aria-hidden="true" />
-        </label>
+        <div class="transparency-search main-search-field">
+            <label class="visually-hidden" for="report-search">Search reports</label>
+            <input id="report-search" type="search" name="q" value="{{ $searchQuery }}" maxlength="100" placeholder="Search reports..." autocomplete="off">
+            <button type="submit" class="search-submit-icon" aria-label="Search reports"><x-icon name="search" size="sm" class="site-search-icon" /></button>
+        </div>
         <label class="transparency-select">
             <span>Sort by</span>
             <select name="sort" aria-label="Sort reports" onchange="this.form.requestSubmit()">
@@ -50,9 +50,8 @@
             <x-icon name="chevron-down" size="sm" aria-hidden="true" />
         </label>
         <input type="hidden" name="tab" value="{{ $tab }}">
-        <button class="site-button" type="submit">Search</button>
         @if ($searchQuery !== '' || $year !== '' || $sort !== 'recent')
-            <a href="{{ route('transparency') }}">Clear filters</a>
+            <a class="site-filter-reset" href="{{ route('transparency') }}">Clear filters</a>
         @endif
     </form>
 
@@ -91,9 +90,7 @@
             </table>
         </div>
 
-        @if ($liquidations->hasPages())
-            <div class="transparency-pagination">{{ $liquidations->links('vendor.pagination.ssite') }}</div>
-        @endif
+        <div class="transparency-pagination">{{ $liquidations->links('vendor.pagination.ssite') }}</div>
     </section>
     @foreach ($liquidations as $liquidation)
         <x-posts.selection :post="$liquidation" :id="'liquidation-selection-' . $liquidation->getKey()" route-prefix="liquidations" category="Events" :date="$liquidation->report_date" :expense="true" />

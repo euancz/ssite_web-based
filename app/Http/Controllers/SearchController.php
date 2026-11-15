@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Support\SiteSearch;
+use App\Support\ContentPagination;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,14 +36,16 @@ class SearchController extends Controller
         $activeType = $request->query('type', 'all');
         if (! in_array($activeType, array_merge(['all'], $types), true)) $activeType = 'all';
         $filtered = $activeType === 'all' ? $matches : $matches->where('type', $activeType)->values();
-        $page = LengthAwarePaginator::resolveCurrentPage();
+        $page = ContentPagination::page($filtered->count(), 10);
         $results = new LengthAwarePaginator(
             $filtered->forPage($page, 10)->values(),
             $filtered->count(),
             10,
             $page,
-            ['path' => LengthAwarePaginator::resolveCurrentPath(), 'query' => $request->query()]
+            ['path' => LengthAwarePaginator::resolveCurrentPath(), 'query' => ['q' => $normalized['query'], 'type' => $activeType]]
         );
+
+        $results->onEachSide(1);
 
         return view('search.index', [
             'query' => $normalized['query'],

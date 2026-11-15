@@ -8,7 +8,7 @@
 ### Context and files reviewed
 
 - Read `docs/SYSTEM_OVERVIEW.md`, `docs/WHERE_IS_WHAT.md`, and the existing source review in `docs/DESIGN_REVIEW.md`.
-- No `docs/DESIGN_PROGRESS.md`, `PRODUCT.md`, or `DESIGN.md` exists.
+- No `docs/archive/DESIGN_PROGRESS.md`, `PRODUCT.md`, or `DESIGN.md` exists.
 - Reviewed the shared application layout and stylesheet, status badge, avatar, page header, workflow tabs, and rejection modal.
 - Reviewed the five module index/show views, models, index/show controller logic, policies, relevant feature routes, configuration, user model, and the supplied SQL schema snapshot at `audit/live-schema-before.txt`.
 - The worktree was already modified before this task. Existing edits include `public/css/app.css`, the five feature index views, several other views/docs, and an untracked `docs/DESIGN_REVIEW.md`. Those changes were left untouched.
@@ -185,7 +185,7 @@ Recommended defaults are stated so the design can proceed without changing scope
 1. Implement Articles index/show with the shared component, shared CSS, and `articles.css`; compare its rendered and source behavior to the before state.
 2. Implement Activities, then Achievements, each with its own module strip and stylesheet.
 3. Implement Documents, then Liquidation with the private attachment card and guest/login behavior.
-4. Update `docs/WHERE_IS_WHAT.md`, `docs/SYSTEM_OVERVIEW.md`, and create/update `docs/DESIGN_PROGRESS.md` for the approved completed batches. Do not change unrelated review findings.
+4. Update `docs/WHERE_IS_WHAT.md`, `docs/SYSTEM_OVERVIEW.md`, and create/update `docs/archive/DESIGN_PROGRESS.md` for the approved completed batches. Do not change unrelated review findings.
 5. Run focused Blade/PHP tests or available validation, compare `php artisan route:list` to the saved before snapshot, and perform the manual role/device checklist below. No migrations, seeders, live database writes, authentication changes, or package installs.
 
 ### Verification checklist

@@ -8,6 +8,7 @@ use App\Services\ContentDrafts;
 use App\Services\ContentReview;
 use App\Services\PostFiles;
 use App\Support\ContentListing;
+use App\Support\ContentPagination;
 use App\Support\PostEngagement;
 use App\Support\PostNotificationRecipients;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -85,14 +86,8 @@ class ActivityController extends Controller
         if (in_array($sort, ['viewed', 'liked'], true)) {
             $activities->orderBy('created_at', 'desc');
         }
-        $activities = $activities->orderBy('id', 'asc')
-            ->paginate(5)
+        $activities = ContentPagination::paginate($activities->orderBy('id', 'asc'))
             ->appends(['q' => is_string($request->query('q')) ? mb_substr(trim($request->query('q')), 0, 100) : '', 'tab' => $tab, 'sort' => $sort, 'timeframe' => $timeframe]);
-        // SECURITY: Visiting Activities clears only this user's unread publication notices for this tab.
-        if ($user) {
-            $user->unreadNotifications()->whereRaw(\App\Support\NotificationSql::field('type').' = ?', ['published'])
-                ->whereRaw(\App\Support\NotificationSql::field('post_type').' = ?', ['activity'])->update(['read_at' => now()]);
-        }
 
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
         $view = $workspaceList ? 'workspace.posts.activities.index' : 'activities.index';
@@ -119,6 +114,7 @@ class ActivityController extends Controller
             abort_unless($activity->isApproved() && $activity->content_status === Activity::CONTENT_ACTIVE, 404);
         }
         // SECURITY: Count only after show authorization; the service excludes authors, bots, and nonpublic posts.
+        if (! $management) \App\Support\PublicationNotifications::read($request->user(), $activity);
         $engagement->recordView($activity, $request);
         $engagement->loadLikeState($activity, $request);
         $activity->load(['author', 'reviewer']);

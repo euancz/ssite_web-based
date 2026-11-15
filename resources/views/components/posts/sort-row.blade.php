@@ -10,7 +10,10 @@
     <input type="hidden" name="tab" value="{{ $tab }}">
     @php($searchValue = is_string(request('q')) ? mb_substr(trim(request('q')), 0, 100) : '')
     <label class="post-feed-visually-hidden" for="public-post-search">Search posts</label>
-    <input id="public-post-search" class="public-post-search" type="search" name="q" maxlength="100" value="{{ $searchValue }}" placeholder="Title or description">
+    <div class="main-search-field">
+        <input id="public-post-search" class="public-post-search" type="search" name="q" maxlength="100" value="{{ $searchValue }}" placeholder="Title or description">
+        <button type="submit" class="search-submit-icon" aria-label="Search posts"><x-icon name="search" size="sm" class="site-search-icon" /></button>
+    </div>
     <label class="post-feed-visually-hidden" for="post-sort-{{ str_replace('.', '-', $routeName) }}">Sort posts</label>
     <select id="post-sort-{{ str_replace('.', '-', $routeName) }}" class="post-feed-filter-control" name="sort" aria-label="Sort posts">
         @foreach ($options as $value => $label)
@@ -25,9 +28,8 @@
             @endforeach
         </select>
     @endif
-    <button type="submit" class="dashboard-button">Search posts</button>
     @if ($searchValue !== '' || $sort !== 'recent' || ($filter !== null && $filter !== '' && $filter !== $filterDefault))
-        <a href="{{ route($routeName, ['tab' => $tab]) }}">Clear filters</a>
+        <a class="site-filter-reset" href="{{ route($routeName, ['tab' => $tab]) }}">Clear filters</a>
     @endif
 </form>
 
@@ -113,7 +115,7 @@
                     }
                 };
 
-                const loadFeed = async (url, pushHistory = true) => {
+                const loadFeed = async (url, pushHistory = true, focusResults = false) => {
                     const currentShell = document.querySelector('.post-feed-shell');
                     const currentResults = currentShell?.querySelector('[data-feed-results]');
                     const error = currentShell?.querySelector('[data-feed-error]');
@@ -151,7 +153,16 @@
                         updatedResults.setAttribute('aria-busy', 'false');
                         currentResults.replaceWith(updatedResults);
                         initializeResults(updatedResults);
-                        currentShell.querySelector('[data-feed-status]')?.replaceChildren('Posts updated.');
+                        const pagination = updatedResults.querySelector('[data-pagination-page]');
+                        const announcement = pagination
+                            ? `Page ${pagination.dataset.paginationPage} of ${pagination.dataset.paginationPages}. ${pagination.querySelector('.ssite-pagination-summary')?.textContent.trim().replace(/\s+/g, ' ') || ''}`
+                            : 'Posts updated.';
+                        currentShell.querySelector('[data-feed-status]')?.replaceChildren(announcement);
+                        if (focusResults) {
+                            updatedResults.setAttribute('tabindex', '-1');
+                            updatedResults.focus({ preventScroll: true });
+                            updatedResults.scrollIntoView({ block: 'start', behavior: 'auto' });
+                        }
                         if (pushHistory) history.pushState({}, '', url);
                     } catch (failure) {
                         if (failure.name !== 'AbortError' && version === requestVersion) {
@@ -192,7 +203,7 @@
                     const target = new URL(link.href, window.location.href);
                     if (target.origin !== window.location.origin) return;
                     event.preventDefault();
-                    loadFeed(target);
+                    loadFeed(target, true, Boolean(link.closest('.ssite-pagination')));
                 });
 
                 document.addEventListener('popstate', () => {

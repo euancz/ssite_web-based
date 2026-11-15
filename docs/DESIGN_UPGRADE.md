@@ -15,7 +15,7 @@ There is one important visual-context gap: the requested dark-blue rounded navig
 
 ### Phase 1: context and baseline
 
-- Ran the bundled Impeccable `context` step. It found an incumbent visual implementation, no `PRODUCT.md` or `DESIGN.md`, and no `docs/DESIGN_UPGRADE_PROGRESS.md`. No project context files were created.
+- Ran the bundled Impeccable `context` step. It found an incumbent visual implementation, no `PRODUCT.md` or `DESIGN.md`, and no `docs/archive/DESIGN_UPGRADE_PROGRESS.md`. No project context files were created.
 - Read the extant design review/progress, feed design, sort/filter plan/progress, position plan/progress, recommendations/progress, system overview, and “where is what” documentation before making recommendations. `docs/DESIGN_DIRECTION.md` and `docs/ROLES_AND_LAYOUT_PLAN.md` are not present.
 - **Already planned / applied:** shared feed frame and post cards; role-gated composers, menus, tabs, and review actions; public/private PDF display rules; module sort/filter controls; status, empty-state, dialog, table, and dashboard components; role-specific dashboards; and notification/search patterns. These remain out of this proposal.
 - Ran `php artisan route:list` before any edits. It contains **102 route entries**. The exact text snapshot is saved outside the repository at `C:\Users\lukee\.copilot\session-state\dba22e8d-57a1-49ae-8da6-9a6fb1ca80ec\files\route-list-before.txt`. No route files were changed.

@@ -8,6 +8,7 @@ use App\Services\ContentDrafts;
 use App\Services\ContentReview;
 use App\Services\PostFiles;
 use App\Support\ContentListing;
+use App\Support\ContentPagination;
 use App\Support\DocumentAcademicYear;
 use App\Support\PostEngagement;
 use App\Support\PostNotificationRecipients;
@@ -80,7 +81,7 @@ class DocumentController extends Controller
         $searchQuery = $request->query('q');
         $searchQuery = is_string($searchQuery) ? mb_substr(trim($searchQuery), 0, 100) : '';
         if ($searchQuery !== '') {
-            $documents->where('title', 'like', '%'.$searchQuery.'%');
+            \App\Support\SearchText::contains($documents, 'title', $searchQuery);
         }
 
         // SECURITY: Engagement queries are limited to Published and require both the feature flag and schema.
@@ -117,14 +118,8 @@ class DocumentController extends Controller
         if (in_array($sort, ['viewed', 'liked'], true)) {
             $documents->orderBy('created_at', 'desc');
         }
-        $documents = $documents->orderBy('id', 'asc')
-            ->paginate(5)
+        $documents = ContentPagination::paginate($documents->orderBy('id', 'asc'))
             ->appends(['tab' => $tab, 'sort' => $sort, 'category' => $category, 'q' => $searchQuery, 'semester' => $semester, 'academic_year' => $academicYear]);
-        // SECURITY: Visiting Documents clears only this user's unread publication notices for this tab.
-        if ($user) {
-            $user->unreadNotifications()->whereRaw(\App\Support\NotificationSql::field('type').' = ?', ['published'])
-                ->whereRaw(\App\Support\NotificationSql::field('post_type').' = ?', ['document'])->update(['read_at' => now()]);
-        }
 
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
         $view = $workspaceList ? 'workspace.posts.documents.index' : 'documents.index';
@@ -146,6 +141,7 @@ class DocumentController extends Controller
             abort_unless($document->isApproved() && $document->content_status === Document::CONTENT_ACTIVE, 404);
         }
         // SECURITY: Count only after show authorization; the service excludes authors, bots, and nonpublic posts.
+        if (! $management) \App\Support\PublicationNotifications::read($request->user(), $document);
         $engagement->recordView($document, $request);
         $engagement->loadLikeState($document, $request);
         $document->load(['author', 'reviewer']);

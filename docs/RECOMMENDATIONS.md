@@ -96,7 +96,7 @@ No high-impact performance defect was verified at the stated scale. Public feeds
 - **ID:** R-10
 - **Title:** Complete a browser-based mobile and keyboard review before release.
 - **Priority:** P1
-- **Evidence:** Existing progress notes say no browser or automation was available and specifically leave responsive widths, keyboard-only navigation, JavaScript-off behavior, and rendered empty states unverified (`docs/SORT_FILTER_PROGRESS.md:14-24, 32-42`). [seen in code]
+- **Evidence:** Existing progress notes say no browser or automation was available and specifically leave responsive widths, keyboard-only navigation, JavaScript-off behavior, and rendered empty states unverified (`docs/archive/SORT_FILTER_PROGRESS.md:14-24, 32-42`). [seen in code]
 - **Problem:** The majority of users are on phones, but source inspection cannot establish whether sticky navigation, dropdowns, tap targets, focus order, zoom, or page overflow work in a real browser.
 - **Recommendation:** Inspect public pages at 320, 768, and 1440 px, then test 200% zoom, keyboard-only navigation, reduced motion, and forms with JavaScript disabled. For login-only pages, use owner-provided screenshots as requested. Record only reproducible defects and preserve the established brand.
 - **Benefit:** Finds practical barriers for students before they rely on the CMS during an event or approval deadline.
@@ -210,10 +210,10 @@ No high-impact performance defect was verified at the stated scale. Public feeds
 
 ## Already planned
 
-- Feed sort/filter controls and removal of per-feed search: completed in `docs/SORT_FILTER_PROGRESS.md` (Batches 1–3).
-- Optional likes and view counts with user privacy and post cleanup: implemented in `docs/SORT_FILTER_PROGRESS.md` (Batch 4), with the schema/default mismatch raised separately as R-01.
-- Position-based roles, post approval, filters, shared feed components, and navigation behavior: already described in `docs/SYSTEM_OVERVIEW.md`, `docs/FEED_DESIGN.md`, `docs/POSITIONS_PLAN.md`, `docs/POSITIONS_PROGRESS.md`, and `docs/SORT_FILTER_PLAN.md`.
-- No separate `DESIGN_DIRECTION.md`, `DESIGN_PROGRESS.md`, or `ROLES_AND_LAYOUT_PLAN.md` was present in `docs/` at review time.
+- Feed sort/filter controls and removal of per-feed search: completed in `docs/archive/SORT_FILTER_PROGRESS.md` (Batches 1–3).
+- Optional likes and view counts with user privacy and post cleanup: implemented in `docs/archive/SORT_FILTER_PROGRESS.md` (Batch 4), with the schema/default mismatch raised separately as R-01.
+- Position-based roles, post approval, filters, shared feed components, and navigation behavior: already described in `docs/SYSTEM_OVERVIEW.md`, `docs/FEED_DESIGN.md`, `docs/archive/POSITIONS_PLAN.md`, `docs/archive/POSITIONS_PROGRESS.md`, and `docs/archive/SORT_FILTER_PLAN.md`.
+- No separate `DESIGN_DIRECTION.md`, `archive/DESIGN_PROGRESS.md`, or `ROLES_AND_LAYOUT_PLAN.md` was present in `docs/` at review time.
 
 ## Suggested sequence
 

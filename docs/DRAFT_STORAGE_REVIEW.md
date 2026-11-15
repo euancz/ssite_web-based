@@ -1,6 +1,6 @@
 # Draft storage: approved migration
 
-Prepared October 27, 2026, subsequently approved and applied to `ssitecms`. Draft controls and endpoints are now implemented; see [Private drafts progress](DRAFTS_PROGRESS.md). The design and pre-execution verification below are retained as the migration review record.
+Prepared October 27, 2026, subsequently approved and applied to `ssitecms`. Draft controls and endpoints are now implemented; see [Private drafts progress](archive/DRAFTS_PROGRESS.md). The design and pre-execution verification below are retained as the migration review record.
 
 ## Proposed change
 
@@ -74,4 +74,4 @@ This is storage for unfinished new submissions. Draft revisions of already publi
 - Five isolated SQLite tests passed: preserving existing records, storing JSON/version defaults and the listing index, rejecting missing owners, preventing silent owner/draft cascade deletion, refusing duplicate-table adoption, and limiting rollback to the new table.
 - The tests require SQLite `:memory:` before creating fixtures or running either migration direction. No application migration ledger or application data was changed.
 - Full regression suite: **53 tests, 911 assertions, all passing**. PHP formatting, syntax, and whitespace checks passed.
-- At review time, MySQL DDL execution was pending approval. The approved targeted migration has since completed successfully; post-implementation verification is recorded in `DRAFTS_PROGRESS.md`.
+- At review time, MySQL DDL execution was pending approval. The approved targeted migration has since completed successfully; post-implementation verification is recorded in `archive/DRAFTS_PROGRESS.md`.

@@ -85,6 +85,39 @@ class ListingFiltersTest extends TestCase
         $response->assertSee('Search posts')->assertSee('Clear filters');
     }
 
+    public function test_listing_search_terms_stay_out_of_the_global_header_search(): void
+    {
+        foreach (['/discover', '/documents', '/activities'] as $path) {
+            $response = $this->get($path.'?q=workshop')->assertOk();
+            $document = new \DOMDocument;
+            @$document->loadHTML($response->getContent());
+            $xpath = new \DOMXPath($document);
+            $headerInputs = $xpath->query('//form[contains(concat(" ", normalize-space(@class), " "), " search-form ")]/input[@name="q"]');
+            $this->assertSame(2, $headerInputs->length);
+            foreach ($headerInputs as $input) {
+                $this->assertSame('', $input->getAttribute('value'));
+            }
+            $localInputs = $xpath->query('//main//input[@name="q" and @value="workshop"]');
+            $this->assertGreaterThan(0, $localInputs->length);
+            $response->assertSee('site-filter-reset')->assertSee('search-controls.js');
+        }
+    }
+
+    public function test_header_search_covers_public_content_while_discover_respects_its_selected_type(): void
+    {
+        foreach (['articles' => 'Workshop story', 'activities' => 'Workshop event', 'documents' => 'Workshop minutes'] as $table => $title) {
+            DB::table($table)->insert(array_merge(['title' => $title, 'approval_status' => 'approved', 'created_at' => now(), 'updated_at' => now()], $table === 'documents' ? ['file_path' => 'documents/fixture.pdf', 'original_name' => 'fixture.pdf'] : []));
+        }
+        DB::table('articles')->insert(['title' => 'Workshop private', 'approval_status' => 'pending', 'created_at' => now(), 'updated_at' => now()]);
+        $global = $this->get(route('search.index', ['q' => 'workshop']))->assertOk();
+        $this->assertEqualsCanonicalizing(['articles', 'activities', 'documents'], collect($global->viewData('results')->items())->pluck('type')->all());
+        $global->assertDontSee('Workshop private');
+        $local = $this->get('/discover?q=workshop&type=articles')->assertOk();
+        $this->assertSame(['Workshop story'], $local->viewData('articles')->pluck('title')->all());
+        $this->assertCount(0, $local->viewData('activities'));
+        $this->assertCount(0, $local->viewData('achievements'));
+        $local->assertDontSee('Workshop minutes')->assertDontSee('Workshop private');
+    }
     public function test_sponsor_visibility_and_keyword_filters_keep_name_order(): void
     {
         (require database_path('migrations/2026_11_14_000002_create_sponsors_table.php'))->up();

@@ -9,13 +9,16 @@ final class NotificationSql
 {
     public static function field(string $key): string
     {
-        if (! in_array($key, ['type', 'post_type'], true)) {
+        if (! in_array($key, ['type', 'post_type', 'post_id'], true)) {
             throw new \InvalidArgumentException('Unsupported notification field.');
         }
 
-        return DB::connection()->getDriverName() === 'pgsql'
-            ? "(CAST(data AS jsonb)->>'{$key}')"
-            : DB::connection()->getQueryGrammar()->wrap('data->'.$key);
+        $driver = DB::connection()->getDriverName();
+        if ($driver === 'pgsql') return "(CAST(data AS jsonb)->>'{$key}')";
+
+        $field = DB::connection()->getQueryGrammar()->wrap('data->'.$key);
+        // SQLite extracts JSON numbers as integers; PostgreSQL ->> and MySQL JSON_UNQUOTE return text.
+        return $key === 'post_id' && $driver === 'sqlite' ? 'CAST('.$field.' AS TEXT)' : $field;
     }
 
     public static function counts(): string

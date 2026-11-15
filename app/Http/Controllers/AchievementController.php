@@ -8,6 +8,7 @@ use App\Services\ContentDrafts;
 use App\Services\ContentReview;
 use App\Services\PostFiles;
 use App\Support\ContentListing;
+use App\Support\ContentPagination;
 use App\Support\PostEngagement;
 use App\Support\PostNotificationRecipients;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -82,14 +83,8 @@ class AchievementController extends Controller
         if (in_array($sort, ['viewed', 'liked'], true)) {
             $achievements->orderBy('created_at', 'desc');
         }
-        $achievements = $achievements->orderBy('id', 'asc')
-            ->paginate(5)
+        $achievements = ContentPagination::paginate($achievements->orderBy('id', 'asc'))
             ->appends(['q' => is_string($request->query('q')) ? mb_substr(trim($request->query('q')), 0, 100) : '', 'tab' => $tab, 'sort' => $sort, 'category' => $category]);
-        // SECURITY: Visiting Achievements clears only this user's unread publication notices for this tab.
-        if ($user) {
-            $user->unreadNotifications()->whereRaw(\App\Support\NotificationSql::field('type').' = ?', ['published'])
-                ->whereRaw(\App\Support\NotificationSql::field('post_type').' = ?', ['achievement'])->update(['read_at' => now()]);
-        }
 
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
         $view = $workspaceList ? 'workspace.posts.achievements.index' : 'achievements.index';
@@ -116,6 +111,7 @@ class AchievementController extends Controller
             abort_unless($achievement->isApproved() && $achievement->content_status === Achievement::CONTENT_ACTIVE, 404);
         }
         // SECURITY: Count only after show authorization; the service excludes authors, bots, and nonpublic posts.
+        if (! $management) \App\Support\PublicationNotifications::read($request->user(), $achievement);
         $engagement->recordView($achievement, $request);
         $engagement->loadLikeState($achievement, $request);
         $achievement->load(['author', 'reviewer']);

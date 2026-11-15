@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Support\ContentPagination;
+
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -71,8 +73,9 @@ final class ContentActivityLog
             $query->where('action', $filters['action']);
         }
         $direction = $filters['sort'] === 'oldest' ? 'asc' : 'desc';
-        $events = $query->orderBy('occurred_at', $direction)->orderBy('module')->orderBy('post_id', $direction)
-            ->orderBy('action')->orderBy('event_id', $direction)->paginate(25)->withQueryString();
+        $query->orderBy('occurred_at', $direction)->orderBy('module')->orderBy('post_id', $direction)
+            ->orderBy('action')->orderBy('event_id', $direction);
+        $events = ContentPagination::paginate($query, 25)->withQueryString();
 
         return compact('events', 'historyAvailable', 'editsAvailable');
     }

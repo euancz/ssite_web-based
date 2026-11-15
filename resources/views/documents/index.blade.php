@@ -25,43 +25,53 @@
             <input id="document-search" type="search" name="q" value="{{ $searchQuery }}" placeholder="Search document titles" maxlength="100">
             <button type="submit" aria-label="Search documents"><x-icon name="search" size="sm" /></button>
         </div>
-        <label class="documents-select">
-            <span>Semester</span>
-            <select name="semester" onchange="this.form.requestSubmit()">
-                <option value="">All Semesters</option>
-                <option value="1" @selected($semester === '1')>1st Semester</option>
-                <option value="2" @selected($semester === '2')>2nd Semester</option>
-            </select>
-            <x-icon name="chevron-down" aria-hidden="true" />
-        </label>
-        <label class="documents-select">
-            <span>Categories</span>
-            <select name="category" onchange="this.form.requestSubmit()">
-                @foreach ($categoryOptions as $value => $label)
-                    <option value="{{ $value }}" @selected($category === $value)>{{ $value === '' ? 'All Categories' : $label }}</option>
-                @endforeach
-            </select>
-            <x-icon name="chevron-down" aria-hidden="true" />
-        </label>
-        @if ($academicYearsEnabled)
-            <label class="documents-select"><span>Academic year</span>
-                <select name="academic_year" onchange="this.form.requestSubmit()">
-                    @foreach ($academicYearOptions as $value => $label)<option value="{{ $value }}" @selected($academicYear === $value)>{{ $label }}</option>@endforeach
-                </select>
-                <x-icon name="chevron-down" aria-hidden="true" />
-            </label>
-        @endif
         <label class="documents-select"><span>Sort by</span>
             <select name="sort" onchange="this.form.requestSubmit()">
                 @foreach ($sortOptions as $value => $label)
                     <option value="{{ $value }}" @selected($sort === $value)>{{ $label }}</option>
                 @endforeach
             </select>
-            <x-icon name="chevron-down" aria-hidden="true" />
         </label>
+        @if ($academicYearsEnabled)
+            <label class="documents-select"><span>Academic year</span>
+                <select name="academic_year" onchange="this.form.requestSubmit()">
+                    @foreach ($academicYearOptions as $value => $label)
+                        <option value="{{ $value }}" @selected($academicYear === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </label>
+        @endif
+        <details class="documents-more-filters" @if ($category !== '' || $semester !== '') open @endif>
+            <summary>
+                <span>More filters</span>
+                @if ($category !== '' || $semester !== '')
+                    <span class="documents-filter-count" aria-label="{{ (int) ($category !== '') + (int) ($semester !== '') }} additional filters active">{{ (int) ($category !== '') + (int) ($semester !== '') }}</span>
+                @endif
+                <span class="documents-filter-hint">Category &amp; semester</span>
+                <x-icon name="chevron-down" size="sm" />
+            </summary>
+            <div class="documents-secondary-filters">
+                <label class="documents-select">
+                    <span>Category</span>
+                    <select name="category" onchange="this.form.requestSubmit()">
+                        @foreach ($categoryOptions as $value => $label)
+                            <option value="{{ $value }}" @selected($category === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </label>
+                <label class="documents-select">
+                    <span>Semester</span>
+                    <select name="semester" onchange="this.form.requestSubmit()">
+                        <option value="">All semesters</option>
+                        <option value="1" @selected($semester === '1')>1st Semester</option>
+                        <option value="2" @selected($semester === '2')>2nd Semester</option>
+                    </select>
+                </label>
+            </div>
+        </details>
         <noscript><button class="site-button" type="submit">Apply filters</button></noscript>
         @if ($academicYear !== '' || $searchQuery !== '' || $category !== '' || $semester !== '' || $sort !== 'recent')
-            <a href="{{ route('documents.index') }}">Clear filters</a>
+            <a class="site-filter-reset" href="{{ route('documents.index') }}">Clear filters</a>
         @endif
     </form>
 
@@ -104,13 +114,11 @@
                 <h2>{{ $academicYear !== '' || $searchQuery !== '' || $category !== '' || $semester !== '' ? 'No matching documents' : 'No published documents yet' }}</h2>
                 <p>{{ $academicYear !== '' || $searchQuery !== '' || $category !== '' || $semester !== '' ? 'Try another title, semester, category, or academic year.' : 'Check back soon for official SSITE records.' }}</p>
                 @if ($academicYear !== '' || $searchQuery !== '' || $category !== '' || $semester !== '')
-                    <a href="{{ route('documents.index') }}">Clear filters</a>
+                    <a class="site-filter-reset" href="{{ route('documents.index') }}">Clear filters</a>
                 @endif
             </div>
         @endforelse
     </section>
-    @if ($documents->hasPages())
-        <div class="dashboard-pagination">{{ $documents->links('vendor.pagination.ssite') }}</div>
-    @endif
+    <div class="dashboard-pagination">{{ $documents->links('vendor.pagination.ssite') }}</div>
 </div>
 @endsection

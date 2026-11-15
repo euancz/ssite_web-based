@@ -1,0 +1,62 @@
+/* Keep each Discover card's action anchored to the bottom of its content. */
+body.main-site-body main .discover-story-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+body.main-site-body main .discover-card-link {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    height: 100%;
+}
+body.main-site-body main .discover-card-link > img { flex-shrink: 0; }
+body.main-site-body main .discover-story-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+}
+body.main-site-body main .discover-story-author { margin-bottom: 16px; }
+body.main-site-body main .discover-read-story {
+    display: inline-flex;
+    align-self: flex-start;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 44px;
+    box-sizing: border-box;
+    margin: auto 0 0 -10px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    color: #17324d;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.5;
+    transition: color 160ms ease, background-color 160ms ease;
+}
+body.main-site-body main .discover-read-story .card-read-more-icon {
+    flex-shrink: 0;
+    box-sizing: border-box;
+    width: 28px;
+    height: 28px;
+    padding: 6px;
+    border-radius: 50%;
+    background: #eaf8fd;
+    color: #155571;
+    stroke-width: 2;
+    transition: color 160ms ease, background-color 160ms ease;
+}
+body.main-site-body main .discover-card-link:is(:hover, :focus-visible) .discover-read-story {
+    background: #d9f3fa;
+    color: #07566a;
+}
+body.main-site-body main .discover-card-link:is(:hover, :focus-visible) .card-read-more-icon {
+    background: #155571;
+    color: #fff;
+}
+@media (prefers-reduced-motion: reduce) {
+    body.main-site-body main :is(.discover-read-story, .card-read-more-icon) { transition: none; }
+}
+body.main-site-body main .discover-story-card:hover { transform: none; translate: none; }

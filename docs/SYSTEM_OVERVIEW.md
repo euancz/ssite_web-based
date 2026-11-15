@@ -1,12 +1,12 @@
 # SSITE System Overview
 
-Current public/workspace boundaries and validation/persistence changes are documented in [Priority 1 progress](PRIORITY_1_PROGRESS.md). Review [the installed database baseline](DATABASE_BASELINE_REVIEW.md) before running migrations.
+Current public/workspace boundaries and validation/persistence changes are documented in [Priority 1 progress](archive/PRIORITY_1_PROGRESS.md). Review [the installed database baseline](DATABASE_BASELINE_REVIEW.md) before running migrations.
 
-Dashboard counts, review filters, workspace search, private reviewer details, and live form previews are documented in [Priority 2 progress](PRIORITY_2_PROGRESS.md).
+Dashboard counts, review filters, workspace search, private reviewer details, and live form previews are documented in [Priority 2 progress](archive/PRIORITY_2_PROGRESS.md).
 
 SSITE is a Laravel Blade application for the Student Society in Information Technology Education at Mabalacat City College. Users sign in with Microsoft or the existing password login, then complete required student information before using protected pages. The app stores identity, role, and student information on one `users` table with `user_id` as its primary key. Articles, Activities, Achievements, Documents, and Liquidation use a shared posting, review, and archiving workflow.
 
-Private draft saving, resuming, version checks, and submission are documented in [Private drafts progress](DRAFTS_PROGRESS.md). Drafts save text and metadata; attach files when submitting.
+Private draft saving, resuming, version checks, and submission are documented in [Private drafts progress](archive/DRAFTS_PROGRESS.md). Drafts save text and metadata; attach files when submitting.
 
 ## Roles
 
@@ -201,7 +201,7 @@ The shared layout loads the deferred Vite entry from `resources/js/app.js`. Its 
 
 Session status/error messages marked in the public and workspace views are progressively upgraded by `resources/js/flash-toasts.js` into persistent, manually dismissible toasts. Their escaped copy and status/alert roles remain; there is no auto-dismiss. Without JavaScript they keep their inline placement. Login-popover, field-validation, and asynchronous feedback are not part of this upgrade.
 
-The change history, bundle measurements, route comparison, source-review notes, and verification limits are in `docs/ICONS_MOTION_PROGRESS.md`. Desktop/mobile rendering, keyboard operation, zoom, reduced-motion interaction, JavaScript-off behavior in a browser, and screen-reader announcements still need browser verification against a working application URL.
+The change history, bundle measurements, route comparison, source-review notes, and verification limits are in `docs/archive/ICONS_MOTION_PROGRESS.md`. Desktop/mobile rendering, keyboard operation, zoom, reduced-motion interaction, JavaScript-off behavior in a browser, and screen-reader announcements still need browser verification against a working application URL.
 
 ## Gotchas and extension notes
 

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ContentPagination;
+
 use App\Services\ContentVersions;
 use App\Support\ContentModules;
 use Illuminate\Http\Request;
@@ -31,7 +33,7 @@ final class ContentVersionController extends Controller
                     fn (array $change): bool => in_array($change['field'], ['title', 'content', 'description'], true),
                 )) : []];
         }
-        $versions = $query->orderByDesc('id')->paginate(10)->appends($request->only('compare'));
+        $versions = ContentPagination::paginate($query->orderByDesc('id'), 10)->appends($request->only('compare'));
 
         return view('workspace.content-versions', compact('record', 'module', 'versions', 'comparison'));
     }

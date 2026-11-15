@@ -1,0 +1,58 @@
+/* Match the main site's masthead and footer without importing page-wide CMS styles. */
+.landing-header { background: #8ad5f4; border: 0; color: #17324d; }
+.landing-header .header-inner { width: 100%; max-width: 1280px; min-height: 84px; padding: 14px clamp(1rem, 3vw, 2.5rem); }
+.landing-header .brand { min-width: 0; gap: 12px; }
+.landing-header .brand img { width: 54px; height: 54px; flex-shrink: 0; border-radius: 50%; object-fit: cover; }
+.landing-header .brand strong { font-size: clamp(.78rem, 1.15vw, 1rem); font-weight: 800; letter-spacing: .045em; line-height: 1.15; }
+.landing-header .brand .landing-brand-short { display: none; }
+.landing-header .brand small { margin-top: 4px; font-size: 10px; font-weight: 400; letter-spacing: normal; }
+.landing-header .header-signin { min-height: 44px; padding: 10px 20px; border: 1px solid #a4b9c4; border-radius: 6px; background: #fff; color: #253746; font-size: 14px; font-weight: 600; white-space: nowrap; }
+.landing-header .header-signin:is(:hover, :focus-visible, :active), .landing-page .button-microsoft:is(:hover, :focus-visible, :active) { background: #fff; border-color: #17324d; }
+.desktop-nav { gap: 24px; margin-left: auto; }
+.desktop-nav a, .mobile-nav a { color: #17324d; }
+.desktop-nav a:hover, .mobile-nav a:hover { color: #155571; text-decoration: underline; text-underline-offset: 6px; }
+
+.landing-site-footer { border-top: 2px solid #3dafea; background: #8ad5f4; color: #17324d; }
+.landing-site-footer .site-footer-content { display: grid; grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr); max-width: 60rem; margin-inline: auto; gap: 48px; padding: 28px 24px 31px; }
+.landing-site-footer .footer-brand { display: flex; align-items: center; gap: 12px; margin: 0; }
+.landing-site-footer .footer-logo, .landing-site-footer .footer-badge { width: 64px; height: 64px; flex: 0 0 auto; border-radius: 50%; object-fit: cover; }
+.landing-site-footer .footer-brand-name { font-size: 15px; font-weight: 700; line-height: 1.15; }
+.landing-site-footer .footer-description { max-width: 26rem; margin: 0 0 12px 76px; color: rgb(23 50 77 / 90%); font-size: 14px; line-height: 1.4; }
+.landing-site-footer .footer-badges { display: flex; align-items: center; gap: 12px; margin-left: 76px; }
+.landing-site-footer .footer-contact { min-width: 0; justify-self: end; padding-top: 12px; }
+.landing-site-footer .footer-heading { margin: 0 0 16px; font-size: 18px; font-weight: 600; }
+.landing-site-footer .footer-contact-list { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; font-size: 14px; }
+.landing-site-footer .footer-contact-button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 12px 16px; border: 1px solid #17324d; border-radius: 12px; background: rgb(255 255 255 / 70%); font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
+.landing-site-footer .footer-contact-button:hover { background: #fff; box-shadow: 0 3px 10px rgb(23 50 77 / 12%); }
+.landing-site-footer .footer-contact-icon { width: 20px; height: 20px; flex: 0 0 auto; }
+.landing-site-footer .footer-return { max-width: 60rem; margin-inline: auto; padding: 0 24px 20px; text-align: right; }
+.landing-site-footer .footer-bottom { display: flex; justify-content: center; border-top: 2px solid #3dafea; }
+.landing-site-footer .footer-copyright { width: 100%; margin: 0; padding: 20px 24px; font-size: 12px; font-weight: 500; text-align: center; }
+
+@media (min-width: 768px) and (max-width: 1000px) {
+    .landing-header .brand .landing-brand-full { display: none; }
+    .landing-header .brand .landing-brand-short { display: block; font-size: 1.1rem; }
+}
+@media (max-width: 767px) {
+    .landing-header .header-inner { min-height: 72px; gap: 8px; padding: 8px 14px; }
+    .landing-header .brand { gap: 9px; }
+    .landing-header .brand img { width: 42px; height: 42px; }
+    .landing-header .brand .landing-brand-full { display: none; }
+    .landing-header .brand .landing-brand-short { display: block; font-size: 1.1rem; }
+    .landing-header .header-signin { gap: 8px; padding-inline: 10px; font-size: 12px; }
+    .landing-site-footer .site-footer-content { grid-template-columns: minmax(0, 1fr); gap: 22px; padding: 28px 20px; }
+    .landing-site-footer .footer-brand { margin-bottom: 16px; }
+    .landing-site-footer .footer-description { max-width: 24rem; margin: 0 0 24px; }
+    .landing-site-footer .footer-badges { margin-left: 0; }
+    .landing-site-footer .footer-contact { justify-self: stretch; padding-top: 0; }
+}
+@media (max-width: 620px) {
+    .mobile-nav { justify-content: space-between; margin-block: 0; border-top: 1px solid #17324d26; }
+    .mobile-nav a { font-size: 11px; }
+}
+@media (max-width: 360px) {
+    .landing-header .header-inner { padding-inline: 10px; }
+    .landing-header .brand img { width: 38px; height: 38px; }
+    .landing-header .brand small { font-size: 9px; }
+    .landing-site-footer .footer-brand-name { font-size: 12px; }
+}

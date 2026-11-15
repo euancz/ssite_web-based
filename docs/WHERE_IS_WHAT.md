@@ -11,7 +11,7 @@ Use this guide to find the file that owns a common change.
 | Change session flash toast enhancement or dismissal | `resources/js/flash-toasts.js`, `public/css/app.css`, and views marked with `data-flash-toast`; unenhanced messages stay inline |
 | Change which flash messages become toasts | Search for `data-flash-toast` in `resources/views/`; login, validation, and async feedback have separate behavior |
 | Change Motion dependency or Vite entry wiring | `package.json`, `resources/js/app.js`, and `vite.config.js` |
-| Review icon/motion batch status, bundle sizes, and verification limits | `docs/ICONS_MOTION_PROGRESS.md` |
+| Review icon/motion batch status, bundle sizes, and verification limits | `docs/archive/ICONS_MOTION_PROGRESS.md` |
 | Header suggestions, keyboard behavior, or dropdown limits | `resources/views/layouts/partials/search-scripts.blade.php` and `public/css/app.css` |
 | Search query normalization, searchable fields, excerpts, and result relevance | `app/Support/SiteSearch.php` |
 | Full search results, filtering, and pagination | `app/Http/Controllers/SearchController.php` and `resources/views/search/index.blade.php` |

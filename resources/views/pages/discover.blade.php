@@ -356,7 +356,10 @@
             <form class="discover-filters" aria-label="Discover filters" method="GET" action="{{ route('discover') }}">
                 <div class="discover-field">
                     <label for="discover-search">Search stories</label>
-                    <input id="discover-search" type="search" name="q" maxlength="100" value="{{ $filters['q'] }}" placeholder="Title or description">
+                    <div class="main-search-field">
+                        <input id="discover-search" type="search" name="q" maxlength="100" value="{{ $filters['q'] }}" placeholder="Title or description">
+                        <button type="submit" class="search-submit-icon" aria-label="Search stories"><x-icon name="search" size="sm" class="site-search-icon" /></button>
+                    </div>
                 </div>
                 <div class="discover-field">
                     <label for="discover-category">Content type</label>
@@ -382,21 +385,16 @@
                         @endforeach
                     </select>
                 </div>
-                <button class="site-button" type="submit">Find stories</button>
                 @if ($filters['q'] !== '' || $filters['type'] !== 'all' || $filters['period'] !== 'all' || $filters['sort'] !== 'featured')
-                    <a href="{{ route('discover') }}">Clear filters</a>
+                    <a class="site-filter-reset" href="{{ route('discover') }}">Clear filters</a>
                 @endif
             </form>
 
             @php
-                $featured = $articles->first() ?? $activities->first() ?? $achievements->first();
-                $featuredType = $articles->isNotEmpty() ? 'Articles' : ($activities->isNotEmpty() ? 'Activities' : 'Achievements');
-                $featuredRoute = $articles->isNotEmpty() ? 'articles.show' : ($activities->isNotEmpty() ? 'activities.show' : 'achievements.show');
-                $discoverSections = [
-                    'articles' => ['label' => 'Articles', 'items' => $articles, 'route' => 'articles.show'],
-                    'activities' => ['label' => 'Activities', 'items' => $activities, 'route' => 'activities.show'],
-                    'achievements' => ['label' => 'Achievements', 'items' => $achievements, 'route' => 'achievements.show'],
-                ];
+                $featured = $stories->first();
+                $labels = ['articles' => 'Articles', 'activities' => 'Activities', 'achievements' => 'Achievements'];
+                $featuredType = $featured ? $labels[$featured->getTable()] : '';
+                $featuredRoute = $featured ? $featured->getTable().'.show' : '';
             @endphp
 
             <section class="discover-panel" id="discover-all" aria-label="Discover stories">
@@ -427,23 +425,21 @@
                 @endif
 
                 <div class="discover-grid">
-                    @foreach ($discoverSections as $key => $section)
-                        @continue($filters['type'] !== 'all' && $filters['type'] !== $key)
-                        @foreach ($section['items'] as $item)
+                    @foreach ($stories->getCollection()->skip(1) as $item)
                             <article class="discover-story-card">
-                                <a class="discover-card-link" href="{{ route($section['route'], $item) }}"><img src="{{ $item->imageUrl() }}" alt="">
+                                <a class="discover-card-link" href="{{ route($item->getTable().'.show', $item) }}"><img src="{{ $item->imageUrl() }}" alt="">
                                 <div class="discover-story-body">
-                                    <div class="discover-story-meta"><span>{{ $section['label'] }}</span></div>
+                                    <div class="discover-story-meta"><span>{{ $labels[$item->getTable()] }}</span></div>
                                     <h3>{{ $item->title }}</h3>
                                     <p class="discover-card-summary">{{ \Illuminate\Support\Str::limit($item instanceof \App\Models\Article ? $item->displayText() : strip_tags($item->description ?? ''), 180) }}</p>
                                     <div class="discover-story-author">By {{ $item->author?->name ?? 'Former member' }} &middot; {{ $item->created_at?->format('F j, Y') }}</div>
-                                    <span class="discover-read-story">Read story <span aria-hidden="true">&rarr;</span></span>
+                                    <span class="discover-read-story"><span>Read more</span><x-icon name="chevron-right" size="sm" class="card-read-more-icon" /></span>
                                 </div>
                                 </a>
                             </article>
-                        @endforeach
                     @endforeach
                 </div>
+                {{ $stories->links() }}
             </section>
         </div>
     </div>

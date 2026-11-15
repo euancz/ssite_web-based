@@ -34,7 +34,7 @@
             @empty <tr><td colspan="5">{{ $filters['q'] !== '' || $filters['visibility'] !== '' ? 'No sponsors match these filters.' : 'No sponsors yet. Add a sponsor to display it on the homepage.' }}</td></tr> @endforelse
             </tbody></table>
         </x-ui.data-table>
-        {{ $sponsors->links() }}
+        {{ $sponsors->links('vendor.pagination.ssite') }}
     </section>
 </div>
 @endsection

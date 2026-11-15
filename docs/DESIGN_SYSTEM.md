@@ -10,7 +10,7 @@
 - Ran Impeccable `context` for `resources/views/activities/index.blade.php`. The incumbent visual implementation and `PRODUCT.md` were found; no `DESIGN.md` exists. This is an **Operate** system for management surfaces and **Read** for public content.
 - Read the app and workspace layouts, shared UI/feed components, public and management styles, Vite/Tailwind setup, and the existing workspace, design-upgrade, feed, sort/filter, design-review, recommendations, system-overview, and where-is-what records. `docs/DESIGN_DIRECTION.md` is absent.
 - The workspace shell is **already built** in `resources/views/layouts/workspace.blade.php`, `resources/views/layouts/partials/workspace.blade.php`, and `public/css/workspace.css`. It is not a future shell. The prior `DESIGN_UPGRADE` work also applied semantic aliases, touch/menu fixes, feed reading width, table handling, and dashboard ordering. These are already planned/applied and should not be redone.
-- No `DESIGN_SYSTEM_PROGRESS.md` exists. Existing progress is in `DESIGN_UPGRADE_PROGRESS.md` and `WORKSPACE_PROGRESS.md`.
+- No `archive/DESIGN_SYSTEM_PROGRESS.md` exists. Existing progress is in `archive/DESIGN_UPGRADE_PROGRESS.md` and `archive/WORKSPACE_PROGRESS.md`.
 - Captured `php artisan route:list --json` before this proposal in `%TEMP%\SSITECMS-route-list-before.json`: **113 entries**. A fresh snapshot remained at **113 entries**. No route changed in this documentation-only phase; expected route-list diff is empty.
 - Git status was clean at the start. No browser automation tool is available in this session. This audit is source-based; it makes no new rendered, responsive, role-authenticated, keyboard, zoom, JavaScript-off, or reduced-motion claims. Previous browser evidence and its limits remain recorded in `DESIGN_UPGRADE.md`.
 - The bundled Impeccable view detector reported three warnings for initially empty image-preview `src` values in the Article, Activity, and Achievement forms. Each preview is populated after local file selection; these match the already-recorded detector false positives in `DESIGN_REVIEW.md`.
@@ -228,7 +228,7 @@ Shared component contract: one implementation and named variants, with default, 
 
 The workspace shell already exists and follows the same codebase. Keep it denser and calmer than public feeds, while using the same semantic tokens, type roles, buttons, labels, badges, focus rings, and glossary.
 
-- Sidebar: dark blue from the public pill (default proposed); active item uses a visible bar or fill plus weight/icon and `aria-current`. Preserve the role-specific sidebar/capability gates already specified in `WORKSPACE_PLAN.md`.
+- Sidebar: dark blue from the public pill (default proposed); active item uses a visible bar or fill plus weight/icon and `aria-current`. Preserve the role-specific sidebar/capability gates already specified in `archive/WORKSPACE_PLAN.md`.
 - Top bar: use the SSITE light-blue token, dark navy text, shared notification/account controls, and the same z-index model as the sticky public pill.
 - Dashboard: prioritize each role’s next allowed action, retain existing stats and role branches; use tabular numbers and shared stat cards.
 - Review queue: text+icon status, title/author/date scan order, clear pending review label; keep approve/reject controls and reason flow exactly as authorized now.

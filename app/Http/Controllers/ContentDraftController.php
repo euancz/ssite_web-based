@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ContentPagination;
+
 use App\Http\Requests\SaveContentDraftRequest;
 use App\Services\ContentDrafts;
 use App\Support\ContentModules;
@@ -17,8 +19,9 @@ class ContentDraftController extends Controller
         $modules = array_filter(ContentModules::all(), fn ($module) => $request->user()->can('create', $module['model']));
         $filters = $request->validate(['module' => ['nullable', Rule::in(array_keys($modules))], 'sort' => ['nullable', Rule::in(['recent', 'oldest'])]]);
         $filters['sort'] = $filters['sort'] ?? 'recent';
-        $drafts = $service->owned($request->user())->when($filters['module'] ?? null, fn ($query, $module) => $query->where('module', $module))
-            ->orderBy('updated_at', $filters['sort'] === 'oldest' ? 'asc' : 'desc')->orderBy('id')->paginate(10)->appends($filters);
+        $query = $service->owned($request->user())->when($filters['module'] ?? null, fn ($query, $module) => $query->where('module', $module))
+            ->orderBy('updated_at', $filters['sort'] === 'oldest' ? 'asc' : 'desc')->orderBy('id');
+        $drafts = ContentPagination::paginate($query, 10)->appends($filters);
 
         return view('workspace.drafts.index', compact('drafts', 'modules', 'filters'));
     }

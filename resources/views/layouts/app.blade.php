@@ -58,7 +58,12 @@
     @endif
     <link rel="stylesheet" href="{{ asset('css/main-site-dropdowns.css') }}">
     <link rel="stylesheet" href="{{ asset('css/interface-polish.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/pagination.css') }}?v={{ filemtime(public_path('css/pagination.css')) }}">
+    @unless ($workspaceEnabled)
+        <link rel="stylesheet" href="{{ asset('css/content-cards.css') }}?v={{ filemtime(public_path('css/content-cards.css')) }}">
+    @endunless
     <script src="{{ asset('js/dropdown-position.js') }}" defer></script>
+    <script src="{{ asset('js/search-controls.js') }}" defer></script>
 </head>
 <body class="{{ $workspaceEnabled ? 'site-body workspace-site-body' : 'site-body main-site-body' }} {{ request()->routeIs('discover') ? 'discover-site-body' : '' }} {{ $isPublicLanding ? 'home-landing-body' : '' }}">
     @if ($showLoginSuccess)
@@ -120,8 +125,8 @@
                 {{-- SECURITY: Both search forms use the public suggestions endpoint; suggestions contain visible content only. --}}
                 <div class="site-search-desktop search-shell">
                     <form method="GET" action="{{ route('search.index') }}" class="search-form">
-                        <input type="text" name="q" value="{{ request()->routeIs('search.index') && isset($query) ? $query : (is_string(request()->query('q')) ? mb_substr(request()->query('q'), 0, 100) : '') }}" placeholder="Discover something from SSITE..."
-                               class="site-search-input" role="combobox" aria-autocomplete="list" aria-expanded="false"
+                        <input type="text" name="q" value="{{ request()->routeIs('search.index') && isset($query) ? $query : '' }}" placeholder="Discover something from SSITE..."
+                               class="site-search-input" aria-label="Search SSITE" maxlength="100" role="combobox" aria-autocomplete="list" aria-expanded="false"
                                aria-controls="desktop-search-list" autocomplete="off">
                         <button type="submit" class="search-submit-icon" aria-label="Search">
                             <x-icon name="search" size="sm" class="site-search-icon" />
@@ -232,8 +237,8 @@
         <div id="mobile-search" class="mobile-search hidden search-shell">
             <div class="mobile-search-field">
                 <form method="GET" action="{{ route('search.index') }}" class="search-form">
-                    <input type="text" name="q" value="{{ request()->routeIs('search.index') && isset($query) ? $query : (is_string(request()->query('q')) ? mb_substr(request()->query('q'), 0, 100) : '') }}" placeholder="Discover something from SSITE..."
-                           class="site-search-input" role="combobox" aria-autocomplete="list" aria-expanded="false"
+                    <input type="text" name="q" value="{{ request()->routeIs('search.index') && isset($query) ? $query : '' }}" placeholder="Discover something from SSITE..."
+                           class="site-search-input" aria-label="Search SSITE" maxlength="100" role="combobox" aria-autocomplete="list" aria-expanded="false"
                            aria-controls="mobile-search-list" autocomplete="off">
                     <button type="submit" class="search-submit-icon" aria-label="Search">
                         <x-icon name="search" size="sm" class="site-search-icon" />

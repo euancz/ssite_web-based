@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Adviser;
 
+use App\Support\ContentPagination;
+
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
@@ -36,7 +38,7 @@ class UserController extends Controller
             'role' => ['nullable', Rule::in($targetRoles)],
         ]);
 
-        $users = User::query()->whereIn('role', $targetRoles)
+        $query = User::query()->whereIn('role', $targetRoles)
             ->when($filters['search'] ?? null, function ($query, string $search): void {
                 $query->where(function ($query) use ($search): void {
                     $query->where('name', 'like', '%' . $search . '%')
@@ -48,9 +50,8 @@ class UserController extends Controller
                 });
             })
             ->when($filters['role'] ?? null, fn ($query, string $role) => $query->where('role', $role))
-            ->orderBy('name')
-            ->paginate(15)
-            ->withQueryString();
+            ->orderBy('name')->orderBy('id');
+        $users = ContentPagination::paginate($query, 15)->appends($filters);
 
         $positions = array_keys(config('school.positions', []));
 

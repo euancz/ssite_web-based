@@ -151,11 +151,9 @@ class SiteSearch
     private function applyWords(Builder $builder, array $fields, array $words): void
     {
         foreach ($words as $word) {
-            $pattern = '%' . $this->escapeLike($word) . '%';
-            $builder->where(function (Builder $match) use ($fields, $pattern): void {
+            $builder->where(function (Builder $match) use ($fields, $word): void {
                 foreach ($fields as $index => $field) {
-                    $method = $index === 0 ? 'where' : 'orWhere';
-                    $match->{$method}($field, 'like', $pattern);
+                    SearchText::contains($match, $field, $word, $index === 0 ? 'and' : 'or');
                 }
             });
         }
@@ -164,14 +162,10 @@ class SiteSearch
     /** Bind both CASE patterns so title-first relevance never interpolates user input into SQL. */
     private function applyTitleOrder(Builder $builder, string $titleField, string $query): void
     {
-        $literal = $this->escapeLike($query);
-        $builder->orderByRaw("CASE WHEN {$titleField} LIKE ? THEN 0 WHEN {$titleField} LIKE ? THEN 1 ELSE 2 END", [$literal . '%', '%' . $literal . '%']);
-    }
-
-    /** Backslash-escape LIKE metacharacters before adding the search wildcards. */
-    private function escapeLike(string $value): string
-    {
-        return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $value);
+        $literal = SearchText::literal($query);
+        $column = $builder->getQuery()->getGrammar()->wrap($titleField);
+        $operator = SearchText::operator($builder);
+        $builder->orderByRaw("CASE WHEN {$column} {$operator} ? ESCAPE '!' THEN 0 WHEN {$column} {$operator} ? ESCAPE '!' THEN 1 ELSE 2 END", [$literal . '%', '%' . $literal . '%']);
     }
 
     /** Strip markup and return a short plain-text excerpt centered around the first matched term. */

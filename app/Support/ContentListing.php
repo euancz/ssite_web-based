@@ -45,8 +45,8 @@ final class ContentListing
             $search = is_string($search) ? mb_substr(trim($search), 0, 100) : '';
             if ($search !== '') {
                 $query->where(function (Builder $searchQuery) use ($module, $search) {
-                    $searchQuery->where('title', 'like', '%'.$search.'%')
-                        ->orWhere($module === 'articles' ? 'content' : 'description', 'like', '%'.$search.'%');
+                    SearchText::contains($searchQuery, 'title', $search);
+                    SearchText::contains($searchQuery, $module === 'articles' ? 'content' : 'description', $search, 'or');
                 });
             }
         }

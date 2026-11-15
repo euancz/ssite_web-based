@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Adviser;
 
+use App\Support\ContentPagination;
+
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\ContentModules;
@@ -75,7 +77,7 @@ class ReviewController extends Controller
             default => $posts->orderBy('created_at'),
         };
         // A stable tie-breaker prevents duplicate or missing rows across page boundaries.
-        $posts = $posts->orderBy('post_type')->orderBy('post_id')->paginate(10)->appends($filters);
+        $posts = ContentPagination::paginate($posts->orderBy('post_type')->orderBy('post_id'), 10)->appends($filters);
         $people = User::query()->whereIn('id', $posts->getCollection()->pluck('created_by_user_id')
             ->merge($posts->getCollection()->pluck('reviewed_by_user_id'))->filter()->unique())
             ->get(['id', 'name'])->keyBy('id');

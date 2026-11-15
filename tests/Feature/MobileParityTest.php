@@ -75,7 +75,7 @@ class MobileParityTest extends TestCase
             Article::forceCreate(['title' => $status, 'content' => "## Heading\n\n**Bold** [Link](https://example.com)\n\n<script>unsafe</script>",
                 'content_format' => 'markdown', 'created_by_user_id' => $user->getKey(), 'approval_status' => $status, 'content_status' => 'active']);
         }
-        $web = app(\App\Http\Controllers\DiscoverController::class)()->getData();
+        $web = app(\App\Http\Controllers\DiscoverController::class)(request())->getData();
         $response = $this->getJson('/api/mobile/v1/discover')->assertOk()->assertHeader('Cache-Control', 'no-store, private');
         $this->assertSame($web['articles']->modelKeys(), array_column($response->json('data.articles'), 'id'));
         $response->assertJsonCount(1, 'data.articles');

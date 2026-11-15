@@ -8,6 +8,7 @@ use App\Services\ContentDrafts;
 use App\Services\ContentReview;
 use App\Services\PostFiles;
 use App\Support\ContentListing;
+use App\Support\ContentPagination;
 use App\Support\PostEngagement;
 use App\Support\PostNotificationRecipients;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -91,15 +92,9 @@ class ArticleController extends Controller
         if (in_array($sort, ['viewed', 'liked'], true)) {
             $articles->orderBy('created_at', 'desc');
         }
-        $articles = $articles->orderBy('id', 'asc')
-            ->paginate(5)
+        $articles = ContentPagination::paginate($articles->orderBy('id', 'asc'))
             ->appends(['q' => is_string($request->query('q')) ? mb_substr(trim($request->query('q')), 0, 100) : '', 'tab' => $tab, 'sort' => $sort, 'category' => $category]);
 
-        // SECURITY: Visiting Articles clears only this user's unread publication notices for this tab.
-        if ($user) {
-            $user->unreadNotifications()->whereRaw(\App\Support\NotificationSql::field('type').' = ?', ['published'])
-                ->whereRaw(\App\Support\NotificationSql::field('post_type').' = ?', ['article'])->update(['read_at' => now()]);
-        }
 
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
         $view = $workspaceList ? 'workspace.posts.articles.index' : 'articles.index';
@@ -128,6 +123,7 @@ class ArticleController extends Controller
             abort_unless($article->isApproved() && $article->content_status === Article::CONTENT_ACTIVE, 404);
         }
         // SECURITY: Count only after show authorization; the service excludes authors, bots, and nonpublic posts.
+        if (! $management) \App\Support\PublicationNotifications::read($request->user(), $article);
         $engagement->recordView($article, $request);
         $engagement->loadLikeState($article, $request);
         $article->load(['author', 'reviewer']);

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ContentPagination;
+
 use App\Http\Requests\SponsorRequest;
 use App\Models\Sponsor;
 use Illuminate\Http\RedirectResponse;
@@ -30,7 +32,7 @@ class SponsorController extends Controller
             'recent' => $query->orderByDesc('created_at')->orderByDesc('id'),
             default => $query->inDisplayOrder(),
         };
-        return view('sponsors.index', ['sponsors' => $query->paginate(20)->appends($filters), 'filters' => $filters]);
+        return view('sponsors.index', ['sponsors' => ContentPagination::paginate($query, 20)->appends($filters), 'filters' => $filters]);
     }
 
     public function create(): View
