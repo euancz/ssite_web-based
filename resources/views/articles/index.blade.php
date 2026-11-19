@@ -5,6 +5,7 @@
 @section('content')
 <x-posts.feed-frame
     variant="index"
+    :initial-loading="$pageDataPending ?? false"
     stylesheet="articles"
     title="Articles"
     description="Read and manage SSITE articles."

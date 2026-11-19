@@ -47,7 +47,7 @@ class ContentPersistenceTest extends TestCase
 
     public function test_failed_database_save_keeps_old_file_and_removes_new_upload(): void
     {
-        $article = $this->article($this->actor('Multimedia'));
+        $article = $this->article($this->actor('Social Media Manager'));
         Storage::disk('public')->put('articles/replacement.jpg', 'replacement bytes');
         $article->image = 'articles/replacement.jpg';
         $article->title = null;
@@ -63,7 +63,7 @@ class ContentPersistenceTest extends TestCase
 
     public function test_successful_save_replaces_file_and_stale_edits_are_rejected(): void
     {
-        $article = $this->article($this->actor('Multimedia'));
+        $article = $this->article($this->actor('Social Media Manager'));
         $stale = $article->fresh();
         Storage::disk('public')->put('articles/replacement.jpg', 'replacement bytes');
         $article->image = 'articles/replacement.jpg';
@@ -82,7 +82,7 @@ class ContentPersistenceTest extends TestCase
 
     public function test_review_of_a_changed_record_is_rejected_and_repeated_approval_sends_no_duplicates(): void
     {
-        $owner = $this->actor('Multimedia');
+        $owner = $this->actor('Social Media Manager');
         $president = $this->actor('President');
         $article = $this->article($owner);
         Article::whereKey($article->getKey())->update(['content' => 'Changed during review']);
@@ -98,7 +98,7 @@ class ContentPersistenceTest extends TestCase
 
     public function test_store_ignores_forged_workflow_fields_and_edit_requires_review_again(): void
     {
-        $owner = $this->actor('Multimedia');
+        $owner = $this->actor('Social Media Manager');
         $president = $this->actor('President');
         $this->actingAs($owner)->post(route('articles.store'), [
             'title' => 'Submitted title', 'content' => '<script>alert(1)</script>',

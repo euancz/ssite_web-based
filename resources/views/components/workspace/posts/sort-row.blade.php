@@ -1,52 +1,74 @@
 {{-- SECURITY: Displayed options are server-whitelisted and tab links omit filter state to reset it. --}}
 @props([
     'action', 'routeName', 'tab', 'sort', 'options',
-    'allowedTabs' => [],
+    'extraFilters' => [],
     'filterName' => null, 'filter' => null, 'filterOptions' => [],
     'filterLabel' => 'Filter posts', 'filterDefault' => null,
     'academicYearOptions' => [], 'academicYear' => '',
 ])
 
 {{-- Expose server-supported sort choices while preserving the current filters. --}}
-<form class="post-feed-sort" method="GET" action="{{ $action }}" data-auto-submit>
+<form class="post-feed-sort workspace-list-toolbar" method="GET" action="{{ $action }}" data-auto-submit>
     <input type="hidden" name="tab" value="{{ $tab }}">
     @php($searchValue = is_string(request('q')) ? mb_substr(trim(request('q')), 0, 100) : '')
-    <label class="post-feed-visually-hidden" for="workspace-post-search">Search by title</label>
-    <input id="workspace-post-search" class="workspace-post-search" type="search" name="q" maxlength="100" value="{{ $searchValue }}" placeholder="{{ str_contains($routeName, '.documents.') ? 'Document title' : (str_contains($routeName, '.liquidations.') ? 'Title, description or filename' : 'Title or description') }}">
+    {{ $slot }}
+    <x-workspace.ui.list-search id="workspace-post-search" label="Search posts" :value="$searchValue"
+        :placeholder="str_contains($routeName, '.documents.') ? 'Document title' : (str_contains($routeName, '.liquidations.') ? 'Title, description or filename' : 'Title or description')" />
+    <div class="workspace-list-filter-actions">
+    @if (collect($extraFilters)->contains(fn ($extra) => $extra['value'] !== '') || $academicYear !== '' || $searchValue !== '' || request('semester') || $sort !== 'recent' || ($filter !== null && $filter !== '' && $filter !== $filterDefault))
+        <a class="dashboard-text-button" href="{{ route($routeName, ['tab' => $tab]) }}">Clear filters</a>
+    @endif
+    <x-posts.filter-panel :active-count="(int) ($sort !== (string) array_key_first($options)) + (int) ($filterName && $filterOptions && (string) $filter !== (string) array_key_first($filterOptions)) + collect($extraFilters)->filter(fn ($extra) => (string) $extra['value'] !== (string) array_key_first($extra['options']))->count() + (int) ($academicYear !== '') + (int) (str_contains($routeName, '.documents.') && in_array(request('semester'), ['1', '2'], true))">
     @if (str_contains($routeName, '.documents.'))
-        <label class="post-feed-visually-hidden" for="workspace-document-semester">Semester</label>
+        <div class="site-filter-field">
+        <label for="workspace-document-semester">Semester</label>
         <select id="workspace-document-semester" class="post-feed-filter-control" name="semester">
             <option value="">All semesters</option>
             <option value="1" @selected(request('semester') === '1')>1st Semester</option>
             <option value="2" @selected(request('semester') === '2')>2nd Semester</option>
         </select>
+    </div>
     @endif
     @if ($academicYearOptions)
-        <label class="post-feed-visually-hidden" for="workspace-document-year">Academic year</label>
+        <div class="site-filter-field">
+        <label for="workspace-document-year">Academic year</label>
         <select id="workspace-document-year" class="post-feed-filter-control" name="academic_year">
             @foreach ($academicYearOptions as $value => $label)<option value="{{ $value }}" @selected($academicYear === $value)>{{ $label }}</option>@endforeach
         </select>
+    </div>
     @endif
     @if ($options)
-        <label class="post-feed-visually-hidden" for="workspace-post-sort">Sort posts</label>
+        <div class="site-filter-field">
+        <label for="workspace-post-sort">Sort posts</label>
         <select id="workspace-post-sort" class="post-feed-filter-control" name="sort" aria-label="Sort posts">
             @foreach ($options as $value => $label)
                 <option value="{{ $value }}" @selected($sort === $value)>{{ $label }}</option>
             @endforeach
         </select>
+    </div>
     @endif
     @if ($filterName && $filterOptions)
-        <label class="post-feed-visually-hidden" for="post-filter-{{ str_replace('.', '-', $routeName) }}">{{ $filterLabel }}</label>
+        <div class="site-filter-field">
+        <label for="post-filter-{{ str_replace('.', '-', $routeName) }}">{{ $filterLabel }}</label>
         <select id="post-filter-{{ str_replace('.', '-', $routeName) }}" class="post-feed-filter-control" name="{{ $filterName }}" aria-label="{{ $filterLabel }}">
             @foreach ($filterOptions as $value => $label)
                 <option value="{{ $value }}" @selected((string) $filter === (string) $value)>{{ $label }}</option>
             @endforeach
         </select>
+    </div>
     @endif
-    <button class="dashboard-button dashboard-button-secondary" type="submit">Search</button>
-    @if ($academicYear !== '' || $searchValue !== '' || request('semester') || $sort !== 'recent' || ($filter !== null && $filter !== '' && $filter !== $filterDefault))
-        <a class="dashboard-text-button" href="{{ route($routeName, ['tab' => $tab]) }}">Clear filters</a>
-    @endif
+    @foreach ($extraFilters as $name => $extra)
+        <div class="site-filter-field">
+        <label for="extra-{{ $name }}">{{ $extra['label'] }}</label>
+        <select id="extra-{{ $name }}" class="post-feed-filter-control" name="{{ $name }}" aria-label="{{ $extra['label'] }}">
+            @foreach ($extra['options'] as $value => $label)
+                <option value="{{ $value }}" @selected((string) $extra['value'] === (string) $value)>{{ $label }}</option>
+            @endforeach
+        </select>
+    </div>
+    @endforeach
+    </x-posts.filter-panel>
+    </div>
 </form>
 
 @once
@@ -116,27 +138,12 @@
                             if (match?.hasAttribute('aria-current')) link.setAttribute('aria-current', 'page');
                             else link.removeAttribute('aria-current');
                         });
-                        const currentDetails = currentTabs.querySelector('.dashboard-tabs-more');
-                        const nextDetails = nextTabs.querySelector('.dashboard-tabs-more');
-                        if (currentDetails && nextDetails) {
-                            currentDetails.open = nextDetails.open;
-                            const summary = currentDetails.querySelector('summary');
-                            const nextSummary = nextDetails.querySelector('summary');
-                            if (summary && nextSummary) {
-                                summary.textContent = nextSummary.textContent;
-                                summary.className = nextSummary.className;
-                                summary.setAttribute('aria-expanded', nextSummary.getAttribute('aria-expanded') || 'false');
-                            }
-                        }
                     }
 
                     const scopeNote = currentShell.querySelector('.workspace-feed-scope-note');
                     const nextScopeNote = nextShell.querySelector('.workspace-feed-scope-note');
                     if (scopeNote) scopeNote.remove();
-                    if (nextScopeNote) currentShell.querySelector('.post-feed-tab-row')?.after(nextScopeNote.cloneNode(true));
-                    const moduleFilter = currentShell.querySelector('[data-post-feed-module-filter]');
-                    const nextModuleFilter = nextShell.querySelector('[data-post-feed-module-filter]');
-                    if (moduleFilter && nextModuleFilter) moduleFilter.innerHTML = nextModuleFilter.innerHTML;
+                    if (nextScopeNote) currentShell.querySelector('.workspace-list-toolbar')?.after(nextScopeNote.cloneNode(true));
 
                     const currentForm = currentShell.querySelector('.post-feed-sort');
                     const nextForm = nextShell.querySelector('.post-feed-sort');
@@ -144,7 +151,10 @@
                         const activeName = currentForm.contains(document.activeElement)
                             ? document.activeElement.name : null;
                         currentForm.action = nextForm.action;
+                        const panelOpen = currentForm.querySelector('.site-more-filters')?.open;
                         currentForm.innerHTML = nextForm.innerHTML;
+                        const nextPanel = currentForm.querySelector('.site-more-filters');
+                        if (nextPanel && panelOpen !== undefined) nextPanel.open = panelOpen;
                         if (activeName) currentForm.querySelector(`[name="${CSS.escape(activeName)}"]`)?.focus({ preventScroll: true });
                     }
                 };
@@ -162,12 +172,12 @@
                     error?.setAttribute('hidden', '');
                     const content = currentResults.querySelector('[data-feed-content]');
                     const skeleton = currentResults.querySelector('[data-feed-skeleton]');
-                    if (content && skeleton) {
+                    if (content && skeleton && !currentResults.hasAttribute('data-feed-initial')) {
                         // Reserve the current result height so switching tabs does not move the page.
                         currentResults.style.minHeight = `${currentResults.getBoundingClientRect().height}px`;
                         skeletonTimer = window.setTimeout(() => {
                             if (version !== requestVersion) return;
-                            const cards = content.querySelectorAll('.post-card').length;
+                            const cards = content.querySelectorAll('.post-card, .liquidation-report-row').length;
                             [...skeleton.children].forEach((card, index) => {
                                 card.hidden = index >= Math.max(1, Math.min(cards, 3));
                             });
@@ -181,6 +191,7 @@
                         const response = await fetch(url, {
                             headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' },
                             credentials: 'same-origin',
+                            cache: 'no-store',
                             signal: activeRequest.signal,
                         });
                         if (!response.ok) throw new Error('Feed request failed.');
@@ -247,32 +258,12 @@
                 });
 
                 document.addEventListener('click', (event) => {
-                    const link = event.target.closest('.post-feed-shell .dashboard-tabs a, .post-feed-shell .post-feed-sort-menu a, .post-feed-shell [data-feed-results] .dashboard-pagination a');
+                    const link = event.target.closest('.post-feed-shell [data-feed-tab], .post-feed-shell .post-feed-sort-menu a, .post-feed-shell [data-feed-results] .dashboard-pagination a');
                     if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
                     const target = new URL(link.href, window.location.href);
                     if (target.origin !== window.location.origin) return;
                     event.preventDefault();
-                    link.closest('.dashboard-tabs-more')?.removeAttribute('open');
                     loadFeed(target);
-                });
-
-                document.addEventListener('click', (event) => {
-                    document.querySelectorAll('.post-feed-shell .dashboard-tabs-more[open]').forEach((menu) => {
-                        if (!menu.contains(event.target)) menu.open = false;
-                    });
-                });
-
-                document.addEventListener('toggle', (event) => {
-                    if (!event.target.matches?.('.post-feed-shell details.dashboard-tabs-more')) return;
-                    event.target.querySelector('summary')?.setAttribute('aria-expanded', String(event.target.open));
-                }, true);
-
-                document.addEventListener('keydown', (event) => {
-                    if (event.key !== 'Escape') return;
-                    const menu = document.querySelector('.post-feed-shell .dashboard-tabs-more[open]');
-                    if (!menu) return;
-                    menu.open = false;
-                    menu.querySelector('summary')?.focus({ preventScroll: true });
                 });
 
                 document.addEventListener('popstate', () => {
@@ -351,6 +342,9 @@
                         if (count) count.textContent = `${selected} selected`;
                     });
                 });
+                if (document.querySelector('.post-feed-shell [data-feed-initial]')) {
+                    loadFeed(window.location.href, false);
+                }
             })();
         </script>
     @endpush

@@ -88,7 +88,7 @@ class ContentReviewHistoryTest extends TestCase
     {
         $this->enable();
         $reviewer = $this->actor();
-        $post = $this->record($this->actor('Multimedia'));
+        $post = $this->record($this->actor('Social Media Manager'));
         app(ContentReview::class)->decide($post, $reviewer, false, '<script>Fix sources</script>');
         $reviewer->name = 'Renamed reviewer';
         $reviewer->save();
@@ -110,13 +110,18 @@ class ContentReviewHistoryTest extends TestCase
     public function test_history_is_private_to_current_editors_even_for_published_content(): void
     {
         $this->enable();
-        $owner = $this->actor('Multimedia');
-        $other = $this->actor('Multimedia');
+        $owner = $this->actor('Social Media Manager');
+        $other = $this->actor('Social Media Manager');
         $reviewer = $this->actor();
         $post = $this->record($owner);
-        app(ContentReview::class)->decide($post, $reviewer, true);
         $this->get(route('articles.show', $post))->assertRedirect(route('login'));
-        $this->actingAs($owner)->get(route('workspace.posts.articles.show', $post))->assertOk()->assertSee('View activity log');
+        $this->actingAs($owner)->get(route('workspace.posts.articles.show', $post))
+            ->assertOk()->assertSee('Submission status')->assertSee('View activity log');
+        app(ContentReview::class)->decide($post, $reviewer, true);
+        $this->get(route('workspace.posts.articles.show', $post))
+            ->assertOk()->assertDontSee('Submission status')->assertDontSee('View activity log');
+        $this->get(route('workspace.content-activity.index', ['module' => 'articles', 'post' => $post->getKey()]))
+            ->assertOk()->assertSee('Original title');
         $this->actingAs($other)->get(route('workspace.posts.articles.show', $post))->assertOk()->assertDontSee('class="workspace-review-history"', false);
         try {
             app(ContentReviewHistory::class)->recentFor($post, $other);
@@ -133,7 +138,7 @@ class ContentReviewHistoryTest extends TestCase
     public function test_history_insert_failure_rolls_back_decision_and_notifications(): void
     {
         $this->enable();
-        $post = $this->record($this->actor('Multimedia'));
+        $post = $this->record($this->actor('Social Media Manager'));
         $reviewer = $this->actor();
         DB::statement("CREATE TRIGGER reject_history BEFORE INSERT ON content_review_events BEGIN SELECT RAISE(ABORT, 'fixture failure'); END");
         try {
@@ -150,7 +155,7 @@ class ContentReviewHistoryTest extends TestCase
     public function test_stale_or_unauthorized_decisions_never_add_history(): void
     {
         $this->enable();
-        $owner = $this->actor('Multimedia');
+        $owner = $this->actor('Social Media Manager');
         $post = $this->record($owner);
         Article::whereKey($post->getKey())->update(['content' => 'New version']);
         $this->assertFalse(app(ContentReview::class)->decide($post, $this->actor(), true));

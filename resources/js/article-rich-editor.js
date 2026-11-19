@@ -5,10 +5,8 @@ import { TableKit } from '@tiptap/extension-table';
 
 export function mountArticleEditor(body, format, tools) {
     const shell = tools.closest('[data-rich-editor]');
-    const sourceToggle = shell.querySelector('[data-rich-source]');
     const heading = tools.querySelector('[data-rich-heading]');
     const tableTools = shell.querySelector('[data-table-tools]');
-    const status = shell.querySelector('[data-rich-status]');
     const dialog = shell.querySelector('[data-rich-link]');
     const urlInput = dialog.querySelector('input');
     urlInput.disabled = true;
@@ -16,7 +14,6 @@ export function mountArticleEditor(body, format, tools) {
     const mount = document.createElement('div');
     mount.className = 'article-visual-editor';
     body.before(mount);
-    let sourceMode = false;
     let linkSelection = null;
     const initialContent = () => format.value === 'markdown' ? body.value : {
         type: 'doc', content: body.value.split(/\r?\n/).map(text => ({
@@ -32,17 +29,15 @@ export function mountArticleEditor(body, format, tools) {
             const can = editor.can();
             const available = { undo: () => can.undo(), redo: () => can.redo(),
                 indent: () => can.sinkListItem('listItem'), outdent: () => can.liftListItem('listItem') };
-            button.disabled = sourceMode || (available[command] ? !available[command]() : false);
+            button.disabled = available[command] ? !available[command]() : false;
         });
-        heading.disabled = sourceMode;
         heading.value = editor.isActive('heading', { level: 2 }) ? '2' : editor.isActive('heading', { level: 3 }) ? '3' : 'paragraph';
-        tableTools.hidden = sourceMode || !editor.isActive('table');
+        tableTools.hidden = !editor.isActive('table');
     };
     const validate = () => {
         const count = (body.value.match(/\S+/gu) || []).length;
         body.setCustomValidity(body.value.length > 20000 ? 'Keep your content within 20,000 characters.'
             : count > 300 ? 'Keep your content within 300 words.' : '');
-        status.textContent = sourceMode ? 'Markdown source' : 'Visual editing';
     };
     const sync = (editor) => {
         body.value = editor.isEmpty ? '' : editor.getMarkdown();
@@ -79,7 +74,6 @@ export function mountArticleEditor(body, format, tools) {
     tools.hidden = false;
     tools.dataset.visualReady = 'true';
     heading.hidden = false;
-    sourceToggle.hidden = false;
     const error = document.createElement('p');
     error.className = 'profile-field-error';
     error.setAttribute('role', 'alert');
@@ -90,7 +84,7 @@ export function mountArticleEditor(body, format, tools) {
         error.textContent = body.validationMessage;
         error.hidden = false;
         editor.view.dom.setAttribute('aria-invalid', 'true');
-        if (sourceMode) body.focus(); else editor.commands.focus();
+        editor.commands.focus();
     });
     body.addEventListener('input', () => {
         validate();
@@ -100,7 +94,7 @@ export function mountArticleEditor(body, format, tools) {
     });
     body.form.querySelector(`label[for="${body.id}"]`)?.addEventListener('click', (event) => {
         event.preventDefault();
-        if (sourceMode) body.focus(); else editor.commands.focus();
+        editor.commands.focus();
     });
     // Preserve the document selection for pointer clicks, while keeping selects and keyboard navigation native.
     const keepSelection = event => { if (event.target.closest('button')) event.preventDefault(); };
@@ -148,7 +142,7 @@ export function mountArticleEditor(body, format, tools) {
     urlInput.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); applyLink(); } });
     const runCommand = event => {
         const button = event.target.closest('[data-format-command]');
-        if (!button || button.disabled || sourceMode) return;
+        if (!button || button.disabled) return;
         const chain = editor.chain().focus();
         const actions = {
             bold: () => chain.toggleBold().run(), italic: () => chain.toggleItalic().run(), strike: () => chain.toggleStrike().run(),
@@ -166,23 +160,6 @@ export function mountArticleEditor(body, format, tools) {
     };
     tools.addEventListener('click', runCommand);
     tableTools.addEventListener('click', runCommand);
-    sourceToggle.addEventListener('click', () => {
-        if (!sourceMode) {
-            // Plain legacy content is escaped by the serializer when converted to Markdown.
-            const markdown = editor.isEmpty ? '' : editor.getMarkdown();
-            if (format.value !== 'markdown' || body.value !== markdown) sync(editor);
-        } else {
-            editor.commands.setContent(body.value, { contentType: 'markdown', emitUpdate: false });
-        }
-        sourceMode = !sourceMode;
-        body.classList.toggle('article-editor-source', !sourceMode);
-        body.tabIndex = sourceMode ? 0 : -1;
-        mount.hidden = sourceMode;
-        sourceToggle.setAttribute('aria-pressed', String(sourceMode));
-        sourceToggle.textContent = sourceMode ? 'Back to visual editor' : 'Markdown source';
-        updateButtons(editor); validate();
-        if (sourceMode) body.focus(); else editor.commands.focus();
-    });
     body.form.addEventListener('reset', () => queueMicrotask(() => {
         editor.commands.setContent(initialContent(), { contentType: format.value === 'markdown' ? 'markdown' : 'json', emitUpdate: false });
         validate(); error.hidden = true; updateButtons(editor);

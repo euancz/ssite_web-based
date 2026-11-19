@@ -5,7 +5,9 @@ namespace Tests\Feature;
 use App\Models\Article;
 use App\Models\User;
 use App\Support\SearchText;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\Concerns\BuildsContentSchema;
 use Tests\TestCase;
@@ -26,6 +28,28 @@ class MainSiteFunctionalityTest extends TestCase
         $row = ['title' => $title, 'approval_status' => 'approved', 'created_at' => now(), 'updated_at' => now()];
         if (in_array($module, ['documents', 'liquidations'])) $row += ['file_path' => 'fixture.pdf', 'original_name' => 'fixture.pdf'];
         return DB::table($module)->insertGetId(array_replace($row, $extra));
+    }
+
+    public function test_home_loading_placeholders_skip_static_content_and_fallback_images(): void
+    {
+        $path = 'post-media/articles/home-image.png';
+        $disk = $this->mock(Filesystem::class);
+        $disk->shouldReceive('exists')->with($path)->andReturnTrue();
+        Storage::shouldReceive('disk')->with('local')->andReturn($disk);
+        $article = $this->postRecord('articles', 'Article with an image', ['image' => $path]);
+        $this->postRecord('activities', 'Activity with a fallback image');
+
+        $response = $this->get(route('home'))->assertOk();
+        $dom = new \DOMDocument;
+        @$dom->loadHTML($response->getContent());
+        $xpath = new \DOMXPath($dom);
+
+        $this->assertSame(0, $xpath->query('//*[@id="page-loading-skeleton" or @id="page-loading-routes"]')->length);
+        $this->assertSame(1, $xpath->query('//img[contains(@src, "rawri-community-cutout.png") and not(@data-home-image)]')->length);
+        $this->assertSame(1, $xpath->query('//img[@alt="Activity: Activity with a fallback image" and not(@data-home-image)]')->length);
+        $images = $xpath->query('//img[@data-home-image]');
+        $this->assertSame(1, $images->length);
+        $this->assertSame(route('posts.media', ['module' => 'articles', 'id' => $article]), $images->item(0)->getAttribute('src'));
     }
 
     public function test_discover_paginates_every_match_once_and_preserves_filters(): void
@@ -57,6 +81,32 @@ class MainSiteFunctionalityTest extends TestCase
         $this->assertSame(3, $last->currentPage());
     }
 
+    public function test_main_site_document_requests_show_static_content_while_posts_load(): void
+    {
+        $this->postRecord('articles', 'A story from the database');
+
+        foreach ([
+            ['/home', 'Welcome to the SSITE Community!', 'data-page-data="news"'],
+            ['/discover?type=articles', 'Stories &amp; Highlights', 'data-page-data="stories"'],
+            ['/articles', 'Read and manage SSITE articles.', 'data-feed-initial'],
+        ] as [$path, $heading, $region]) {
+            $this->get($path, ['Sec-Fetch-Dest' => 'document'])->assertOk()
+                ->assertSee($heading, false)->assertSee($region, false)
+                ->assertSee('aria-busy="true"', false)->assertDontSee('A story from the database');
+            $this->get($path, ['Sec-Fetch-Dest' => 'empty'])->assertOk()
+                ->assertSee('A story from the database')->assertDontSee('aria-busy="true"', false);
+        }
+
+        $this->get('/home?_full=1', ['Sec-Fetch-Dest' => 'document'])->assertOk()
+            ->assertSee('A story from the database')->assertDontSee('aria-busy="true"', false);
+
+        $headers = ['Sec-Fetch-Dest' => 'empty', 'X-SSITE-Page-Data' => '1'];
+        foreach (['/home', '/discover'] as $path) {
+            $this->get($path, $headers)->assertOk()
+                ->assertSee('A story from the database')->assertDontSee('<html', false);
+        }
+    }
+
     public function test_discover_sorting_crosses_module_boundaries_and_handles_ties(): void
     {
         $this->postRecord('articles', 'Zulu old article', ['created_at' => now()->subDays(30)]);
@@ -73,6 +123,22 @@ class MainSiteFunctionalityTest extends TestCase
         $first = $this->get('/discover?sort=title')->viewData('stories')->map(fn ($p) => $p->getTable().':'.$p->id)->all();
         $second = $this->get('/discover?sort=title')->viewData('stories')->map(fn ($p) => $p->getTable().':'.$p->id)->all();
         $this->assertSame($first, $second);
+    }
+
+    public function test_story_details_link_back_to_discover(): void
+    {
+        foreach (['articles', 'activities', 'achievements'] as $module) {
+            $postId = $this->postRecord($module, 'Visible story');
+            $response = $this->get(route($module.'.show', $postId))->assertOk();
+            $dom = new \DOMDocument;
+            @$dom->loadHTML($response->getContent());
+            $xpath = new \DOMXPath($dom);
+            $backLink = $xpath->query('//nav[@aria-label="Post navigation"]/a')->item(0);
+
+            $this->assertInstanceOf(\DOMElement::class, $backLink);
+            $this->assertSame('Back to Discover', trim($backLink->textContent));
+            $this->assertSame(route('discover'), $backLink->getAttribute('href'));
+        }
     }
 
     public function test_search_handles_capitals_and_literal_wildcards_on_each_main_content_list(): void

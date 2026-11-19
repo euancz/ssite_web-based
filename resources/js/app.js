@@ -10,6 +10,9 @@ import { initMotion } from './motion';
 import { initFlashToasts } from './flash-toasts';
 
 initMotion();
+document.addEventListener('page-data-loaded', ({ detail }) => {
+    detail.regions.forEach(region => initMotion(region));
+});
 initFlashToasts();
 
 if (document.querySelector('[data-document-selection]')) {

@@ -1,5 +1,6 @@
 @props(['module', 'draft' => null])
 
+@if (session('status') || $draft)
 <div class="workspace-draft-controls">
     @if (session('status'))<p class="dashboard-success" role="status">{{ session('status') }}</p>@endif
     @if ($draft)
@@ -10,9 +11,6 @@
             <p class="profile-field-help">Saved attachment: {{ $draft->attachment()['original_name'] ?? 'Selected file' }}</p>
         @endif
     @endif
-    <p class="profile-field-help" id="draft-save-note">Save text, details, and one selected image or PDF to finish later. Selecting a replacement updates the saved attachment when you save.</p>
-    <div class="profile-form-actions">
-        <button type="submit" class="dashboard-button dashboard-button-secondary" formaction="{{ route('workspace.drafts.save', $module) }}" formnovalidate aria-describedby="draft-save-note" data-save-draft>Save draft</button>
-        <a class="dashboard-text-button" href="{{ route('workspace.drafts.index') }}">My drafts</a>
-    </div>
 </div>
+@endif
+<button type="submit" class="dashboard-button dashboard-button-secondary" formaction="{{ route('workspace.drafts.save', $module) }}" formnovalidate data-save-draft>Save draft</button>

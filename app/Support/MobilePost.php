@@ -46,6 +46,9 @@ class MobilePost
             'amount' => $post->amount ?? null,
             'academic_year' => $post->academic_year ?? null,
             'semester' => $post->semester ?? null,
+            'view_count' => isset($post->view_count) ? (int) $post->view_count : null,
+            'like_count' => isset($post->like_count) ? (int) $post->like_count : null,
+            'liked_by_viewer' => isset($post->liked_by_viewer) ? (int) $post->liked_by_viewer > 0 : null,
             'file_url' => in_array($module, ['documents', 'liquidations'], true)
                 ? route('api.mobile.file', ['module' => $module, 'id' => $post->getKey()]) : null,
             'url' => match (class_basename($post)) {

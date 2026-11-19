@@ -5,7 +5,7 @@ namespace App\Policies;
 use App\Models\Article;
 use App\Models\User;
 
-/** Article permissions follow configured officer positions; advisers and superadmins never manage content. */
+/** Article permissions follow configured officer positions; advisers and admins never manage content. */
 class ArticlePolicy
 {
     public function viewAny(?User $user): bool
@@ -51,15 +51,10 @@ class ArticlePolicy
 
     public function delete(User $user, Article $article): bool
     {
-        return $user->canPermanentlyDelete();
+        return $user->canPermanentlyDelete() && $article->isArchived();
     }
 
     public function bulkArchive(User $user): bool
-    {
-        return $user->isPresident();
-    }
-
-    public function feature(User $user, Article $article): bool
     {
         return $user->isPresident();
     }

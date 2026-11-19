@@ -18,11 +18,13 @@
     applyPreferences();
     const jump = document.getElementById('workspace-jump');
     const query = jump.querySelector('[data-workspace-query]');
+    const destinations = jump.querySelector('[data-workspace-destinations]');
     const items = [...jump.querySelectorAll('[data-jump-item]')];
     const filter = () => {
         const terms = query.value.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
         items.forEach(item => { item.hidden = !terms.every(term => item.textContent.toLocaleLowerCase().includes(term)); });
         const count = items.filter(item => !item.hidden).length;
+        destinations.scrollTop = 0;
         jump.querySelector('[data-workspace-no-results]').hidden = count !== 0;
         jump.querySelector('[data-workspace-result-count]').textContent = count + (count === 1 ? ' destination' : ' destinations');
     };
@@ -35,7 +37,7 @@
         document.getElementById('account-menu-toggle')?.setAttribute('aria-expanded', 'false');
         dialog.showModal();
         document.body.classList.add('workspace-dialog-open');
-        if (dialog === jump) { query.value = ''; filter(); query.focus(); }
+        if (dialog === jump) { query.value = ''; filter(); query.focus({ preventScroll: true }); }
     };
     document.querySelectorAll('[data-workspace-open]').forEach(button => {
         button.hidden = false;
@@ -61,7 +63,8 @@
             event.preventDefault();
             const index = visible.indexOf(document.activeElement);
             const next = event.key === 'ArrowDown' ? (index + 1) % visible.length : (index <= 0 ? visible.length - 1 : index - 1);
-            visible[next].focus();
+            visible[next].focus({ preventScroll: true });
+            window.searchPopover.reveal(destinations, visible[next]);
         }
         if (event.key === 'Enter' && event.target === query) { event.preventDefault(); visible[0].click(); }
     });

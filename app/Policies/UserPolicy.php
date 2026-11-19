@@ -19,7 +19,7 @@ class UserPolicy
             return false;
         }
 
-        if ($target->isSuperadmin()) {
+        if ($target->isAdmin()) {
             return false;
         }
 

@@ -28,6 +28,7 @@
                     'submitted' => 'clock',
                     'approved', 'published' => 'circle-check',
                     'rejected' => 'circle-x',
+                    'liked' => 'heart',
                     default => 'info',
                 })
                 <article class="notification-page-card {{ $notification->read_at ? '' : 'is-unread' }}">
@@ -35,11 +36,15 @@
                         @csrf
                         <button type="submit" class="notification-page-open">
                             <span class="notification-type-icon notification-type-{{ $data['type'] ?? 'published' }}" aria-hidden="true">
-                                <x-icon :name="$statusIcon" size="sm" class="notification-status-icon" />
+                                <x-icon name="user-round" size="sm" class="notification-status-icon" />
                                 <img class="notification-actor-avatar" src="{{ route('notifications.avatar', $notification->id) }}" alt="">
                             </span>
                             <span class="notification-page-copy">
-                                <strong>{{ $data['message'] ?? 'You have a new notification.' }}</strong>
+                                <strong>{{ match ($data['type'] ?? '') {
+                                    'published' => \App\Notifications\PostPublished::message($data['post_type'] ?? ''),
+                                    'approved' => 'Your request was approved.',
+                                    default => $data['message'] ?? 'You have a new notification.',
+                                } }}</strong>
                                 <span>{{ $data['title'] ?? '' }}</span>
                                 <small>{{ $data['actor_name'] ?? 'SSITE' }} · {{ ucfirst($data['post_type'] ?? 'post') }} · {{ $notification->created_at?->diffForHumans() }}</small>
                                 @if (! empty($data['rejection_reason']))

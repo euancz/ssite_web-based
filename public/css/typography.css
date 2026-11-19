@@ -1,0 +1,55 @@
+/* Shared Poppins typography for public pages and the workspace. */
+:root {
+    --font-family-body: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+    --font-family-display: var(--font-family-body);
+    --font-family-logo: var(--font-family-body);
+}
+
+body.site-body,
+body.landing-page {
+    font-family: var(--font-family-body);
+}
+
+/* Override existing page-specific heading fonts, including mobile rules. */
+body:is(.site-body, .landing-page) :is(h1, h2, h3, h4, h5, h6) {
+    font-family: var(--font-family-display) !important;
+    letter-spacing: -.025em;
+}
+
+body:is(.site-body, .landing-page) :is(
+    .site-brand-name,
+    .footer-brand-name,
+    .landing-brand-full,
+    .landing-brand-short,
+    .workspace-brand-copy > strong,
+    .error-brand > span
+) {
+    font-family: var(--font-family-logo) !important;
+    font-weight: 600;
+    letter-spacing: .015em;
+}
+
+body.landing-page .landing-header .brand .landing-brand-full,
+body.main-site-body .site-header .site-brand-name .brand-full {
+    font-size: clamp(.75rem, 1.05vw, .95rem);
+    line-height: 1.3;
+}
+
+body.landing-page .hero-copy h1 {
+    font-weight: 600;
+    letter-spacing: -.04em;
+    line-height: 1.12;
+}
+
+body:is(.site-body, .landing-page) .footer-brand-name {
+    line-height: 1.4;
+}
+
+body.site-body .brand-campus {
+    font-family: var(--font-family-body);
+}
+@font-face { font-family: 'Poppins'; src: url('../fonts/Poppins-Regular.woff') format('woff'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Poppins'; src: url('../fonts/Poppins-Medium.woff') format('woff'); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Poppins'; src: url('../fonts/Poppins-SemiBold.woff') format('woff'); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Poppins'; src: url('../fonts/Poppins-Bold.woff') format('woff'); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Poppins'; src: url('../fonts/Poppins-ExtraBold.woff') format('woff'); font-weight: 800; font-style: normal; font-display: swap; }

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Mobile\AuthController;
 use App\Http\Controllers\Mobile\ContentController;
+use App\Http\Controllers\Mobile\NotificationController;
 use App\Http\Controllers\Mobile\SessionController;
 use App\Http\Middleware\AuthenticateMobileToken;
 use Illuminate\Support\Facades\Route;
@@ -20,6 +21,16 @@ Route::prefix('mobile/v1')->name('api.mobile.')->group(function () {
         Route::post('/workspace/session', [SessionController::class, 'workspace'])->middleware('throttle:10,1')->name('workspace.session');
 
         Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
+
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('/notifications/summary', [NotificationController::class, 'summary'])->name('notifications.summary');
+        Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+        Route::post('/notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
+        Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+
+        Route::post('/engagement/{module}/{id}/like', [ContentController::class, 'toggleLike'])
+            ->where(['module' => 'articles|activities|achievements|documents|liquidations', 'id' => '[0-9]+'])
+            ->name('engagement.like');
 
         Route::get('/home', [ContentController::class, 'home'])->name('home');
 

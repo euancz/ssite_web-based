@@ -64,7 +64,6 @@ final class MobilePublisher
             'search_text' => ($payload['title'] ?? '').' '.($payload['description'] ?? ''),
             'category' => $post->category, 'semester' => $post->semester,
             'academic_year' => $post->academic_year, 'sort_date' => $post->created_at,
-            'featured_at' => $post instanceof Article ? $post->featured_at : null,
             'sort_order' => $order, 'updated_at' => now(),
         ]);
     }

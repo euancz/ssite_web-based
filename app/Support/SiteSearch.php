@@ -83,16 +83,16 @@ class SiteSearch
         return $fragment . e(substr($text, $offset));
     }
 
-    /** Articles search only their public title and body, never author or account fields. */
+    /** Articles search their public title, body, and category metadata. */
     private function articles(string $query, array $words): array
     {
-        return $this->contentResults(Article::query()->publiclyVisible(), ['title', 'content'], 'articles', 'articles.show', 'id', 'created_at', $query, $words);
+        return $this->contentResults(Article::query()->publiclyVisible(), array_merge(['title', 'content'], ContentCategories::available('articles') ? ['category'] : []), 'articles', 'articles.show', 'id', 'created_at', $query, $words);
     }
 
     /** Activities use the persisted event date and location columns. */
     private function activities(string $query, array $words): array
     {
-        return $this->contentResults(Activity::query()->publiclyVisible(), ['title', 'description', 'location'], 'activities', 'activities.show', 'id', 'activity_date', $query, $words, fn ($row) => $row->location);
+        return $this->contentResults(Activity::query()->publiclyVisible(), array_merge(['title', 'description', 'location'], ContentCategories::available('activities') ? ['category'] : []), 'activities', 'activities.show', 'id', 'activity_date', $query, $words, fn ($row) => $row->location);
     }
 
     /** Achievements use their awardee and category metadata without joining user profiles. */
@@ -163,7 +163,7 @@ class SiteSearch
     private function applyTitleOrder(Builder $builder, string $titleField, string $query): void
     {
         $literal = SearchText::literal($query);
-        $column = $builder->getQuery()->getGrammar()->wrap($titleField);
+        $column = SearchText::column($builder, $titleField);
         $operator = SearchText::operator($builder);
         $builder->orderByRaw("CASE WHEN {$column} {$operator} ? ESCAPE '!' THEN 0 WHEN {$column} {$operator} ? ESCAPE '!' THEN 1 ELSE 2 END", [$literal . '%', '%' . $literal . '%']);
     }

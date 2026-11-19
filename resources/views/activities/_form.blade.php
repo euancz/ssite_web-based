@@ -12,6 +12,7 @@
         <input id="activity-title" placeholder="e.g. Web development workshop" name="title" @error('title') aria-invalid="true" aria-describedby="activity-title-error" @enderror type="text" maxlength="200" required value="{{ old('title', $draftValues['title'] ?? $activity?->title) }}">
         @error('title') <span id="activity-title-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
+    <x-workspace.category-field module="activities" :post="$activity" :draft-values="$draftValues ?? []" />
     @php($formattingEnabled = app(\App\Services\ArticleContent::class)->availableFor('activities'))
     <div class="dashboard-form-field">
         <label id="activity-description-label" for="activity-description">Description <span class="post-form-required-mark" aria-hidden="true">*</span></label>
@@ -24,9 +25,6 @@
             :format-value="$draftValues['content_format'] ?? $activity?->content_format ?? 'markdown'"
             :formatting-enabled="$formattingEnabled"
         />
-        @if ($formattingEnabled)
-            <span class="profile-field-help">Use the toolbar or paste formatted text.</span>
-        @endif
         <span class="profile-field-help">Maximum 300 words and 20,000 characters.</span>
         @error('description') <span id="activity-description-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
@@ -44,9 +42,9 @@
     </div>
     {{-- SECURITY: Upload validation and filename generation happen on the server. --}}
     <div class="dashboard-form-field">
-        <label for="activity-image">{{ $activity ? 'Replace image (optional)' : 'Image (optional)' }}</label>
+        <label for="activity-image">{{ $activity?->image ? 'Replace image (optional)' : 'Image' }} @unless ($activity?->image)<span class="post-form-required-mark" aria-hidden="true">*</span>@endunless</label>
         <x-workspace.attachment title="Attach a feature image" help="JPG or PNG up to 2 MB">
-            <input id="activity-image" data-image-preview="activity-image-preview" name="image" @error('image') aria-invalid="true" aria-describedby="activity-image-error" @enderror type="file" accept=".jpg,.png">
+            <input id="activity-image" data-image-preview="activity-image-preview" name="image" @error('image') aria-invalid="true" aria-describedby="activity-image-error" @enderror type="file" accept=".jpg,.png" @required(! $activity?->image)>
         </x-workspace.attachment>
         <x-workspace.upload-status input-id="activity-image" :max-kb="2048" />
         @error('image') <span id="activity-image-error" class="profile-field-error">{{ $message }}</span> @enderror

@@ -43,8 +43,8 @@ class ContentManagementTest extends TestCase
 
     public function test_dashboard_counts_and_recent_records_follow_module_ownership_and_public_visibility(): void
     {
-        $owner = $this->actor('Multimedia');
-        $other = $this->actor('Multimedia');
+        $owner = $this->actor('Social Media Manager');
+        $other = $this->actor('Social Media Manager');
         $this->makePost('articles', $owner, ['title' => 'My published article', 'approval_status' => 'approved']);
         $this->makePost('articles', $owner, ['approval_status' => 'approved', 'content_status' => 'archived']);
         $this->makePost('articles', $owner, ['title' => 'Fix this article', 'approval_status' => 'rejected', 'reviewed_at' => '2026-10-20 10:30:00', 'reviewed_by_user_id' => $other->id, 'rejection_reason' => 'Add the venue']);
@@ -113,6 +113,8 @@ class ContentManagementTest extends TestCase
         $this->assertSame(1, $response->viewData('posts')->total());
         $response->assertSee(route('adviser.reviews.index', array_merge($filters, ['sort' => 'oldest', 'status' => 'approved'])));
         $this->get(route('adviser.reviews.index', array_merge($filters, ['status' => 'approved'])))->assertOk()->assertSee('Matching approved');
+        $this->getJson(route('adviser.reviews.index', array_replace($filters, ['q' => 'sPECIFIC AUTHOR', '_suggest' => 1])))
+            ->assertOk()->assertExactJson(['results' => ['End of day document']]);
     }
 
     public function test_review_pagination_is_stable_with_identical_timestamps_and_retains_search(): void
@@ -143,8 +145,8 @@ class ContentManagementTest extends TestCase
 
     public function test_workspace_search_cannot_escape_owner_scope_and_retains_pagination_filters(): void
     {
-        $owner = $this->actor('Multimedia');
-        $other = $this->actor('Multimedia');
+        $owner = $this->actor('Social Media Manager');
+        $other = $this->actor('Social Media Manager');
         foreach (['articles', 'activities', 'achievements'] as $module) {
             for ($i = 0; $i < 6; $i++) {
                 $this->makePost($module, $owner, ['title' => 'Find this '.$i]);
@@ -155,16 +157,21 @@ class ContentManagementTest extends TestCase
                 ->assertSee('Find this 0')->assertDontSee('Unrelated record')->assertDontSee('Find this foreign private record');
             $this->assertSame(6, $response->viewData($module)->total());
             $this->assertStringContainsString('q=Find%20this', $response->viewData($module)->nextPageUrl());
+            $this->getJson(route('workspace.posts.'.$module.'.index', ['q' => 'fIND THIS', '_suggest' => 1]))
+                ->assertOk()->assertJsonCount(6, 'results')->assertJsonMissing(['Find this foreign private record']);
         }
     }
 
-    public function test_reviewer_details_stay_in_workspace_and_forms_offer_safe_unsaved_previews(): void
+    public function test_completed_posts_hide_review_details_and_forms_offer_safe_unsaved_previews(): void
     {
         $president = $this->actor('President', 'Reviewer identity');
         foreach (array_keys(ContentModules::all()) as $module) {
             $id = $this->makePost($module, $president, ['approval_status' => 'approved', 'reviewed_by_user_id' => $president->id, 'reviewed_at' => now()]);
-            $this->actingAs($president)->get(route('workspace.posts.'.$module.'.show', $id))->assertOk()->assertSee('Latest decision');
+            $this->actingAs($president)->get(route('workspace.posts.'.$module.'.show', $id))->assertOk()->assertDontSee('Submission status');
             $this->get(route($module.'.show', $id))->assertOk()->assertDontSee('Latest decision');
+            $rejected = $this->makePost($module, $president, ['approval_status' => 'rejected', 'rejection_reason' => 'Add the venue']);
+            $this->get(route('workspace.posts.'.$module.'.show', $rejected))
+                ->assertOk()->assertSee('Submission status')->assertSee('Add the venue');
             $this->get(route($module.'.create'))->assertOk()->assertSee('data-content-preview', false)->assertSee('Preview unsaved content');
         }
     }

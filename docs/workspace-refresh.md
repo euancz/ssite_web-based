@@ -4,7 +4,7 @@ This change is local to the Laravel CMS workspace. It preserves the SSITE navy/l
 
 ## Changes
 
-- Redesigned officer, president, adviser, and superadmin dashboard headers.
+- Redesigned officer, president, adviser, and admin dashboard headers.
 - Live publishing metrics, content-area shortcuts, and a collapsible workspace guide.
 - Searchable quick navigation with Ctrl/Cmd+K, arrow-key browsing, and Escape dismissal. Editor shortcuts retain priority.
 - Working workspace settings for comfortable/compact spacing and reduced animation, saved in browser storage.

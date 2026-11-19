@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Support\MicrosoftAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -10,8 +11,12 @@ use Illuminate\Support\Facades\Auth;
 class AuthController extends Controller
 {
     /** Redirect protected-route sign-in requests to the public Microsoft landing page. */
-    public function redirectToHome()
+    public function redirectToHome(Request $request)
     {
+        if ($request->session()->has(MicrosoftAccount::PENDING_SESSION_KEY)) {
+            return redirect()->route('profile.complete');
+        }
+
         return redirect('/')->with('error', 'Sign in first before proceeding.');
     }
 

@@ -16,6 +16,14 @@ class PostPublished extends Notification
 
     public function toArray(object $notifiable): array
     {
-        return array_merge($this->payload, ['type' => 'published', 'message' => 'A new post was published.']);
+        return array_merge($this->payload, ['type' => 'published', 'message' => self::message($this->payload['post_type'] ?? '')]);
+    }
+
+    public static function message(string $postType): string
+    {
+        $label = in_array($postType, ['article', 'activity', 'achievement', 'document', 'liquidation'], true)
+            ? $postType : 'post';
+
+        return "A new {$label} has been published.";
     }
 }

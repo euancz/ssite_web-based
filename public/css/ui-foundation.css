@@ -108,8 +108,6 @@
 .article-rich-content ol { list-style: decimal; }
 .article-rich-content pre { white-space: pre-wrap; }
 .article-rich-content a { color: var(--color-text-primary); text-decoration: underline; text-underline-offset: .2em; }
-.workspace-article-feature p { max-width: 65ch; }
-.workspace-article-feature button { min-height: 44px; }
 .workspace-review-summary dl, .content-live-preview dl { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-6); }
 .workspace-review-summary dt, .content-live-preview dt { font-size: var(--type-meta); color: var(--color-text-secondary); }
 .workspace-review-summary dd, .content-live-preview dd { margin: 0; overflow-wrap: anywhere; }

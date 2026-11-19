@@ -46,6 +46,7 @@ final class ContentListing
             if ($search !== '') {
                 $query->where(function (Builder $searchQuery) use ($module, $search) {
                     SearchText::contains($searchQuery, 'title', $search);
+                    if (ContentCategories::available($module)) SearchText::contains($searchQuery, 'category', $search, 'or');
                     SearchText::contains($searchQuery, $module === 'articles' ? 'content' : 'description', $search, 'or');
                 });
             }

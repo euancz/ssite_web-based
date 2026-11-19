@@ -3,7 +3,7 @@
 @section('title', $achievement->title)
 
 @section('content')
-<x-posts.feed-frame variant="show" stylesheet="achievements" :back-url="route(($management ? 'workspace.posts.' : '') . 'achievements.index')">
+<x-posts.feed-frame variant="show" stylesheet="achievements" :back-url="route($management ? 'workspace.posts.achievements.index' : 'discover')" :back-label="$management ? 'Back to posts' : 'Back to Discover'">
     @if ($management)<x-workspace.review-summary :post="$achievement" />@endif
     @if (session('status'))
         <p class="dashboard-success" role="status" data-flash-toast>{{ session('status') }}</p>

@@ -1,0 +1,95 @@
+.stories-banner {
+    position: relative;
+    isolation: isolate;
+    container-type: inline-size;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    border-radius: 3.6% / 12.3%;
+    background: linear-gradient(110deg, #63e1ed, #80d7e8 48%, #7ce5e5);
+    box-shadow: 0 6px 22px rgb(8 55 71 / 16%), inset 0 0 0 1px rgb(27 164 185 / 18%);
+    color: #073746;
+    text-align: center;
+}
+
+.stories-banner::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 12px 18px -16px rgb(255 255 255 / 90%);
+    pointer-events: none;
+}
+
+.stories-banner-grid {
+    position: absolute;
+    z-index: -1;
+    left: -25%;
+    width: 150%;
+    height: 18cqw;
+    background-image:
+        repeating-linear-gradient(0deg, transparent 0 3.1cqw, rgb(23 166 210 / 20%) 3.2cqw 4.1cqw, rgb(255 255 255 / 10%) 4.2cqw 4.5cqw),
+        repeating-linear-gradient(90deg, transparent 0 calc(10% - 1cqw), rgb(23 166 210 / 23%) calc(10% - .9cqw) calc(10% - .4cqw), rgb(255 255 255 / 12%) calc(10% - .3cqw) 10%);
+    filter: blur(0.06cqw);
+    pointer-events: none;
+}
+
+.stories-banner-grid--top {
+    top: 0;
+    transform-origin: center top;
+    transform: perspective(40cqw) rotateX(-58deg);
+    mask-image: linear-gradient(#000 12%, transparent 78%);
+}
+
+.stories-banner-grid--bottom {
+    bottom: 0;
+    transform-origin: center bottom;
+    transform: perspective(40cqw) rotateX(58deg);
+    mask-image: linear-gradient(transparent 22%, #000 88%);
+}
+
+.stories-banner-copy {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 292px;
+    min-height: 29.2cqw;
+    padding: 40px 24px;
+    padding: 4cqw 2.4cqw;
+}
+
+body.main-site-body main .stories-banner-eyebrow {
+    margin: 0 0 12px;
+    margin-bottom: 0.5cqw;
+    font-size: 1.95cqw;
+    font-weight: 600;
+    line-height: 1.5;
+    letter-spacing: 0;
+    color: #174b5c;
+    text-transform: uppercase;
+}
+
+body.main-site-body main .stories-banner h1 {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-family-body) !important;
+    font-size: 6.5cqw;
+    white-space: nowrap;
+    line-height: 1.12;
+    letter-spacing: 0;
+    font-weight: 700;
+    -webkit-text-stroke: 0.055cqw currentColor;
+    color: #073746;
+    text-transform: uppercase;
+}
+
+body.main-site-body main .stories-banner-description {
+    margin: 14px auto 0;
+    margin-top: 1.1cqw;
+    max-width: 64cqw;
+    font-size: 1.5cqw;
+    font-weight: 500;
+    color: #174b5c;
+    line-height: 1.5;
+}

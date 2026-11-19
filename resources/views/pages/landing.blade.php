@@ -91,7 +91,7 @@
     </div>
     <ol class="start-steps">
         <li><h3>Choose your school account</h3><p>If Microsoft shows a personal account, choose another account and enter your MCC email.</p></li>
-        <li><h3>Complete your profile</h3><p>On your first visit, fill in your student details to finish setting up your account.</p></li>
+        <li><h3>Set up your profile</h3><p>On your first visit, upload a profile photo and agree to the Terms of Service and Privacy Policy.</p></li>
         <li><h3>Browse the community</h3><p>Read updates on Home, find activities in Discover, or open Documents and Transparency.</p></li>
     </ol>
 </section>
@@ -99,8 +99,7 @@
     <div class="policy-intro"><p class="eyebrow">USING SSITE</p><h2 id="faq-title">Terms &amp; privacy</h2><p>How to use the site responsibly and what information your account stores.</p></div>
     <div class="faq-list">
         <details id="acceptable-use"><summary>Acceptable use <span aria-hidden="true">+</span></summary><p>Use your own MCC Microsoft account and provide accurate profile information. Treat other members respectfully. Do not share someone else’s personal information without permission, post harmful or misleading material, or attempt to access accounts and records you are not authorized to view.</p></details>
-        <details id="terms-of-service"><summary>Terms of service <span aria-hidden="true">+</span></summary><p>SSITE provides organization updates, activities, and resources for the MCC community. Use the site and its materials for their intended school and organization purposes. Respect authorship and any restrictions shown on documents. Publishing and administrative tools are limited to assigned roles.</p><p>Keep your account secure and sign out on shared devices. Report incorrect content or account concerns to <a href="mailto:ssite@gmail.com">ssite@gmail.com</a>.</p></details>
-        <details id="data-privacy"><summary>Data privacy <span aria-hidden="true">+</span></summary><p>When you sign in, SSITE stores your name, school email, and Microsoft account identifier to identify your account. Microsoft handles your Microsoft password; SSITE does not receive it.</p><p>Your profile also stores the student number, institute, program, year level, gender, contact number, address, and any profile picture you submit. These details support your community profile and account administration. Session cookies keep you signed in.</p><p>You can update editable details in your profile settings. For privacy questions or requests concerning access, correction, or removal of account data, contact <a href="mailto:ssite@gmail.com">ssite@gmail.com</a>.</p></details>
+        @include('pages.partials.policies')
     </div>
 </section>
 <section class="join-section" aria-labelledby="join-title"><div class="wrap join-inner"><div><h2 id="join-title">Your community is here.</h2><p>Sign in with your MCC Microsoft account.</p></div><a class="button button-microsoft" href="{{ route('microsoft.login') }}"><x-microsoft-mark /> Sign in with Microsoft <x-icon name="arrow-right" /></a></div></section>

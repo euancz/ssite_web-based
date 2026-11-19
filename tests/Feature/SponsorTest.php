@@ -47,7 +47,7 @@ class SponsorTest extends TestCase
     {
         $sponsor = Sponsor::create($this->data());
         $this->get(route('workspace.sponsors.index'))->assertRedirect();
-        foreach ([['student', 'President'], ['officer', 'Secretary'], ['adviser', ''], ['superadmin', '']] as [$role, $position]) {
+        foreach ([['student', 'President'], ['officer', 'Secretary'], ['adviser', ''], ['admin', '']] as [$role, $position]) {
             $this->actingAs($this->actor($role, $position));
             $this->get(route('workspace.sponsors.index'))->assertForbidden();
             $this->get(route('workspace.sponsors.create'))->assertForbidden();
@@ -101,6 +101,41 @@ class SponsorTest extends TestCase
             'sort_order' => -1,
         ]))->assertSessionHasErrors(['logo', 'sort_order']);
         $this->assertDatabaseCount('sponsors', 0);
+    }
+
+    public function test_workspace_can_save_edit_and_clear_a_footer_style_sponsor_link(): void
+    {
+        $facebookUrl = 'https://www.facebook.com/communitypartner';
+        $this->actingAs($this->actor());
+        $this->get(route('workspace.sponsors.create'))->assertOk()
+            ->assertSee('Facebook page or website link (optional)');
+        $this->post(route('workspace.sponsors.store'), $this->data(['website_url' => $facebookUrl]))
+            ->assertSessionHasNoErrors()->assertRedirect(route('workspace.sponsors.index'));
+        $sponsor = Sponsor::firstOrFail();
+
+        foreach (['workspace.sponsors.index', 'home'] as $route) {
+            $response = $this->get(route($route))->assertOk();
+            $document = new \DOMDocument;
+            @$document->loadHTML($response->getContent());
+            $xpath = new \DOMXPath($document);
+            $link = '//a[@href="'.$facebookUrl.'"][@class="footer-contact-button"]';
+            $this->assertSame('Community Partner on Facebook', $xpath->evaluate('normalize-space('.$link.')'));
+            $this->assertSame('_blank', $xpath->evaluate('string('.$link.'/@target)'));
+            $this->assertSame(1.0, $xpath->evaluate('count('.$link.'/svg/path[@fill="currentColor"])'));
+        }
+
+        $this->get(route('workspace.sponsors.edit', $sponsor))->assertOk()
+            ->assertSee('value="'.$facebookUrl.'"', false);
+        $websiteUrl = 'https://example.com/?ref=facebook.com';
+        $this->put(route('workspace.sponsors.update', $sponsor), $this->data(['website_url' => $websiteUrl]))
+            ->assertSessionHasNoErrors()->assertRedirect(route('workspace.sponsors.index'));
+        $this->get(route('home'))->assertOk()->assertSee('Visit Community Partner online')->assertSee($websiteUrl)
+            ->assertDontSee('Community Partner on Facebook');
+
+        $this->put(route('workspace.sponsors.update', $sponsor), $this->data(['website_url' => '']))
+            ->assertSessionHasNoErrors()->assertRedirect(route('workspace.sponsors.index'));
+        $this->assertNull($sponsor->fresh()->website_url);
+        $this->get(route('home'))->assertOk()->assertDontSee('Visit Community Partner online');
     }
 
     public function test_home_and_mobile_only_display_visible_sponsors_in_order(): void

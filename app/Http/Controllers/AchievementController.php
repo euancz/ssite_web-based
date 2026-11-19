@@ -9,12 +9,15 @@ use App\Services\ContentReview;
 use App\Services\PostFiles;
 use App\Support\ContentListing;
 use App\Support\ContentPagination;
+use App\Support\InitialPageData;
 use App\Support\PostEngagement;
 use App\Support\PostNotificationRecipients;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
+use App\Support\SearchSuggestions;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -27,7 +30,7 @@ class AchievementController extends Controller
     use AuthorizesRequests;
 
     /** Show the tabs and records available to the current capability. */
-    public function index(Request $request, PostEngagement $engagement): View
+    public function index(Request $request, PostEngagement $engagement): View|JsonResponse
     {
         $this->authorize('viewAny', Achievement::class);
         $user = $request->user();
@@ -35,8 +38,7 @@ class AchievementController extends Controller
             ->scope(Achievement::query()->with('author'), $request, 'achievements');
 
         // SECURITY: Categories come only from this already visibility-scoped tab query.
-        $categories = (clone $achievements)->whereNotNull('category')->where('category', '<>', '')
-            ->distinct()->orderBy('category')->pluck('category')->all();
+        $categories = array_keys(\App\Support\ContentCategories::options('achievements', $achievements));
         $requestedCategory = $request->query('category');
         $category = is_string($requestedCategory) && in_array($requestedCategory, $categories, true)
             ? $requestedCategory
@@ -83,13 +85,18 @@ class AchievementController extends Controller
         if (in_array($sort, ['viewed', 'liked'], true)) {
             $achievements->orderBy('created_at', 'desc');
         }
-        $achievements = ContentPagination::paginate($achievements->orderBy('id', 'asc'))
+        if (SearchSuggestions::requested($request)) {
+            return SearchSuggestions::fromQuery($request, $achievements->orderBy('id'));
+        }
+
+        $pageDataPending = InitialPageData::pending($request);
+        $achievements = ContentPagination::paginate($achievements->orderBy('id', 'asc'), pending: $pageDataPending)
             ->appends(['q' => is_string($request->query('q')) ? mb_substr(trim($request->query('q')), 0, 100) : '', 'tab' => $tab, 'sort' => $sort, 'category' => $category]);
 
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
         $view = $workspaceList ? 'workspace.posts.achievements.index' : 'achievements.index';
 
-        return view($view, compact('achievements', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'category', 'categoryOptions', 'pendingCount'));
+        return view($view, compact('achievements', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'category', 'categoryOptions', 'pendingCount', 'pageDataPending'));
     }
 
     /** Show public achievements or private records to their author or the President. */
@@ -185,8 +192,11 @@ class AchievementController extends Controller
             $achievement->image = $this->storeImage($request);
         }
 
-        if ($wasRejected || ($wasApproved && $request->user()->isOfficer()
-            && config('school.reset_approval_on_edit', true))) {
+        // President edits preserve the current review state.
+        $needsReview = ! $request->user()->isPresident()
+            && ($wasRejected || ($wasApproved && $request->user()->isOfficer()
+                && config('school.reset_approval_on_edit', true)));
+        if ($needsReview) {
             // Changed content needs review again; approval and visibility remain separate states.
             $achievement->approval_status = Achievement::APPROVAL_PENDING;
             $achievement->rejection_reason = null;
@@ -196,7 +206,7 @@ class AchievementController extends Controller
 
         app(PostFiles::class)->save($achievement);
         // SECURITY: Edits returned to pending notify configured reviewers; failures never block saving.
-        if ($request->user()->isOfficer() && ($wasRejected || ($wasApproved && config('school.reset_approval_on_edit', true)))) {
+        if ($request->user()->isOfficer() && $needsReview) {
             app(PostNotificationRecipients::class)->submitted('achievement', $achievement, $request->user(), true);
         }
 

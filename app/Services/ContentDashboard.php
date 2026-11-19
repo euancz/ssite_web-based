@@ -7,16 +7,28 @@ use App\Support\ContentModules;
 
 final class ContentDashboard
 {
+    public function modulesFor(User $user): array
+    {
+        $modules = [];
+        foreach (ContentModules::all() as $key => $module) {
+            if ($user->canPostIn($key)) {
+                $modules[$key] = ['label' => $module['label'], 'index' => 'workspace.posts.'.$key.'.index', 'create' => $key.'.create'];
+            }
+        }
+
+        return $modules;
+    }
+
     public function forUser(User $user): array
     {
-        $moduleStats = [];
+        $moduleStats = $this->modulesFor($user);
         $dashboardStatus = array_fill_keys(['pending', 'published', 'rejected', 'archived'], 0);
         $recentPosts = collect();
         $rejectedPosts = collect();
         $pendingPosts = collect();
 
         foreach (ContentModules::all() as $key => $module) {
-            if (! $user->canPostIn($key)) {
+            if (! isset($moduleStats[$key])) {
                 continue;
             }
             $owned = $module['model']::query();
@@ -30,7 +42,6 @@ final class ContentDashboard
                 COALESCE(SUM(CASE WHEN approval_status = 'approved' AND content_status = 'active' THEN 1 ELSE 0 END), 0) as published,
                 COALESCE(SUM(CASE WHEN approval_status = 'rejected' THEN 1 ELSE 0 END), 0) as rejected,
                 COALESCE(SUM(CASE WHEN content_status = 'archived' THEN 1 ELSE 0 END), 0) as archived")->first();
-            $moduleStats[$key] = ['label' => $module['label'], 'index' => 'workspace.posts.'.$key.'.index', 'create' => $key.'.create'];
             foreach (['total', 'pending', 'published', 'rejected', 'archived'] as $status) {
                 $moduleStats[$key][$status] = (int) $counts->$status;
                 if (array_key_exists($status, $dashboardStatus)) {

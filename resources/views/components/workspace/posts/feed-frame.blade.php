@@ -1,5 +1,6 @@
 @props([
     'variant' => 'index',
+    'initialLoading' => false,
     'stylesheet' => null,
     'title' => null,
     'description' => null,
@@ -9,6 +10,7 @@
     'pendingCount' => null,
     'sort' => 'recent',
     'sortOptions' => [],
+    'extraFilters' => [],
     'filterName' => null,
     'filter' => null,
     'filterOptions' => [],
@@ -45,24 +47,42 @@
 
 <div class="post-feed-shell workspace-library-feed {{ $stylesheet ? 'post-feed-' . $stylesheet : '' }}">
     @if ($variant === 'index')
-        <header class="post-feed-heading">
-            <div><span class="workspace-library-context">{{ $title }}</span><h1>{{ $statusTitle }}</h1>
-            <p>{{ $description }}@if ($activeTab === 'archived') Archived posts are hidden from the public site.@endif</p></div>
-            @if ($filterModuleKey !== false && $filterUser?->canPostIn($filterModuleKey))
+        <x-workspace.posts.list-heading
+            :context="($activeTab === 'mine' ? 'My work' : 'Manage posts').' · '.$title"
+            :title="$statusTitle"
+            :description="$description.($activeTab === 'archived' ? ' Archived posts are hidden from the public site.' : '')"
+        >
+            @if ($filterModuleKey !== false && $filterModuleKey !== 'articles' && $filterUser?->canPostIn($filterModuleKey))
                 <a class="dashboard-button" href="{{ route($filterModules[$filterModuleKey]['create']) }}"><x-workspace.icon name="plus" /> Create {{ strtolower($filterModules[$filterModuleKey]['singular']) }}</a>
             @endif
-        </header>
+        </x-workspace.posts.list-heading>
 
-        @if ($routeName && $allowedTabs)
-            <x-workspace.ui.workflow-tabs :route-name="$routeName" :allowed-tabs="$allowedTabs" :active-tab="$activeTab" :pending-count="$pendingCount" />
+        @if ($activeTab === 'mine')
+            <x-workspace.ui.my-work-tabs active-tab="mine" :module="$filterModuleKey !== false ? $filterModuleKey : null" />
+        @elseif ($routeName && $allowedTabs)
+            <x-workspace.ui.workflow-tabs :route-name="$routeName" :allowed-tabs="array_values(array_diff($allowedTabs, ['mine', 'rejected', 'all']))" :active-tab="$activeTab" :pending-count="$pendingCount" />
         @endif
 
         @if ($sortOptions)
-            <div class="post-feed-tab-row">
+            <x-workspace.posts.sort-row
+                :action="route($routeName)"
+                :route-name="$routeName"
+                :tab="$activeTab"
+                :sort="$sort"
+                :options="$sortOptions"
+                :extra-filters="$extraFilters"
+                :filter-name="$filterName"
+                :filter="$filter"
+                :filter-options="$filterOptions"
+                :filter-label="$filterLabel"
+                :filter-default="$filterDefault"
+                :academic-year-options="$academicYearOptions"
+                :academic-year="$academicYear"
+            >
                 @if ($filterModules->count() > 1 && $filterModuleKey !== false)
-                    <label class="post-feed-module-filter">
-                        <span>Content type</span>
-                        <select aria-label="Filter by content type" data-post-feed-module-filter>
+                    <div class="workspace-list-field">
+                        <label for="workspace-post-module">Content type</label>
+                        <select id="workspace-post-module" data-post-feed-module-filter>
                             @foreach ($filterModules as $moduleKey => $module)
                                 @php($moduleRoute = $routeName === $module['editorial'] ? $module['editorial'] : $module['workspace'])
                                 <option value="{{ route($moduleRoute, ['tab' => $activeTab]) }}" @selected($filterModuleKey === $moduleKey)>
@@ -70,24 +90,9 @@
                                 </option>
                             @endforeach
                         </select>
-                    </label>
+                    </div>
                 @endif
-                <x-workspace.posts.sort-row
-                    :action="route($routeName)"
-                    :route-name="$routeName"
-                    :tab="$activeTab"
-                    :allowed-tabs="$allowedTabs"
-                    :sort="$sort"
-                    :options="$sortOptions"
-                    :filter-name="$filterName"
-                    :filter="$filter"
-                    :filter-options="$filterOptions"
-                    :filter-label="$filterLabel"
-                    :filter-default="$filterDefault"
-                    :academic-year-options="$academicYearOptions"
-                    :academic-year="$academicYear"
-                />
-            </div>
+            </x-workspace.posts.sort-row>
         @endif
         @if ($activeTab === 'mine')
             <p class="workspace-feed-scope-note">Showing submissions created by your account.</p>
@@ -96,39 +101,13 @@
 
     <p class="dashboard-error post-feed-update-error" role="alert" data-feed-error hidden>
         Posts could not be updated. Check your connection and try again.
+        @if ($initialLoading)
+            <a href="{{ request()->fullUrlWithQuery(['_full' => 1]) }}">Reload the posts</a>.
+        @endif
     </p>
     <p class="visually-hidden" role="status" aria-live="polite" data-feed-status></p>
-    <div data-feed-results aria-busy="false">
-        <div class="post-feed-skeleton" data-feed-skeleton aria-hidden="true" hidden>
-            @for ($skeletonCard = 0; $skeletonCard < 3; $skeletonCard++)
-                <article class="post-feed-skeleton-card">
-                    <div class="post-feed-skeleton-author">
-                        <span class="post-feed-skeleton-block post-feed-skeleton-avatar"></span>
-                        <span class="post-feed-skeleton-lines">
-                            <span class="post-feed-skeleton-block post-feed-skeleton-line post-feed-skeleton-name"></span>
-                            <span class="post-feed-skeleton-block post-feed-skeleton-line post-feed-skeleton-meta"></span>
-                        </span>
-                    </div>
-                    <span class="post-feed-skeleton-block post-feed-skeleton-line post-feed-skeleton-title"></span>
-                    <span class="post-feed-skeleton-block post-feed-skeleton-line"></span>
-                    <span class="post-feed-skeleton-block post-feed-skeleton-line post-feed-skeleton-copy"></span>
-                    <span class="post-feed-skeleton-block post-feed-skeleton-footer"></span>
-                </article>
-            @endfor
-        </div>
-        <div data-feed-content>{{ $slot }}</div>
+    <div data-feed-results aria-busy="{{ $initialLoading ? 'true' : 'false' }}" @if ($initialLoading) data-feed-initial @endif>
+        <x-posts.feed-skeleton :stylesheet="$stylesheet" :visible="$initialLoading" />
+        <div data-feed-content @if ($initialLoading) hidden @endif>@unless ($initialLoading){{ $slot }}@endunless</div>
     </div>
 </div>
-
-@once
-    @push('scripts')
-        <script>
-            document.addEventListener('change', (event) => {
-                const selector = event.target instanceof Element
-                    ? event.target.closest('[data-post-feed-module-filter]')
-                    : null;
-                if (selector?.value) window.location.assign(selector.value);
-            });
-        </script>
-    @endpush
-@endonce

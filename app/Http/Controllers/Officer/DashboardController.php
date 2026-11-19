@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Officer;
 
 use App\Http\Controllers\Controller;
 use App\Services\ContentDashboard;
+use App\Support\InitialPageData;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -13,6 +14,14 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        return view($user->isPresident() ? 'workspace.dashboard' : 'officer.dashboard', $dashboard->forUser($user));
+        $view = $user->isPresident() ? 'workspace.dashboard' : 'officer.dashboard';
+        if (InitialPageData::pending($request)) {
+            return view($view, [
+                'pageDataPending' => true,
+                'moduleStats' => $dashboard->modulesFor($user),
+            ]);
+        }
+
+        return view($view, $dashboard->forUser($user));
     }
 }

@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as MicrosoftUser;
 use Tests\Concerns\BuildsContentSchema;
@@ -29,17 +31,26 @@ class LoginSuccessAnimationTest extends TestCase
             \Mockery::mock()->shouldReceive('user')->once()->andReturn($identity)->getMock()
         );
 
-        $this->get(route('microsoft.callback'))
-            ->assertRedirect(route('profile.complete'))
-            ->assertSessionHas('show_login_success', true);
+        Storage::fake('public');
+        $this->get(route('microsoft.callback'))->assertRedirect(route('profile.complete'));
 
         $this->get(route('profile.complete'))->assertOk()
+            ->assertDontSee('id="login-success"', false);
+
+        $this->post(route('profile.complete.store'), [
+            'picture' => UploadedFile::fake()->createWithContent('photo.png', base64_decode(
+                'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII='
+            )),
+            'accept_policies' => '1',
+        ])->assertRedirect(route('home'))->assertSessionHas('show_login_success', true);
+
+        $this->get(route('home'))->assertOk()
             ->assertSee('id="login-success"', false)
             ->assertSee('login-success.css')
             ->assertSee('login-success.js')
             ->assertSessionMissing('show_login_success');
 
-        $this->get(route('profile.complete'))->assertOk()
+        $this->get(route('home'))->assertOk()
             ->assertDontSee('id="login-success"', false)
             ->assertDontSee('login-success.js');
     }

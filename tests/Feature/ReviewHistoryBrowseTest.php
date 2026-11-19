@@ -27,7 +27,7 @@ class ReviewHistoryBrowseTest extends TestCase
         (require database_path('migrations/2026_10_27_000005_create_content_review_events_table.php'))->up();
     }
 
-    private function actor(string $position = 'Multimedia', string $role = 'officer'): User
+    private function actor(string $position = 'Social Media Manager', string $role = 'officer'): User
     {
         $user = new User;
         $user->forceFill(['name' => $position, 'email' => uniqid().'@mcc.edu.ph', 'role' => $role,
@@ -64,7 +64,7 @@ class ReviewHistoryBrowseTest extends TestCase
         $this->get(route('workspace.content-activity.index'))->assertRedirect();
         $this->actingAs($this->actor())->get(route('workspace.content-activity.index'))->assertOk()->assertSee('Review tracking is not available');
         $this->enable();
-        foreach (['student', 'adviser', 'superadmin'] as $role) {
+        foreach (['student', 'adviser', 'admin'] as $role) {
             $this->actingAs($this->actor('President', $role))->get(route('workspace.content-activity.index'))->assertForbidden();
         }
         $this->actingAs($this->actor())->get(route('workspace.content-activity.index'))->assertOk()->assertSee('No activity matches')->assertSee('workspace-content', false);
@@ -85,6 +85,8 @@ class ReviewHistoryBrowseTest extends TestCase
         $response = $this->actingAs($owner)->get(route('workspace.content-activity.index'))->assertOk()
             ->assertSee('My prior title')->assertDontSee('Another author title')->assertDontSee('Lost module title')->assertDontSee('Deleted post title');
         $this->assertSame(2, $response->viewData('log')['events']->total());
+        $this->getJson(route('workspace.content-activity.index', ['q' => 'tITLE', 'action' => 'approved', '_suggest' => 1]))
+            ->assertOk()->assertExactJson(['results' => ['My prior title']]);
         $this->get(route('workspace.content-activity.index', ['module' => 'articles', 'post' => $other->getKey()]))->assertOk()->assertDontSee('Another author title');
         $owner->officer_position = 'Secretary';
         $owner->save();
@@ -134,7 +136,9 @@ class ReviewHistoryBrowseTest extends TestCase
             ->assertSee('&lt;script&gt;Old title&lt;/script&gt;', false)->assertDontSee('<script>Old title</script>', false)
             ->assertDontSee('<img src=x onerror=alert(1)>', false)->assertDontSee('<svg onload=alert(1)>', false)
             ->assertSee(route('workspace.posts.articles.show', $article));
-        $this->get(route('workspace.posts.articles.show', $article))->assertOk()
-            ->assertSee(route('workspace.content-activity.index', ['module' => 'articles', 'post' => $article->getKey()]));
+        $activityUrl = route('workspace.content-activity.index', ['module' => 'articles', 'post' => $article->getKey()]);
+        $this->get(route('workspace.posts.articles.show', $article))->assertOk()->assertDontSee($activityUrl);
+        $article->forceFill(['approval_status' => 'pending'])->save();
+        $this->get(route('workspace.posts.articles.show', $article))->assertOk()->assertSee($activityUrl);
     }
 }

@@ -5,13 +5,13 @@ return [
     'brand' => 'SSITE Workspace',
     'roles' => [
         'adviser' => 'Adviser',
-        'superadmin' => 'Superadmin',
+        'admin' => 'Admin',
     ],
     'default_modules' => [
         'President' => 'articles',
         'Secretary' => 'documents',
         'Auditor' => 'liquidations',
-        'Multimedia' => 'articles',
+        'Social Media Manager' => 'articles',
     ],
     'sections' => [
         'overview' => 'Overview',

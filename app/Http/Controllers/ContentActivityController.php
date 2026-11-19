@@ -5,13 +5,15 @@ namespace App\Http\Controllers;
 use App\Services\ContentActivityLog;
 use App\Services\ContentReviewHistory;
 use Illuminate\Contracts\View\View;
+use App\Support\SearchSuggestions;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 
 class ContentActivityController extends Controller
 {
-    public function __invoke(Request $request, ContentActivityLog $activity, ContentReviewHistory $history): View
+    public function __invoke(Request $request, ContentActivityLog $activity, ContentReviewHistory $history): View|JsonResponse
     {
         $modules = $history->modulesFor($request->user());
         abort_if($modules === [], 403);
@@ -37,6 +39,10 @@ class ContentActivityController extends Controller
             $filters['start'] = Carbon::createFromFormat('!Y-m-d', $filters['from'] ?: now()->subDays(29)->toDateString());
             $filters['end'] = Carbon::createFromFormat('!Y-m-d', $filters['to'] ?: now()->toDateString())->endOfDay();
         }
+        if (SearchSuggestions::requested($request)) {
+            return SearchSuggestions::fromQuery($request, $activity->searchQuery($request->user(), $filters));
+        }
+
         $log = $activity->forUser($request->user(), $filters);
 
         return view('workspace.content-activity', compact('modules', 'filters', 'log'));

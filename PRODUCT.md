@@ -16,7 +16,7 @@ The SSITE site publishes organization content and supports its role-based editor
 
 ## Capabilities and Constraints
 
-Capabilities include articles, activities, achievements, documents, liquidation reports, submission review, officer roster management, and role assignment. Server-side role middleware and model policies determine access. The workspace redesign applies to President, Multimedia, Auditor, Adviser, and Superadmin accounts and preserves their existing permissions.
+Capabilities include articles, activities, achievements, documents, liquidation reports, submission review, officer roster management, and role assignment. Server-side role middleware and model policies determine access. The workspace redesign applies to President, Social Media Manager, Auditor, Adviser, and Admin accounts and preserves their existing permissions.
 
 ## Brand Commitments
 

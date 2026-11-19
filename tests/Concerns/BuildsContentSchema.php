@@ -20,10 +20,11 @@ trait BuildsContentSchema
 
         Schema::create('users', function (Blueprint $table): void {
             $table->increments('id');
-            foreach (['name', 'email', 'password', 'role', 'officer_position', 'student_number', 'institute', 'program', 'year_level', 'gender', 'contact_number', 'address', 'profile_picture', 'microsoft_id', 'remember_token'] as $column) {
+            foreach (['name', 'email', 'password', 'role', 'officer_position', 'profile_picture', 'microsoft_id', 'remember_token'] as $column) {
                 $table->string($column)->nullable();
             }
             $table->timestamp('profile_completed_at')->nullable();
+            $table->timestamp('profile_policies_accepted_at')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamps();
         });

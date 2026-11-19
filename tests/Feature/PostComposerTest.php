@@ -26,7 +26,7 @@ class PostComposerTest extends TestCase
 
     public function test_every_content_type_opens_the_guided_details_step_with_its_original_form(): void
     {
-        foreach (['articles' => 'Multimedia', 'activities' => 'Multimedia', 'achievements' => 'Multimedia', 'documents' => 'Secretary', 'liquidations' => 'Auditor'] as $module => $position) {
+        foreach (['articles' => 'Social Media Manager', 'activities' => 'Social Media Manager', 'achievements' => 'Social Media Manager', 'documents' => 'Secretary', 'liquidations' => 'Auditor'] as $module => $position) {
             $this->actingAs($this->officer($position))->get(route($module.'.create'))->assertOk()
                 ->assertSee('data-post-composer', false)
                 ->assertSee('aria-current="step"', false)

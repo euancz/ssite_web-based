@@ -5,10 +5,10 @@ use App\Http\Controllers\Adviser\UserController;
 use App\Http\Controllers\Adviser\OfficerTermController;
 use Illuminate\Support\Facades\Route;
 
-// Holds role-assignment routes for advisers and superadmins with completed profiles.
+// Holds role-assignment routes for advisers and admins with completed profiles.
 Route::prefix('adviser')
     ->name('adviser.')
-    ->middleware(['auth', 'role:adviser,superadmin', 'profile.complete'])
+    ->middleware(['auth', 'role:adviser,admin', 'profile.complete'])
     ->group(function () {
         Route::get('/dashboard', DashboardController::class)
             ->name('dashboard');

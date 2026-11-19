@@ -8,6 +8,8 @@ use App\Models\Article;
 use App\Models\Document;
 use App\Models\Liquidation;
 use App\Models\PostLike;
+use App\Models\User;
+use App\Notifications\PostLiked;
 use App\Support\PostEngagement;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
@@ -42,7 +44,7 @@ class PostLikeController extends Controller
             return redirect('/')->with('error', 'Sign in first to like this post.');
         }
         if (! $user->hasCompletedProfile()
-            && !(($user->isAdviser() || $user->isSuperadmin()) && ! config('school.require_profile_for_all_roles', true))) {
+            && !(($user->isAdviser() || $user->isAdmin()) && ! config('school.require_profile_for_all_roles', true))) {
             $request->session()->put('url.intended', $showUrl);
             return redirect()->route('profile.complete');
         }
@@ -52,7 +54,7 @@ class PostLikeController extends Controller
         $desiredLike = $desiredLike === '1';
 
         // SECURITY: Locking the public post serializes two tabs before they check or create its unique user like.
-        DB::transaction(function () use ($modelClass, $keyName, $post, $type, $user, $desiredLike, $engagement): void {
+        DB::transaction(function () use ($modelClass, $keyName, $post, $type, $user, $desiredLike, $engagement, $showUrl): void {
             $lockedPost = $modelClass::query()->where($keyName, $post)->lockForUpdate()->firstOrFail();
             abort_unless($lockedPost->isApproved() && $lockedPost->content_status === 'active', 404);
             $this->authorize('view', $lockedPost);
@@ -72,6 +74,17 @@ class PostLikeController extends Controller
                 $like->created_at = now();
                 $like->save();
                 DB::table($lockedPost->getTable())->where($keyName, $lockedPost->getKey())->increment('like_count');
+                // Keep delivery in the transaction so retries cannot create duplicate notices.
+                if ($lockedPost->created_by_user_id && (int) $lockedPost->created_by_user_id !== (int) $user->id) {
+                    User::query()->find($lockedPost->created_by_user_id)?->notify(new PostLiked([
+                        'post_type' => $type,
+                        'post_id' => $lockedPost->getKey(),
+                        'title' => $lockedPost->title,
+                        'actor_id' => $user->id,
+                        'actor_name' => $user->name,
+                        'url' => $showUrl,
+                    ]));
+                }
             } elseif (! $desiredLike && $like) {
                 $like->delete();
                 DB::table($lockedPost->getTable())->where($keyName, $lockedPost->getKey())

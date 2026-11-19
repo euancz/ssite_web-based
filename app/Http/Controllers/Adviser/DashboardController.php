@@ -9,15 +9,21 @@ use App\Models\Article;
 use App\Models\Document;
 use App\Models\Liquidation;
 use App\Models\User;
+use App\Support\InitialPageData;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /** Supplies role-assignment dashboards with counts only and no private post details. */
 class DashboardController extends Controller
 {
-    public function __invoke(): View
+    public function __invoke(Request $request): View
     {
+        if (InitialPageData::pending($request)) {
+            return view('adviser.dashboard', ['pageDataPending' => true]);
+        }
+
         $modules = [
             'articles' => ['label' => 'Articles', 'model' => Article::class],
             'activities' => ['label' => 'Activities', 'model' => Activity::class],
@@ -35,11 +41,11 @@ class DashboardController extends Controller
 
         $presidentExists = User::query()->where('role', User::ROLE_OFFICER)->get(['id', 'role', 'officer_position'])
             ->contains(fn (User $user): bool => $user->isPresident());
-        $advisers = auth()->user()->isSuperadmin()
+        $advisers = auth()->user()->isAdmin()
             ? User::query()->where('role', User::ROLE_ADVISER)->orderBy('name')->get(['id', 'name', 'email'])
             : collect();
         $roleHistory = collect();
-        if (auth()->user()->isSuperadmin()
+        if (auth()->user()->isAdmin()
             && Schema::hasColumns('role_changes', ['user_id', 'changed_by_user_id', 'old_role', 'new_role', 'old_officer_position', 'new_officer_position', 'created_at'])) {
             $roleHistory = DB::table('role_changes as changes')
                 ->leftJoin('users as target', 'target.id', '=', 'changes.user_id')

@@ -35,7 +35,8 @@ body.main-site-body .news-card h3 a::after { content: ''; position: absolute; in
 body.main-site-body .news-card .read-more { position: relative; z-index: 1; }
 body.main-site-body .news-card:focus-within { outline: 3px solid var(--color-focus, #0b6b8e); outline-offset: 4px; }
 body.workspace-site-body .workspace-stat:has(.workspace-stat-link) { position: relative; }
-body.workspace-site-body .workspace-stat .workspace-stat-link { inset: 0; width: auto; height: auto; display: flex; align-items: flex-end; justify-content: flex-end; padding: 12px; }
+body.workspace-site-body .workspace-stat .workspace-stat-link { inset: 0; width: auto; height: auto; display: grid; grid-template-columns: minmax(0, 1fr) var(--stat-rail-width); align-items: end; padding: var(--stat-rail-inset); }
+body.workspace-site-body .workspace-stat .workspace-stat-link > .workspace-icon { grid-column: 2; justify-self: center; width: 18px; height: 18px; }
 body.workspace-site-body .workspace-stat .workspace-stat-link:hover { background: transparent; outline: 2px solid var(--color-accent, #0b6b8e); outline-offset: -2px; }
 
 @media (max-width: 640px) {

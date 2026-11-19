@@ -1,8 +1,7 @@
 {{-- Search suggestions render text safely and use the throttled endpoint. --}}
     {{-- SECURITY: Suggestions use plain-text DOM nodes, short queries are rejected, and the endpoint is throttled. --}}
     <script>
-        (() => {
-            const inputs = [...document.querySelectorAll('.search-form [role="combobox"]')];
+        document.querySelectorAll('.search-shell [role="combobox"]').forEach((input) => {
             const suggestionsUrl = @json(route('search.suggest'));
             const typeLabels = { articles: 'Articles', activities: 'Activities', achievements: 'Achievements', documents: 'Documents', liquidation: 'Liquidation', officers: 'Officers' };
             const typeIconTemplates = {
@@ -17,13 +16,13 @@
             let request = null;
             let sequence = 0;
             let activeIndex = -1;
+            const shell = input.closest('.search-shell');
+            const list = shell.querySelector('[role="listbox"]');
 
-            const close = (shell) => {
-                const input = shell.querySelector('[role="combobox"]');
-                const list = shell.querySelector('[role="listbox"]');
+            const close = () => {
                 window.clearTimeout(timer);
                 sequence++;
-                list.classList.add('hidden');
+                window.searchPopover.hide(list);
                 list.replaceChildren();
                 input.setAttribute('aria-expanded', 'false');
                 input.removeAttribute('aria-activedescendant');
@@ -72,7 +71,21 @@
                 return link;
             };
 
-            const showResults = (shell, list, items, query) => {
+            const searchAll = (query) => {
+                const link = document.createElement('a');
+                const url = new URL(input.form.action);
+                url.searchParams.set('q', query);
+                link.href = url;
+                link.id = `${list.id}-all`;
+                link.className = 'search-suggestion-all';
+                link.setAttribute('role', 'option');
+                link.setAttribute('aria-selected', 'false');
+                link.tabIndex = -1;
+                link.textContent = `Search for “${query}”`;
+                return link;
+            };
+
+            const showResults = (items, query, showEmpty = true) => {
                 list.replaceChildren();
                 const words = query.trim().split(/\s+/).slice(0, 5);
                 const groups = new Map();
@@ -100,27 +113,26 @@
                     entries.slice(0, 3).forEach((item) => list.append(optionLink(item, words)));
                 });
 
-                if (!items.length) {
+                if (!items.length && showEmpty) {
                     const empty = document.createElement('p');
                     empty.className = 'search-suggestion-message';
                     empty.textContent = `No suggestions for “${query}”.`;
                     list.append(empty);
                 }
-                list.classList.remove('hidden');
-                shell.querySelector('[role="combobox"]').setAttribute('aria-expanded', 'true');
-                shell.querySelector('[role="combobox"]').removeAttribute('aria-activedescendant');
+                list.append(searchAll(query));
+                window.searchPopover.show(list, input);
+                input.setAttribute('aria-expanded', 'true');
+                input.removeAttribute('aria-activedescendant');
                 activeIndex = -1;
             };
 
-            const fetchSuggestions = (input, immediate = false) => {
-                const shell = input.closest('.search-shell');
-                const list = shell.querySelector('[role="listbox"]');
+            const fetchSuggestions = () => {
                 const query = input.value.trim().replace(/\s+/g, ' ');
                 window.clearTimeout(timer);
                 sequence++;
                 const currentSequence = sequence;
                 if (request) request.abort();
-                if (query.length < 2) { close(shell); return; }
+                if ([...query].length < 2) { close(); return; }
 
                 activeIndex = -1;
                 input.removeAttribute('aria-activedescendant');
@@ -139,7 +151,7 @@
                     loading.append(skeletonRow);
                 }
                 list.append(loading);
-                list.classList.remove('hidden');
+                window.searchPopover.show(list, input);
                 input.setAttribute('aria-expanded', 'true');
                 timer = window.setTimeout(async () => {
                     request = new AbortController();
@@ -148,60 +160,61 @@
                             headers: { Accept: 'application/json' }, credentials: 'same-origin', signal: request.signal,
                         });
                         if (!response.ok) {
-                            if (currentSequence === sequence) close(shell);
+                            if (currentSequence === sequence) showResults([], query, false);
                             return;
                         }
                         const payload = await response.json();
                         if (currentSequence !== sequence || input.value.trim().replace(/\s+/g, ' ') !== query) return;
-                        showResults(shell, list, payload.results || [], query);
+                        showResults(payload.results || [], query);
                     } catch (_) {
                         // SECURITY: Network and session failures leave the form usable and expose no response data.
-                        if (currentSequence === sequence) close(shell);
+                        if (currentSequence === sequence) showResults([], query, false);
                     }
-                }, immediate ? 0 : 250);
+                }, 250);
             };
 
-            inputs.forEach((input) => {
-                input.addEventListener('input', () => fetchSuggestions(input));
-                // Keep native submission: Enter and Search open the complete results.
-                input.closest('form')?.addEventListener('submit', () => close(input.closest('.search-shell')));
-                input.addEventListener('keydown', (event) => {
-                    const shell = input.closest('.search-shell');
-                    const list = shell.querySelector('[role="listbox"]');
-                    const options = [...list.querySelectorAll('[role="option"]')];
-                    if (event.key === 'Escape') { close(shell); return; }
-                    if (event.key === 'ArrowDown' && !list.classList.contains('hidden')) {
-                        event.preventDefault();
-                        activeIndex = Math.min(activeIndex + 1, options.length - 1);
-                    } else if (event.key === 'ArrowUp' && !list.classList.contains('hidden')) {
-                        event.preventDefault();
-                        activeIndex = Math.max(activeIndex - 1, 0);
-                    } else if (event.key === 'Enter' && activeIndex >= 0 && options[activeIndex]) {
-                        event.preventDefault();
-                        window.location.assign(options[activeIndex].href);
-                    } else return;
-
-                    options.forEach((option, index) => option.setAttribute('aria-selected', String(index === activeIndex)));
-                    const active = options[activeIndex];
-                    if (active) {
-                        input.setAttribute('aria-activedescendant', active.id);
-                        const optionBounds = active.getBoundingClientRect();
-                        const listBounds = list.getBoundingClientRect();
-                        if (optionBounds.top < listBounds.top) {
-                            list.scrollTop -= listBounds.top - optionBounds.top;
-                        } else if (optionBounds.bottom > listBounds.bottom) {
-                            list.scrollTop += optionBounds.bottom - listBounds.bottom;
-                        }
-                    } else input.removeAttribute('aria-activedescendant');
-                });
+            input.addEventListener('input', (event) => {
+                if (!event.isComposing) fetchSuggestions();
             });
+            input.addEventListener('compositionstart', close);
+            input.addEventListener('compositionend', fetchSuggestions);
+            input.addEventListener('focus', fetchSuggestions);
+            // Keep native submission: Enter and Search open the complete results.
+            input.closest('form')?.addEventListener('submit', close);
+            input.addEventListener('keydown', (event) => {
+                const options = [...list.querySelectorAll('[role="option"]')];
+                if (event.isComposing) return;
+                if (event.key === 'Escape' && !list.classList.contains('hidden')) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    close();
+                    return;
+                }
+                if (event.key === 'ArrowDown' && !list.classList.contains('hidden')) {
+                    event.preventDefault();
+                    activeIndex = Math.min(activeIndex + 1, options.length - 1);
+                } else if (event.key === 'ArrowUp' && !list.classList.contains('hidden')) {
+                    event.preventDefault();
+                    activeIndex = Math.max(activeIndex - 1, 0);
+                } else if (event.key === 'Enter' && activeIndex >= 0 && options[activeIndex]) {
+                    event.preventDefault();
+                    window.location.assign(options[activeIndex].href);
+                } else return;
 
+                options.forEach((option, index) => option.setAttribute('aria-selected', String(index === activeIndex)));
+                const active = options[activeIndex];
+                if (active) {
+                    input.setAttribute('aria-activedescendant', active.id);
+                        window.searchPopover.reveal(list, active);
+                } else input.removeAttribute('aria-activedescendant');
+            });
+            shell.addEventListener('focusout', (event) => {
+                if (!shell.contains(event.relatedTarget)) close();
+            });
             document.addEventListener('click', (event) => {
-                document.querySelectorAll('.search-shell').forEach((shell) => {
-                    if (!shell.contains(event.target)) close(shell);
-                });
+                if (!shell.contains(event.target)) close();
             });
-            window.addEventListener('popstate', () => document.querySelectorAll('.search-shell').forEach(close));
-            window.addEventListener('pagehide', () => { if (request) request.abort(); });
-        })();
+            window.addEventListener('popstate', close);
+            window.addEventListener('pagehide', close);
+        });
     </script>

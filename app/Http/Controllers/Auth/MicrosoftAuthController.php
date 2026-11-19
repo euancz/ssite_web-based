@@ -3,19 +3,14 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use App\Support\MicrosoftAccount;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Support\MobileLogin;
 use Laravel\Socialite\Two\InvalidStateException;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Str;
-
-/*
- * Microsoft login flow: Socialite verifies the identity, then the callback finds or creates
- * the local user, sends incomplete profiles to completion, and sends completed accounts to the CMS home.
- */
+use Illuminate\Validation\ValidationException;
 /**
  * Starts Microsoft sign-in and connects the verified Microsoft identity to a local user.
  */
@@ -29,6 +24,8 @@ class MicrosoftAuthController extends Controller
         if ($redirect = $this->redirectToCallbackHost($request)) {
             return $redirect;
         }
+
+        $request->session()->forget(['mobile_login', 'mobile_login_return_url']);
 
         return $this->startMicrosoftSignIn();
     }
@@ -82,6 +79,8 @@ class MicrosoftAuthController extends Controller
 
     private function startMicrosoftSignIn()
     {
+        request()->session()->forget(MicrosoftAccount::PENDING_SESSION_KEY);
+
         return Socialite::driver('microsoft')
             ->with([
                 'prompt' => 'login',
@@ -92,13 +91,13 @@ class MicrosoftAuthController extends Controller
     /**
      * Validate Microsoft's identity, preserve existing profile edits, and route after login.
      */
-    public function callback()
+    public function callback(Request $request)
     {
         try {
             $microsoftUser = Socialite::driver('microsoft')->user();
 
             $email = strtolower((string) $microsoftUser->getEmail());
-            $microsoftId = $microsoftUser->getId();
+            $microsoftId = (string) $microsoftUser->getId();
             $name = $microsoftUser->getName()
                 ?: $microsoftUser->getNickname()
                 ?: 'Student';
@@ -123,62 +122,42 @@ class MicrosoftAuthController extends Controller
                     ->with('error', 'Microsoft did not provide a valid account identifier.');
             }
 
-            // Prefer the stable Microsoft ID; email is used only to link a prior local account.
-            $user = User::where('microsoft_id', $microsoftId)->first();
+            $user = MicrosoftAccount::find($microsoftId, $email);
+            if (! $user?->hasCompletedProfile()) {
+                $request->session()->regenerate(true);
+                $request->session()->put(MicrosoftAccount::PENDING_SESSION_KEY, [
+                    'id' => $microsoftId,
+                    'email' => $email,
+                    'name' => $name,
+                ]);
 
-            if (!$user) {
-                $user = User::where('email', $email)->first();
-
-                if ($user) {
-                    if ($user->microsoft_id && $user->microsoft_id !== $microsoftId) {
-                        return redirect('/')
-                            ->with('error', 'This email address is already linked to a different Microsoft account.');
-                    }
-
-                    if (! $user->microsoft_id) {
-                        $user->microsoft_id = $microsoftId;
-                    }
-                }
-            }
-
-            if (!$user) {
-                // Set system-managed fields directly so they never need to be mass assignable.
-                $user = new User();
-                $user->name = $name;
-                $user->email = $email;
-                $user->microsoft_id = $microsoftId;
-                $user->password = Hash::make(Str::random(64));
-                $user->profile_picture = null;
-                $user->role = 'student';
-            }
-
-            // Leave existing pictures untouched; this callback does not fetch Microsoft photos.
-
-            if ($user->isDirty()) {
-                $user->save();
-            }
-
-            Auth::login($user);
-
-            request()->session()->regenerate();
-
-            if ($user->hasCompletedProfile()) {
-                $mobileRedirect = MobileLogin::redirectToApp(request(), $user);
-                if ($mobileRedirect) {
-                    return $mobileRedirect;
-                }
-            }
-
-            // Consume this once on the first CMS page after successful authentication.
-            request()->session()->put('show_login_success', true);
-
-            // Profile enforcement happens before role routing so unfinished accounts cannot browse.
-            if (! $user->hasCompletedProfile()) {
                 return redirect()->route('profile.complete');
             }
 
+            if (! $user->microsoft_id) {
+                $user->newQuery()->whereKey($user->getKey())->whereNull('microsoft_id')
+                    ->update(['microsoft_id' => $microsoftId]);
+                if ($user->refresh()->microsoft_id !== $microsoftId) {
+                    return redirect()->route('landing')
+                        ->with('error', 'This email address is already linked to a different Microsoft account.');
+                }
+            }
+
+            Auth::login($user);
+            $request->session()->regenerate();
+            $request->session()->forget(MicrosoftAccount::PENDING_SESSION_KEY);
+
+            if ($mobileRedirect = MobileLogin::redirectToApp($request, $user)) {
+                return $mobileRedirect;
+            }
+
+            // Consume this once on the first CMS page after successful authentication.
+            $request->session()->put('show_login_success', true);
+
             return redirect()->route('home');
 
+        } catch (ValidationException $e) {
+            return redirect()->route('landing')->with('error', $e->validator->errors()->first());
         } catch (InvalidStateException $e) {
             report($e);
 

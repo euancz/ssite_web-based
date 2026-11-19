@@ -60,7 +60,7 @@ class LiquidationPolicy
 
     public function delete(User $user, Liquidation $liquidation): bool
     {
-        return $user->canPermanentlyDelete();
+        return $user->canPermanentlyDelete() && $liquidation->isArchived();
     }
 
     public function bulkArchive(User $user): bool

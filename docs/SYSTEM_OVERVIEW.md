@@ -16,18 +16,18 @@ Private draft saving, resuming, version checks, and submission are documented in
 | President officer | Documents and Liquidation | Yes; all pending modules | Published and all non-public PDFs after login and profile completion | Post in all modules; posts auto-approve by default (`school.president_posts_auto_approved`); manage, bulk archive, and permanently delete posts. |
 | Secretary officer | Documents | No | Published and own non-public PDFs | Post Documents; manage only own posts. Submissions await President review. |
 | Auditor officer | Liquidation | No | Published and own non-public reports | Post Liquidation; manage only own reports. Submissions await President review. |
-| Multimedia officer | No | No | Published content and own non-public posts | Post Articles, Activities, and Achievements; manage only own posts. Submissions await President review. |
+| Social Media Manager officer | No | No | Published content and own non-public posts | Post Articles, Activities, and Achievements; manage only own posts. Submissions await President review. |
 | Adviser | No | No | Published content only | Assign student/officer roles and canonical officer positions; see pending counts only. Cannot review posts or manage the About roster. |
-| Superadmin | No | No | Published content only | Assign or revoke adviser roles; view role history when its optional table is available. Cannot assign officer positions, review posts, or manage the About roster. |
+| Admin | No | No | Published content only | Assign or revoke adviser roles; view role history when its optional table is available. Cannot assign officer positions, review posts, or manage the About roster. |
 
-Position capabilities apply only while the account has the officer role. Adviser and superadmin assignments are separate. About page leadership remains annual officer snapshots; role assignment synchronizes only the current year's snapshot. Content access is enforced by route middleware, policies, and position-aware queries.
+Position capabilities apply only while the account has the officer role. Adviser and admin assignments are separate. About page leadership remains annual officer snapshots; role assignment synchronizes only the current year's snapshot. Content access is enforced by route middleware, policies, and position-aware queries.
 
 ## Request flow example
 
 An adviser assigning an officer role at `/adviser/users` follows this path:
 
 1. `routes/adviser.php` matches the named `adviser.users.index` route.
-2. Laravel runs `auth`, `role:adviser,superadmin`, and `profile.complete` middleware; the policy restricts each actor to their assignment scope.
+2. Laravel runs `auth`, `role:adviser,admin`, and `profile.complete` middleware; the policy restricts each actor to their assignment scope.
 3. `App\Http\Controllers\Adviser\UserController::index` validates filters and queries users through the `User` model.
 4. The controller renders `resources/views/adviser/users/index.blade.php`, which uses shared components from `resources/views/components/ui`.
 
@@ -224,7 +224,7 @@ The change history, bundle measurements, route comparison, source-review notes, 
 - **PDF upload limits:** `school.max_pdf_size_kb` is the application limit. PHP's `upload_max_filesize` and `post_max_size` in `php.ini` must also be large enough for the desired upload.
 - **PDF access:** `school.documents_list_public` controls whether document metadata lists are public; `school.liquidation_list_public` controls liquidation listing access. PDF view routes require login and a completed profile.
 - **Role checks:** Blade `@can` checks only hide navigation. Keep middleware or authorization checks on every protected route and write action.
-- **Officer positions:** `config/school.php` defines canonical assignable positions and module capabilities. Positions grant no capabilities unless the account role is `officer`; `User` centralizes checks. Adviser assigns student/officer roles and officer positions; superadmin assigns or revokes adviser roles only.
+- **Officer positions:** `config/school.php` defines canonical assignable positions and module capabilities. Positions grant no capabilities unless the account role is `officer`; `User` centralizes checks. Adviser assigns student/officer roles and officer positions; admin assigns or revokes adviser roles only.
 - **Adding a role:** Update the role values and helpers in `User`, middleware route declarations, Gate definitions, role-specific dashboard redirect, assignment policies, and documentation. Review all user-management validation before making a new role assignable.
 - **Adding an approval-required feature:** Add its schema/model and ownership relationship, policies or equivalent authorization, validated create/update/review endpoints, and status transitions. Set initial status in the server, require a rejection reason, and scope public/student queries to approved and active records only.
 - **School options:** Fill the TODO institute and program arrays in `config/school.php`; empty lists intentionally do not allow a student to submit arbitrary values.
@@ -238,7 +238,7 @@ The change history, bundle measurements, route comparison, source-review notes, 
 
 ## Articles tab
 
-Students, advisers, superadmins, and officers without Article capability see Published articles only. President sees Pending Review, Rejected, Archived, and All; other Article posters see My Posts and their own Archived articles. `approval_status` tracks President review while `content_status` tracks active or archived visibility. Lists use a module-specific sort control; Articles support recent, oldest, and title ordering, with optional view/like ordering only when enabled and backed by schema. Per-tab text search has been removed; the header and `/search` global search remain separate. When adding a tab, add it to the capability allowlist in `ArticleController::index`, query with Article scopes, and keep public results approved AND active.
+Students, advisers, admins, and officers without Article capability see Published articles only. President sees Pending Review, Rejected, Archived, and All; other Article posters see My Posts and their own Archived articles. `approval_status` tracks President review while `content_status` tracks active or archived visibility. Lists use a module-specific sort control; Articles support recent, oldest, and title ordering, with optional view/like ordering only when enabled and backed by schema. Per-tab text search has been removed; the header and `/search` global search remain separate. When adding a tab, add it to the capability allowlist in `ArticleController::index`, query with Article scopes, and keep public results approved AND active.
 
 ## Activities and Achievements tabs
 

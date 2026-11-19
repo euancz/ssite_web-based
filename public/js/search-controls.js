@@ -1,11 +1,27 @@
 (() => {
-    const root = document.querySelector('body.main-site-body');
+    const root = document.querySelector('body.site-body');
     if (!root) return;
 
-    const fields = '.search-form input[name="q"], .main-search-field input[name="q"], .documents-search input[name="q"], .transparency-search input[name="q"]';
+    const mainSite = root.classList.contains('main-site-body');
+    const fields = '.search-form input[name="q"], .main-search-field input[name="q"], .documents-search input[name="q"], .transparency-search input[name="q"], .workspace-list-search-input input[type="search"]';
     const listings = '.discover-filters, .documents-filters, .transparency-filters, form.post-feed-sort';
     const initializedInputs = new WeakSet();
-    const initializedForms = new WeakSet();
+    const initializedForms = new WeakMap();
+    const initializedPanels = new WeakSet();
+
+    const initializePanel = (panel) => {
+        if (panel.hasAttribute('data-filter-popover')) return;
+        if (initializedPanels.has(panel)) return;
+        initializedPanels.add(panel);
+        const key = `site-filters:${window.location.pathname}`;
+        try {
+            const saved = sessionStorage.getItem(key);
+            if (saved !== null) panel.open = saved === 'open';
+        } catch { /* Native disclosure works when session storage is unavailable. */ }
+        panel.addEventListener('toggle', () => {
+            try { sessionStorage.setItem(key, panel.open ? 'open' : 'closed'); } catch {}
+        });
+    };
 
     const submit = (form) => {
         if (form?.checkValidity()) form.requestSubmit();
@@ -13,7 +29,7 @@
     const clearKeyword = (input) => {
         input.value = '';
         input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.focus();
+        input.focus({ preventScroll: true });
         // The header owns global suggestions; page filters submit only to their own route.
         if (!input.closest('.search-form')) {
             if (input.required) {
@@ -56,7 +72,7 @@
         clear.addEventListener('click', () => clearKeyword(input));
         input.addEventListener('keydown', (event) => {
             if (event.key !== 'Escape' || event.isComposing) return;
-            // An open header suggestion menu gets the first Escape; the next clears text.
+            // Dismiss the suggestions before clearing the field.
             if (input.getAttribute('aria-expanded') === 'true') return;
             if (!input.value) return;
             event.preventDefault();
@@ -68,14 +84,13 @@
 
     const initializeFilters = (form) => {
         // Feed updates replace form children while retaining the form element itself.
-        if (form.querySelector('[data-active-filters]')) return;
-        if (!initializedForms.has(form)) {
-            initializedForms.add(form);
-            form.setAttribute('role', 'search');
-            if (!form.hasAttribute('aria-label')) form.setAttribute('aria-label', 'Filter this page');
-        }
-        const active = [];
         const keyword = form.querySelector('input[name="q"]');
+        if (initializedForms.get(form) === keyword) return;
+        initializedForms.set(form, keyword);
+        form.setAttribute('role', 'search');
+        if (!form.hasAttribute('aria-label')) form.setAttribute('aria-label', 'Filter this page');
+        if (form.querySelector('[data-active-filters]')) return;
+        const active = [];
         if (keyword?.value.trim()) active.push({ control: keyword, label: 'Search', value: keyword.value.trim(), reset: '' });
         form.querySelectorAll('select[name]').forEach((control) => {
             const reset = control.dataset.filterDefault ?? control.options[0]?.value ?? '';
@@ -126,6 +141,8 @@
 
     const initialize = () => {
         root.querySelectorAll(fields).forEach(initializeInput);
+        if (!mainSite) return;
+        root.querySelectorAll('.site-more-filters').forEach(initializePanel);
         root.querySelectorAll(listings).forEach(initializeFilters);
     };
     initialize();

@@ -42,7 +42,7 @@ class Article extends Model
     /** Cast the optional SQL-managed counter without making it mass assignable. */
     protected function casts(): array
     {
-        return ['view_count' => 'integer', 'featured_at' => 'datetime'];
+        return ['view_count' => 'integer'];
     }
 
     /**

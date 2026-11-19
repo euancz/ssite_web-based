@@ -43,7 +43,7 @@ class ContentVersionTest extends TestCase
 
     public function test_first_edit_preserves_baseline_and_versions_are_private_escaped_and_paginated(): void
     {
-        $owner = $this->actor('Multimedia');
+        $owner = $this->actor('Social Media Manager');
         $post = $this->articleRecord($owner);
         $this->actingAs($owner);
         for ($i = 1; $i <= 11; $i++) {
@@ -58,7 +58,7 @@ class ContentVersionTest extends TestCase
         $this->get($url)->assertOk()->assertSee('Edit 11')->assertDontSee('<script>private()', false);
         // Historical source is escaped even when it contains markup.
         $this->get($url.'?page=2')->assertOk()->assertSee('&lt;script&gt;private()&lt;/script&gt;', false)->assertDontSee('<script>private()', false);
-        $this->actingAs($this->actor('Multimedia'))->get($url)->assertForbidden();
+        $this->actingAs($this->actor('Social Media Manager'))->get($url)->assertForbidden();
         $this->actingAs($this->actor())->get($url)->assertOk();
         $owner->officer_position = 'Secretary';
         $owner->save();
@@ -135,7 +135,7 @@ class ContentVersionTest extends TestCase
 
     public function test_comparison_uses_previous_version_of_same_post_and_escapes_source(): void
     {
-        $owner = $this->actor('Multimedia');
+        $owner = $this->actor('Social Media Manager');
         $this->actingAs($owner);
         $post = $this->articleRecord($owner);
         $post->title = 'First edit';
@@ -157,7 +157,7 @@ class ContentVersionTest extends TestCase
         $this->get($url.'?compare=999999')->assertNotFound();
         $this->getJson($url.'?compare[]=1')->assertUnprocessable();
         $this->getJson($url.'?compare=-1')->assertUnprocessable();
-        $this->actingAs($this->actor('Multimedia'))->get($url.'?compare='.$selected)->assertForbidden();
+        $this->actingAs($this->actor('Social Media Manager'))->get($url.'?compare='.$selected)->assertForbidden();
     }
 
     public function test_comparison_preserves_absent_null_empty_and_zero_values(): void

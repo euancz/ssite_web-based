@@ -19,6 +19,23 @@ body.main-site-body main .discover-story-body {
     min-width: 0;
 }
 body.main-site-body main .discover-story-author { margin-bottom: 16px; }
+
+/* Fill each Home grid row so titles and bylines can wrap above aligned actions. */
+body.main-site-body main .home-page .news-card,
+body.main-site-body main .home-page .news-card-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+body.main-site-body main .home-page .news-card-content { flex: 1; }
+body.main-site-body main .home-page .news-card-content > .article-category { align-self: flex-start; }
+body.main-site-body main .home-page .news-grid > .news-card:is(:hover, :focus-within) {
+    transform: none;
+    translate: none;
+}
+
+/* Shared Read more treatment for Home and Discover cards. */
+body.main-site-body main .read-more,
 body.main-site-body main .discover-read-story {
     display: inline-flex;
     align-self: flex-start;
@@ -27,15 +44,19 @@ body.main-site-body main .discover-read-story {
     gap: 10px;
     min-height: 44px;
     box-sizing: border-box;
-    margin: auto 0 0 -10px;
     padding: 6px 10px;
     border-radius: 8px;
+    background: transparent;
     color: #17324d;
     font-size: 14px;
     font-weight: 600;
     line-height: 1.5;
+    text-decoration: none;
     transition: color 160ms ease, background-color 160ms ease;
 }
+body.main-site-body main .read-more,
+body.main-site-body main .discover-read-story { margin: auto 0 0; }
+body.main-site-body main .read-more .card-read-more-icon,
 body.main-site-body main .discover-read-story .card-read-more-icon {
     flex-shrink: 0;
     box-sizing: border-box;
@@ -48,15 +69,22 @@ body.main-site-body main .discover-read-story .card-read-more-icon {
     stroke-width: 2;
     transition: color 160ms ease, background-color 160ms ease;
 }
+body.main-site-body main .read-more:is(:hover, :focus-visible),
 body.main-site-body main .discover-card-link:is(:hover, :focus-visible) .discover-read-story {
     background: #d9f3fa;
     color: #07566a;
+    text-decoration: none;
 }
+body.main-site-body main .read-more:focus-visible {
+    outline: 2px solid #155571;
+    outline-offset: 3px;
+}
+body.main-site-body main .read-more:is(:hover, :focus-visible) .card-read-more-icon,
 body.main-site-body main .discover-card-link:is(:hover, :focus-visible) .card-read-more-icon {
     background: #155571;
     color: #fff;
 }
 @media (prefers-reduced-motion: reduce) {
-    body.main-site-body main :is(.discover-read-story, .card-read-more-icon) { transition: none; }
+    body.main-site-body main :is(.read-more, .discover-read-story, .card-read-more-icon) { transition: none; }
 }
 body.main-site-body main .discover-story-card:hover { transform: none; translate: none; }

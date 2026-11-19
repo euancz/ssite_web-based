@@ -16,6 +16,6 @@ class PostApproved extends Notification
 
     public function toArray(object $notifiable): array
     {
-        return array_merge($this->payload, ['type' => 'approved', 'message' => 'Your post was approved.']);
+        return array_merge($this->payload, ['type' => 'approved', 'message' => 'Your request was approved.']);
     }
 }

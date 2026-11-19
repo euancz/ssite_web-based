@@ -1,13 +1,14 @@
-@extends('layouts.app')
+@extends(request()->header('X-SSITE-Page-Data') === '1' ? 'layouts.page-data' : 'layouts.app')
 
 @section('title', 'Dashboard')
 
 @section('content')
 <div class="dashboard-page workspace-officer-dashboard">
     <x-workspace.welcome description="Track your submissions and manage your posts." :action-url="route('workspace.create')" action-label="Create post" />
-    <x-workspace.dashboard-summary :status="$dashboardStatus" :draft-count="$draftCount" />
+    <x-workspace.dashboard-summary :status="$dashboardStatus ?? []" :draft-count="$draftCount ?? null" :pending="$pageDataPending ?? false" />
 
-    @if ($rejectedPosts->isNotEmpty())
+    <div class="page-data-contents" data-page-data="feedback" @if ($pageDataPending ?? false) aria-busy="true" @endif>
+    @if (($rejectedPosts ?? collect())->isNotEmpty())
     <section class="workspace-officer-attention" aria-labelledby="workspace-attention-title">
         <div class="workspace-officer-section-heading">
             <div><h2 id="workspace-attention-title">Needs your attention</h2><p>Review feedback before submitting again.</p></div>
@@ -28,6 +29,7 @@
     </section>
 
     @endif
+    </div>
 
     <section class="workspace-officer-recent" aria-labelledby="workspace-recent-title">
         <div class="workspace-officer-section-heading">
@@ -36,7 +38,10 @@
         <x-ui.data-table label="Your recent submissions">
             <table class="dashboard-table workspace-officer-table">
                 <thead><tr><th scope="col">Title</th><th scope="col">Content type</th><th scope="col">Status</th><th scope="col">Submitted</th><th scope="col">Open</th></tr></thead>
-                <tbody>
+                <tbody data-page-data="submissions" @if ($pageDataPending ?? false) aria-busy="true" @endif>
+                    @if ($pageDataPending ?? false)
+                        <x-ui.data-skeleton :columns="5" />
+                    @else
                     @forelse ($recentPosts->take(5) as $post)
                         <tr>
                             <th scope="row">{{ $post->title }}</th>
@@ -48,6 +53,7 @@
                     @empty
                         <tr><td colspan="5" class="workspace-officer-empty">Your submissions will appear here once you create content.</td></tr>
                     @endforelse
+                    @endif
                 </tbody>
             </table>
         </x-ui.data-table>

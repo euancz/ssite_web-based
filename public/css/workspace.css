@@ -147,22 +147,33 @@ body.workspace-site-body {
 .workspace-admin-shortcut > a .workspace-icon { width: 15px; height: 15px; }
 
 /* President review queue and officer roster keep the existing table data and actions. */
-.workspace-content .president-review-page,
 .workspace-content .president-officers-page { max-width: 76rem; }
-.workspace-content .president-review-page .dashboard-tabs { margin: 0 0 16px; }
 .workspace-content .president-review-page .dashboard-panel { padding: 18px 20px 12px; }
-.workspace-review-list-summary { margin: 0 0 12px; color: var(--color-text-secondary); font-size: 11px; }
-.workspace-content .president-review-page .dashboard-table td { vertical-align: middle; }
+.workspace-review-list-summary { margin: 0 0 12px; color: var(--color-text-secondary); font-size: 13px; }
+.workspace-content .president-review-page .dashboard-table tbody :is(th, td) { vertical-align: middle; }
 .workspace-content .president-review-page .dashboard-table-actions { min-width: 205px; flex-wrap: wrap; }
 .workspace-content .president-review-page .dashboard-table-actions form { display: inline-flex; }
 .workspace-content .president-review-page .dashboard-table-actions .dashboard-button { min-height: 38px; padding-inline: 12px; }
 .workspace-content .president-review-page .dashboard-table-actions > a { min-height: 38px; display: inline-flex; align-items: center; }
 .workspace-content .president-review-page .dashboard-pagination { margin-top: 14px; }
 .workspace-content .president-officers-page .dashboard-panel { padding: 18px 20px; }
-.workspace-content .president-officers-page .dashboard-filter-form { display: flex; align-items: end; gap: 12px; margin-bottom: 18px; border-bottom: 1px solid var(--color-border); padding-bottom: 18px; }
-.workspace-content .president-officers-page .dashboard-filter-form .dashboard-form-field { min-width: min(100%, 240px); }
-.workspace-content .president-officers-page .officer-manager-more { display: inline-block; margin: 0 0 14px; }
-.workspace-content .president-officers-page .officer-manager-more summary { list-style: none; cursor: pointer; }
+.workspace-content .president-officers-page .dashboard-filter-form {
+    flex-direction: row;
+    align-items: end;
+    gap: 12px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 18px;
+}
+.workspace-content .president-officers-page .dashboard-filter-form .dashboard-form-field {
+    flex: 1 1 130px;
+    min-width: 0;
+    max-width: 240px;
+}
+.workspace-content .president-officers-page .dashboard-filter-form .dashboard-button {
+    flex: none;
+    width: auto;
+}
 .workspace-content .president-officers-page .officers-manager-table img { display: block; border-radius: 50%; object-fit: cover; }
 .workspace-content .president-officers-page .officers-manager-table td:last-child { white-space: nowrap; }
 .workspace-content .president-officers-page .officers-manager-table td:last-child > a { display: inline-flex; min-height: 42px; align-items: center; margin-right: 10px; color: var(--color-accent); font-size: 11px; font-weight: 700; }
@@ -182,8 +193,6 @@ body.workspace-site-body {
     .workspace-president-dashboard .workspace-status-list li { padding-block: 13px; }
     .workspace-admin-shortcut { align-items: flex-start; flex-direction: column; gap: 10px; }
     .workspace-admin-shortcut > a { margin-left: 52px; }
-    .workspace-content .president-officers-page .dashboard-filter-form { align-items: stretch; flex-direction: column; }
-    .workspace-content .president-officers-page .dashboard-filter-form .dashboard-button { align-self: flex-start; }
 }
 
 .workspace-content {
@@ -621,10 +630,6 @@ body.workspace-site-body {
 .workspace-scrim { display: none; }
 .workspace-main { margin-left: var(--workspace-sidebar-width); }
 .workspace-topbar { min-height: 68px; border-bottom-color: var(--color-transparent); background: var(--workspace-topbar); box-shadow: 0 4px 12px var(--workspace-color-rgb-23-50-77-9); }
-.workspace-topbar-title { display: flex; min-width: 0; align-items: baseline; gap: 8px; margin: 0; color: var(--color-text-primary); font-size: 12px; font-weight: 600; }
-.workspace-topbar-title > span:first-child { color: var(--workspace-color-hex-385c75); font-size: 10px; font-weight: 650; }
-.workspace-topbar-title > span:nth-child(2) { color: var(--workspace-color-hex-537991); }
-.workspace-topbar-title strong { overflow: hidden; font-size: 13px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
 .workspace-topbar-actions { gap: 9px; }
 .workspace-view-site { display: inline-flex; min-height: 44px; align-items: center; gap: 7px; border: 1px solid var(--color-border-control); border-radius: 8px; padding: 0 12px; background: var(--color-surface); color: var(--color-text-primary); font-size: 11px; font-weight: 700; text-decoration: none; }
 .workspace-view-site:hover { border-color: var(--color-accent); background: var(--color-surface-page); }
@@ -709,8 +714,7 @@ body.workspace-site-body {
 
 @media (max-width: 600px) {
     .workspace-topbar { min-height: 60px; gap: 8px; padding-inline: 1rem; }
-    .workspace-topbar-title > span:first-child, .workspace-view-site span, .workspace-profile-copy, .workspace-profile-toggle > .workspace-icon { display: none; }
-    .workspace-topbar-title { font-size: 11px; }
+    .workspace-view-site span, .workspace-profile-copy, .workspace-profile-toggle > .workspace-icon { display: none; }
     .workspace-view-site { width: 44px; justify-content: center; padding: 0; }
     .workspace-topbar-actions { gap: 6px; }
     .workspace-notification-toggle { width: 44px; height: 44px; }
@@ -965,23 +969,10 @@ body.workspace-site-body {
     color: var(--color-accent);
     font-weight: 700;
 }
-.workspace-content .workspace-status-menu { position: relative; display: block; }
-.workspace-content .workspace-status-menu > .dashboard-tabs-menu {
-    min-width: 10rem;
-    z-index: var(--layer-dropdown);
-}
-.workspace-content .workspace-status-menu a[aria-current="page"] {
-    background: var(--color-surface-page);
-    font-weight: 700;
-}
-.workspace-content .workspace-status-menu[open] > .dashboard-tabs-menu {
-    animation: workspace-tab-reveal 160ms ease-out;
-}
 .workspace-content [data-feed-results][data-ajax-updated="true"] > [data-feed-content] {
     animation: workspace-tab-reveal 180ms ease-out;
 }
 .workspace-content .post-feed-skeleton { margin-top: 14px; }
-.workspace-content .post-feed-skeleton-card[hidden] { display: none; }
 .workspace-content .post-feed-skeleton-card {
     border-color: var(--color-border);
     border-radius: 12px;
@@ -999,10 +990,8 @@ body.workspace-site-body {
 }
 @media (prefers-reduced-motion: reduce) {
     .workspace-content .workspace-workflow-tabs .dashboard-tab::before { transition: none; }
-    .workspace-content .workspace-status-menu[open] > .dashboard-tabs-menu,
     .workspace-content [data-feed-results][data-ajax-updated="true"] > [data-feed-content],
-    .workspace-content .post-feed-skeleton-block,
-    .workspace-site-body .page-loading-skeleton .skeleton-block { animation: none; }
+    .workspace-content .post-feed-skeleton-block { animation: none; }
 }
 @media (max-width: 600px) {
     .workspace-content .workspace-workflow-tabs .dashboard-tab { padding-inline: 8px; }

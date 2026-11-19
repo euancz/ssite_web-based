@@ -21,7 +21,7 @@ class ArticleRequest extends ContentRequest
             'content' => ['required', 'string', 'max:20000', new MaxWords],
             'content_format' => app(ArticleContent::class)->available()
                 ? ['sometimes', 'required', Rule::in(['plain', 'markdown'])] : ['exclude'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'extensions:jpg,png', 'max:2048'],
+            'image' => [$this->route('article')?->image ? 'nullable' : 'required', 'image', 'mimes:jpg,jpeg,png', 'extensions:jpg,png', 'max:2048'],
         ];
     }
 
@@ -31,6 +31,7 @@ class ArticleRequest extends ContentRequest
             'title.required' => 'Enter an article title.',
             'title.max' => 'The title may not be longer than 200 characters.',
             'content.required' => 'Enter the article content.',
+            'image.required' => 'Choose an image.',
             'image.image' => 'Choose a valid image file.',
             'image.mimes' => 'The image must be a JPG or PNG file.',
             'image.extensions' => 'The image must have a .jpg or .png extension.',

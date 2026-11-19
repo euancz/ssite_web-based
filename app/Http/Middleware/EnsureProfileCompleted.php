@@ -24,7 +24,7 @@ class EnsureProfileCompleted
         if (
             ! $user
             || $user->hasCompletedProfile()
-            || (($user->isAdviser() || $user->isSuperadmin()) && ! config('school.require_profile_for_all_roles', true))
+            || (($user->isAdviser() || $user->isAdmin()) && ! config('school.require_profile_for_all_roles', true))
         ) {
             return $next($request);
         }

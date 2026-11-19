@@ -8,7 +8,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Stores authentication, role, and student information together on the users table.
+ * Stores account identity, roles, and profile pictures.
  */
 class User extends Authenticatable
 {
@@ -17,13 +17,13 @@ class User extends Authenticatable
     public const ROLE_STUDENT = 'student';
     public const ROLE_OFFICER = 'officer';
     public const ROLE_ADVISER = 'adviser';
-    public const ROLE_SUPERADMIN = 'superadmin';
+    public const ROLE_ADMIN = 'admin';
 
     public const ROLES = [
         self::ROLE_STUDENT,
         self::ROLE_OFFICER,
         self::ROLE_ADVISER,
-        self::ROLE_SUPERADMIN,
+        self::ROLE_ADMIN,
     ];
 
     protected $table = 'users';
@@ -52,18 +52,7 @@ class User extends Authenticatable
     |--------------------------------------------------------------------------
     */
 
-    // SECURITY: Only profile fields submitted by the signed-in user are mass-assignable.
-    // Identity, role, authentication, and officer fields are set through trusted server-side flows.
-    protected $fillable = [
-        'student_number',
-        'name',
-        'institute',
-        'program',
-        'year_level',
-        'gender',
-        'contact_number',
-        'address',
-    ];
+    protected $fillable = ['name'];
 
 
     /*
@@ -92,6 +81,7 @@ class User extends Authenticatable
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
             'profile_completed_at' => 'datetime',
+            'profile_policies_accepted_at' => 'datetime',
         ];
     }
 
@@ -155,10 +145,10 @@ class User extends Authenticatable
         return $this->role === self::ROLE_ADVISER;
     }
 
-    /** Identify superadmin accounts for adviser role assignment. */
-    public function isSuperadmin(): bool
+    /** Identify admin accounts for adviser role assignment. */
+    public function isAdmin(): bool
     {
-        return $this->role === self::ROLE_SUPERADMIN;
+        return $this->role === self::ROLE_ADMIN;
     }
 
     /** Return the configured position only when this account currently has the officer role. */
@@ -227,10 +217,10 @@ class User extends Authenticatable
         return $this->isAdviser();
     }
 
-    /** Only superadmins assign or revoke adviser roles. */
+    /** Only admins assign or revoke adviser roles. */
     public function canAssignAdvisers(): bool
     {
-        return $this->isSuperadmin();
+        return $this->isAdmin();
     }
 
     /**
@@ -271,7 +261,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Tell the profile middleware whether required student information has been saved.
+     * Tell the profile middleware whether onboarding is complete.
      */
     public function hasCompletedProfile(): bool
     {
@@ -283,7 +273,7 @@ class User extends Authenticatable
      */
     public function dashboardRoute(): string
     {
-        if ($this->isSuperadmin() || $this->isAdviser()) {
+        if ($this->isAdmin() || $this->isAdviser()) {
             return 'adviser.dashboard';
         }
 

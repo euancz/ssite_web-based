@@ -1,6 +1,8 @@
 @props([
     'variant' => 'index',
+    'initialLoading' => false,
     'backUrl' => null,
+    'backLabel' => 'Back to posts',
     'stylesheet' => null,
     'title' => null,
     'description' => null,
@@ -13,6 +15,7 @@
     'pendingCount' => null,
     'sort' => 'recent',
     'sortOptions' => [],
+    'extraFilters' => [],
     'filterName' => null,
     'filter' => null,
     'filterOptions' => [],
@@ -33,7 +36,7 @@
         <nav class="post-feed-back" aria-label="Post navigation">
             <a href="{{ $backUrl }}" class="dashboard-button dashboard-button-secondary">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7M5 12h14" /></svg>
-                Back to posts
+                {{ $backLabel }}
             </a>
         </nav>
     @endif
@@ -54,6 +57,7 @@
                     :tab="$activeTab"
                     :sort="$sort"
                     :options="$sortOptions"
+                    :extra-filters="$extraFilters"
                     :filter-name="$filterName"
                     :filter="$filter"
                     :filter-options="$filterOptions"
@@ -66,26 +70,13 @@
 
     <p class="dashboard-error post-feed-update-error" role="alert" data-feed-error hidden>
         Posts could not be updated. Check your connection and try again.
+        @if ($initialLoading)
+            <a href="{{ request()->fullUrlWithQuery(['_full' => 1]) }}">Reload the posts</a>.
+        @endif
     </p>
     <p class="visually-hidden" role="status" aria-live="polite" data-feed-status></p>
-    <div data-feed-results aria-busy="false">
-        <div class="post-feed-skeleton" data-feed-skeleton aria-hidden="true" hidden>
-            @for ($skeletonCard = 0; $skeletonCard < 3; $skeletonCard++)
-                <article class="post-feed-skeleton-card">
-                    <div class="post-feed-skeleton-author">
-                        <span class="post-feed-skeleton-block post-feed-skeleton-avatar"></span>
-                        <span class="post-feed-skeleton-lines">
-                            <span class="post-feed-skeleton-block post-feed-skeleton-line post-feed-skeleton-name"></span>
-                            <span class="post-feed-skeleton-block post-feed-skeleton-line post-feed-skeleton-meta"></span>
-                        </span>
-                    </div>
-                    <span class="post-feed-skeleton-block post-feed-skeleton-line post-feed-skeleton-title"></span>
-                    <span class="post-feed-skeleton-block post-feed-skeleton-line"></span>
-                    <span class="post-feed-skeleton-block post-feed-skeleton-line post-feed-skeleton-copy"></span>
-                    <span class="post-feed-skeleton-block post-feed-skeleton-footer"></span>
-                </article>
-            @endfor
-        </div>
-        <div data-feed-content>{{ $slot }}</div>
+    <div data-feed-results aria-busy="{{ $initialLoading ? 'true' : 'false' }}" @if ($initialLoading) data-feed-initial @endif>
+        <x-posts.feed-skeleton :stylesheet="$stylesheet" :visible="$initialLoading" />
+        <div data-feed-content @if ($initialLoading) hidden @endif>@unless ($initialLoading){{ $slot }}@endunless</div>
     </div>
 </div>

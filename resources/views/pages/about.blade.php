@@ -3,17 +3,15 @@
 @section('title', 'About Us')
 
 @push('styles')
-	<link rel="stylesheet" href="{{ asset('css/about.css') }}">
+	<link rel="stylesheet" href="{{ asset('css/about.css') }}?v={{ filemtime(public_path('css/about.css')) }}">
 @endpush
 
 @section('content')
 <div class="about-page site-page">
-	<x-ui.page-hero
-		class="about-hero"
-		banner="images/heroes/hero-about.svg"
+	<x-ui.stories-banner
 		eyebrow="About the organization"
 		title="Get to know SSITE"
-		description="Discover who we are, what we stand for, and the vision that brings our community together."
+		description="Discover who we are, what we stand for, and the vision that brings our community of aspiring IT professionals together."
 		labelledby="about-hero-title"
 	/>
 
@@ -35,25 +33,7 @@
 		{{-- Officer snapshots stay independent of later changes to user roles and profiles. --}}
 		<div class="officers-grid">
 			@forelse ($officers as $officer)
-				<article class="officer-card card-hover" tabindex="0" data-motion="reveal">
-					@php
-						$officerPhoto = null;
-						if (is_object($officer) && method_exists($officer, 'photoUrl')) {
-							$officerPhoto = $officer->photoUrl();
-						} elseif (is_object($officer) && isset($officer->photo_url)) {
-							$officerPhoto = $officer->photo_url;
-						} elseif (is_array($officer) && isset($officer['photo_url'])) {
-							$officerPhoto = $officer['photo_url'];
-						}
-					@endphp
-					@if ($officerPhoto)
-						<div class="officer-photo-frame card-media"><img class="officer-photo" src="{{ $officerPhoto }}" alt="Officer portrait for {{ $officer->name ?? ($officer['name'] ?? 'SSITE officer') }}"></div>
-					@else
-						<div class="officer-photo-frame"><div class="officer-photo officer-photo-placeholder" role="img" aria-label="Photo unavailable">Photo unavailable</div></div>
-					@endif
-					<h3>{{ $officer->name ?? ($officer['name'] ?? 'Officer Name') }}</h3>
-					<p>{{ $officer->position ?? ($officer['position'] ?? 'Officer Role') }}</p>
-				</article>
+				@include('pages.partials.officer-card', ['officer' => $officer, 'reveal' => true])
 			@empty
 				<div class="about-officers-empty"><p>Officers for A.Y. {{ $current }} will be announced soon.</p></div>
 			@endforelse
@@ -72,25 +52,7 @@
 					</summary>
 					<div class="officers-grid history-grid">
 						@foreach ($yearOfficers as $officer)
-							<article class="officer-card card-hover" tabindex="0">
-								@php
-									$yearOfficerPhoto = null;
-									if (is_object($officer) && method_exists($officer, 'photoUrl')) {
-										$yearOfficerPhoto = $officer->photoUrl();
-									} elseif (is_object($officer) && isset($officer->photo_url)) {
-										$yearOfficerPhoto = $officer->photo_url;
-									} elseif (is_array($officer) && isset($officer['photo_url'])) {
-										$yearOfficerPhoto = $officer['photo_url'];
-									}
-								@endphp
-								@if ($yearOfficerPhoto)
-									<div class="officer-photo-frame card-media"><img class="officer-photo" src="{{ $yearOfficerPhoto }}" alt="Officer portrait for {{ $officer->name ?? ($officer['name'] ?? 'SSITE officer') }}"></div>
-								@else
-									<div class="officer-photo-frame"><div class="officer-photo officer-photo-placeholder" role="img" aria-label="Photo unavailable">Photo unavailable</div></div>
-								@endif
-								<h3>{{ $officer->name ?? ($officer['name'] ?? 'Officer Name') }}</h3>
-								<p>{{ $officer->position ?? ($officer['position'] ?? 'Officer Role') }}</p>
-							</article>
+							@include('pages.partials.officer-card', ['officer' => $officer])
 						@endforeach
 					</div>
 				</details>

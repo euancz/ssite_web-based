@@ -15,6 +15,25 @@ function initRichForm(form) {
     const output = panel?.querySelector('[data-article-preview-output]');
     const status = panel?.querySelector('[data-article-preview-status]');
     const previewButton = panel?.querySelector('[data-render-article]');
+    const previewImage = panel?.querySelector('[data-article-preview-image]');
+    const imageInput = form.querySelector('input[type="file"][data-image-preview]');
+    const originalImage = imageInput ? document.getElementById(imageInput.dataset.imagePreview)?.getAttribute('src') : null;
+    let imageUrl = null;
+    const updateImage = () => {
+        if (!previewImage) return;
+        if (imageUrl) URL.revokeObjectURL(imageUrl);
+        const file = imageInput?.files?.[0];
+        imageUrl = file?.type.startsWith('image/') ? URL.createObjectURL(file) : null;
+        const source = imageUrl || originalImage;
+        previewImage.hidden = !source;
+        if (source) previewImage.src = source;
+        else previewImage.removeAttribute('src');
+    };
+    imageInput?.addEventListener('change', updateImage);
+    window.addEventListener('pagehide', (event) => {
+        if (!event.persisted && imageUrl) URL.revokeObjectURL(imageUrl);
+    });
+    updateImage();
     let revision = 0;
     let pending = null;
 

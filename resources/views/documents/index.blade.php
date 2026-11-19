@@ -9,12 +9,10 @@
 
 @section('content')
 <div class="documents-page site-page">
-    <x-ui.page-hero
-        class="documents-hero"
-        banner="images/heroes/hero-documents.svg"
-        eyebrow="Documents · records · archives"
+    <x-ui.stories-banner
+        eyebrow="Documents • Records • Archives"
         title="Official records"
-        description="Browse SSITE's official documents and organizational records in one accessible location."
+        description="Browse SSITE’s official documents and organizational records in one accessible location."
         labelledby="documents-title"
     />
 
@@ -25,6 +23,7 @@
             <input id="document-search" type="search" name="q" value="{{ $searchQuery }}" placeholder="Search document titles" maxlength="100">
             <button type="submit" aria-label="Search documents"><x-icon name="search" size="sm" /></button>
         </div>
+        <x-posts.filter-panel :active-count="(int) ($category !== '') + (int) ($semester !== '') + (int) ($academicYear !== '') + (int) ($sort !== 'recent')">
         <label class="documents-select"><span>Sort by</span>
             <select name="sort" onchange="this.form.requestSubmit()">
                 @foreach ($sortOptions as $value => $label)
@@ -41,16 +40,7 @@
                 </select>
             </label>
         @endif
-        <details class="documents-more-filters" @if ($category !== '' || $semester !== '') open @endif>
-            <summary>
-                <span>More filters</span>
-                @if ($category !== '' || $semester !== '')
-                    <span class="documents-filter-count" aria-label="{{ (int) ($category !== '') + (int) ($semester !== '') }} additional filters active">{{ (int) ($category !== '') + (int) ($semester !== '') }}</span>
-                @endif
-                <span class="documents-filter-hint">Category &amp; semester</span>
-                <x-icon name="chevron-down" size="sm" />
-            </summary>
-            <div class="documents-secondary-filters">
+
                 <label class="documents-select">
                     <span>Category</span>
                     <select name="category" onchange="this.form.requestSubmit()">
@@ -67,8 +57,7 @@
                         <option value="2" @selected($semester === '2')>2nd Semester</option>
                     </select>
                 </label>
-            </div>
-        </details>
+        </x-posts.filter-panel>
         <noscript><button class="site-button" type="submit">Apply filters</button></noscript>
         @if ($academicYear !== '' || $searchQuery !== '' || $category !== '' || $semester !== '' || $sort !== 'recent')
             <a class="site-filter-reset" href="{{ route('documents.index') }}">Clear filters</a>

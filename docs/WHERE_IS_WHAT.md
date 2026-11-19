@@ -104,9 +104,9 @@ Use this guide to find the file that owns a common change.
 | Officer Term validation and custom academic-year checks | `app/Http/Requests/StoreOfficerTermRequest.php` and `UpdateOfficerTermRequest.php` |
 | Role checks and profile-completion middleware | `app/Http/Middleware/` and `bootstrap/app.php` |
 | Officer dashboard | `app/Http/Controllers/Officer/DashboardController.php` and `resources/views/officer/dashboard.blade.php` |
-| Adviser/superadmin dashboards, pending counts, or role history | `app/Http/Controllers/Adviser/DashboardController.php` and `resources/views/adviser/dashboard.blade.php` |
+| Adviser/admin dashboards, pending counts, or role history | `app/Http/Controllers/Adviser/DashboardController.php` and `resources/views/adviser/dashboard.blade.php` |
 | Position-based officer dashboard and own post counts | `app/Http/Controllers/Officer/DashboardController.php` and `resources/views/officer/dashboard.blade.php` |
-| Adviser/superadmin user assignment manager | `app/Http/Controllers/Adviser/UserController.php` and `resources/views/adviser/users/` |
+| Adviser/admin user assignment manager | `app/Http/Controllers/Adviser/UserController.php` and `resources/views/adviser/users/` |
 | Public home or about page content | `resources/views/pages/` |
 | Activity, achievement, document, or liquidation page content | The matching `resources/views/<feature>/` directory |
 | Shared page headers, badges, tables, statistic cards, or reject modal | `resources/views/components/ui/` |

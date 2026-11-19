@@ -24,9 +24,6 @@
             :format-value="$draftValues['content_format'] ?? $achievement?->content_format ?? 'markdown'"
             :formatting-enabled="$formattingEnabled"
         />
-        @if ($formattingEnabled)
-            <span class="profile-field-help">Use the toolbar or paste formatted text.</span>
-        @endif
         <span class="profile-field-help">Maximum 300 words and 20,000 characters.</span>
         @error('description') <span id="achievement-description-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
@@ -43,16 +40,12 @@
         @error('awardee') <span id="achievement-awardee-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
     {{-- Category is optional and follows the table's 100-character limit. --}}
-    <div class="dashboard-form-field">
-        <label for="achievement-category">Category</label>
-        <input id="achievement-category" name="category" @error('category') aria-invalid="true" aria-describedby="achievement-category-error" @enderror type="text" maxlength="100" value="{{ old('category', $draftValues['category'] ?? $achievement?->category) }}">
-        @error('category') <span id="achievement-category-error" class="profile-field-error">{{ $message }}</span> @enderror
-    </div>
+    <x-workspace.category-field module="achievements" :post="$achievement" :draft-values="$draftValues ?? []" />
     {{-- SECURITY: Upload validation and filename generation happen on the server. --}}
     <div class="dashboard-form-field">
-        <label for="achievement-image">{{ $achievement ? 'Replace image (optional)' : 'Image (optional)' }}</label>
+        <label for="achievement-image">{{ $achievement?->image ? 'Replace image (optional)' : 'Image' }} @unless ($achievement?->image)<span class="post-form-required-mark" aria-hidden="true">*</span>@endunless</label>
         <x-workspace.attachment title="Attach a feature image" help="JPG or PNG up to 2 MB">
-            <input id="achievement-image" data-image-preview="achievement-image-preview" name="image" @error('image') aria-invalid="true" aria-describedby="achievement-image-error" @enderror type="file" accept=".jpg,.png">
+            <input id="achievement-image" data-image-preview="achievement-image-preview" name="image" @error('image') aria-invalid="true" aria-describedby="achievement-image-error" @enderror type="file" accept=".jpg,.png" @required(! $achievement?->image)>
         </x-workspace.attachment>
         <x-workspace.upload-status input-id="achievement-image" :max-kb="2048" />
         @error('image') <span id="achievement-image-error" class="profile-field-error">{{ $message }}</span> @enderror

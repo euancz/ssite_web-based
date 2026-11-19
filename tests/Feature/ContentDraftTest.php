@@ -20,7 +20,7 @@ class ContentDraftTest extends TestCase
         $this->buildContentSchema();
     }
 
-    private function actor(string $position = 'Multimedia'): User
+    private function actor(string $position = 'Social Media Manager'): User
     {
         $user = new User;
         $user->forceFill(['name' => 'Draft owner', 'email' => uniqid().'@mcc.edu.ph', 'role' => 'officer',
@@ -38,7 +38,7 @@ class ContentDraftTest extends TestCase
 
     public function test_all_modules_save_and_resume_incomplete_private_drafts_without_publishing_or_notifying(): void
     {
-        foreach (['articles' => 'Multimedia', 'activities' => 'Multimedia', 'achievements' => 'Multimedia', 'documents' => 'Secretary', 'liquidations' => 'Auditor'] as $module => $position) {
+        foreach (['articles' => 'Social Media Manager', 'activities' => 'Social Media Manager', 'achievements' => 'Social Media Manager', 'documents' => 'Secretary', 'liquidations' => 'Auditor'] as $module => $position) {
             $owner = $this->actor($position);
             $draft = $this->saveDraft($owner, $module, ['title' => 'Private '.$module, 'created_by_user_id' => 999,
                 'approval_status' => 'approved', 'file_path' => 'secret.pdf', 'image' => 'forged.jpg']);

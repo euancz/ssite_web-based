@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    @include('layouts.partials.font-preloads')
     <meta name="description" content="The official SSITE community at Mabalacat City College. Sign in for student news, activities, achievements, documents, and organization reports.">
     <meta name="theme-color" content="#7bd0ed">
-    <title>SSITE | Mabalacat City College</title>
+    <title>@yield('title', 'SSITE | Mabalacat City College')</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('images/ssite-favicon.svg') }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/landing.css') }}">
     <link rel="stylesheet" href="{{ asset('css/interface-polish.css') }}">
     <link rel="stylesheet" href="{{ asset('css/landing-chrome.css') }}">
+    @include('layouts.partials.typography')
     <script src="{{ asset('js/landing.js') }}" defer></script>
 </head>
 <body class="landing-page" id="top">
@@ -20,10 +19,10 @@
     <header class="landing-header">
         <div class="header-inner wrap">
             <a class="brand" href="{{ route('landing') }}" aria-label="SSITE home"><img src="{{ asset('images/SSITE LOGO.png') }}" alt="" width="54" height="54"><span><strong class="landing-brand-full">STUDENT SOCIETY IN INFORMATION<br>TECHNOLOGY EDUCATION</strong><strong class="landing-brand-short">SSITE</strong><small>Mabalacat City College</small></span></a>
-            <nav class="desktop-nav" aria-label="Main navigation"><a href="#community">Community</a><a href="#get-app">The app</a><a href="#questions">Policies</a></nav>
+            <nav class="desktop-nav" aria-label="Main navigation"><a href="{{ route('landing') }}#community">Community</a><a href="{{ route('landing') }}#get-app">The app</a><a href="#questions">Policies</a></nav>
             <a class="header-signin" href="{{ route('microsoft.login') }}" aria-label="Sign in with Microsoft"><x-microsoft-mark /> Sign in <x-icon name="arrow-right" size="sm" /></a>
         </div>
-        <nav class="mobile-nav wrap" aria-label="Mobile navigation"><a href="#community">Community</a><a href="#get-app">Download app</a><a href="#questions">Policies</a></nav>
+        <nav class="mobile-nav wrap" aria-label="Mobile navigation"><a href="{{ route('landing') }}#community">Community</a><a href="{{ route('landing') }}#get-app">Download app</a><a href="#questions">Policies</a></nav>
     </header>
     <main id="main-content" tabindex="-1">@yield('content')</main>
     <footer class="landing-site-footer">

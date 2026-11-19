@@ -24,7 +24,7 @@ class ArticleCategoryTest extends TestCase
     private function actor(): User
     {
         $user = new User;
-        $user->forceFill(['name' => 'Editor', 'email' => uniqid().'@mcc.edu.ph', 'role' => 'officer', 'officer_position' => 'Multimedia', 'profile_completed_at' => now()])->save();
+        $user->forceFill(['name' => 'Editor', 'email' => uniqid().'@mcc.edu.ph', 'role' => 'officer', 'officer_position' => 'Social Media Manager', 'profile_completed_at' => now()])->save();
 
         return $user;
     }
@@ -48,7 +48,10 @@ class ArticleCategoryTest extends TestCase
         $this->actingAs(User::factory()->make(['id' => 99999, 'role' => 'student', 'profile_completed_at' => now()]));
         $response = $this->get(route('articles.index', ['category' => 'Projects']))->assertOk()
             ->assertSee('Published project')->assertDontSee('Uncategorized legacy')->assertDontSee('Private category')->assertDontSee('Archived category');
-        $this->assertSame(['' => 'All categories', 'Projects' => 'Projects'], $response->viewData('categoryOptions'));
+        $this->assertSame(['' => 'All categories',
+            'Organization News' => 'Organization News', 'Student Features' => 'Student Features',
+            'Educational Articles' => 'Educational Articles', 'Event Highlights' => 'Event Highlights',
+            'Projects' => 'Projects'], $response->viewData('categoryOptions'));
         $this->get(route('articles.index'))->assertOk()->assertSee('Uncategorized legacy');
         $this->getJson(route('articles.index', ['category' => ['bad']]))->assertUnprocessable();
         $this->getJson(route('articles.index', ['category' => str_repeat('x', 101)]))->assertUnprocessable();

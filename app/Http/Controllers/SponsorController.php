@@ -3,17 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Support\ContentPagination;
+use App\Support\SearchText;
 
 use App\Http\Requests\SponsorRequest;
 use App\Models\Sponsor;
 use Illuminate\Http\RedirectResponse;
+use App\Support\SearchSuggestions;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class SponsorController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|JsonResponse
     {
         $filters = $request->validate([
             'q' => ['nullable', 'string', 'max:100'],
@@ -24,7 +27,10 @@ class SponsorController extends Controller
         $filters['q'] = trim($filters['q']);
         $query = Sponsor::query();
         if ($filters['q'] !== '') {
-            $query->where(fn ($query) => $query->where('name', 'like', '%'.$filters['q'].'%')->orWhere('description', 'like', '%'.$filters['q'].'%'));
+            $query->where(function ($query) use ($filters) {
+                SearchText::contains($query, 'name', $filters['q']);
+                SearchText::contains($query, 'description', $filters['q'], 'or');
+            });
         }
         if ($filters['visibility'] !== '') $query->where('is_active', $filters['visibility'] === 'visible');
         match ($filters['sort']) {
@@ -32,6 +38,10 @@ class SponsorController extends Controller
             'recent' => $query->orderByDesc('created_at')->orderByDesc('id'),
             default => $query->inDisplayOrder(),
         };
+        if (SearchSuggestions::requested($request)) {
+            return SearchSuggestions::fromQuery($request, $query, 'name');
+        }
+
         return view('sponsors.index', ['sponsors' => ContentPagination::paginate($query, 20)->appends($filters), 'filters' => $filters]);
     }
 

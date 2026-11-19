@@ -5,7 +5,7 @@ namespace App\Policies;
 use App\Models\Activity;
 use App\Models\User;
 
-/** Activity permissions follow configured officer positions; advisers and superadmins never manage content. */
+/** Activity permissions follow configured officer positions; advisers and admins never manage content. */
 class ActivityPolicy
 {
     public function viewAny(?User $user): bool
@@ -51,7 +51,7 @@ class ActivityPolicy
 
     public function delete(User $user, Activity $activity): bool
     {
-        return $user->canPermanentlyDelete();
+        return $user->canPermanentlyDelete() && $activity->isArchived();
     }
 
     public function bulkArchive(User $user): bool

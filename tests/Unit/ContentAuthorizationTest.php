@@ -28,7 +28,7 @@ class ContentAuthorizationTest extends TestCase
     public function test_only_president_can_review_and_non_president_officers_can_edit_their_own_posts(): void
     {
         $policy = new ArticlePolicy();
-        $secretary = $this->user(10, User::ROLE_OFFICER, 'Multimedia');
+        $secretary = $this->user(10, User::ROLE_OFFICER, 'Social Media Manager');
         $president = $this->user(11, User::ROLE_OFFICER, 'President');
         $article = new Article();
         $article->created_by_user_id = $secretary->id;
@@ -38,14 +38,14 @@ class ContentAuthorizationTest extends TestCase
         $this->assertTrue($policy->update($secretary, $article));
         $this->assertFalse($policy->approve($secretary, $article));
         $this->assertTrue($policy->approve($president, $article));
-        $this->assertFalse($policy->update($this->user(12, User::ROLE_OFFICER, 'Multimedia'), $article));
+        $this->assertFalse($policy->update($this->user(12, User::ROLE_OFFICER, 'Social Media Manager'), $article));
     }
 
     public function test_officer_positions_can_post_only_to_their_configured_modules(): void
     {
         $secretary = $this->user(30, User::ROLE_OFFICER, 'Secretary');
         $auditor = $this->user(31, User::ROLE_OFFICER, 'Auditor');
-        $multimedia = $this->user(32, User::ROLE_OFFICER, 'Multimedia');
+        $socialMediaManager = $this->user(32, User::ROLE_OFFICER, 'Social Media Manager');
         $president = $this->user(33, User::ROLE_OFFICER, 'President');
         $student = $this->user(34, User::ROLE_STUDENT);
 
@@ -53,9 +53,9 @@ class ContentAuthorizationTest extends TestCase
         $this->assertFalse($secretary->canPostIn('articles'));
         $this->assertTrue($auditor->canPostIn('liquidations'));
         $this->assertFalse($auditor->canPostIn('documents'));
-        $this->assertTrue($multimedia->canPostIn('articles'));
-        $this->assertTrue($multimedia->canPostIn('activities'));
-        $this->assertFalse($multimedia->canPostIn('documents'));
+        $this->assertTrue($socialMediaManager->canPostIn('articles'));
+        $this->assertTrue($socialMediaManager->canPostIn('activities'));
+        $this->assertFalse($socialMediaManager->canPostIn('documents'));
         $this->assertTrue($president->canPostIn('liquidations'));
         $this->assertFalse($student->canPostIn('articles'));
     }
@@ -63,7 +63,7 @@ class ContentAuthorizationTest extends TestCase
     public function test_pending_rejected_and_archived_posts_are_not_publicly_visible(): void
     {
         $policy = new ArticlePolicy();
-        $owner = $this->user(40, User::ROLE_OFFICER, 'Multimedia');
+        $owner = $this->user(40, User::ROLE_OFFICER, 'Social Media Manager');
         $other = $this->user(41, User::ROLE_STUDENT);
         $article = new Article();
         $article->created_by_user_id = $owner->id;

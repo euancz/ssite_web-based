@@ -5,6 +5,7 @@
 @section('content')
 <x-workspace.posts.feed-frame
     variant="index"
+    :initial-loading="$pageDataPending ?? false"
     stylesheet="liquidation"
     title="Liquidation"
     description="Browse and manage liquidation reports."
@@ -14,6 +15,7 @@
     :pending-count="$pendingCount"
     :sort="$sort"
     :sort-options="$sortOptions"
+    :extra-filters="$extraFilters"
     filter-name="year"
     :filter="$year"
     :filter-options="$yearOptions"

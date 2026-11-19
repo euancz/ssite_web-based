@@ -16,6 +16,18 @@
         @error('title') <span id="liquidation-title-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
 
+    @if (\Illuminate\Support\Facades\Schema::hasColumn('liquidations', 'semester'))
+        <div class="dashboard-form-field">
+            <label for="liquidation-semester">Academic semester</label>
+            <select id="liquidation-semester" name="semester" @error('semester') aria-invalid="true" aria-describedby="liquidation-semester-error" @enderror>
+                <option value="">Not assigned</option>
+                @foreach (['1' => '1st Semester', '2' => '2nd Semester'] as $value => $label)
+                    <option value="{{ $value }}" @selected((string) old('semester', $draftValues['semester'] ?? $liquidation?->semester) === (string) $value)>{{ $label }}</option>
+                @endforeach
+            </select>
+            @error('semester')<span id="liquidation-semester-error" class="profile-field-error">{{ $message }}</span>@enderror
+        </div>
+    @endif
     <div class="dashboard-form-field">
         <label for="liquidation-amount">Amount (PHP)</label>
         <input id="liquidation-amount" name="amount" @error('amount') aria-invalid="true" aria-describedby="liquidation-amount-error" @enderror type="number" min="0" max="9999999999.99" step="0.01" value="{{ old('amount', $draftValues['amount'] ?? $liquidation?->amount) }}">

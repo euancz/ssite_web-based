@@ -4,6 +4,10 @@ export function initPostComposer() {
         const form = page.querySelector('[data-content-form]');
         const actions = form?.querySelector(':scope > .profile-form-actions');
         if (!form || !actions) return;
+        const saveDraft = form.querySelector('[data-save-draft]');
+        const formattedPreview = form.querySelector('[data-article-preview]');
+        const previewImage = formattedPreview?.querySelector('[data-article-preview-image]');
+        const contentFormat = form.querySelector('[data-rich-format], #article-content-format');
         const details = document.createElement('section');
         details.dataset.composerDetails = '';
         const review = document.createElement('section');
@@ -17,7 +21,7 @@ export function initPostComposer() {
         summary.className = 'workspace-composer-summary';
         review.append(summary);
         [...form.children].forEach((child) => {
-            if (child.matches('input[type="hidden"], .workspace-draft-controls, [data-unsaved-status]')) return;
+            if (child.matches('input[type="hidden"], .workspace-draft-controls, [data-unsaved-status], [data-save-draft]')) return;
             if (child.matches('[data-content-preview], [data-article-preview], .profile-form-actions')) review.append(child);
             else details.append(child);
         });
@@ -29,6 +33,11 @@ export function initPostComposer() {
         const navigation = document.createElement('div');
         navigation.className = 'profile-form-actions';
         navigation.append(next);
+        actions.querySelectorAll('a').forEach((link) => {
+            if (link.textContent.trim() === 'Back to submissions') link.remove();
+            else navigation.prepend(link);
+        });
+        if (saveDraft) navigation.prepend(saveDraft);
         details.append(navigation);
         const back = document.createElement('button');
         back.type = 'button';
@@ -53,9 +62,12 @@ export function initPostComposer() {
             if (focus) heading.focus();
         };
         const updateSummary = () => {
+            // Keep the live preview and its event listeners when rebuilding the summary.
+            if (formattedPreview) review.insertBefore(formattedPreview, actions);
             summary.replaceChildren();
             [...form.elements].forEach((control) => {
                 if (!control.name || !control.matches('input:not([type="hidden"]), textarea, select') || control.disabled) return;
+                if (contentFormat?.value === 'markdown' && previewImage && !previewImage.hidden && control.matches('input[type="file"][data-image-preview]')) return;
                 const value = control.type === 'file'
                     ? [...control.files].map((file) => file.name).join(', ')
                     : control.tagName === 'SELECT' ? (control.value ? control.selectedOptions[0]?.textContent : '') : control.value;
@@ -64,7 +76,12 @@ export function initPostComposer() {
                 const label = document.createElement('dt');
                 label.textContent = (control.labels?.[0]?.textContent || control.name).replace(/\s*\*\s*$/, '').trim();
                 const output = document.createElement('dd');
-                output.textContent = value;
+                if (formattedPreview && contentFormat?.value === 'markdown' && control.matches('[data-rich-body], #article-content')) {
+                    output.classList.add('workspace-composer-formatted-content');
+                    output.append(formattedPreview);
+                } else {
+                    output.textContent = value;
+                }
                 row.append(label, output);
                 summary.append(row);
             });
@@ -80,6 +97,7 @@ export function initPostComposer() {
             }
             updateSummary();
             show(3);
+            if (contentFormat?.value === 'markdown') formattedPreview?.querySelector('[data-render-article]')?.click();
         };
         next.addEventListener('click', advance);
         back.addEventListener('click', () => show(2));

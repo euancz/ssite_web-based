@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Adviser;
 
 use App\Support\ContentPagination;
+use App\Support\SearchText;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use App\Support\SearchSuggestions;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -16,7 +19,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /*
- * Adviser and superadmin assignment paths are separated; configured positions are never free text.
+ * Adviser and admin assignment paths are separated; configured positions are never free text.
  */
 /**
  * Lists user information and provides actor-scoped role assignment and read-only details.
@@ -24,9 +27,9 @@ use Illuminate\Validation\ValidationException;
 class UserController extends Controller
 {
     /**
-     * Search and paginate user accounts, including their academic profile fields.
+     * Search and paginate user accounts by name, email, and role.
      */
-    public function index(Request $request): View
+    public function index(Request $request): View|JsonResponse
     {
         $actor = $request->user();
         abort_unless($actor?->canAssignOfficers() || $actor?->canAssignAdvisers(), 403);
@@ -39,18 +42,19 @@ class UserController extends Controller
         ]);
 
         $query = User::query()->whereIn('role', $targetRoles)
-            ->when($filters['search'] ?? null, function ($query, string $search): void {
+            ->when(trim($filters['search'] ?? '') !== '', function ($query) use ($filters): void {
+                $search = trim($filters['search']);
                 $query->where(function ($query) use ($search): void {
-                    $query->where('name', 'like', '%' . $search . '%')
-                        ->orWhere('email', 'like', '%' . $search . '%')
-                        ->orWhere('student_number', 'like', '%' . $search . '%')
-                        ->orWhere('institute', 'like', '%' . $search . '%')
-                        ->orWhere('program', 'like', '%' . $search . '%')
-                        ->orWhere('year_level', 'like', '%' . $search . '%');
+                    SearchText::contains($query, 'name', $search);
+                    SearchText::contains($query, 'email', $search, 'or');
                 });
             })
             ->when($filters['role'] ?? null, fn ($query, string $role) => $query->where('role', $role))
             ->orderBy('name')->orderBy('id');
+        if (SearchSuggestions::requested($request)) {
+            return SearchSuggestions::fromQuery($request, $query, 'name');
+        }
+
         $users = ContentPagination::paginate($query, 15)->appends($filters);
 
         $positions = array_keys(config('school.positions', []));

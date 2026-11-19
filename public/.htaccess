@@ -1,3 +1,13 @@
+<IfModule mod_mime.c>
+    AddType font/woff .woff
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "^Poppins-.*\.woff$">
+        Header set Cache-Control "public, max-age=31536000"
+    </FilesMatch>
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

@@ -9,12 +9,15 @@ use App\Services\ContentReview;
 use App\Services\PostFiles;
 use App\Support\ContentListing;
 use App\Support\ContentPagination;
+use App\Support\InitialPageData;
 use App\Support\PostEngagement;
 use App\Support\PostNotificationRecipients;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
+use App\Support\SearchSuggestions;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -31,7 +34,7 @@ class ArticleController extends Controller
     /**
      * Show each role only the article tabs and rows that role may access.
      */
-    public function index(Request $request, PostEngagement $engagement): View
+    public function index(Request $request, PostEngagement $engagement): View|JsonResponse
     {
         $this->authorize('viewAny', Article::class);
         $user = $request->user();
@@ -45,8 +48,7 @@ class ArticleController extends Controller
             $filters = $request->validate(['category' => ['nullable', 'string', 'max:100']]);
             $category = $filters['category'] ?? '';
             // Discover categories only inside the already authorized publication/owner scope.
-            $categoryOptions = (clone $articles)->whereNotNull('category')->where('category', '<>', '')
-                ->distinct()->orderBy('category')->pluck('category', 'category')->all();
+            $categoryOptions = \App\Support\ContentCategories::options('articles', $articles);
             $categoryOptions = ['' => 'All categories'] + $categoryOptions;
             if ($category !== '') {
                 $categoryOptions[$category] ??= $category;
@@ -92,14 +94,19 @@ class ArticleController extends Controller
         if (in_array($sort, ['viewed', 'liked'], true)) {
             $articles->orderBy('created_at', 'desc');
         }
-        $articles = ContentPagination::paginate($articles->orderBy('id', 'asc'))
+        if (SearchSuggestions::requested($request)) {
+            return SearchSuggestions::fromQuery($request, $articles->orderBy('id'));
+        }
+
+        $pageDataPending = InitialPageData::pending($request);
+        $articles = ContentPagination::paginate($articles->orderBy('id', 'asc'), pending: $pageDataPending)
             ->appends(['q' => is_string($request->query('q')) ? mb_substr(trim($request->query('q')), 0, 100) : '', 'tab' => $tab, 'sort' => $sort, 'category' => $category]);
 
 
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
         $view = $workspaceList ? 'workspace.posts.articles.index' : 'articles.index';
 
-        return view($view, compact('articles', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'pendingCount', 'categoriesEnabled', 'categoryOptions', 'category'));
+        return view($view, compact('articles', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'pendingCount', 'categoriesEnabled', 'categoryOptions', 'category', 'pageDataPending'));
     }
 
     /**
@@ -206,8 +213,11 @@ class ArticleController extends Controller
             $article->image = $this->storeImage($request);
         }
 
-        if ($wasRejected || ($wasApproved && $request->user()->isOfficer()
-            && config('school.reset_approval_on_edit', true))) {
+        // President edits preserve the current review state.
+        $needsReview = ! $request->user()->isPresident()
+            && ($wasRejected || ($wasApproved && $request->user()->isOfficer()
+                && config('school.reset_approval_on_edit', true)));
+        if ($needsReview) {
             // Edited content needs a fresh President decision; approval and visibility stay separate.
             $article->approval_status = Article::APPROVAL_PENDING;
             $article->rejection_reason = null;
@@ -217,7 +227,7 @@ class ArticleController extends Controller
 
         app(PostFiles::class)->save($article);
         // SECURITY: Only officer edits returned to pending trigger a review notice; failures never block saving.
-        if ($request->user()->isOfficer() && ($wasRejected || ($wasApproved && config('school.reset_approval_on_edit', true)))) {
+        if ($request->user()->isOfficer() && $needsReview) {
             app(PostNotificationRecipients::class)->submitted('article', $article, $request->user(), true);
         }
 

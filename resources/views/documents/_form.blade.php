@@ -16,11 +16,7 @@
         @error('title') <span id="document-title-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
 
-    <div class="dashboard-form-field">
-        <label for="document-category">Category</label>
-        <input id="document-category" placeholder="e.g. Meeting minutes" name="category" @error('category') aria-invalid="true" aria-describedby="document-category-error" @enderror maxlength="100" value="{{ old('category', $draftValues['category'] ?? $document?->category) }}">
-        @error('category') <span id="document-category-error" class="profile-field-error">{{ $message }}</span> @enderror
-    </div>
+    <x-workspace.category-field module="documents" :post="$document" :draft-values="$draftValues ?? []" />
 
     @if (\App\Support\DocumentAcademicYear::available())
         <div class="dashboard-form-field">

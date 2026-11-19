@@ -61,7 +61,7 @@
                             <a href="{{ route('adviser.officers.index') }}">Officer roster <x-workspace.icon name="chevron" /></a>
                         @endcan
                         @can(config('workspace.navigation.users.gate'))
-                            <a href="{{ route('adviser.users.index') }}">{{ $guideUser->isSuperadmin() ? 'Adviser accounts' : 'User accounts' }} <x-workspace.icon name="chevron" /></a>
+                            <a href="{{ route('adviser.users.index') }}">{{ $guideUser->isAdmin() ? 'Adviser accounts' : 'User accounts' }} <x-workspace.icon name="chevron" /></a>
                         @endcan
                     </div>
                 </div>

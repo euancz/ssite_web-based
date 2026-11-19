@@ -21,7 +21,7 @@ class Liquidation extends Model
     protected $primaryKey = 'id';
 
     // SECURITY: Workflow state and uploaded-file metadata are never mass assignable.
-    protected $fillable = ['title', 'description', 'amount', 'report_date'];
+    protected $fillable = ['title', 'description', 'amount', 'report_date', 'semester'];
 
     protected function casts(): array
     {

@@ -22,8 +22,8 @@ class OfficerTermSeeder extends Seeder
             ['Chanel Jeraldine Fernandez', 'Public Information Officer', null],
             ['Robert John Garcia', 'Business Manager', null],
             ['Jhan Mino Daracan', 'Social Media Manager', null],
-            ['Febbie Ann Escoto', 'Multimedia (Creative)', null],
-            ['Sophia Cassandra Pare', 'Multimedia (Documentation)', null],
+            ['Febbie Ann Escoto', 'Social Media Manager (Creative)', null],
+            ['Sophia Cassandra Pare', 'Social Media Manager (Documentation)', null],
             ['Ashley Alessandra Annunciation', 'IT Representative I', null],
             ['Izhar Henjie Allague', 'IT Representative II', null],
         ];

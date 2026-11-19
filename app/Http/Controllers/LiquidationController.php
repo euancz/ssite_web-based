@@ -9,6 +9,7 @@ use App\Services\ContentReview;
 use App\Services\PostFiles;
 use App\Support\ContentListing;
 use App\Support\ContentPagination;
+use App\Support\InitialPageData;
 use App\Support\PostEngagement;
 use App\Support\PostNotificationRecipients;
 use App\Support\PrivatePdfResponse;
@@ -16,6 +17,8 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
+use App\Support\SearchSuggestions;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -31,12 +34,22 @@ class LiquidationController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index(Request $request, PostEngagement $engagement): View
+    public function index(Request $request, PostEngagement $engagement): View|JsonResponse
     {
         $this->authorize('viewAny', Liquidation::class);
         $user = $request->user();
         [$liquidations, $allowedTabs, $tab, $pendingCount, $workspaceList] = app(ContentListing::class)
             ->scope(Liquidation::query()->with('author'), $request, 'liquidations');
+
+        $semestersEnabled = \Illuminate\Support\Facades\Schema::hasColumn('liquidations', 'semester');
+        $semesterOptions = $semestersEnabled ? ['' => 'All academic semesters', '1' => '1st Semester', '2' => '2nd Semester'] : [];
+        $semester = $request->query('semester');
+        $semester = is_string($semester) && array_key_exists($semester, $semesterOptions) ? $semester : '';
+        $eventOptions = ['' => 'All events'] + (clone $liquidations)->distinct()->orderBy('title')->pluck('title', 'title')->all();
+        $event = $request->query('event');
+        $event = is_string($event) && array_key_exists($event, $eventOptions) ? $event : '';
+        $extraFilters = ['event' => ['label' => 'Event name', 'value' => $event, 'options' => $eventOptions]];
+        if ($semestersEnabled) $extraFilters['semester'] = ['label' => 'Academic semester', 'value' => $semester, 'options' => $semesterOptions];
 
         // Build year choices inside the visibility boundary, before other filters.
         $yearOptions = ['' => 'All report years'];
@@ -48,6 +61,8 @@ class LiquidationController extends Controller
         $requestedYear = $request->query('year');
         $year = is_string($requestedYear) && array_key_exists($requestedYear, $yearOptions) ? $requestedYear : '';
         if ($year !== '') $liquidations->whereYear('report_date', $year);
+        if ($semester !== '') $liquidations->where('semester', $semester);
+        if ($event !== '') $liquidations->where('title', $event);
 
         $searchQuery = $request->query('q');
         if (is_string($searchQuery) && trim($searchQuery) !== '') {
@@ -112,12 +127,17 @@ class LiquidationController extends Controller
         if (in_array($sort, ['viewed', 'liked'], true)) {
             $liquidations->orderBy('created_at', 'desc');
         }
-        $liquidations = ContentPagination::paginate($liquidations->orderBy('id', 'asc'))
-            ->appends(['tab' => $tab, 'sort' => $sort, 'q' => $searchQuery, 'year' => $year]);
+        if (SearchSuggestions::requested($request)) {
+            return SearchSuggestions::fromQuery($request, $liquidations->orderBy('id'));
+        }
+
+        $pageDataPending = $workspaceList && InitialPageData::pending($request);
+        $liquidations = ContentPagination::paginate($liquidations->orderBy('id', 'asc'), pending: $pageDataPending)
+            ->appends(['tab' => $tab, 'sort' => $sort, 'q' => $searchQuery, 'year' => $year, 'semester' => $semester, 'event' => $event]);
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
         $view = $workspaceList ? 'workspace.posts.liquidation.index' : 'liquidation.index';
 
-        return view($view, compact('liquidations', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'pendingCount', 'year', 'yearOptions', 'searchQuery'));
+        return view($view, compact('liquidations', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'pendingCount', 'year', 'yearOptions', 'searchQuery', 'semester', 'semesterOptions', 'event', 'eventOptions', 'extraFilters', 'pageDataPending'));
     }
 
     public function show(Liquidation $liquidation, Request $request, PostEngagement $engagement): View
@@ -204,7 +224,11 @@ class LiquidationController extends Controller
             [$liquidation->file_path, $liquidation->original_name, $liquidation->file_size] = $this->storePdf($file);
         }
         // SECURITY: Edited rejected reports and configured approved edits return to President review.
-        if ($wasRejected || ($wasApproved && $request->user()->isOfficer() && config('school.reset_approval_on_edit', true))) {
+        // President edits preserve the current review state.
+        $needsReview = ! $request->user()->isPresident()
+            && ($wasRejected || ($wasApproved && $request->user()->isOfficer()
+                && config('school.reset_approval_on_edit', true)));
+        if ($needsReview) {
             $liquidation->approval_status = Liquidation::APPROVAL_PENDING;
             $liquidation->rejection_reason = null;
             $liquidation->reviewed_by_user_id = null;
@@ -212,7 +236,7 @@ class LiquidationController extends Controller
         }
         app(PostFiles::class)->save($liquidation);
         // SECURITY: Edits returned to pending notify configured reviewers; failures never block saving.
-        if ($request->user()->isOfficer() && ($wasRejected || ($wasApproved && config('school.reset_approval_on_edit', true)))) {
+        if ($request->user()->isOfficer() && $needsReview) {
             app(PostNotificationRecipients::class)->submitted('liquidation', $liquidation, $request->user(), true);
         }
 

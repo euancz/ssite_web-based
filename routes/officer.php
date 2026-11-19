@@ -9,7 +9,7 @@ Route::prefix('workspace')->name('workspace.')
         Route::resource('sponsors', \App\Http\Controllers\SponsorController::class)->except('show');
     });
 
-// Holds the officer dashboard; adviser and superadmin accounts use their role-assignment dashboard.
+// Holds the officer dashboard; adviser and admin accounts use their role-assignment dashboard.
 Route::get('/officer/dashboard', DashboardController::class)
     ->middleware(['auth', 'role:officer', 'profile.complete'])
     ->name('officer.dashboard');

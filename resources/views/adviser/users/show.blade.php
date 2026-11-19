@@ -13,13 +13,6 @@
             'Email' => $user->email,
             'Role' => ucfirst($user->role),
             'Officer position' => $user->officer_position ?: '-',
-            'Student number' => $user->student_number ?: '-',
-            'Institute' => $user->institute ?: '-',
-            'Program' => $user->program ?: '-',
-            'Year level' => $user->year_level ?: '-',
-            'Gender' => $user->gender ?: '-',
-            'Contact number' => $user->contact_number ?: '-',
-            'Address' => $user->address ?: '-',
             'Joined' => $user->created_at?->format('M j, Y') ?? '-',
         ] as $label => $value)
             <div>

@@ -78,6 +78,46 @@ const timeout = setTimeout(() => { browser.kill(); throw new Error('Browser chec
     await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]},sessionId);
     assert.ok(parseFloat(await evaluate(`getComputedStyle(document.querySelector('.discover-read-story')).transitionDuration`)) <= 0.001);
     console.log('PASS: mobile actions fit, retain touch targets and respect reduced motion');
+
+    await send('Emulation.setEmulatedMedia', { features: [] }, sessionId);
+    await send('Emulation.setDeviceMetricsOverride', { width: 1100, height: 700, deviceScaleFactor: 1, mobile: false }, sessionId);
+    const homeCss = fs.readFileSync('public/css/home.css', 'utf8') + '\n' + css;
+    const newsCards = [
+        ['Activities', 'Club meeting', 'By Febbie Ann Escoto'],
+        ['Achievements', 'Campus Hackathon Champions and Student Technology Award Recipients', 'By Alex Rivera · October 30, 2026'],
+    ].map(([category, title, byline]) => `
+        <article class="news-card card-hover">
+            <div class="news-card-image"></div>
+            <div class="news-card-content">
+                <p class="article-category">${category}</p>
+                <h3><a href="#story">${title}</a></h3>
+                <p class="article-byline">${byline}</p>
+                <a class="read-more" href="#story">Read more</a>
+            </div>
+        </article>`).join('');
+    const home = `<header class="public-home-header"></header><main><div class="home-page site-page"><div class="news-grid">${newsCards}</div></div></main>`;
+    await evaluate(`document.querySelector('style').textContent=${JSON.stringify(homeCss)};document.body.innerHTML=${JSON.stringify(home)}`);
+    const homeActionRects = `[...document.querySelectorAll('.news-card .read-more')].map(link => {
+        const { top, height } = link.getBoundingClientRect();
+        return { top, height };
+    })`;
+    const assertHomeAlignment = async () => {
+        const [first, second] = await evaluate(homeActionRects);
+        assert.deepEqual(first, second);
+        assert.ok(first.height >= 44);
+    };
+    await assertHomeAlignment();
+    await send('DOM.enable', {}, sessionId);
+    await send('CSS.enable', {}, sessionId);
+    const { root } = await send('DOM.getDocument', {}, sessionId);
+    const { nodeId } = await send('DOM.querySelector', { nodeId: root.nodeId, selector: '.news-card' }, sessionId);
+    await send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: ['hover'] }, sessionId);
+    await evaluate('new Promise(resolve => setTimeout(resolve, 250))');
+    await assertHomeAlignment();
+    await send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: [] }, sessionId);
+    await evaluate(`document.querySelector('.news-card .read-more').focus(); new Promise(resolve => setTimeout(resolve, 250))`);
+    await assertHomeAlignment();
+    console.log('PASS: Home actions align with different title lengths, including on hover and focus');
 })().catch((error) => { console.error(error); process.exitCode = 1; }).finally(async () => {
     clearTimeout(timeout);
     try { await send('Browser.close'); } catch {}

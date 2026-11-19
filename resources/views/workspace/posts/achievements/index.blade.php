@@ -5,6 +5,7 @@
 @section('content')
 <x-workspace.posts.feed-frame
     variant="index"
+    :initial-loading="$pageDataPending ?? false"
     stylesheet="achievements"
     title="Achievements"
     description="Read and manage SSITE achievements."

@@ -15,7 +15,7 @@ return [
         'Adviser', 'Student Adviser', 'President', 'Vice President (Internal)',
         'Vice President (External)', 'Secretary', 'Treasurer', 'Auditor',
         'Public Information Officer', 'Business Manager', 'Social Media Manager',
-        'Multimedia (Creative)', 'Multimedia (Documentation)',
+        'Social Media Manager (Creative)', 'Social Media Manager (Documentation)',
         'IT Representative I', 'IT Representative II',
     ],
     // SECURITY: Officer permissions come from canonical config keys, never free-text positions.
@@ -38,7 +38,7 @@ return [
             'auto_approved' => false,
             'single_holder' => false,
         ],
-        'Multimedia' => [
+        'Social Media Manager' => [
             'modules' => ['articles', 'achievements', 'activities'],
             'can_review' => false,
             'auto_approved' => false,

@@ -43,7 +43,7 @@ class ActivityAchievementEditorTest extends TestCase
             $singular = $module === 'activities' ? 'activity' : 'achievement';
             $this->get(route($module.'.create'))->assertOk()
                 ->assertSee('data-rich-editor', false)->assertSee('data-rich-body', false)
-                ->assertSee('data-rich-source', false)->assertSee('data-table-tools', false)
+                ->assertDontSee('data-rich-source', false)->assertSee('data-table-tools', false)
                 ->assertSee('name="content_format" value="markdown"', false)
                 ->assertSee('aria-labelledby="'.$singular.'-description-label"', false);
             $payload = ['title' => 'Highlights', 'description' => $source, 'content_format' => 'markdown'];

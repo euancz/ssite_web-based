@@ -16,12 +16,10 @@
         <p class="dashboard-error transparency-toast" role="alert" data-flash-toast>{{ session('error') }}</p>
     @endif
 
-    <x-ui.page-hero
-        class="transparency-hero"
-        banner="images/heroes/hero-transparency.svg"
-        eyebrow="Financial transparency · accountability · trust"
+    <x-ui.stories-banner
+        eyebrow="Financial transparency • Accountability • Trust"
         title="Funds with purpose"
-        description="Explore SSITE's financial records, expense reports, and liquidation documents to see how organization funds are managed and utilized."
+        description="Explore SSITE’s financial records, expense reports, and liquidation documents to see how organization funds are managed and utilized."
         labelledby="transparency-title"
     />
 
@@ -31,6 +29,17 @@
             <input id="report-search" type="search" name="q" value="{{ $searchQuery }}" maxlength="100" placeholder="Search reports..." autocomplete="off">
             <button type="submit" class="search-submit-icon" aria-label="Search reports"><x-icon name="search" size="sm" class="site-search-icon" /></button>
         </div>
+        <x-posts.filter-panel :active-count="(int) ($event !== '') + (int) ($year !== '') + (int) ($semester !== '') + (int) ($sort !== 'recent')">
+        <label class="transparency-select">
+            <span>Event name</span>
+            <select name="event" aria-label="Event name" onchange="this.form.requestSubmit()">
+                @foreach ($eventOptions as $value => $label)
+                    <option value="{{ $value }}" @selected((string) $event === (string) $value)>{{ $label }}</option>
+                @endforeach
+            </select>
+            <x-icon name="chevron-down" size="sm" aria-hidden="true" />
+        </label>
+
         <label class="transparency-select">
             <span>Sort by</span>
             <select name="sort" aria-label="Sort reports" onchange="this.form.requestSubmit()">
@@ -49,8 +58,22 @@
             </select>
             <x-icon name="chevron-down" size="sm" aria-hidden="true" />
         </label>
+        @foreach ($extraFilters as $name => $extra)
+            @continue($name === 'event')
+            <label class="transparency-select">
+                <span>{{ $extra['label'] }}</span>
+                <select name="{{ $name }}" aria-label="{{ $extra['label'] }}" onchange="this.form.requestSubmit()">
+                    @foreach ($extra['options'] as $value => $label)
+                        <option value="{{ $value }}" @selected((string) $extra['value'] === (string) $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+                <x-icon name="chevron-down" size="sm" aria-hidden="true" />
+            </label>
+        @endforeach
+        </x-posts.filter-panel>
+        <noscript><button class="site-button" type="submit">Apply filters</button></noscript>
         <input type="hidden" name="tab" value="{{ $tab }}">
-        @if ($searchQuery !== '' || $year !== '' || $sort !== 'recent')
+        @if ($searchQuery !== '' || $year !== '' || $event !== '' || $semester !== '' || $sort !== 'recent')
             <a class="site-filter-reset" href="{{ route('transparency') }}">Clear filters</a>
         @endif
     </form>
@@ -83,7 +106,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="transparency-empty">{{ $searchQuery !== '' || $year !== '' ? 'No matching transactions. Try another search or report year.' : 'No published transactions yet. Check back soon for the latest records.' }}</td>
+                            <td colspan="3" class="transparency-empty">{{ $searchQuery !== '' || $year !== '' || $event !== '' || $semester !== '' ? 'No matching transactions. Try another search or report year.' : 'No published transactions yet. Check back soon for the latest records.' }}</td>
                         </tr>
                     @endforelse
                 </tbody>

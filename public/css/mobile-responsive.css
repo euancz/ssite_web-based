@@ -68,8 +68,6 @@
     /* Workspace drawer, page headers, lists, forms, and data-heavy views. */
     .workspace-topbar { min-height: 58px; gap: 8px; padding-inline: 12px; padding-top: env(safe-area-inset-top); }
     .workspace-menu-toggle { width: 44px; height: 44px; flex: 0 0 44px; }
-    .workspace-topbar-title { min-width: 0; flex: 1 1 auto; font-size: 11px; }
-    .workspace-topbar-title strong { max-width: 38vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .workspace-topbar-actions { flex: 0 0 auto; gap: 6px; }
     .workspace-content { width: calc(100% - 28px); padding-top: 18px; padding-bottom: max(40px, env(safe-area-inset-bottom)); }
     .workspace-content .dashboard-page-header,
@@ -101,8 +99,6 @@
 
 @media (min-width: 768px) and (max-width: 900px) {
     .workspace-topbar { gap: 8px; padding-inline: 16px; }
-    .workspace-topbar-title > span:first-child { display: none; }
-    .workspace-topbar-title strong { max-width: 30vw; }
     .workspace-topbar-actions { gap: 8px; }
     .workspace-view-site { min-width: 44px; justify-content: center; padding-inline: 10px; }
     .workspace-view-site span { display: none; }
@@ -140,7 +136,6 @@
     .public-home-header :where(.mobile-menu-toggle, .mobile-search-toggle, .account-toggle, .account-notifications) { width: 40px; min-width: 40px; height: 40px; }
     .public-home-header .login-toggle-button { min-height: 40px; padding-inline: 8px; }
     .workspace-content { width: calc(100% - 24px); }
-    .workspace-topbar-title { font-size: 10px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -177,8 +172,7 @@
     body.main-site-body main :is(.section-heading h2, .about-section-title, .post-card-title, .mission-card h2, .vision-card h2) { font-family: var(--font-family-body); font-size: 24px; line-height: 1.35; }
     body.main-site-body main :is(.post-card, .document-tile, .news-card, .mission-card, .vision-card) { box-shadow: none; border-color: #d9e6ee; }
     body.main-site-body main :is(.documents-filters, .transparency-filters, .discover-filters) { gap: 16px; margin-block: 20px 24px; }
-    .workspace-topbar-title > span, .workspace-profile-copy { display: none; }
-    .workspace-topbar-title strong { max-width: none; }
+    .workspace-profile-copy { display: none; }
 }
 
 /* Keep SVG banners visible on mobile; fluid image rules above preserve the complete artwork. */

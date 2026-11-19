@@ -20,9 +20,10 @@ class ActivityRequest extends ContentRequest
             'description' => ['required', 'string', 'max:20000', new MaxWords],
             'content_format' => app(ArticleContent::class)->availableFor('activities')
                 ? ['sometimes', 'required', Rule::in(['plain', 'markdown'])] : ['exclude'],
+            'category' => \App\Support\ContentCategories::available('activities') ? ['nullable', 'string', 'max:100'] : ['exclude'],
             'activity_date' => ['nullable', 'date'],
             'location' => ['nullable', 'string', 'max:200'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'extensions:jpg,png', 'max:2048'],
+            'image' => [$this->route('activity')?->image ? 'nullable' : 'required', 'image', 'mimes:jpg,jpeg,png', 'extensions:jpg,png', 'max:2048'],
         ];
     }
 
@@ -34,6 +35,7 @@ class ActivityRequest extends ContentRequest
             'description.required' => 'Enter the activity description.',
             'activity_date.date' => 'Enter a valid activity date.',
             'location.max' => 'The location may not be longer than 200 characters.',
+            'image.required' => 'Choose an image.',
             'image.image' => 'Choose a valid image file.',
             'image.mimes' => 'The image must be a JPG or PNG file.',
             'image.extensions' => 'The image must have a .jpg or .png extension.',

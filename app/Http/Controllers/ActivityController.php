@@ -9,12 +9,15 @@ use App\Services\ContentReview;
 use App\Services\PostFiles;
 use App\Support\ContentListing;
 use App\Support\ContentPagination;
+use App\Support\InitialPageData;
 use App\Support\PostEngagement;
 use App\Support\PostNotificationRecipients;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
+use App\Support\SearchSuggestions;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -27,12 +30,18 @@ class ActivityController extends Controller
     use AuthorizesRequests;
 
     /** Show each role only the activity tabs and records available to that role. */
-    public function index(Request $request, PostEngagement $engagement): View
+    public function index(Request $request, PostEngagement $engagement): View|JsonResponse
     {
         $this->authorize('viewAny', Activity::class);
         $user = $request->user();
         [$activities, $allowedTabs, $tab, $pendingCount, $workspaceList] = app(ContentListing::class)
             ->scope(Activity::query()->with('author'), $request, 'activities');
+
+        $categoriesEnabled = \App\Support\ContentCategories::available('activities');
+        $categoryOptions = $categoriesEnabled ? ['' => 'All categories'] + \App\Support\ContentCategories::options('activities', $activities) : [];
+        $requestedCategory = $request->query('category');
+        $category = is_string($requestedCategory) && array_key_exists($requestedCategory, $categoryOptions) ? $requestedCategory : '';
+        if ($category !== '') $activities->where('category', $category);
 
         // SECURITY: Engagement queries are limited to Published and require both the feature flag and schema.
         $viewCountsEnabled = $tab === 'published' && $engagement->viewCountsAvailable($activities->getModel());
@@ -86,13 +95,18 @@ class ActivityController extends Controller
         if (in_array($sort, ['viewed', 'liked'], true)) {
             $activities->orderBy('created_at', 'desc');
         }
-        $activities = ContentPagination::paginate($activities->orderBy('id', 'asc'))
-            ->appends(['q' => is_string($request->query('q')) ? mb_substr(trim($request->query('q')), 0, 100) : '', 'tab' => $tab, 'sort' => $sort, 'timeframe' => $timeframe]);
+        if (SearchSuggestions::requested($request)) {
+            return SearchSuggestions::fromQuery($request, $activities->orderBy('id'));
+        }
+
+        $pageDataPending = InitialPageData::pending($request);
+        $activities = ContentPagination::paginate($activities->orderBy('id', 'asc'), pending: $pageDataPending)
+            ->appends(['q' => is_string($request->query('q')) ? mb_substr(trim($request->query('q')), 0, 100) : '', 'tab' => $tab, 'sort' => $sort, 'timeframe' => $timeframe, 'category' => $category]);
 
         // Use the management feed only after the role's tab allowlist has accepted the requested tab.
         $view = $workspaceList ? 'workspace.posts.activities.index' : 'activities.index';
 
-        return view($view, compact('activities', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'timeframe', 'timeframeOptions', 'pendingCount'));
+        return view($view, compact('activities', 'allowedTabs', 'tab', 'sort', 'sortOptions', 'timeframe', 'timeframeOptions', 'pendingCount', 'category', 'categoryOptions', 'pageDataPending'));
     }
 
     /** Show public activities or private records to their author or the President. */
@@ -188,8 +202,11 @@ class ActivityController extends Controller
             $activity->image = $this->storeImage($request);
         }
 
-        if ($wasRejected || ($wasApproved && $request->user()->isOfficer()
-            && config('school.reset_approval_on_edit', true))) {
+        // President edits preserve the current review state.
+        $needsReview = ! $request->user()->isPresident()
+            && ($wasRejected || ($wasApproved && $request->user()->isOfficer()
+                && config('school.reset_approval_on_edit', true)));
+        if ($needsReview) {
             // Changed content needs review again; approval and visibility remain separate states.
             $activity->approval_status = Activity::APPROVAL_PENDING;
             $activity->rejection_reason = null;
@@ -199,7 +216,7 @@ class ActivityController extends Controller
 
         app(PostFiles::class)->save($activity);
         // SECURITY: Only officer edits returned to pending trigger a review notice; failures never block saving.
-        if ($request->user()->isOfficer() && ($wasRejected || ($wasApproved && config('school.reset_approval_on_edit', true)))) {
+        if ($request->user()->isOfficer() && $needsReview) {
             app(PostNotificationRecipients::class)->submitted('activity', $activity, $request->user(), true);
         }
 

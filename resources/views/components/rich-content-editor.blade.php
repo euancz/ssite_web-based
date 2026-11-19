@@ -6,7 +6,6 @@
     <div class="article-editor-shell" data-rich-editor>
         <div class="article-editor-heading">
             <span><strong>{{ $title }}</strong><small>{{ $subtitle }}</small></span>
-            <button type="button" class="article-source-toggle" data-rich-source aria-pressed="false" hidden>Markdown source</button>
         </div>
         <div class="article-format-tools" data-article-tools role="group" aria-label="Post formatting tools">
             <div class="article-tool-group" role="group" aria-label="Text style">
@@ -37,7 +36,6 @@
         <div class="article-editor-canvas">
             <textarea id="{{ $id }}" data-rich-body name="{{ $name }}" aria-labelledby="{{ $labelId }}" @error($name) aria-invalid="true" aria-describedby="{{ $id }}-error" @enderror rows="14" maxlength="20000" required>{{ old($name, $value) }}</textarea>
         </div>
-        <div class="article-editor-footer"><span>Ctrl+B bold &middot; Ctrl+I italic &middot; Ctrl+K link</span><span data-rich-status role="status"></span></div>
         <dialog class="article-link-dialog" data-rich-link aria-labelledby="{{ $id }}-link-heading">
             <h2 id="{{ $id }}-link-heading">Insert a link</h2>
             <p>Link selected text to a website. With no selection, the URL becomes the link text.</p>

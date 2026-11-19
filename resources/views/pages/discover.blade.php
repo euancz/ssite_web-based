@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends(request()->header('X-SSITE-Page-Data') === '1' ? 'layouts.page-data' : 'layouts.app')
 
 @section('title', 'Discover')
 
@@ -19,66 +19,6 @@
             padding: 24px 20px 0;
         }
 
-        .discover-hero {
-            position: relative;
-            overflow: hidden;
-            background: linear-gradient(180deg, rgba(17, 171, 216, 0.84), rgba(107, 202, 222, 0.88));
-            border-radius: 26px;
-            padding: 34px 30px 32px;
-            box-shadow: 0 10px 18px rgba(17, 83, 119, 0.08);
-            min-height: 210px;
-        }
-
-        .discover-hero::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background:
-                linear-gradient(140deg, rgba(255,255,255,0.12), transparent 32%),
-                linear-gradient(130deg, transparent 44%, rgba(3, 66, 92, 0.08) 47%, transparent 50%),
-                repeating-linear-gradient(
-                    90deg,
-                    transparent,
-                    transparent 34px,
-                    rgba(255,255,255,0.10) 34px,
-                    rgba(255,255,255,0.10) 35px
-                );
-            pointer-events: none;
-        }
-
-        .discover-hero-inner {
-            position: relative;
-            z-index: 1;
-            text-align: center;
-            max-width: 820px;
-            margin: 0 auto;
-        }
-
-        .discover-kicker {
-            margin: 0 0 10px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            letter-spacing: 0.28rem;
-            color: rgba(12, 55, 73, 0.95);
-            text-transform: uppercase;
-        }
-
-        .discover-title {
-            margin: 0;
-            font-size: clamp(2.4rem, 5vw, 5rem);
-            line-height: 0.96;
-            letter-spacing: -0.08em;
-            font-weight: 800;
-            color: #0c2d3d;
-        }
-
-        .discover-subtitle {
-            margin: 16px auto 0;
-            max-width: 640px;
-            font-size: 1.05rem;
-            color: rgba(8, 45, 59, 0.8);
-            line-height: 1.55;
-        }
 
         .discover-filters {
             display: grid;
@@ -216,12 +156,18 @@
             box-shadow: 0 10px 20px rgba(17, 79, 97, 0.06);
         }
 
-        .discover-story-card img {
+        .discover-story-card img,
+        .discover-story-card > .skeleton-block {
             display: block;
             width: 100%;
             height: 220px;
             object-fit: cover;
         }
+
+        .discover-featured-image.skeleton-block,
+        .discover-story-card > .skeleton-block { border-radius: 0; }
+        .discover-featured-copy .skeleton-lines { gap: 1rem; }
+        .discover-story-body.skeleton-lines { min-height: 9rem; }
 
         .discover-story-body {
             padding: 18px 16px 16px;
@@ -313,19 +259,6 @@
                 padding-right: 14px;
             }
 
-            .discover-hero {
-                padding: 26px 18px 24px;
-            }
-
-            .discover-kicker {
-                letter-spacing: 0.16rem;
-                font-size: 0.72rem;
-            }
-
-            .discover-subtitle {
-                font-size: 0.94rem;
-            }
-
             .discover-grid {
                 grid-template-columns: 1fr;
             }
@@ -334,7 +267,8 @@
                 padding: 20px 18px;
             }
 
-            .discover-story-card img {
+            .discover-story-card img,
+            .discover-story-card > .skeleton-block {
                 height: 200px;
             }
         }
@@ -344,12 +278,10 @@
 @section('content')
     <div class="discover-page">
         <div class="discover-main site-page">
-            <x-ui.page-hero
-                class="discover-hero"
-                banner="images/heroes/hero-discover.svg"
-                eyebrow="Articles · activities · achievements"
-                title="Stories & highlights"
-                description="Discover the stories, activities, and achievements that highlight our students' creativity, experiences, and accomplishments."
+            <x-ui.stories-banner
+                eyebrow="Articles • Activities • Achievements"
+                title="Stories & Highlights"
+                description="Discover the stories, activities, and achievements that highlight our students’ creativity, experiences, and accomplishments."
                 labelledby="discover-title"
             />
 
@@ -361,14 +293,37 @@
                         <button type="submit" class="search-submit-icon" aria-label="Search stories"><x-icon name="search" size="sm" class="site-search-icon" /></button>
                     </div>
                 </div>
+                <x-posts.filter-panel :active-count="(int) ($filters['type'] !== 'all') + (int) ($filters['category'] !== '') + (int) ($filters['period'] !== 'all') + (int) ($filters['sort'] !== 'recent')">
                 <div class="discover-field">
-                    <label for="discover-category">Content type</label>
-                    <select id="discover-category" name="type" onchange="this.form.requestSubmit()">
+                    <label for="discover-type">Content type</label>
+                    <select id="discover-type" name="type" onchange="if (this.form.elements.category) this.form.elements.category.value = ''; this.form.requestSubmit()">
                         @foreach (['all' => 'All content', 'articles' => 'Articles', 'activities' => 'Activities', 'achievements' => 'Achievements'] as $value => $label)
                             <option value="{{ $value }}" @selected($filters['type'] === $value)>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
+                <div class="page-data-contents" data-page-data="categories" @if ($pageDataPending ?? false) aria-busy="true" @endif>
+                @if (($pageDataPending ?? false) && $filters['type'] !== 'all')
+                    <div class="discover-field">
+                        <label for="discover-category">Category</label>
+                        <select id="discover-category" disabled><option>Loading categories</option></select>
+                        <input type="hidden" name="category" value="{{ $filters['category'] }}">
+                    </div>
+                @elseif ($filters['type'] !== 'all' && ! empty($categoryGroups))
+                <div class="discover-field">
+                    <label for="discover-category">Category</label>
+                    <select id="discover-category" name="category" onchange="this.form.requestSubmit()">
+                        <option value="">All categories</option>
+                        @foreach ($categoryGroups as $options)
+                            @foreach ($options as $value => $label)
+                                <option value="{{ $value }}" @selected($filters['category'] === $value)>{{ $label }}</option>
+                            @endforeach
+                        @endforeach
+                    </select>
+                </div>
+                @endif
+                </div>
+
                 <div class="discover-field">
                     <label for="discover-date">Date added</label>
                     <select id="discover-date" name="period" onchange="this.form.requestSubmit()">
@@ -380,16 +335,44 @@
                 <div class="discover-field">
                     <label for="discover-sort">Sort by</label>
                     <select id="discover-sort" name="sort" onchange="this.form.requestSubmit()">
-                        @foreach (['featured' => 'Featured first', 'recent' => 'Newest added', 'oldest' => 'Oldest added', 'title' => 'Title (A to Z)'] as $value => $label)
+                        @foreach (['recent' => 'Newest added', 'oldest' => 'Oldest added', 'title' => 'Title (A to Z)'] as $value => $label)
                             <option value="{{ $value }}" @selected($filters['sort'] === $value)>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
-                @if ($filters['q'] !== '' || $filters['type'] !== 'all' || $filters['period'] !== 'all' || $filters['sort'] !== 'featured')
+                </x-posts.filter-panel>
+                <noscript><button class="site-button" type="submit">Apply filters</button></noscript>
+                @if ($filters['q'] !== '' || $filters['type'] !== 'all' || $filters['period'] !== 'all' || $filters['sort'] !== 'recent' || $filters['category'] !== '')
                     <a class="site-filter-reset" href="{{ route('discover') }}">Clear filters</a>
                 @endif
             </form>
 
+            <section class="discover-panel" id="discover-all" aria-label="Discover stories" data-page-data="stories" @if ($pageDataPending ?? false) aria-busy="true" @endif>
+            @if ($pageDataPending ?? false)
+                <article class="discover-featured" aria-hidden="true">
+                    <div class="discover-featured-image skeleton-block"></div>
+                    <div class="discover-featured-copy">
+                        <div class="skeleton-lines">
+                            <span class="skeleton-block skeleton-line skeleton-line--short"></span>
+                            <span class="skeleton-block skeleton-line skeleton-line--heading"></span>
+                            <span class="skeleton-block skeleton-line"></span>
+                            <span class="skeleton-block skeleton-line skeleton-line--short"></span>
+                        </div>
+                    </div>
+                </article>
+                <div class="discover-grid" aria-hidden="true">
+                    @for ($card = 0; $card < 3; $card++)
+                        <article class="discover-story-card">
+                            <div class="skeleton-block"></div>
+                            <div class="discover-story-body skeleton-lines">
+                                <span class="skeleton-block skeleton-line skeleton-line--heading"></span>
+                                <span class="skeleton-block skeleton-line"></span>
+                                <span class="skeleton-block skeleton-line skeleton-line--short"></span>
+                            </div>
+                        </article>
+                    @endfor
+                </div>
+            @else
             @php
                 $featured = $stories->first();
                 $labels = ['articles' => 'Articles', 'activities' => 'Activities', 'achievements' => 'Achievements'];
@@ -397,7 +380,6 @@
                 $featuredRoute = $featured ? $featured->getTable().'.show' : '';
             @endphp
 
-            <section class="discover-panel" id="discover-all" aria-label="Discover stories">
                 @if ($featured)
                     <article class="discover-featured" data-motion="reveal">
                         <div class="discover-featured-image">
@@ -440,6 +422,7 @@
                     @endforeach
                 </div>
                 {{ $stories->links() }}
+            @endif
             </section>
         </div>
     </div>

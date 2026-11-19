@@ -14,7 +14,7 @@
 .documents-search input, .documents-select select { width: 100%; height: var(--site-control-height); border: 1px solid #083747; border-bottom-width: 5px; border-radius: 11px; padding: 0 48px 0 20px; color: #083747; font: inherit; font-size: 14px; font-weight: 500; }
 .documents-search input { background: #fff; }
 .documents-search input::placeholder { color: #111; opacity: 1; }
-.documents-search button { position: absolute; right: 6px; top: 2px; display: grid; place-items: center; width: 44px; height: 44px; border: 0; background: transparent; color: #083747; cursor: pointer; }
+.documents-search > button[type="submit"] { position: absolute; right: 6px; top: 2px; display: grid; place-items: center; width: 44px; height: 44px; border: 0; background: transparent; color: #083747; cursor: pointer; }
 .documents-select { position: relative; display: grid; gap: 6px; }
 .documents-select > span { padding-left: 8px; font-size: 14px; font-weight: 600; }
 .documents-select select { appearance: none; background: linear-gradient(110deg, #a8e4f5, #a2f2fb); padding-left: 28px; cursor: pointer; }

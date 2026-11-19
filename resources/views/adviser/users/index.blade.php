@@ -4,8 +4,8 @@
 
 @section('content')
 <div class="dashboard-page workspace-user-manager">
-    {{-- Adviser and superadmin role assignments use actor-specific server authorization. --}}
-    <x-ui.page-header title="{{ auth()->user()->isSuperadmin() ? 'Manage advisers' : 'Manage users' }}" subtitle="{{ auth()->user()->isSuperadmin() ? 'Assign or revoke adviser access for eligible accounts.' : 'Assign student and officer roles and configured positions.' }}" />
+    {{-- Adviser and admin role assignments use actor-specific server authorization. --}}
+    <x-ui.page-header title="{{ auth()->user()->isAdmin() ? 'Manage advisers' : 'Manage users' }}" subtitle="{{ auth()->user()->isAdmin() ? 'Assign or revoke adviser access for eligible accounts.' : 'Assign student and officer roles and configured positions.' }}" />
 
     {{-- Report the result of a completed role update without hiding validation errors. --}}
     @if (session('status'))
@@ -29,8 +29,10 @@
             @csrf
             <div class="dashboard-form-field">
                 <label for="users-search">Search accounts</label>
-                <input id="users-search" type="search" name="search" value="{{ request('search') }}"
-                       maxlength="100" placeholder="Name, email, student number, institute, program, year">
+                <div class="workspace-list-search-input">
+                    <input id="users-search" type="search" name="search" value="{{ request('search') }}"
+                           maxlength="100" placeholder="Name or email">
+                </div>
             </div>
             <div class="dashboard-form-field"><label for="users-role-filter">Role</label>
                 <select id="users-role-filter" name="role"><option value="">All eligible roles</option>
@@ -47,13 +49,12 @@
                 <thead>
                     <tr>
                         <th scope="col">Name</th>
-                        <th scope="col">Program</th>
+                        <th scope="col">Email</th>
                         <th scope="col">Role</th>
                         <th scope="col">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {{-- User rows include academic information so advisers can identify the correct account. --}}
                     @forelse ($users as $user)
                         @php
                             $actor = auth()->user();
@@ -64,7 +65,7 @@
                         <tr>
                             {{-- Keep the existing user link and identify each account with its shared avatar. --}}
                             <td><a href="{{ route('adviser.users.show', $user) }}" class="adviser-user-link"><x-ui.avatar :user="$user" size="sm" />{{ $user->name }}</a></td>
-                            <td>{{ $user->program ?? '-' }}</td>
+                            <td>{{ $user->email }}</td>
                             <td><x-ui.status-badge :status="$user->role" />
                                 @if ($user->isOfficer() && ! $user->position())
                                     <p class="dashboard-error" role="status">Unrecognized position. Assign a configured title to restore posting access.</p>
@@ -72,8 +73,8 @@
                             </td>
                             <td>
                                 {{-- SECURITY: Advisers cannot change their own role or promote/demote another adviser. --}}
-                                @if (auth()->user()->is($user) || $user->isSuperadmin())
-                                    <span class="dashboard-muted">{{ auth()->user()->is($user) ? 'Your role is protected' : 'Superadmin role is protected' }}</span>
+                                @if (auth()->user()->is($user) || $user->isAdmin())
+                                    <span class="dashboard-muted">{{ auth()->user()->is($user) ? 'Your role is protected' : 'Admin role is protected' }}</span>
                                 @else
                                     <button type="button" class="dashboard-text-button workspace-role-change" data-role-dialog-open="role-dialog-{{ $user->id }}">Change role</button>
                                     <dialog id="role-dialog-{{ $user->id }}" class="reject-modal" aria-labelledby="role-title-{{ $user->id }}">

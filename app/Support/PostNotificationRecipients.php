@@ -37,7 +37,7 @@ class PostNotificationRecipients
         if ($post->getAttribute('approval_status') !== 'approved' || $post->getAttribute('content_status') !== 'active') return;
         $this->safely(function () use ($postType, $post, $actor, $exceptUserIds): void {
             $this->sendToEveryoneExcept(array_merge([$actor->id], $exceptUserIds),
-                new PostPublished($this->payload($postType, $post, $actor)));
+                new PostPublished($this->payload($postType, $post, $this->author($post) ?? $actor)));
         }, $postType, $post);
     }
 
@@ -72,6 +72,7 @@ class PostNotificationRecipients
             'post_type' => $postType,
             'post_id' => (int) $post->getAttribute($key),
             'title' => Str::limit((string) $post->getAttribute('title'), 100),
+            'actor_id' => $actor->id,
             'actor_name' => (string) $actor->name,
             'url' => route($route, $post->getAttribute($key)),
         ];

@@ -1,4 +1,5 @@
 {{-- Account menus and notification polling run only for the matching session state. --}}
+    <template id="notification-profile-placeholder"><x-icon name="user-round" size="sm" /></template>
     @guest
         <script>
             const loginToggle = document.getElementById('login-toggle');
@@ -87,6 +88,7 @@
                 ['submitted', 'notification-icon-submitted'],
                 ['approved', 'notification-icon-approved'],
                 ['published', 'notification-icon-published'],
+                ['liked', 'notification-icon-liked'],
                 ['rejected', 'notification-icon-rejected'],
             ]);
             const notificationPostIconTemplates = new Map([
@@ -186,7 +188,7 @@
                         const typeIcon = document.createElement('span');
                         typeIcon.className = `notification-type-icon notification-type-${data.type || 'published'}`;
                         typeIcon.setAttribute('aria-hidden', 'true');
-                        appendStaticIcon(typeIcon, notificationIconTemplates.get(data.type) || 'notification-icon-default', 'notification-status-icon');
+                        appendStaticIcon(typeIcon, 'notification-profile-placeholder', 'notification-status-icon');
                         const postIcon = document.createElement('small');
                         appendStaticIcon(postIcon, notificationPostIconTemplates.get(data.post_type) || 'notification-post-article', 'notification-post-icon');
                         typeIcon.append(postIcon);

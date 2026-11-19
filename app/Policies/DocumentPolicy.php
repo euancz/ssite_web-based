@@ -60,7 +60,7 @@ class DocumentPolicy
 
     public function delete(User $user, Document $document): bool
     {
-        return $user->canPermanentlyDelete();
+        return $user->canPermanentlyDelete() && $document->isArchived();
     }
 
     public function bulkArchive(User $user): bool

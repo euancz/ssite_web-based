@@ -40,8 +40,8 @@ class MobileWorkspaceTest extends TestCase
         foreach ([
             ['student', null, false], ['officer', null, false],
             ['officer', 'President', true], ['officer', 'Secretary', true],
-            ['officer', 'Auditor', true], ['officer', 'Multimedia', true],
-            ['adviser', null, true], ['superadmin', null, true], ['unknown', null, false],
+            ['officer', 'Auditor', true], ['officer', 'Social Media Manager', true],
+            ['adviser', null, true], ['admin', null, true], ['unknown', null, false],
         ] as [$role, $position, $allowed]) {
             $user = $this->account($role, $position);
             $this->withToken($this->token($user))->getJson('/api/mobile/v1/auth/me')

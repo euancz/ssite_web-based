@@ -1,0 +1,28 @@
+.officer-user-picker { position: relative; }
+.officer-user-picker[hidden], .officer-user-results[hidden] { display: none; }
+.officer-user-picker input { width: 100%; box-sizing: border-box; }
+.officer-user-results {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    max-height: 260px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 4px;
+    background: #fff;
+    border: 1px solid #b7cbd8;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgb(23 50 77 / 14%);
+}
+.officer-user-option {
+    padding: 10px 12px;
+    border-radius: 6px;
+    color: #17324d;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+}
+.officer-user-option[aria-selected="true"] { font-weight: 600; }
+.officer-user-option:hover, .officer-user-option.is-active { background: #eaf8fd; }
+.officer-user-option small { display: block; font-weight: 400; color: #52677c; }

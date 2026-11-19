@@ -47,13 +47,14 @@ class SaveContentDraftRequest extends FormRequest
                 ? ['sometimes', 'required', Rule::in(['plain', 'markdown'])] : ['exclude'],
                 'category' => \App\Support\ArticleCategory::available() ? ['nullable', 'string', 'max:100'] : ['exclude']],
             'activities' => ['content_format' => app(ArticleContent::class)->availableFor('activities') ? ['sometimes', 'required', Rule::in(['plain', 'markdown'])] : ['exclude'],
+                'category' => \App\Support\ContentCategories::available('activities') ? ['nullable', 'string', 'max:100'] : ['exclude'],
                 'activity_date' => ['nullable', 'date_format:Y-m-d'], 'location' => ['nullable', 'string', 'max:200']],
             'achievements' => ['content_format' => app(ArticleContent::class)->availableFor('achievements') ? ['sometimes', 'required', Rule::in(['plain', 'markdown'])] : ['exclude'],
                 'achievement_date' => ['nullable', 'date_format:Y-m-d'], 'awardee' => ['nullable', 'string', 'max:200'], 'category' => ['nullable', 'string', 'max:100']],
             'documents' => ['category' => ['nullable', 'string', 'max:100'], 'semester' => ['nullable', Rule::in(['1', '2'])],
                 'academic_year' => DocumentAcademicYear::available()
                     ? ['nullable', 'string', 'max:9', new ConsecutiveAcademicYear] : ['exclude']],
-            'liquidations' => ['report_date' => ['nullable', 'date_format:Y-m-d'], 'amount' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99']],
+            'liquidations' => ['semester' => \Illuminate\Support\Facades\Schema::hasColumn('liquidations', 'semester') ? ['nullable', Rule::in(['1', '2'])] : ['exclude'], 'report_date' => ['nullable', 'date_format:Y-m-d'], 'amount' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99']],
             default => [],
         };
     }

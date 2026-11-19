@@ -22,7 +22,7 @@ class DemoDataSeeder extends Seeder
     {
         DB::transaction(function (): void {
             $people = ['Alex Rivera', 'Jamie Santos', 'Morgan Cruz', 'Taylor Reyes', 'Casey Garcia'];
-            $positions = ['Multimedia', 'Secretary', 'Auditor', null, null];
+            $positions = ['Social Media Manager', 'Secretary', 'Auditor', null, null];
             $users = [];
             foreach ($people as $i => $name) {
                 $users[] = User::firstOrCreate(['email' => 'demo.member'.($i + 1).'@example.test'], [
@@ -31,8 +31,6 @@ class DemoDataSeeder extends Seeder
                     'officer_position' => $positions[$i],
                     // These are display records, not usable password or Microsoft accounts.
                     'password' => null,
-                    'student_number' => 'DEMO-'.str_pad((string) ($i + 1), 4, '0', STR_PAD_LEFT),
-                    'institute' => 'ICS', 'program' => 'BSIT', 'year_level' => (string) (($i % 4) + 1),
                     'profile_completed_at' => now(),
                 ]);
             }

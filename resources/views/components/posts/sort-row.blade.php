@@ -1,6 +1,7 @@
 {{-- SECURITY: Displayed options are server-whitelisted and tab links omit filter state to reset it. --}}
 @props([
     'action', 'routeName', 'tab', 'sort', 'options',
+    'extraFilters' => [],
     'filterName' => null, 'filter' => null, 'filterOptions' => [],
     'filterLabel' => 'Filter posts', 'filterDefault' => null,
 ])
@@ -14,21 +15,38 @@
         <input id="public-post-search" class="public-post-search" type="search" name="q" maxlength="100" value="{{ $searchValue }}" placeholder="Title or description">
         <button type="submit" class="search-submit-icon" aria-label="Search posts"><x-icon name="search" size="sm" class="site-search-icon" /></button>
     </div>
-    <label class="post-feed-visually-hidden" for="post-sort-{{ str_replace('.', '-', $routeName) }}">Sort posts</label>
+    <x-posts.filter-panel :active-count="(int) ($sort !== (string) array_key_first($options)) + (int) ($filterName && $filterOptions && (string) $filter !== (string) array_key_first($filterOptions)) + collect($extraFilters)->filter(fn ($extra) => (string) $extra['value'] !== (string) array_key_first($extra['options']))->count()">
+    <div class="site-filter-field">
+        <label for="post-sort-{{ str_replace('.', '-', $routeName) }}">Sort posts</label>
     <select id="post-sort-{{ str_replace('.', '-', $routeName) }}" class="post-feed-filter-control" name="sort" aria-label="Sort posts">
         @foreach ($options as $value => $label)
             <option value="{{ $value }}" @selected($sort === $value)>{{ $label }}</option>
         @endforeach
     </select>
+    </div>
     @if ($filterName && $filterOptions)
-        <label class="post-feed-visually-hidden" for="post-filter-{{ str_replace('.', '-', $routeName) }}">{{ $filterLabel }}</label>
+        <div class="site-filter-field">
+        <label for="post-filter-{{ str_replace('.', '-', $routeName) }}">{{ $filterLabel }}</label>
         <select id="post-filter-{{ str_replace('.', '-', $routeName) }}" class="post-feed-filter-control" name="{{ $filterName }}" aria-label="{{ $filterLabel }}">
             @foreach ($filterOptions as $value => $label)
                 <option value="{{ $value }}" @selected((string) $filter === (string) $value)>{{ $label }}</option>
             @endforeach
         </select>
+    </div>
     @endif
-    @if ($searchValue !== '' || $sort !== 'recent' || ($filter !== null && $filter !== '' && $filter !== $filterDefault))
+    @foreach ($extraFilters as $name => $extra)
+        <div class="site-filter-field">
+        <label for="extra-{{ $name }}">{{ $extra['label'] }}</label>
+        <select id="extra-{{ $name }}" class="post-feed-filter-control" name="{{ $name }}" aria-label="{{ $extra['label'] }}">
+            @foreach ($extra['options'] as $value => $label)
+                <option value="{{ $value }}" @selected((string) $extra['value'] === (string) $value)>{{ $label }}</option>
+            @endforeach
+        </select>
+    </div>
+    @endforeach
+    </x-posts.filter-panel>
+    <noscript><button class="post-feed-sort-apply" type="submit">Apply filters</button></noscript>
+    @if (collect($extraFilters)->contains(fn ($extra) => $extra['value'] !== '') || $searchValue !== '' || $sort !== 'recent' || ($filter !== null && $filter !== '' && $filter !== $filterDefault))
         <a class="site-filter-reset" href="{{ route($routeName, ['tab' => $tab]) }}">Clear filters</a>
     @endif
 </form>
@@ -110,7 +128,10 @@
                         const activeName = currentForm.contains(document.activeElement)
                             ? document.activeElement.name : null;
                         currentForm.action = nextForm.action;
+                        const panelOpen = currentForm.querySelector('.site-more-filters')?.open;
                         currentForm.innerHTML = nextForm.innerHTML;
+                        const nextPanel = currentForm.querySelector('.site-more-filters');
+                        if (nextPanel && panelOpen !== undefined) nextPanel.open = panelOpen;
                         if (activeName) currentForm.querySelector(`[name="${CSS.escape(activeName)}"]`)?.focus({ preventScroll: true });
                     }
                 };
@@ -137,6 +158,7 @@
                         const response = await fetch(url, {
                             headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' },
                             credentials: 'same-origin',
+                            cache: 'no-store',
                             signal: activeRequest.signal,
                         });
                         if (!response.ok) throw new Error('Feed request failed.');
@@ -282,6 +304,9 @@
                         if (count) count.textContent = `${selected} selected`;
                     });
                 });
+                if (document.querySelector('.post-feed-shell [data-feed-initial]')) {
+                    loadFeed(window.location.href, false);
+                }
             })();
         </script>
     @endpush

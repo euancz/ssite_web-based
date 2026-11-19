@@ -16,8 +16,8 @@ class ContentWorkspaceTest extends TestCase
     use BuildsContentSchema;
 
     private const MODULES = [
-        'articles' => ['article', 'Multimedia'], 'activities' => ['activity', 'Multimedia'],
-        'achievements' => ['achievement', 'Multimedia'], 'documents' => ['document', 'Secretary'],
+        'articles' => ['article', 'Social Media Manager'], 'activities' => ['activity', 'Social Media Manager'],
+        'achievements' => ['achievement', 'Social Media Manager'], 'documents' => ['document', 'Secretary'],
         'liquidations' => ['liquidation', 'Auditor'],
     ];
 
@@ -48,9 +48,56 @@ class ContentWorkspaceTest extends TestCase
         return DB::table($module)->insertGetId($data, 'id');
     }
 
+    public function test_president_edits_keep_posts_approved_without_review_notifications(): void
+    {
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+        config(['school.reset_approval_on_edit' => true]);
+        $president = $this->actor();
+        foreach (self::MODULES as $module => [$type, $position]) {
+            $officer = $this->actor('officer', $position);
+            foreach ([$president, $officer] as $owner) {
+                $id = $this->makePost($module, $owner->id);
+                $reviewedAt = '2026-10-01 12:00:00';
+                DB::table($module)->where('id', $id)->update([
+                    'reviewed_by_user_id' => $president->id, 'reviewed_at' => $reviewedAt,
+                ]);
+                $payload = ['title' => 'President edited '.$module,
+                    $type === 'article' ? 'content' : 'description' => 'Updated content'];
+                $this->actingAs($president)->patch(route($module.'.update', $id), $payload)
+                    ->assertSessionHasNoErrors()->assertRedirect();
+                $this->assertDatabaseHas($module, [
+                    'id' => $id, 'title' => $payload['title'], 'approval_status' => 'approved',
+                    'created_by_user_id' => $owner->id, 'content_status' => 'active',
+                    'reviewed_by_user_id' => $president->id, 'reviewed_at' => $reviewedAt,
+                ]);
+            }
+        }
+        $this->assertDatabaseCount('notifications', 0);
+    }
+
+    public function test_other_officers_edits_still_require_review_across_modules(): void
+    {
+        config(['school.reset_approval_on_edit' => true]);
+        $president = $this->actor();
+        foreach (self::MODULES as $module => [$type, $position]) {
+            $owner = $this->actor('officer', $position);
+            $id = $this->makePost($module, $owner->id);
+            DB::table($module)->where('id', $id)->update([
+                'reviewed_by_user_id' => $president->id, 'reviewed_at' => now(),
+            ]);
+            $this->actingAs($owner)->patch(route($module.'.update', $id), [
+                'title' => 'Officer edited '.$module,
+                $type === 'article' ? 'content' : 'description' => 'Updated content',
+            ])->assertSessionHasNoErrors()->assertRedirect();
+            $this->assertDatabaseHas($module, ['id' => $id, 'approval_status' => 'pending',
+                'reviewed_by_user_id' => null, 'reviewed_at' => null]);
+        }
+        $this->assertDatabaseCount('notifications', count(self::MODULES));
+    }
+
     public function test_create_post_chooser_only_offers_authorized_modules(): void
     {
-        foreach (['President', 'Multimedia', 'Secretary', 'Auditor'] as $position) {
+        foreach (['President', 'Social Media Manager', 'Secretary', 'Auditor'] as $position) {
             $actor = $this->actor('officer', $position);
             $response = $this->actingAs($actor)->get(route('workspace.create'))->assertOk();
             foreach (config('workspace.modules') as $key => $module) {
@@ -90,6 +137,26 @@ class ContentWorkspaceTest extends TestCase
                 ->assertSee('<h1>Archived posts</h1>', false)
                 ->assertSee('Restore post?')
                 ->assertDontSee('id="'.$type.'-bulk-archive"', false);
+        }
+    }
+
+    public function test_permanent_deletion_requires_archived_content_in_every_module(): void
+    {
+        $president = $this->actor();
+        $this->actingAs($president);
+
+        foreach (self::MODULES as $module => [$type]) {
+            $active = $this->makePost($module, $president->id);
+            $archived = $this->makePost($module, $president->id, 'approved', 'archived');
+            $this->get(route('workspace.posts.'.$module.'.index', ['tab' => 'published']))
+                ->assertOk()->assertDontSee('Delete permanently');
+            $this->delete(route($module.'.destroy', $active))->assertForbidden();
+            $this->assertDatabaseHas($module, ['id' => $active]);
+            $this->get(route('workspace.posts.'.$module.'.index', ['tab' => 'archived']))
+                ->assertOk()->assertSee('Delete permanently');
+            $model = \App\Support\ContentModules::all()[$module]['model'];
+            $post = $model::findOrFail($archived);
+            $this->assertTrue($president->can('delete', $post));
         }
     }
 
@@ -146,7 +213,7 @@ class ContentWorkspaceTest extends TestCase
             $this->get(route('workspace.posts.'.$module.'.show', $foreign))->assertNotFound();
             $this->post(route($module.'.approve', $id))->assertForbidden();
             $this->patch(route($module.'.update', $foreign), [])->assertForbidden();
-            foreach (['student', 'adviser', 'superadmin'] as $role) {
+            foreach (['student', 'adviser', 'admin'] as $role) {
                 $this->actingAs($this->actor($role, null))->get(route('workspace.posts.'.$module.'.index'))->assertForbidden();
                 $this->post(route($module.'.approve', $id))->assertForbidden();
             }
@@ -207,7 +274,7 @@ class ContentWorkspaceTest extends TestCase
 
     public function test_json_contracts_and_notification_ownership_are_preserved(): void
     {
-        $owner = $this->actor('officer', 'Multimedia');
+        $owner = $this->actor('officer', 'Social Media Manager');
         $president = $this->actor();
         $id = $this->makePost('articles', $owner->id, 'pending');
         $notificationId = (string) Str::uuid();

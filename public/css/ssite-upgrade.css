@@ -203,14 +203,14 @@ body.main-site-body main .site-page .site-hero :is(.documents-eyebrow, .transpar
 }
 
 /* Cards and editorial surfaces */
-body.main-site-body main :is(.news-card, .discover-story-card, .discover-featured, .post-card, .transparency-register, .document-tile, .mission-card, .vision-card, .officer-card) {
+body.main-site-body main :is(.news-card, .discover-story-card, .discover-featured, .post-card, .transparency-register, .document-tile, .mission-card, .vision-card) {
     border: 1px solid var(--upgrade-rule);
     border-radius: 18px;
     background: rgb(255 255 255 / 94%);
     box-shadow: var(--upgrade-shadow-soft);
 }
 
-body.main-site-body main :is(.news-card, .discover-story-card, .post-card, .document-tile, .officer-card):hover {
+body.main-site-body main :is(.news-card, .discover-story-card, .post-card, .document-tile):hover {
     border-color: var(--ssite-line);
     box-shadow: var(--upgrade-shadow);
     transform: translateY(-4px);
@@ -290,18 +290,18 @@ body.main-site-body main .home-page .home-eyebrow {
     letter-spacing: .04em;
 }
 
-body.main-site-body main :is(.news-card, .discover-story-card, .discover-featured, .officer-card, .mission-card, .vision-card) {
+body.main-site-body main :is(.news-card, .discover-story-card, .discover-featured, .mission-card, .vision-card) {
     transition:
         transform var(--motion-duration-standard) var(--motion-ease-out),
         box-shadow var(--motion-duration-standard) var(--motion-ease-out),
         border-color var(--motion-duration-standard) var(--motion-ease-out);
 }
 
-body.main-site-body main :is(.news-card, .discover-story-card, .discover-featured, .officer-card) img {
+body.main-site-body main :is(.news-card, .discover-story-card, .discover-featured) img {
     transition: transform var(--motion-duration-slow) var(--motion-ease-out);
 }
 
-body.main-site-body main :is(.news-card, .discover-story-card, .discover-featured, .officer-card):hover img {
+body.main-site-body main :is(.news-card, .discover-story-card, .discover-featured):hover img {
     transform: scale(1.035);
 }
 
@@ -1240,14 +1240,14 @@ body.workspace-site-body {
     .page-hero-orbit-one { transform: rotate(28deg) scaleX(1.7); }
     .page-hero-orbit-two { transform: rotate(-28deg) scaleX(1.7); }
 
-    body.main-site-body main :is(.news-card, .post-card, .document-tile, .mission-card, .vision-card, .officer-card, .discover-story-card, .discover-featured, .transparency-register) {
+    body.main-site-body main :is(.news-card, .post-card, .document-tile, .mission-card, .vision-card, .discover-story-card, .discover-featured, .transparency-register) {
         border: 1px solid var(--ssite-rule);
         border-radius: var(--ssite-radius-card);
         background: var(--ssite-paper-strong);
         box-shadow: var(--ssite-shadow-card);
     }
 
-    body.main-site-body main :is(.news-card, .post-card, .document-tile, .officer-card, .discover-story-card):hover {
+    body.main-site-body main :is(.news-card, .post-card, .document-tile, .discover-story-card):hover {
         border-color: var(--ssite-line);
         box-shadow: var(--ssite-shadow-float);
         transform: translateY(-4px);
@@ -1419,14 +1419,14 @@ body.workspace-site-body {
             animation-iteration-count: 1 !important;
         }
 
-        body.main-site-body main :is(.news-card, .discover-story-card, .discover-featured, .officer-card):hover {
+        body.main-site-body main :is(.news-card, .discover-story-card, .discover-featured):hover {
             transform: none;
         }
     }
 
     @media (prefers-reduced-motion: reduce) {
         .workspace-content :is(.workspace-metric-card, .dashboard-stat-card),
-        body.main-site-body main :is(.news-card, .post-card, .document-tile, .officer-card, .discover-story-card) {
+        body.main-site-body main :is(.news-card, .post-card, .document-tile, .discover-story-card) {
             transition: none;
         }
     }
@@ -1875,36 +1875,6 @@ body.main-site-body main .about-section-title::after {
     content: '';
 }
 
-body.main-site-body main .officers-grid {
-    gap: 1.25rem;
-}
-
-body.main-site-body main .officer-card {
-    padding: 1rem .75rem 1.1rem;
-    border-color: var(--upgrade-rule);
-    border-radius: 16px;
-    background: rgb(255 255 255 / 90%);
-    box-shadow: var(--upgrade-shadow-soft);
-}
-
-body.main-site-body main .officer-photo-frame {
-    width: min(100%, 10rem);
-    border-color: var(--ssite-line);
-    box-shadow: 0 0 0 4px rgb(61 175 234 / 14%);
-}
-
-body.main-site-body main .officer-card h3 {
-    margin-top: .75rem;
-    color: var(--ssite-navy);
-    font-size: .86rem;
-}
-
-body.main-site-body main .officer-card p {
-    color: var(--upgrade-muted);
-    font-size: .76rem;
-    line-height: 1.35;
-}
-
 body.main-site-body main .leadership-item {
     border-color: var(--upgrade-rule);
     border-radius: 14px;
@@ -2272,10 +2242,6 @@ body.workspace-site-body .notification-page-action {
     font-weight: 700;
 }
 
-body.workspace-site-body .profile-picture-remove-form .dashboard-button {
-    min-height: 44px;
-}
-
 body.workspace-site-body .president-officers-page .dashboard-page-header-actions .dashboard-button {
     min-height: 44px;
 }
@@ -2397,13 +2363,6 @@ body.workspace-site-body .dashboard-table tbody tr:only-child td[colspan] {
         margin-top: 1rem;
     }
 
-    body.main-site-body main .officers-grid {
-        gap: .85rem;
-    }
-
-    body.main-site-body main .officer-card {
-        padding-inline: .5rem;
-    }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2795,7 +2754,6 @@ body.main-site-body main .site-page .page-hero-banner-art {
             gap: 10px;
             min-height: 44px;
             padding: 10px 12px;
-            border: 0;
             border-radius: 6px;
             background: #fff;
             color: #17324d;
@@ -2805,9 +2763,6 @@ body.main-site-body main .site-page .page-hero-banner-art {
             cursor: pointer;
         }
 
-        option:checked { background: #e3f3fc; color: #155571; font-weight: 600; }
-        option:hover, option:focus-visible { background: #edf6fa; color: #123e4c; outline: 2px solid #9bbdca; outline-offset: -2px; }
-        option::checkmark { color: #155571; }
         option:disabled { color: #64748b; opacity: .65; cursor: default; }
     }
 
@@ -3054,7 +3009,7 @@ body.main-site-body .public-home-header ~ main .home-page .home-intro .home-hero
     color: #fff;
 }
 
-@media (max-width: 767px) {
+@media (min-width: 641px) and (max-width: 767px) {
     body.main-site-body .public-home-header ~ main .home-page .home-intro {
         grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
         gap: 24px;

@@ -18,6 +18,7 @@ class TransferSupabaseData extends Command
         'achievements' => 'achievement_id', 'documents' => 'document_id', 'liquidations' => 'liquidation_id',
         'officer_terms' => 'term_id', 'role_changes' => 'role_change_id', 'post_likes' => 'like_id',
         'post_views' => 'view_id', 'content_drafts' => 'draft_id'];
+    private const LEGACY_USER_FIELDS = ['student_number', 'institute', 'program', 'year_level', 'gender', 'contact_number', 'address'];
 
     public function handle(): int
     {
@@ -92,6 +93,11 @@ class TransferSupabaseData extends Command
                         throw new \RuntimeException('Invalid exported record.');
                     }
                     $columns[$table] ??= Schema::getColumnListing($table);
+                    if ($table === 'users') {
+                        foreach (array_diff(self::LEGACY_USER_FIELDS, $columns[$table]) as $field) {
+                            unset($row[$field]);
+                        }
+                    }
                     if (array_diff(array_keys($row), $columns[$table])) {
                         throw new \RuntimeException('Unmapped source columns in '.$table.'. Import rolled back; reconcile the schemas before retrying.');
                     }

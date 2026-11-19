@@ -25,7 +25,7 @@ class PrivatePostImagesTest extends TestCase
         Storage::fake('public');
     }
 
-    private function actor(string $role = 'officer', string $position = 'Multimedia'): User
+    private function actor(string $role = 'officer', string $position = 'Social Media Manager'): User
     {
         $user = new User;
         $user->forceFill(['name' => 'Fixture', 'email' => uniqid().'@mcc.edu.ph', 'role' => $role,

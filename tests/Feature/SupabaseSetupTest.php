@@ -15,7 +15,12 @@ class SupabaseSetupTest extends TestCase
         foreach (['articles', 'activities', 'achievements', 'documents', 'liquidations'] as $table) {
             $this->assertTrue(Schema::hasColumns($table, ['id', 'created_by_user_id', 'approval_status', 'content_status', 'view_count', 'like_count']));
         }
-        $this->assertTrue(Schema::hasColumns('users', ['officer_position', 'profile_completed_at']));
+        $this->assertTrue(Schema::hasColumns('users', [
+            'officer_position', 'microsoft_id', 'profile_picture', 'profile_completed_at', 'profile_policies_accepted_at',
+        ]));
+        foreach (['student_number', 'institute', 'program', 'year_level', 'gender', 'contact_number', 'address'] as $column) {
+            $this->assertFalse(Schema::hasColumn('users', $column));
+        }
         $this->assertTrue(Schema::hasColumns('role_changes', ['old_role', 'new_role', 'created_at', 'updated_at']));
         $this->assertTrue(Schema::hasColumns('documents', ['semester', 'academic_year', 'file_path']));
     }

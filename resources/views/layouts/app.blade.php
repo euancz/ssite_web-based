@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @include('layouts.partials.font-preloads')
     <title>@yield('title', 'SSITE') | Student Society in Information Technology Education</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('images/ssite-favicon.svg') }}">
 
@@ -15,8 +16,6 @@
         <script src="{{ asset('js/login-success.js') }}" defer></script>
     @endif
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- App styles -->
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
@@ -30,7 +29,7 @@
             || $workspaceUser->can('manage-officers')
         );
         $workspaceRoutePatterns = [
-            'officer.*', 'adviser.*', 'editorial.*', 'workspace.posts.*', 'workspace.drafts.*', 'workspace.content-activity.*', 'workspace.content-versions.*', 'workspace.sponsors.*', 'workspace.sponsors.*',
+            'officer.*', 'adviser.*', 'editorial.*', 'workspace.posts.*', 'workspace.drafts.*', 'workspace.content-activity.*', 'workspace.content-versions.*', 'workspace.sponsors.*',
             'notifications.index', 'profile.edit',
             'articles.create', 'articles.edit', 'activities.create', 'activities.edit',
             'achievements.create', 'achievements.edit', 'documents.create', 'documents.edit',
@@ -56,16 +55,27 @@
     @if ($workspaceEnabled)
         <link rel="stylesheet" href="{{ asset('css/workspace-refresh.css') }}">
     @endif
-    <link rel="stylesheet" href="{{ asset('css/main-site-dropdowns.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/main-site-dropdowns.css') }}?v={{ filemtime(public_path('css/main-site-dropdowns.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/interface-polish.css') }}">
     <link rel="stylesheet" href="{{ asset('css/pagination.css') }}?v={{ filemtime(public_path('css/pagination.css')) }}">
     @unless ($workspaceEnabled)
         <link rel="stylesheet" href="{{ asset('css/content-cards.css') }}?v={{ filemtime(public_path('css/content-cards.css')) }}">
     @endunless
+    @include('layouts.partials.typography')
+    <link rel="stylesheet" href="{{ asset('css/stories-banner.css') }}?v={{ filemtime(public_path('css/stories-banner.css')) }}">
     <script src="{{ asset('js/dropdown-position.js') }}" defer></script>
-    <script src="{{ asset('js/search-controls.js') }}" defer></script>
+    @include('layouts.partials.search-assets')
+    @if ($pageDataPending ?? false)
+        <noscript><meta http-equiv="refresh" content="0;url={{ request()->fullUrlWithQuery(['_full' => 1]) }}"></noscript>
+        <script src="{{ asset('js/initial-page-data.js') }}" defer></script>
+    @endif
 </head>
 <body class="{{ $workspaceEnabled ? 'site-body workspace-site-body' : 'site-body main-site-body' }} {{ request()->routeIs('discover') ? 'discover-site-body' : '' }} {{ $isPublicLanding ? 'home-landing-body' : '' }}">
+    @if ($pageDataPending ?? false)
+        <p data-page-data-fallback role="status" class="dashboard-error" hidden>
+            The page data could not be loaded. <a href="{{ request()->fullUrlWithQuery(['_full' => 1]) }}">Reload the full page</a>.
+        </p>
+    @endif
     @if ($showLoginSuccess)
         @include('layouts.partials.login-success')
     @endif
@@ -79,6 +89,7 @@
     <template id="notification-icon-submitted"><x-icon name="clock" size="sm" /></template>
     <template id="notification-icon-approved"><x-icon name="circle-check" size="sm" /></template>
     <template id="notification-icon-published"><x-icon name="circle-check" size="sm" /></template>
+    <template id="notification-icon-liked"><x-icon name="heart" size="sm" /></template>
     <template id="notification-icon-rejected"><x-icon name="circle-x" size="sm" /></template>
     <template id="notification-icon-default"><x-icon name="info" size="sm" /></template>
     <template id="notification-post-article"><x-icon name="file-text" size="sm" /></template>
@@ -99,10 +110,6 @@
         <header class="site-header profile-minimal-header">
             <div class="site-header-main">
                 <img src="{{ asset('images/SSITE LOGO.png') }}" alt="SSITE Logo" class="site-logo">
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="site-button">Logout</button>
-                </form>
             </div>
         </header>
     @else
@@ -207,13 +214,12 @@
                                     <span>My Profile</span>
                                 </a>
                             @endif
-                            <button type="button" class="account-menu-action" role="menuitem">
-                                <x-icon name="settings" size="sm" class="icon-small" />
-                                <span>Settings</span>
-                            </button>
                             @if (auth()->user()->canPost() || auth()->user()->can('review-posts') || auth()->user()->can('manage-users') || auth()->user()->can('manage-officers'))
                                 <div class="account-menu-divider" role="separator"></div>
-                                <a href="{{ route(auth()->user()->dashboardRoute()) }}" class="account-menu-action" role="menuitem">Open workspace</a>
+                                <a href="{{ route(auth()->user()->dashboardRoute()) }}" class="account-menu-action" role="menuitem">
+                                    <x-icon name="layout-dashboard" size="sm" class="icon-small" />
+                                    <span>Open workspace</span>
+                                </a>
                             @endif
                             {{-- Keep logout last and visually separate for every signed-in role. --}}
                             <div class="account-menu-divider" role="separator"></div>
@@ -381,21 +387,6 @@
     <button type="button" id="back-to-top" class="back-to-top hidden" aria-label="Back to top">
         <x-icon name="arrow-up" size="md" />
     </button>
-
-    <div id="page-loading-skeleton" class="page-loading-skeleton hidden" role="status" aria-label="Loading page">
-        <div class="page-loading-skeleton-header" aria-hidden="true">
-            <span class="skeleton-block skeleton-brand-mark"></span>
-            <span class="skeleton-block skeleton-brand-name"></span>
-            <span class="skeleton-block skeleton-header-action"></span>
-        </div>
-        <div class="loading-shell-sidebar" aria-hidden="true">
-            @for ($loadingItem = 0; $loadingItem < 5; $loadingItem++)
-                <span class="skeleton-block loading-input"></span>
-            @endfor
-        </div>
-        <div class="page-loading-skeleton-content" aria-hidden="true"></div>
-    </div>
-    @include('layouts.partials.page-loading')
 
     @stack('scripts')
     @include('layouts.partials.account-scripts')

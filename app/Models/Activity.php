@@ -26,7 +26,7 @@ class Activity extends Model
     protected $keyType = 'int';
 
     // SECURITY: Ownership, status, rejection, and review fields are set only by trusted actions.
-    protected $fillable = ['title', 'description', 'content_format', 'activity_date', 'location', 'image'];
+    protected $fillable = ['title', 'category', 'description', 'content_format', 'activity_date', 'location', 'image'];
 
     /** Cast optional event dates for consistent formatting in lists and detail pages. */
     protected function casts(): array

@@ -36,6 +36,8 @@ class ListingFiltersTest extends TestCase
         $this->report('Private workshop', '2024-03-01', 10, 'pending');
         $response = $this->get('/transparency?q=Workshop&year=2026&sort=amount_low')->assertOk();
         $this->assertSame(['Workshop low', 'Workshop high'], $response->viewData('liquidations')->pluck('title')->all());
+        $this->getJson('/transparency?_suggest=1&q=wORK&year=2026&sort=amount_low')
+            ->assertOk()->assertExactJson(['results' => ['Workshop low', 'Workshop high']]);
         $this->assertArrayNotHasKey('2024', $response->viewData('yearOptions'));
         $response->assertSee('Report year')->assertSee('Amount (low to high)')->assertDontSee('Sort by semester');
     }
@@ -64,6 +66,8 @@ class ListingFiltersTest extends TestCase
         $this->assertSame(['Matching story'], $response->viewData('articles')->pluck('title')->all());
         $this->assertCount(0, $response->viewData('activities'));
         $response->assertSee('Matching story')->assertDontSee('Private story')->assertSee('Clear filters');
+        $this->getJson('/discover?_suggest=1&type=articles&q=wORKSH&period=week')
+            ->assertOk()->assertExactJson(['results' => ['Matching story']]);
     }
 
     public function test_document_search_filters_keep_requested_title_order(): void
@@ -73,6 +77,8 @@ class ListingFiltersTest extends TestCase
         }
         $response = $this->get('/documents?q=minutes&semester=1&category=Minutes&sort=title')->assertOk();
         $this->assertSame(['Alpha minutes', 'Zulu minutes'], $response->viewData('documents')->pluck('title')->all());
+        $this->getJson('/documents?_suggest=1&q=MIN&semester=1&category=Minutes&sort=title')
+            ->assertOk()->assertExactJson(['results' => ['Alpha minutes', 'Zulu minutes']]);
         $response->assertSee('name="sort"', false)->assertDontSee('Sort By Semester');
     }
     public function test_public_keyword_search_combines_with_activity_timeframe_without_leaking_private_records(): void
@@ -112,6 +118,9 @@ class ListingFiltersTest extends TestCase
         $global = $this->get(route('search.index', ['q' => 'workshop']))->assertOk();
         $this->assertEqualsCanonicalizing(['articles', 'activities', 'documents'], collect($global->viewData('results')->items())->pluck('type')->all());
         $global->assertDontSee('Workshop private');
+        $global->assertSee('aria-controls="results-search-list"', false);
+        $this->getJson(route('search.suggest', ['q' => 'wORKsh']))
+            ->assertOk()->assertJsonCount(3, 'results')->assertJsonMissing(['title' => 'Workshop private']);
         $local = $this->get('/discover?q=workshop&type=articles')->assertOk();
         $this->assertSame(['Workshop story'], $local->viewData('articles')->pluck('title')->all());
         $this->assertCount(0, $local->viewData('activities'));
@@ -129,6 +138,8 @@ class ListingFiltersTest extends TestCase
         $response = $this->get(route('workspace.sponsors.index', ['q' => 'partner', 'visibility' => 'visible', 'sort' => 'name']))->assertOk();
         $this->assertSame(['Alpha partner', 'Zulu partner'], $response->viewData('sponsors')->pluck('name')->all());
         $response->assertDontSee('Hidden partner')->assertSee('Find sponsors');
+        $this->getJson(route('workspace.sponsors.index', ['_suggest' => 1, 'q' => 'pARTN', 'visibility' => 'visible', 'sort' => 'name']))
+            ->assertOk()->assertExactJson(['results' => ['Alpha partner', 'Zulu partner']]);
     }
 
 }

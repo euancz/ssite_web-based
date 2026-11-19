@@ -20,5 +20,5 @@ Route::get('/auth/microsoft/mobile', [MicrosoftAuthController::class, 'redirectF
     ->name('microsoft.mobile.login');
 
 Route::post('/logout', [AuthController::class, 'logout'])
-    ->middleware(RequireAuthentication::class)
+    ->middleware(RequireAuthentication::class . ':pending')
     ->name('logout');

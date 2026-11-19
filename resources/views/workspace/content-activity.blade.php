@@ -4,21 +4,28 @@
 <div class="dashboard-page">
     <x-ui.page-header title="Activity log" subtitle="See who posted, approved, and edited content you can manage." />
     <x-ui.form-errors />
-    <form method="GET" action="{{ route('workspace.content-activity.index') }}" class="workspace-review-filters">
-        <div class="dashboard-form-field"><label for="activity-search">Content title</label><input id="activity-search" type="search" name="q" maxlength="100" value="{{ $filters['q'] }}" placeholder="Search titles"></div>
-        <div class="dashboard-form-field"><label for="activity-module">Content area</label>
+    @php($activeFilters = (int) ($filters['action'] !== '') + (int) ($filters['days'] !== 30) + (int) ($filters['sort'] !== 'newest'))
+    <form method="GET" action="{{ route('workspace.content-activity.index') }}" class="workspace-list-toolbar" aria-label="Filter activity log">
+        <div class="workspace-list-field"><label for="activity-module">Content type</label>
             <select id="activity-module" name="module"><option value="">All assigned areas</option>@foreach ($modules as $key => $module)<option value="{{ $key }}" @selected($filters['module'] === $key)>{{ $module['label'] }}</option>@endforeach</select>
         </div>
-        <div class="dashboard-form-field"><label for="activity-action">Action</label>
-            <select id="activity-action" name="action"><option value="">All actions</option>@foreach (['posted' => 'Posted', 'approved' => 'Approved', 'edited' => 'Edited', 'rejected' => 'Rejected'] as $key => $label)<option value="{{ $key }}" @selected($filters['action'] === $key)>{{ $label }}</option>@endforeach</select>
+        <x-workspace.ui.list-search id="activity-search" label="Search activity" :value="$filters['q']" placeholder="Content title" />
+        <div class="workspace-list-filter-actions">
+            @if ($activeFilters || $filters['q'] !== '' || $filters['module'] !== '' || $filters['post'] || $filters['from'] !== '' || $filters['to'] !== '')
+                <a class="dashboard-text-button" href="{{ route('workspace.content-activity.index') }}">Clear filters</a>
+            @endif
+            <x-posts.filter-panel :active-count="$activeFilters">
+                <div class="site-filter-field"><label for="activity-action">Action</label>
+                    <select id="activity-action" name="action"><option value="">All actions</option>@foreach (['posted' => 'Posted', 'approved' => 'Approved', 'edited' => 'Edited', 'rejected' => 'Rejected'] as $key => $label)<option value="{{ $key }}" @selected($filters['action'] === $key)>{{ $label }}</option>@endforeach</select>
+                </div>
+                <div class="site-filter-field"><label for="activity-days">Period</label>
+                    <select id="activity-days" name="days">@foreach ([7, 30] as $days)<option value="{{ $days }}" @selected($filters['days'] === $days)>Last {{ $days }} days</option>@endforeach</select>
+                </div>
+                <div class="site-filter-field"><label for="activity-sort">Sort by</label>
+                    <select id="activity-sort" name="sort"><option value="newest" @selected($filters['sort'] === 'newest')>Newest first</option><option value="oldest" @selected($filters['sort'] === 'oldest')>Oldest first</option></select>
+                </div>
+            </x-posts.filter-panel>
         </div>
-        <div class="dashboard-form-field"><label for="activity-days">Period</label>
-            <select id="activity-days" name="days">@foreach ([7, 30] as $days)<option value="{{ $days }}" @selected($filters['days'] === $days)>Last {{ $days }} days</option>@endforeach</select>
-        </div>
-        <div class="dashboard-form-field"><label for="activity-sort">Sort by</label>
-            <select id="activity-sort" name="sort"><option value="newest" @selected($filters['sort'] === 'newest')>Newest first</option><option value="oldest" @selected($filters['sort'] === 'oldest')>Oldest first</option></select>
-        </div>
-        <div class="profile-form-actions"><button class="dashboard-button" type="submit">Apply filters</button><a class="dashboard-text-button" href="{{ route('workspace.content-activity.index') }}">Clear filters</a></div>
     </form>
     <section class="dashboard-panel">
         <h2>Recent activity</h2>

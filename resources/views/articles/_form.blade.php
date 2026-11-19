@@ -18,14 +18,7 @@
         @error('title') <span id="article-title-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
 
-    @if (\App\Support\ArticleCategory::available())
-        <div class="dashboard-form-field">
-            <label for="article-category">Category (optional)</label>
-            <input id="article-category" name="category" type="text" maxlength="100" value="{{ old('category', $draftValues['category'] ?? $article?->category) }}" @error('category') aria-invalid="true" aria-describedby="article-category-error" @enderror>
-            <span class="profile-field-help">Use a short, consistent category name to help readers find related articles.</span>
-            @error('category')<span id="article-category-error" class="profile-field-error">{{ $message }}</span>@enderror
-        </div>
-    @endif
+    <x-workspace.category-field module="articles" :post="$article" :draft-values="$draftValues ?? []" />
 
     {{-- Blade escapes article content on redisplay and the server validates it as required text. --}}
     <div class="dashboard-form-field">
@@ -41,18 +34,15 @@
             :format-value="$draftValues['content_format'] ?? $article?->content_format ?? 'markdown'"
             :formatting-enabled="$formattingEnabled"
         />
-        @if ($formattingEnabled)
-            <span class="profile-field-help">Use the toolbar or paste formatted text. Preview below to check how readers will see your article.</span>
-        @endif
         <span class="profile-field-help">Maximum 300 words and 20,000 characters.</span>
         @error('content') <span id="article-content-error" class="profile-field-error">{{ $message }}</span> @enderror
     </div>
 
     {{-- SECURITY: The server validates image bytes, extension, and size before storing a generated filename. --}}
     <div class="dashboard-form-field">
-        <label for="article-image">{{ $article ? 'Replace image (optional)' : 'Image (optional)' }}</label>
+        <label for="article-image">{{ $article?->image ? 'Replace image (optional)' : 'Image' }} @unless ($article?->image)<span class="post-form-required-mark" aria-hidden="true">*</span>@endunless</label>
         <x-workspace.attachment title="Attach a feature image" help="JPG or PNG up to 2 MB">
-            <input id="article-image" data-image-preview="article-image-preview" name="image" @error('image') aria-invalid="true" aria-describedby="article-image-error" @enderror type="file" accept=".jpg,.png">
+            <input id="article-image" data-image-preview="article-image-preview" name="image" @error('image') aria-invalid="true" aria-describedby="article-image-error" @enderror type="file" accept=".jpg,.png" @required(! $article?->image)>
         </x-workspace.attachment>
         <x-workspace.upload-status input-id="article-image" :max-kb="2048" />
         @error('image') <span id="article-image-error" class="profile-field-error">{{ $message }}</span> @enderror
@@ -66,10 +56,12 @@
     {{-- The form submits only editable fields and returns to the saved article. --}}
     @if ($formattingEnabled)
         <section class="article-preview-panel" data-article-preview data-preview-url="{{ route('workspace.articles.preview') }}" hidden aria-labelledby="article-preview-heading">
-            <h2 id="article-preview-heading">Check formatting</h2>
-            <p class="profile-field-help">Preview sends this text to the server without saving it. Refresh after editing.</p>
-            <button type="button" class="dashboard-button dashboard-button-secondary" data-render-article>Refresh preview</button>
+            <div class="article-preview-heading">
+                <h2 id="article-preview-heading">Content preview</h2>
+                <button type="button" class="dashboard-button dashboard-button-secondary article-preview-refresh" data-render-article aria-label="Refresh preview" title="Refresh preview"><x-icon name="refresh-cw" /></button>
+            </div>
             <p class="profile-field-help" data-article-preview-status role="status" aria-live="polite"></p>
+            <img class="article-preview-image" data-article-preview-image alt="Post image preview" hidden>
             <div class="article-rich-content" data-article-preview-output hidden></div>
         </section>
         <noscript><p class="profile-field-help">You can type Markdown and save without JavaScript. Check the formatted article on its workspace page after saving.</p></noscript>

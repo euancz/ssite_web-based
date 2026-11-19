@@ -1,0 +1,64 @@
+.table-actions-trigger {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--color-border-subtle-control);
+    border-radius: 10px;
+    background: var(--color-surface-raised);
+    color: inherit;
+    cursor: pointer;
+}
+
+.table-actions-trigger:hover,
+.table-actions-trigger:has(+ .table-actions-panel:popover-open) {
+    background: var(--color-surface-page);
+}
+
+.table-actions-panel {
+    width: max-content;
+    min-width: 144px;
+    max-width: calc(100vw - 16px);
+    box-sizing: border-box;
+    margin: 0;
+    padding: 6px;
+    overflow: auto;
+    border: 1px solid var(--color-border-subtle-control);
+    border-radius: 12px;
+    background: var(--color-surface-raised);
+    color: var(--color-text-primary);
+    box-shadow: 0 8px 24px rgb(17 48 74 / 16%);
+    white-space: normal;
+}
+
+.table-actions-panel form { margin: 0; }
+
+.table-actions-panel :is(a, button) {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 44px;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.table-actions-panel :is(a, button):hover { background: var(--color-surface-page); }
+
+.table-actions-trigger:focus-visible,
+.table-actions-panel :is(a, button):focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -2px;
+}
+
+@supports not selector(:popover-open) {
+    .table-actions-trigger { display: none; }
+}

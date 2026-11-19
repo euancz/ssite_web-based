@@ -56,7 +56,11 @@ class NotificationController extends Controller
                 'id' => $notification->id,
                 'read_at' => $notification->read_at?->toIso8601String(),
                 'created_at' => $notification->created_at?->toIso8601String(),
-                'data' => array_intersect_key((array) $notification->data, array_flip([
+                'data' => array_intersect_key(array_merge((array) $notification->data,
+                    ($notification->data['type'] ?? '') === 'published'
+                        ? ['message' => \App\Notifications\PostPublished::message($notification->data['post_type'] ?? '')]
+                        : (($notification->data['type'] ?? '') === 'approved'
+                            ? ['message' => 'Your request was approved.'] : [])), array_flip([
                     'type', 'post_type', 'post_id', 'title', 'actor_name', 'message', 'url', 'rejection_reason',
                 ])),
             ])->values(),
@@ -80,14 +84,14 @@ class NotificationController extends Controller
         if (! $post || $post->content_status !== 'active') {
             return redirect()->route($indexRoute)->with('status', 'This post is no longer available.');
         }
-        if (($data['type'] ?? '') === 'published' && $post->approval_status !== 'approved') {
+        if (in_array($data['type'] ?? '', ['published', 'liked'], true) && $post->approval_status !== 'approved') {
             return redirect()->route($indexRoute)->with('status', 'This post is no longer available.');
         }
         if ($request->user()->isStudent() && ($post->approval_status !== 'approved' || $post->content_status !== 'active')) {
             return redirect()->route($indexRoute)->with('status', 'This post is no longer available.');
         }
 
-        if (($data['type'] ?? '') !== 'published' && $request->user()->can('update', $post)) {
+        if (! in_array($data['type'] ?? '', ['published', 'liked'], true) && $request->user()->can('update', $post)) {
             $showRoute = 'workspace.posts.'.$showRoute;
         }
 
@@ -125,8 +129,13 @@ class NotificationController extends Controller
             abort(404);
         }
 
-        // Submission notices show the posting officer; review notices show the adviser on the post.
-        $actorId = ($data['type'] ?? '') === 'submitted' ? $post->created_by_user_id : $post->reviewed_by_user_id;
+        // Keep the original actor for new notices; older notices resolve from the post.
+        // Publications show the poster, while approvals and rejections show the reviewer.
+        $actorId = $data['actor_id'] ?? (in_array($data['type'] ?? '', ['submitted', 'published'], true)
+            ? $post->created_by_user_id : $post->reviewed_by_user_id);
+        if (($data['type'] ?? '') === 'liked') {
+            $actorId = $data['actor_id'] ?? null;
+        }
         $avatarUrl = $actorId ? User::query()->find($actorId)?->avatarUrl() : null;
         if (! $avatarUrl) {
             abort(404);

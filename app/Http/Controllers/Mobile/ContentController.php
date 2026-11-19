@@ -12,7 +12,6 @@ use App\Models\Document;
 use App\Models\Liquidation;
 use App\Models\OfficerTerm;
 use App\Models\Sponsor;
-use App\Services\FeaturedArticles;
 use App\Services\PostImages;
 use App\Support\DocumentAcademicYear;
 use App\Support\MobilePost;
@@ -21,6 +20,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use App\Models\PostLike;
+use App\Notifications\PostLiked;
+use App\Models\User;
+use App\Support\PostEngagement;
 
 class ContentController extends Controller
 {
@@ -42,16 +46,13 @@ class ContentController extends Controller
                 return [];
             }
 
-            return $model::publiclyVisible()->with('author')->latest($dateField)->take($limit)->get()
+            return $model::publiclyVisible()->with('author')->latest($dateField)->orderByDesc('id')->take($limit)->get()
                 ->map(fn ($post) => MobilePost::serialize($post, $dateField))->values();
         };
 
         return response()->json([
             'data' => [
-                'articles' => Schema::hasTable('articles')
-                    ? app(FeaturedArticles::class)->forDisplay(1)
-                        ->map(fn ($post) => MobilePost::serialize($post, 'created_at'))->values()
-                    : [],
+                'articles' => $posts('articles', Article::class, 'created_at', 1),
                 'activities' => $posts('activities', Activity::class, 'activity_date', 1),
                 'achievements' => $posts('achievements', Achievement::class, 'achievement_date', 1),
                 'officers' => Schema::hasTable('officer_terms')
@@ -90,6 +91,12 @@ class ContentController extends Controller
         abort_unless(Schema::hasTable($table), 503, 'Content is not available yet.');
 
         $query = $model::publiclyVisible()->with('author');
+        $engagement = app(PostEngagement::class);
+        $likesAvailable = $engagement->likesAvailable();
+        if ($likesAvailable && Schema::hasColumn($table, 'like_count')) {
+            $query->withCount(['likes as liked_by_viewer' => fn ($likes) =>
+                $likes->where('user_id', $request->attributes->get('mobile_user')->id)]);
+        }
         $filters = [];
         if ($module === 'documents') {
             $filters['category'] = (clone $query)->whereNotNull('category')->where('category', '<>', '')
@@ -111,14 +118,15 @@ class ContentController extends Controller
                 }
             }
         }
-        $search = mb_substr(trim((string) $request->query('q', '')), 0, 100);
+        $term = $request->query('q');
+        $search = is_string($term) ? mb_substr(trim($term), 0, 100) : '';
         if ($search !== '') {
             $query->where(function ($builder) use ($search, $module) {
-                $builder->where('title', 'like', '%'.addcslashes($search, '%_\\').'%');
+                \App\Support\SearchText::contains($builder, 'title', $search);
                 if ($module === 'articles') {
-                    $builder->orWhere('content', 'like', '%'.addcslashes($search, '%_\\').'%');
+                    \App\Support\SearchText::contains($builder, 'content', $search, 'or');
                 } else {
-                    $builder->orWhere('description', 'like', '%'.addcslashes($search, '%_\\').'%');
+                    \App\Support\SearchText::contains($builder, 'description', $search, 'or');
                 }
             });
         }
@@ -157,5 +165,74 @@ class ContentController extends Controller
         $post = $model::publiclyVisible()->findOrFail($id);
 
         return app(PostImages::class)->response($post);
+    }
+
+    public function toggleLike(Request $request, string $module, int $id, PostEngagement $engagement)
+    {
+        abort_unless($engagement->likesAvailable(), 404);
+        $validated = $request->validate([
+            'liked' => ['required', 'string', 'in:0,1'],
+        ]);
+
+        $config = [
+            'articles' => [Article::class, 'article'],
+            'activities' => [Activity::class, 'activity'],
+            'achievements' => [Achievement::class, 'achievement'],
+            'documents' => [Document::class, 'document'],
+            'liquidations' => [Liquidation::class, 'liquidation'],
+        ][$module] ?? abort(404);
+        [$model, $type] = $config;
+        $user = $request->attributes->get('mobile_user');
+        $desiredLike = $validated['liked'] === '1';
+        $likeCount = 0;
+        $liked = false;
+
+        DB::transaction(function () use (&$likeCount, &$liked, $model, $type, $id, $user, $desiredLike): void {
+            $post = $model::query()->whereKey($id)->lockForUpdate()->firstOrFail();
+            abort_unless($post->isApproved() && $post->content_status === 'active', 404);
+            abort_unless(Schema::hasColumn($post->getTable(), 'like_count'), 404);
+            Gate::forUser($user)->authorize('view', $post);
+
+            $like = PostLike::query()
+                ->where('post_type', $type)
+                ->where('post_id', $id)
+                ->where('user_id', $user->id)
+                ->lockForUpdate()
+                ->first();
+
+            if ($desiredLike && ! $like) {
+                $like = new PostLike();
+                $like->post_type = $type;
+                $like->post_id = $id;
+                $like->user_id = $user->id;
+                $like->created_at = now();
+                $like->save();
+                DB::table($post->getTable())->whereKey($id)->increment('like_count');
+                if ($post->created_by_user_id && (int) $post->created_by_user_id !== (int) $user->id) {
+                    User::query()->find($post->created_by_user_id)?->notify(new PostLiked([
+                        'post_type' => $type,
+                        'post_id' => $id,
+                        'title' => $post->title,
+                        'actor_id' => $user->id,
+                        'actor_name' => $user->name,
+                        'url' => route(match ($type) {
+                            'article' => 'articles.show',
+                            'activity' => 'activities.show',
+                            'achievement' => 'achievements.show',
+                            'document' => 'documents.show',
+                            default => 'liquidations.show',
+                        }, $post),
+                    ]));
+                }
+            } elseif (! $desiredLike && $like) {
+                $like->delete();
+                DB::table($post->getTable())->whereKey($id)->where('like_count', '>', 0)->decrement('like_count');
+            }
+
+            $liked = $desiredLike;
+            $likeCount = (int) DB::table($post->getTable())->whereKey($id)->value('like_count');
+        });
+
+        return response()->json(['liked' => $liked, 'like_count' => $likeCount]);
     }
 }

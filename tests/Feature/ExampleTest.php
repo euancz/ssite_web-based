@@ -64,7 +64,7 @@ class ExampleTest extends TestCase
     {
         $officer = User::factory()->make();
         $officer->role = 'officer';
-        $officer->officer_position = 'Multimedia';
+        $officer->officer_position = 'Social Media Manager';
         $officer->id = 101;
         $officer->profile_completed_at = now();
 
@@ -125,8 +125,8 @@ class ExampleTest extends TestCase
 
         $this->get(route('profile.complete'))
             ->assertOk()
-            ->assertSee('Please complete your information to continue')
-            ->assertSee('Logout')
+            ->assertSee('Upload a profile photo and agree to the site policies to continue.')
+            ->assertSee('Decline and sign out')
             ->assertDontSee('About us');
     }
 

@@ -33,6 +33,8 @@ Route::get('/', function () {
         : view('pages.landing');
 })->name('landing');
 
+Route::view('/policies', 'pages.policies')->name('policies');
+
 Route::get('/home', HomeController::class)
     ->middleware([RequireAuthentication::class, EnsureProfileCompleted::class])
     ->name('home');

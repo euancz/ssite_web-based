@@ -5,7 +5,7 @@ namespace App\Policies;
 use App\Models\Achievement;
 use App\Models\User;
 
-/** Achievement permissions follow configured officer positions; advisers and superadmins never manage content. */
+/** Achievement permissions follow configured officer positions; advisers and admins never manage content. */
 class AchievementPolicy
 {
     public function viewAny(?User $user): bool
@@ -51,7 +51,7 @@ class AchievementPolicy
 
     public function delete(User $user, Achievement $achievement): bool
     {
-        return $user->canPermanentlyDelete();
+        return $user->canPermanentlyDelete() && $achievement->isArchived();
     }
 
     public function bulkArchive(User $user): bool

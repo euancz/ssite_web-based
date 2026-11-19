@@ -19,8 +19,6 @@ body.workspace-site-body .workspace-nav-link.is-active .workspace-icon { color: 
 body.workspace-site-body .workspace-module-link.is-active { border-color: transparent; background: #f1f5f9; color: #17324d; }
 body.workspace-site-body .workspace-module-link.is-active::before { content: none; }
 body.workspace-site-body .workspace-topbar { min-height: 72px; box-shadow: none; background: #fff; border-color: #e2e8f0; }
-body.workspace-site-body .workspace-topbar-title { gap: 10px; font-size: 12px; color: #64748b; }
-body.workspace-site-body .workspace-topbar-title strong { color: #17324d; font-weight: 600; }
 body.workspace-site-body .workspace-profile-copy strong { font-size: 12px; }
 body.workspace-site-body .workspace-profile-copy small { font-size: 12px; }
 body.workspace-site-body .workspace-content { padding-top: 30px; padding-bottom: 48px; }
@@ -126,7 +124,6 @@ body.workspace-site-body .post-feed-empty p { max-width: 48ch; margin-inline: au
 @media (max-width: 700px) {
     body.workspace-site-body .workspace-content { padding-top: 20px; }
     body.workspace-site-body .workspace-content .dashboard-form-field :is(input:not([type="file"]):not([type="hidden"]), textarea, select) { font-size: 16px; }
-    body.workspace-site-body .workspace-topbar-title { font-size: 12px; }
     body.workspace-site-body .workspace-composer-panel .article-format-tool { width: 44px; min-width: 44px; height: 44px; min-height: 44px; flex-basis: 44px; }
     body.workspace-site-body .workspace-composer-panel select[data-rich-heading] { min-height: 44px; height: 44px; font-size: 16px; }
     body.workspace-site-body .article-visual-editor .tiptap { min-height: 300px; padding: 18px; font-size: 16px; }

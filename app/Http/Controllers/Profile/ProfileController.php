@@ -3,141 +3,94 @@
 namespace App\Http\Controllers\Profile;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Profile\StoreProfileRequest;
-use App\Http\Requests\Profile\UpdateProfileRequest;
 use App\Http\Requests\Profile\UpdateProfilePictureRequest;
-use Illuminate\Contracts\View\View;
-use Illuminate\Http\RedirectResponse;
-use App\Services\ProfilePictures;
 use App\Models\User;
+use App\Services\ProfilePictures;
+use App\Support\MicrosoftAccount;
 use App\Support\MobileLogin;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\View\View;
 
-/**
- * Shows and saves the signed-in user's student information in the users table.
- */
 class ProfileController extends Controller
 {
-    /**
-     * Show the required completion form, or send an already-complete user home.
-     */
-    public function create(): View|RedirectResponse
-    {
-        $user = auth()->user();
-
-        if ($user->hasCompletedProfile()) {
-            return redirect()->route('home');
-        }
-
-        return view('profile.complete', $this->formData($user));
-    }
-
-    /**
-     * Validate and save only the authenticated user's submitted profile fields.
-     */
-    public function store(StoreProfileRequest $request): RedirectResponse
+    public function create(Request $request): Response|RedirectResponse
     {
         $user = $request->user();
+        $identity = $request->session()->get(MicrosoftAccount::PENDING_SESSION_KEY);
 
-        if ($user->hasCompletedProfile()) {
+        if ($user?->hasCompletedProfile()) {
             return redirect()->route('home');
         }
 
-        $data = $request->validated();
-        $data['contact_number'] = $this->normalizePhoneNumber($data['contact_number']);
+        return response()->view('profile.complete', [
+            'user' => $user,
+            'name' => $user?->name ?? ($identity['name'] ?? 'Member'),
+        ])->header('Cache-Control', 'no-store, private');
+    }
 
-        $user->fill($data);
-        $user->profile_completed_at = now();
-        $user->save();
+    public function store(UpdateProfilePictureRequest $request, ProfilePictures $pictures): RedirectResponse
+    {
+        $user = $request->user();
+        $identity = $request->session()->get(MicrosoftAccount::PENDING_SESSION_KEY);
 
-        $mobileRedirect = MobileLogin::redirectToApp($request, $user);
-        if ($mobileRedirect) {
+        if ($user?->hasCompletedProfile()) {
+            return redirect()->route('home');
+        }
+
+        if (! $user) {
+            $user = MicrosoftAccount::find($identity['id'], $identity['email']) ?? (new User)->forceFill([
+                'name' => $identity['name'],
+                'email' => $identity['email'],
+                'password' => Hash::make(Str::random(64)),
+                'role' => User::ROLE_STUDENT,
+            ]);
+        }
+
+        try {
+            $user = $pictures->complete($user, $request->file('picture'), $identity['id'] ?? null);
+        } catch (UniqueConstraintViolationException) {
+            return redirect()->route('profile.complete')->withErrors([
+                'account' => 'An account was created or linked while you were setting up your profile. Please try again.',
+            ]);
+        }
+
+        if ($identity) {
+            Auth::login($user);
+            $request->session()->regenerate();
+            $request->session()->forget(MicrosoftAccount::PENDING_SESSION_KEY);
+            $request->session()->put('show_login_success', true);
+        }
+
+        if ($mobileRedirect = MobileLogin::redirectToApp($request, $user)) {
             return $mobileRedirect;
         }
 
         return redirect()->intended(route($user->dashboardRoute()))
-            ->with('status', 'Your profile has been completed.');
+            ->with('status', 'Your profile is ready.');
     }
 
-    /**
-     * Render the edit form for the current user's existing information.
-     */
-    public function edit(): View
+    public function edit(Request $request): View
     {
-        return view('profile.edit', $this->formData(auth()->user()));
+        return view('profile.edit', ['user' => $request->user()]);
     }
 
-    /**
-     * Update the current user's allowed profile fields without accepting identity or role data.
-     */
-    public function update(UpdateProfileRequest $request): RedirectResponse
+    public function updatePicture(UpdateProfilePictureRequest $request, ProfilePictures $pictures): RedirectResponse
     {
-        $user = $request->user();
-        $data = $request->validated();
-        $data['contact_number'] = $this->normalizePhoneNumber($data['contact_number']);
+        $pictures->replace($request->user(), $request->file('picture'));
 
-        $user->fill($data);
-        $user->save();
-
-        return redirect()->route('profile.edit')
-            ->with('status', 'Your profile has been updated.');
+        return redirect()->route('profile.edit')->with('status', 'Your profile picture has been updated.');
     }
 
-    /**
-     * Store a validated picture for the signed-in user, then return to profile settings.
-     */
-    public function updatePicture(UpdateProfilePictureRequest $request): RedirectResponse
+    public function removePicture(Request $request, ProfilePictures $pictures): RedirectResponse
     {
-        app(ProfilePictures::class)->replace($request->user(), $request->file('picture'));
+        $pictures->replace($request->user(), null);
 
-        return back()->with('status', 'Your profile picture has been updated.');
-    }
-
-    /**
-     * Remove the signed-in user's local picture and return to profile settings.
-     */
-    public function removePicture(): RedirectResponse
-    {
-        app(ProfilePictures::class)->replace(auth()->user(), null);
-
-        return back()->with('status', 'Your profile picture has been removed.');
-    }
-
-    /**
-     * Convert the accepted local mobile format to the normalized +63 format for storage.
-     */
-    private function normalizePhoneNumber(string $number): string
-    {
-        return str_starts_with($number, '09')
-            ? '+63' . substr($number, 1)
-            : $number;
-    }
-
-    /**
-     * Build the configured option lists shared by the completion and edit forms.
-     */
-    private function formData(User $user): array
-    {
-        $programsByInstitute = config('school.programs_by_institute', []);
-        $institutesByProgram = [];
-
-        // Prepare the option mapping here so the Blade view only renders configured values.
-        foreach ($programsByInstitute as $institute => $programs) {
-            foreach ($programs as $program) {
-                $institutesByProgram[$program][] = $institute;
-            }
-        }
-
-        $programOptions = $programsByInstitute !== []
-            ? collect($programsByInstitute)->flatten()->unique()->values()->all()
-            : config('school.programs', []);
-
-        return [
-            'user' => $user,
-            'institutes' => config('school.institutes', []),
-            'programs' => $programOptions,
-            'institutesByProgram' => $institutesByProgram,
-            'yearLevels' => config('school.year_levels', []),
-            'genders' => config('school.genders', []),
-        ];
+        return redirect()->route('profile.edit')->with('status', 'Your profile picture has been removed.');
     }
 }

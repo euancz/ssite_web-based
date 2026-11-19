@@ -28,7 +28,7 @@ class ContentActivityTest extends TestCase
         (require database_path('migrations/2026_10_27_000005_create_content_review_events_table.php'))->up();
     }
 
-    private function actor(string $position = 'Multimedia', string $role = 'officer'): User
+    private function actor(string $position = 'Social Media Manager', string $role = 'officer'): User
     {
         $user = new User;
         $user->forceFill(['name' => $position, 'email' => uniqid().'@mcc.edu.ph', 'role' => $role,
@@ -146,7 +146,7 @@ class ContentActivityTest extends TestCase
     public function test_role_and_filter_validation_prevent_scope_bypass(): void
     {
         $this->get(route('workspace.content-activity.index'))->assertRedirect();
-        foreach (['student', 'adviser', 'superadmin'] as $role) {
+        foreach (['student', 'adviser', 'admin'] as $role) {
             $this->actingAs($this->actor('President', $role))->get(route('workspace.content-activity.index'))->assertForbidden();
         }
         $owner = $this->actor();

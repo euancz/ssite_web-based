@@ -122,8 +122,6 @@ Route::prefix('liquidation')->name('liquidations.')->middleware(['auth', 'profil
 Route::middleware(['auth', 'profile.complete', 'throttle:content-writes'])->group(function () {
     Route::post('/workspace/articles/preview', \App\Http\Controllers\ArticlePreviewController::class)
         ->name('workspace.articles.preview')->middleware('can:create,App\\Models\\Article');
-    Route::patch('/workspace/posts/articles/{article}/featured', \App\Http\Controllers\FeaturedArticleController::class)
-        ->whereNumber('article')->name('workspace.posts.articles.featured')->middleware('can:feature,article');
     // SECURITY: Upload routes have a tighter limit in addition to the shared write limit.
     Route::resource('articles', ArticleController::class)->only(['create', 'store'])->whereNumber('article')
         ->middleware('can:create,App\\Models\\Article')->middlewareFor('store', 'throttle:uploads');

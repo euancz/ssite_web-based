@@ -10,7 +10,10 @@
             @if ($sponsor->exists) @method('PUT') @endif
             <div class="dashboard-form-field"><label for="name">Sponsor name</label><input id="name" name="name" placeholder="e.g. SSITE Industry Partner" maxlength="255" value="{{ old('name', $sponsor->name) }}" required></div>
             <div class="dashboard-form-field"><label for="description">Description</label><textarea id="description" name="description" placeholder="Describe how this sponsor supports SSITE" rows="4" maxlength="2000" required>{{ old('description', $sponsor->description) }}</textarea></div>
-            <div class="dashboard-form-field"><label for="website_url">Official website or social page (optional)</label><input id="website_url" name="website_url" type="url" maxlength="2048" placeholder="https://example.com" value="{{ old('website_url', $sponsor->website_url) }}"></div>
+            <div class="dashboard-form-field">
+                <label for="website_url">Facebook page or website link (optional)</label>
+                <input id="website_url" name="website_url" type="url" maxlength="2048" placeholder="https://www.facebook.com/YourPage" value="{{ old('website_url', $sponsor->website_url) }}">
+            </div>
             @if ($sponsor->logoUrl())
                 <img src="{{ $sponsor->logoUrl() }}" alt="Current logo for {{ $sponsor->name }}" width="100" height="100" style="object-fit:contain">
                 <label><input type="checkbox" name="remove_logo" value="1" @checked(old('remove_logo'))> Remove current logo</label>

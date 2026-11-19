@@ -116,7 +116,7 @@ class OfficerTermController extends Controller
             'officer' => $officer,
             'years' => AcademicYear::options(),
             'positions' => config('school.officer_positions', []),
-            'users' => User::query()->whereIn('role', ['student', 'officer'])->orderBy('name')->get(['id', 'name', 'profile_picture']),
+            'users' => User::query()->whereIn('role', ['student', 'officer'])->orderBy('name')->get(['id', 'name', 'email']),
         ];
     }
 

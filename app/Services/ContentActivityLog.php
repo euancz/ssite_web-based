@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Support\ContentPagination;
+use App\Support\SearchText;
+use Illuminate\Database\Query\Builder;
 
 use App\Models\User;
 use Illuminate\Support\Carbon;
@@ -11,6 +13,19 @@ use Illuminate\Support\Facades\DB;
 final class ContentActivityLog
 {
     public function forUser(User $viewer, array $filters): array
+    {
+        [$query, $historyAvailable, $editsAvailable] = $this->listing($viewer, $filters);
+        $events = ContentPagination::paginate($query, 25)->withQueryString();
+
+        return compact('events', 'historyAvailable', 'editsAvailable');
+    }
+
+    public function searchQuery(User $viewer, array $filters): Builder
+    {
+        return $this->listing($viewer, $filters)[0];
+    }
+
+    private function listing(User $viewer, array $filters): array
     {
         $history = app(ContentReviewHistory::class);
         $modules = $history->modulesFor($viewer);
@@ -64,7 +79,7 @@ final class ContentActivityLog
         }
         $query = DB::query()->fromSub($union, 'activity');
         if ($filters['q'] !== '') {
-            $query->where('title', 'like', '%'.$filters['q'].'%');
+            SearchText::contains($query, 'title', $filters['q']);
         }
         if ($filters['post']) {
             $query->where('post_id', $filters['post']);
@@ -75,8 +90,6 @@ final class ContentActivityLog
         $direction = $filters['sort'] === 'oldest' ? 'asc' : 'desc';
         $query->orderBy('occurred_at', $direction)->orderBy('module')->orderBy('post_id', $direction)
             ->orderBy('action')->orderBy('event_id', $direction);
-        $events = ContentPagination::paginate($query, 25)->withQueryString();
-
-        return compact('events', 'historyAvailable', 'editsAvailable');
+        return [$query, $historyAvailable, $editsAvailable];
     }
 }

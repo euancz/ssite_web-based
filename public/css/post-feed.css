@@ -206,6 +206,7 @@ a.ssite-page-button:hover {
 }
 
 .post-feed-skeleton[hidden],
+.post-feed-skeleton > [hidden],
 [data-feed-content][hidden] {
     display: none !important;
 }
@@ -269,6 +270,19 @@ a.ssite-page-button:hover {
 .post-feed-skeleton-copy {
     width: 91%;
 }
+
+.post-feed-skeleton-media {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+}
+
+.post-feed-liquidation .post-feed-skeleton {
+    display: grid;
+    gap: 12px;
+}
+
+.post-feed-skeleton .liquidation-report-actions { min-height: 3.5rem; }
 
 .post-feed-skeleton-footer {
     width: 100%;

@@ -5,6 +5,7 @@
 @section('content')
 <x-workspace.posts.feed-frame
     variant="index"
+    :initial-loading="$pageDataPending ?? false"
     stylesheet="documents"
     title="Documents"
     description="Browse and manage SSITE documents."

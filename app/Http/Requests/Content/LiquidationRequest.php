@@ -17,6 +17,7 @@ class LiquidationRequest extends ContentRequest
             'title' => ['required', 'string', 'max:200'],
             'description' => ['nullable', 'string', new MaxWords],
             'amount' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
+            'semester' => \Illuminate\Support\Facades\Schema::hasColumn('liquidations', 'semester') ? ['nullable', \Illuminate\Validation\Rule::in(['1', '2'])] : ['exclude'],
             'report_date' => ['nullable', 'date'],
             'file' => [$this->route('liquidation') ? 'nullable' : 'required', 'file', 'mimes:pdf', 'max:'.config('school.max_pdf_size_kb', 10240)],
         ];

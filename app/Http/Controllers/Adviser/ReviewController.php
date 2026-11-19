@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Adviser;
 
 use App\Support\ContentPagination;
+use App\Support\SearchText;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\ContentModules;
 use Illuminate\Contracts\View\View;
+use App\Support\SearchSuggestions;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +19,7 @@ use Illuminate\Validation\Rule;
 /** Lists current review decisions, not a historical audit trail. */
 class ReviewController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|JsonResponse
     {
         abort_unless($request->user()?->canReview(), 403);
         $modules = ContentModules::all();
@@ -47,9 +50,10 @@ class ReviewController extends Controller
             );
             if ($filters['q'] !== '') {
                 $query->where(function ($search) use ($filters, $table) {
-                    $search->where('title', 'like', '%'.$filters['q'].'%')->orWhereExists(function ($author) use ($filters, $table) {
-                        $author->selectRaw('1')->from('users')->whereColumn('users.id', $table.'.created_by_user_id')
-                            ->where('users.name', 'like', '%'.$filters['q'].'%');
+                    SearchText::contains($search, 'title', $filters['q']);
+                    $search->orWhereExists(function ($author) use ($filters, $table) {
+                        $author->selectRaw('1')->from('users')->whereColumn('users.id', $table.'.created_by_user_id');
+                        SearchText::contains($author, 'users.name', $filters['q']);
                     });
                 });
             }
@@ -69,13 +73,17 @@ class ReviewController extends Controller
             $union->unionAll($query);
         }
         $scoped = DB::query()->fromSub($union, 'review_posts');
-        $statusCounts = (clone $scoped)->selectRaw('status, COUNT(*) as total')->groupBy('status')->pluck('total', 'status');
         $posts = (clone $scoped)->where('status', $status);
         match ($filters['sort']) {
             'recent' => $posts->orderByDesc('created_at'),
             'reviewed' => $posts->orderByDesc('reviewed_at')->orderByDesc('created_at'),
             default => $posts->orderBy('created_at'),
         };
+        if (SearchSuggestions::requested($request)) {
+            return SearchSuggestions::fromQuery($request, $posts->orderBy('post_type')->orderBy('post_id'));
+        }
+
+        $statusCounts = (clone $scoped)->selectRaw('status, COUNT(*) as total')->groupBy('status')->pluck('total', 'status');
         // A stable tie-breaker prevents duplicate or missing rows across page boundaries.
         $posts = ContentPagination::paginate($posts->orderBy('post_type')->orderBy('post_id'), 10)->appends($filters);
         $people = User::query()->whereIn('id', $posts->getCollection()->pluck('created_by_user_id')

@@ -5,6 +5,7 @@
 @section('content')
 <x-workspace.posts.feed-frame
     variant="index"
+    :initial-loading="$pageDataPending ?? false"
     stylesheet="activities"
     title="Activities"
     description="Read and manage SSITE activities."
@@ -14,6 +15,7 @@
     :pending-count="$pendingCount"
     :sort="$sort"
     :sort-options="$sortOptions"
+    :extra-filters="$categoryOptions ? ['category' => ['label' => 'Filter by category', 'value' => $category, 'options' => $categoryOptions]] : []"
     filter-name="timeframe"
     :filter="$timeframe"
     :filter-options="$timeframeOptions"
