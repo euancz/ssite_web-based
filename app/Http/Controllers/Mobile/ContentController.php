@@ -14,6 +14,7 @@ use App\Models\OfficerTerm;
 use App\Models\Sponsor;
 use App\Services\PostImages;
 use App\Support\DocumentAcademicYear;
+use App\Support\ContentCategories;
 use App\Support\MobilePost;
 use App\Support\PrivatePdfResponse;
 use Illuminate\Http\Request;
@@ -30,7 +31,27 @@ class ContentController extends Controller
 {
     public function discover(Request $request)
     {
-        $data = app(DiscoverController::class)($request)->getData();
+        $discoverRequest = $request->duplicate();
+        $discoverRequest->query->remove('_suggest');
+        $discoverRequest->headers->set('X-SSITE-Page-Data', '1');
+        $data = app(DiscoverController::class)($discoverRequest)->getData();
+
+        if ($request->boolean('feed')) {
+            $stories = $data['stories'];
+
+            return response()->json([
+                'data' => $stories->getCollection()->map(fn ($post) => MobilePost::serialize($post, match (true) {
+                    $post instanceof Activity => 'activity_date',
+                    $post instanceof Achievement => 'achievement_date',
+                    default => 'created_at',
+                }))->values(),
+                'meta' => [
+                    'current_page' => $stories->currentPage(), 'last_page' => $stories->lastPage(), 'total' => $stories->total(),
+                    'filters' => $request->boolean('facets', true) && ! empty($data['categoryGroups'])
+                        ? ['category' => array_keys(reset($data['categoryGroups']))] : [],
+                ],
+            ])->header('Cache-Control', 'no-store, private');
+        }
 
         return response()->json(['data' => [
             'articles' => $data['articles']->map(fn ($post) => MobilePost::serialize($post, 'created_at'))->values(),
@@ -98,9 +119,28 @@ class ContentController extends Controller
                 $likes->where('user_id', $request->attributes->get('mobile_user')->id)]);
         }
         $filters = [];
+        $includeOptions = $request->boolean('facets', true);
+        $story = in_array($module, ['articles', 'activities', 'achievements'], true);
+        $hasCategory = ContentCategories::available($table);
+        if ($story) {
+            if ($hasCategory) {
+                if ($includeOptions) $filters['category'] = array_keys(ContentCategories::options($table, $model::publiclyVisible()));
+                $category = $request->query('category');
+                if (is_string($category) && $category !== '') $query->where('category', $category);
+            }
+            $since = match ($request->query('period')) {
+                'week' => now()->subDays(7),
+                'month' => now()->subDays(30),
+                'year' => now()->subYear(),
+                default => null,
+            };
+            if ($since) $query->where('created_at', '>=', $since);
+        }
         if ($module === 'documents') {
-            $filters['category'] = (clone $query)->whereNotNull('category')->where('category', '<>', '')
-                ->distinct()->orderBy('category')->pluck('category')->values();
+            if ($includeOptions) {
+                $filters['category'] = (clone $query)->whereNotNull('category')->where('category', '<>', '')
+                    ->distinct()->orderBy('category')->pluck('category')->values();
+            }
             foreach (['category', 'semester'] as $field) {
                 $value = $request->query($field);
                 if (is_string($value) && $value !== '') {
@@ -108,8 +148,10 @@ class ContentController extends Controller
                 }
             }
             if (DocumentAcademicYear::available()) {
-                $filters['academic_year'] = Document::publiclyVisible()->whereNotNull('academic_year')
-                    ->distinct()->orderByDesc('academic_year')->pluck('academic_year')->values();
+                if ($includeOptions) {
+                    $filters['academic_year'] = Document::publiclyVisible()->whereNotNull('academic_year')
+                        ->distinct()->orderByDesc('academic_year')->pluck('academic_year')->values();
+                }
                 $year = $request->query('academic_year');
                 if ($year === 'unassigned') {
                     $query->whereNull('academic_year');
@@ -118,20 +160,46 @@ class ContentController extends Controller
                 }
             }
         }
+        if ($module === 'liquidations') {
+            if ($includeOptions) {
+                $filters['event'] = $model::publiclyVisible()->distinct()->orderBy('title')->pluck('title')->all();
+                $filters['year'] = $model::publiclyVisible()->whereNotNull('report_date')->distinct()
+                    ->pluck('report_date')->map(fn ($date) => $date->format('Y'))->unique()->sortDesc()->values()->all();
+            }
+            $event = $request->query('event');
+            $year = $request->query('year');
+            $semester = $request->query('semester');
+            if (is_string($event) && $event !== '') $query->where('title', $event);
+            if (is_string($year) && preg_match('/\A[1-9][0-9]{3}\z/', $year)) $query->whereYear('report_date', $year);
+            if (in_array($semester, ['1', '2'], true) && Schema::hasColumn($table, 'semester')) $query->where('semester', $semester);
+        }
         $term = $request->query('q');
         $search = is_string($term) ? mb_substr(trim($term), 0, 100) : '';
         if ($search !== '') {
-            $query->where(function ($builder) use ($search, $module) {
+            $query->where(function ($builder) use ($search, $module, $story, $hasCategory) {
                 \App\Support\SearchText::contains($builder, 'title', $search);
                 if ($module === 'articles') {
                     \App\Support\SearchText::contains($builder, 'content', $search, 'or');
                 } else {
                     \App\Support\SearchText::contains($builder, 'description', $search, 'or');
                 }
+                if ($story && $hasCategory) {
+                    \App\Support\SearchText::contains($builder, 'category', $search, 'or');
+                }
+                if (in_array($module, ['documents', 'liquidations'], true)) {
+                    \App\Support\SearchText::contains($builder, 'original_name', $search, 'or');
+                }
             });
         }
         $sortMap = ['recent' => ['created_at', 'desc'], 'oldest' => ['created_at', 'asc'], 'title' => ['title', 'asc']];
-        [$sortColumn, $sortDirection] = $sortMap[$request->query('sort', 'recent')] ?? $sortMap['recent'];
+        if ($module === 'liquidations') {
+            $sortMap += [
+                'report_soonest' => ['report_date', 'asc'], 'report_latest' => ['report_date', 'desc'],
+                'amount_high' => ['amount', 'desc'], 'amount_low' => ['amount', 'asc'],
+            ];
+        }
+        $sort = $request->query('sort', 'recent');
+        [$sortColumn, $sortDirection] = is_string($sort) ? ($sortMap[$sort] ?? $sortMap['recent']) : $sortMap['recent'];
         $items = $query->orderBy($sortColumn, $sortDirection)->orderBy('id')
             ->paginate(min(max((int) $request->query('per_page', 10), 1), 50));
         $items->getCollection()->transform(fn ($post) => MobilePost::serialize($post, $dateField));

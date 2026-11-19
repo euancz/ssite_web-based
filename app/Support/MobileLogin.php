@@ -10,6 +10,11 @@ use Illuminate\Support\Str;
 
 class MobileLogin
 {
+    public static function codeKey(string $code, ?string $challenge): string
+    {
+        return 'mobile_login_code:'.hash('sha256', $code.($challenge === null ? '' : ':'.$challenge));
+    }
+
     public static function allowsWebReturnUrl(mixed $url): bool
     {
         if (! is_string($url) || ! filter_var($url, FILTER_VALIDATE_URL)) {
@@ -40,7 +45,8 @@ class MobileLogin
             abort(422, 'The app return address is not allowed.');
         }
         $code = Str::random(64);
-        Cache::put('mobile_login_code:' . hash('sha256', $code), $user->getKey(), now()->addMinutes(2));
+        $challenge = $request->session()->pull('mobile_login_challenge');
+        Cache::put(self::codeKey($code, $challenge), $user->getKey(), now()->addMinutes(2));
 
         return redirect()->away($returnUrl !== null
             ? $returnUrl . '#ssite_code=' . urlencode($code)

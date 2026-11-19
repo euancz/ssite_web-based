@@ -25,13 +25,15 @@ class MicrosoftAuthController extends Controller
             return $redirect;
         }
 
-        $request->session()->forget(['mobile_login', 'mobile_login_return_url']);
+        $request->session()->forget(['mobile_login', 'mobile_login_return_url', 'mobile_login_challenge']);
 
         return $this->startMicrosoftSignIn();
     }
 
     public function redirectForMobile(Request $request)
     {
+        $challenge = $request->query('code_challenge');
+        abort_unless($challenge === null || (is_string($challenge) && preg_match('/\A[0-9a-f]{64}\z/', $challenge)), 422);
         $returnUrl = $request->query('return_url');
         if ($returnUrl !== null) {
             abort_unless(MobileLogin::allowsWebReturnUrl($returnUrl), 422, 'The app return address is not allowed.');
@@ -41,7 +43,18 @@ class MicrosoftAuthController extends Controller
         }
 
         $request->session()->put('mobile_login_return_url', $returnUrl);
+        $request->session()->put('mobile_login_challenge', $challenge);
         $request->session()->put('mobile_login', true);
+
+        if ($challenge !== null) {
+            // Let the app user choose a Microsoft account independently of the browser's current account.
+            if (Auth::check()) {
+                Auth::logout();
+                $request->session()->regenerate(true);
+            }
+
+            return $this->startMicrosoftSignIn();
+        }
 
         if (Auth::check()) {
             $user = $request->user();
@@ -70,8 +83,11 @@ class MicrosoftAuthController extends Controller
             return null;
         }
 
-        if ($mobile && $request->query('return_url') !== null) {
-            $target .= '?' . http_build_query(['return_url' => $request->query('return_url')]);
+        if ($mobile) {
+            $params = array_filter($request->only(['return_url', 'code_challenge']), fn ($value) => $value !== null);
+            if ($params) {
+                $target .= '?'.http_build_query($params);
+            }
         }
 
         return redirect()->away($target);

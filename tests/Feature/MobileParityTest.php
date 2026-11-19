@@ -85,5 +85,13 @@ class MobileParityTest extends TestCase
         $this->assertStringContainsString('<strong>Bold</strong>', $html);
         $this->assertStringNotContainsString('<script>', $html);
         $this->assertStringNotContainsString('**', $response->json('data.articles.0.description'));
+
+        $this->getJson('/api/mobile/v1/discover?feed=1&q=approved&period=week&_suggest=1', [
+            'Sec-Fetch-Dest' => 'document',
+        ])
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $article->id)
+            ->assertJsonPath('meta.total', 1);
     }
 }

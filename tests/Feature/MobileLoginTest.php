@@ -66,6 +66,36 @@ class MobileLoginTest extends TestCase
         $this->assertStringStartsWith('ssiteapp://auth/callback?code=', $response->headers->get('Location'));
     }
 
+    public function test_app_sign_in_code_can_only_be_redeemed_by_its_original_client(): void
+    {
+        $user = $this->student();
+        $identity = (new \Laravel\Socialite\Two\User)->map([
+            'id' => 'verified-app-identity', 'email' => $user->email, 'name' => $user->name,
+        ]);
+        $provider = \Mockery::mock();
+        $provider->shouldReceive('with')->with(['prompt' => 'login'])->once()->andReturnSelf();
+        $provider->shouldReceive('redirect')->once()->andReturn(redirect()->away('https://login.example.test'));
+        $provider->shouldReceive('user')->once()->andReturn($identity);
+        \Laravel\Socialite\Facades\Socialite::shouldReceive('driver')->with('microsoft')->twice()->andReturn($provider);
+
+        $verifier = str_repeat('a', 64);
+        $this->actingAs($user)->get('/auth/microsoft/mobile?'.http_build_query([
+            'code_challenge' => hash('sha256', $verifier),
+        ]))->assertRedirect('https://login.example.test');
+        $this->assertGuest();
+        $response = $this->get('/auth/microsoft/callback')->assertRedirect();
+        parse_str(parse_url($response->headers->get('Location'), PHP_URL_QUERY), $params);
+        $code = $params['code'];
+
+        $this->postJson('/api/mobile/v1/auth/exchange', compact('code'))->assertUnauthorized();
+        $this->postJson('/api/mobile/v1/auth/exchange', ['code' => $code, 'code_verifier' => str_repeat('b', 64)])
+            ->assertUnauthorized();
+        $this->postJson('/api/mobile/v1/auth/exchange', ['code' => $code, 'code_verifier' => $verifier])
+            ->assertOk()->assertJsonPath('user.email', 'app@mcc.edu.ph');
+        $this->postJson('/api/mobile/v1/auth/exchange', ['code' => $code, 'code_verifier' => $verifier])
+            ->assertUnauthorized();
+    }
+
     public function test_untrusted_return_addresses_are_rejected_before_login(): void
     {
         foreach (['https://attacker.test/', 'https://app.example.test.attacker.test/',

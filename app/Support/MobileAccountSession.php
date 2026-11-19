@@ -9,7 +9,12 @@ use Illuminate\Support\Str;
 /** One-time access to account pages without granting workspace capabilities. */
 class MobileAccountSession
 {
-    public const DESTINATIONS = ['profile' => 'profile.edit', 'notifications' => 'notifications.index', 'search' => 'search.index'];
+    public const DESTINATIONS = [
+        'profile' => 'profile.edit',
+        'notifications' => 'notifications.index',
+        'search' => 'search.index',
+        'site' => 'home',
+    ];
 
     public static function issue(User $user, string $tokenId, string $destination): string
     {
