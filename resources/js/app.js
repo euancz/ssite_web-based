@@ -1,9 +1,11 @@
 import './bootstrap';
 import { initContentForms } from './content-forms';
+import { initContentUploads } from './content-uploads';
 import { initArticleFormatting } from './article-formatting';
 import { initPostComposer } from './post-composer';
 
 initContentForms();
+initContentUploads();
 initArticleFormatting();
 initPostComposer();
 import { initMotion } from './motion';

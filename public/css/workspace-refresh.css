@@ -48,7 +48,8 @@ body.workspace-site-body .workspace-content .workspace-welcome h1 { margin: 0; f
 body.workspace-site-body .workspace-content .workspace-welcome p { margin: 6px 0 0; color: var(--ws-muted); font-size: 14px; line-height: 1.6; }
 body.workspace-site-body .workspace-welcome-actions { display: flex; align-items: center; gap: 12px; margin: 0; }
 body.workspace-site-body .workspace-content .workspace-welcome .dashboard-button { background: var(--ws-ink); border-color: var(--ws-ink); color: #fff; box-shadow: none; }
-body.workspace-site-body .workspace-dashboard-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 0 0 24px; padding: 0; border: 0; background: transparent; }
+body.workspace-site-body .workspace-dashboard-summary { display: grid; grid-template-columns: repeat(var(--ws-summary-columns, 4), minmax(0, 1fr)); gap: 12px; margin: 0 0 24px; padding: 0; border: 0; background: transparent; }
+body.workspace-site-body .workspace-dashboard-summary--three { --ws-summary-columns: 3; }
 body.workspace-site-body .workspace-stat { position: relative; display: grid; grid-template-columns: 1fr auto; align-content: start; gap: 8px; min-width: 0; margin: 0; padding: 16px 52px 16px 16px; background: #fff; border: 1px solid var(--ws-line); border-radius: 10px; box-shadow: none; }
 body.workspace-site-body .workspace-stat-label { grid-column: 1; grid-row: 1; font-size: 12px; font-weight: 500; color: var(--ws-muted); }
 body.workspace-site-body .workspace-stat strong { grid-column: 1; grid-row: 2; font-size: 32px; line-height: 1.2; letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
@@ -66,8 +67,6 @@ body.workspace-site-body .workspace-area-shortcut a span { overflow-wrap: anywhe
 body.workspace-site-body .workspace-area-shortcut a > .workspace-icon { flex-shrink: 0; }
 body.workspace-site-body .workspace-area-shortcut a + a { flex: 0 0 44px; justify-content: center; padding-inline: 0; }
 body.workspace-site-body .workspace-area-shortcut a:hover { background: var(--ws-soft); border-radius: 7px; }
-body.workspace-site-body .workspace-role-history summary { min-height: 44px; align-content: center; cursor: pointer; font-size: 15px; font-weight: 600; }
-body.workspace-site-body .workspace-role-history[open] summary { margin-bottom: 16px; }
 body.workspace-site-body .workspace-content :is(.workspace-officer-recent, .workspace-governance-list, .dashboard-panel) { border-color: var(--ws-line); border-radius: var(--ws-radius); box-shadow: 0 3px 8px #17324d03; }
 body.workspace-site-body .workspace-content :is(.workspace-officer-recent, .workspace-governance-list) { padding: 24px; }
 body.workspace-site-body .workspace-content .workspace-officer-attention { border-color: #ecd8c4; background: #fffaf3; }
@@ -156,9 +155,8 @@ body.workspace-site-body.workspace-reduce-motion *, body.workspace-site-body.wor
     body.workspace-site-body .workspace-content { width: calc(100% - 28px); padding-top: 18px; }
     body.workspace-site-body .workspace-topbar { gap: 8px; padding-inline: 14px; }
     body.workspace-site-body .workspace-topbar-actions { gap: 6px; }
-    body.workspace-site-body .workspace-jump-trigger { width: 40px; min-height: 44px; justify-content: center; padding: 0; background: transparent; border: 0; }
+    body.workspace-site-body .workspace-jump-trigger { width: 44px; min-height: 44px; justify-content: center; padding: 0; background: transparent; border: 0; }
     body.workspace-site-body .workspace-jump-trigger span { display: none; }
-    body.workspace-site-body .workspace-view-site { display: none; }
     body.workspace-site-body .workspace-content .workspace-dashboard-heading.workspace-welcome { align-items: flex-start; }
     body.workspace-site-body .workspace-content .workspace-welcome h1 { font-size: 26px; }
     body.workspace-site-body .workspace-content .workspace-welcome p { font-size: 13px; }
@@ -416,6 +414,10 @@ body.workspace-site-body .workspace-content .workspace-list-tabs .dashboard-tab.
     box-shadow: none;
 }
 body.workspace-site-body .workspace-content .workspace-list-tabs .dashboard-tab::before { display: none; }
+body.workspace-site-body .workspace-content .president-review-page .dashboard-tab-count {
+    background: transparent;
+    color: inherit;
+}
 body.workspace-site-body .workspace-content form.workspace-list-toolbar {
     display: grid;
     grid-template-columns: minmax(0, 220px) minmax(0, 1fr) auto;

@@ -92,7 +92,7 @@ class ReviewController extends Controller
         foreach ($posts as $post) {
             $post->author = $people->get($post->created_by_user_id);
             $post->reviewer = $people->get($post->reviewed_by_user_id);
-            $post->preview_url = route('workspace.posts.'.$post->route_prefix.'.show', [$post->post_id]);
+            $post->preview_url = route('workspace.posts.'.$post->route_prefix.'.show', [$post->post_id, 'review_preview' => 1]);
             $post->approve_url = route($post->route_prefix.'.approve', [$post->post_id]);
             $post->reject_url = route($post->route_prefix.'.reject', [$post->post_id]);
         }

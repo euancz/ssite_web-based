@@ -25,7 +25,10 @@
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 16px;
-            margin-top: 26px;
+        }
+
+        .discover-main > .stories-banner + .discover-filters {
+            margin-block-start: clamp(20px, 2.5vw, 26px);
         }
 
         .discover-field {
@@ -118,6 +121,10 @@
             font-weight: 700;
             letter-spacing: 0.03em;
             text-transform: uppercase;
+        }
+
+        body.main-site-body main .discover-featured-copy .read-more {
+            margin-block-start: 16px;
         }
 
         .discover-featured-copy h2 {
@@ -289,9 +296,8 @@
 
             <form class="discover-filters" aria-label="Discover filters" method="GET" action="{{ route('discover') }}">
                 <div class="discover-field">
-                    <label for="discover-search">Search stories</label>
                     <div class="main-search-field">
-                        <input id="discover-search" type="search" name="q" maxlength="100" value="{{ $filters['q'] }}" placeholder="Title or description">
+                        <input id="discover-search" type="search" name="q" maxlength="100" value="{{ $filters['q'] }}" placeholder="Title or description" aria-label="Search stories">
                         <button type="submit" class="search-submit-icon" aria-label="Search stories"><x-icon name="search" size="sm" class="site-search-icon" /></button>
                     </div>
                 </div>
@@ -379,7 +385,7 @@
                 $featured = $stories->first();
                 $labels = ['articles' => 'Articles', 'activities' => 'Activities', 'achievements' => 'Achievements'];
                 $featuredType = $featured ? $labels[$featured->getTable()] : '';
-                $featuredRoute = $featured ? $featured->getTable().'.show' : '';
+                $featuredUrl = $featured ? route($featured->getTable().'.show', $featured) : '';
             @endphp
 
                 @if ($featured)
@@ -389,9 +395,10 @@
                         </div>
                         <div class="discover-featured-copy">
                             <div class="discover-tag-row"><span class="discover-tag">{{ $featuredType }}</span></div>
-                            <h2><a href="{{ route($featuredRoute, $featured) }}">{{ $featured->title }}</a></h2>
+                            <h2><a href="{{ $featuredUrl }}">{{ $featured->title }}</a></h2>
                             <p>{{ \Illuminate\Support\Str::limit($featured instanceof \App\Models\Article ? $featured->displayText() : ($featured->description ?? ''), 180) }}</p>
                             <div class="discover-author">By {{ $featured->author?->name ?? 'Former member' }} • {{ $featured->created_at?->format('F j, Y') }}</div>
+                            <a class="read-more" href="{{ $featuredUrl }}" aria-label="Read more about {{ $featured->title }}">Read more <x-icon name="chevron-right" size="sm" class="card-read-more-icon" /></a>
                         </div>
                     </article>
                 @else

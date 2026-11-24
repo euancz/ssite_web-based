@@ -56,6 +56,20 @@ class WorkspaceExperienceTest extends TestCase
             } else {
                 $response->assertDontSee($reviewLink, false);
             }
+
+            $response->assertSee('workspace-dashboard-summary');
+            if ($user->isAdviser()) {
+                $response->assertDontSee('workspace-welcome-actions')
+                    ->assertSee('href="'.route('adviser.users.index', ['role' => 'officer']).'"', false)
+                    ->assertSee('href="'.route('adviser.users.index', ['role' => 'student']).'"', false)
+                    ->assertDontSee('Manage adviser access');
+            } elseif ($user->isAdmin()) {
+                $response->assertSee('Manage adviser access')
+                    ->assertDontSee('workspace-welcome-actions')
+                    ->assertDontSee('Recent role changes')
+                    ->assertDontSee('Manage accounts')
+                    ->assertDontSee('href="'.route('adviser.users.index', ['role' => 'officer']).'"', false);
+            }
         }
     }
 

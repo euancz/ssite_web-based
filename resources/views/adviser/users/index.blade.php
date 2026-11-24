@@ -24,24 +24,20 @@
         </div>
     @endif
 
-    <section class="dashboard-panel">
-        <form method="GET" action="{{ route('adviser.users.index') }}" class="dashboard-filter-form workspace-user-filters">
-            @csrf
-            <div class="dashboard-form-field">
-                <label for="users-search">Search accounts</label>
-                <div class="workspace-list-search-input">
-                    <input id="users-search" type="search" name="search" value="{{ request('search') }}"
-                           maxlength="100" placeholder="Name or email">
-                </div>
-            </div>
-            <div class="dashboard-form-field"><label for="users-role-filter">Role</label>
-                <select id="users-role-filter" name="role"><option value="">All eligible roles</option>
-                    @foreach ($targetRoles as $role)<option value="{{ $role }}" @selected(request('role') === $role)>{{ ucfirst($role) }}</option>@endforeach
-                </select>
-            </div>
-            <button type="submit" class="dashboard-button"><x-workspace.icon name="search" />Search</button>
-        </form>
+    <form method="GET" action="{{ route('adviser.users.index') }}" class="workspace-list-toolbar" aria-label="Filter accounts">
+        <div class="workspace-list-field">
+            <label for="users-role-filter">Role</label>
+            <select id="users-role-filter" name="role">
+                <option value="">All eligible roles</option>
+                @foreach ($targetRoles as $role)
+                    <option value="{{ $role }}" @selected(request('role') === $role)>{{ ucfirst($role) }}</option>
+                @endforeach
+            </select>
+        </div>
+        <x-workspace.ui.list-search id="users-search" name="search" label="Search accounts" :value="request('search')" placeholder="Name or email" />
+    </form>
 
+    <section class="dashboard-panel">
         <p class="workspace-user-results">{{ $users->total() }} {{ \Illuminate\Support\Str::plural('account', $users->total()) }} · Showing {{ $users->firstItem() ?? 0 }}–{{ $users->lastItem() ?? 0 }}</p>
 
         <x-ui.data-table label="Users">

@@ -39,6 +39,7 @@
         $workspaceRoute = request()->routeIs(...$workspaceRoutePatterns);
         $workspaceEnabled = $workspaceRole && $workspaceRoute;
         $isPublicLanding = request()->getPathInfo() === '/';
+        $showAccountPhotoDialog = ! $isPublicLanding && ! request()->routeIs('profile.edit', 'profile.complete') && $workspaceUser?->hasCompletedProfile();
     @endphp
     @if ($workspaceEnabled)
         <link rel="stylesheet" href="{{ asset('css/workspace.css') }}">
@@ -51,10 +52,10 @@
     @endunless
     <link rel="stylesheet" href="{{ asset('css/ui-foundation.css') }}">
     <link rel="stylesheet" href="{{ asset('css/ssite-upgrade.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/mobile-responsive.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/mobile-responsive.css') }}?v={{ filemtime(public_path('css/mobile-responsive.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/workspace-experience.css') }}">
     @if ($workspaceEnabled)
-        <link rel="stylesheet" href="{{ asset('css/workspace-refresh.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/workspace-refresh.css') }}?v={{ filemtime(public_path('css/workspace-refresh.css')) }}">
     @endif
     <link rel="stylesheet" href="{{ asset('css/main-site-dropdowns.css') }}?v={{ filemtime(public_path('css/main-site-dropdowns.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/interface-polish.css') }}">
@@ -70,10 +71,10 @@
         <noscript><meta http-equiv="refresh" content="0;url={{ request()->fullUrlWithQuery(['_full' => 1]) }}"></noscript>
         <script src="{{ asset('js/initial-page-data.js') }}" defer></script>
     @endif
-</head>
     @if (auth()->user()?->isAdviser())
         <link rel="stylesheet" href="{{ asset('css/site-editor.css') }}?v={{ filemtime(public_path('css/site-editor.css')) }}">
     @endif
+</head>
 <body class="{{ $workspaceEnabled ? 'site-body workspace-site-body' : 'site-body main-site-body' }} {{ request()->routeIs('discover') ? 'discover-site-body' : '' }} {{ $isPublicLanding ? 'home-landing-body' : '' }}">
     @if ($pageDataPending ?? false)
         <p data-page-data-fallback role="status" class="dashboard-error" hidden>
@@ -133,7 +134,6 @@
 
             @unless ($isPublicLanding)
             <div class="site-header-actions">
-                {{-- SECURITY: Both search forms use the public suggestions endpoint; suggestions contain visible content only. --}}
                 @if (auth()->user()?->isAdviser())
                     <details class="site-edit-menu" @if (in_array(session('saved_section'), ['navigation', 'app-header'])) open @endif>
                         <summary aria-label="Edit header or navigation" title="Edit header or navigation"><x-icon name="pencil" size="sm" /></summary>
@@ -143,6 +143,7 @@
                         </div>
                     </details>
                 @endif
+                {{-- SECURITY: Both search forms use the public suggestions endpoint; suggestions contain visible content only. --}}
                 <div class="site-search-desktop search-shell">
                     <form method="GET" action="{{ route('search.index') }}" class="search-form">
                         <input type="text" name="q" value="{{ request()->routeIs('search.index') && isset($query) ? $query : '' }}" placeholder="Discover something from SSITE..."
@@ -212,7 +213,7 @@
 
                         <div id="account-menu" class="account-menu hidden" role="menu" aria-label="Account menu">
                             <div class="account-menu-identity" role="presentation">
-                                <x-ui.avatar :user="auth()->user()" size="md" />
+                                @include('layouts.partials.account-avatar', ['user' => auth()->user()])
                                 <div class="account-menu-identity-copy">
                                     <strong>{{ auth()->user()->name }}</strong>
                                     <span>{{ ucfirst(str_replace('_', ' ', auth()->user()->role)) }}</span>
@@ -221,21 +222,14 @@
                                     @endif
                                 </div>
                             </div>
-                            @if (auth()->user()->hasCompletedProfile())
-                                <a href="{{ route('profile.edit') }}" class="account-menu-action" role="menuitem">
-                                    <x-icon name="user-round" size="sm" class="icon-small" />
-                                    <span>My Profile</span>
-                                </a>
-                            @endif
                             @if (auth()->user()->canPost() || auth()->user()->can('review-posts') || auth()->user()->can('manage-users') || auth()->user()->can('manage-officers'))
-                                <div class="account-menu-divider" role="separator"></div>
                                 <a href="{{ route(auth()->user()->dashboardRoute()) }}" class="account-menu-action" role="menuitem">
                                     <x-icon name="layout-dashboard" size="sm" class="icon-small" />
                                     <span>Open workspace</span>
                                 </a>
+                                <div class="account-menu-divider" role="separator"></div>
                             @endif
-                            {{-- Keep logout last and visually separate for every signed-in role. --}}
-                            <div class="account-menu-divider" role="separator"></div>
+                            {{-- Keep logout last for every signed-in role. --}}
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="account-menu-logout" role="menuitem">
@@ -280,23 +274,32 @@
             const mobileSearch = document.getElementById('mobile-search');
 
             {{-- Keep the mobile search toggle's accessible state aligned with the existing visibility toggle. --}}
-            if (searchToggle && mobileSearch) {
-                searchToggle.addEventListener('click', () => {
-                    const open = searchToggle.getAttribute('aria-expanded') !== 'true';
-                    searchToggle.setAttribute('aria-expanded', String(open));
-                    searchToggle.setAttribute('aria-label', open ? 'Close search' : 'Open search');
-                    searchToggle.dataset.tooltip = open ? 'Close search' : 'Open search';
-                    mobileSearch.classList.toggle('hidden', !open);
-                });
+            if (!searchToggle || !mobileSearch) return;
 
-                window.matchMedia('(min-width: 1024px)').addEventListener('change', (event) => {
-                    if (!event.matches) return;
-                    mobileSearch.classList.add('hidden');
-                    searchToggle.setAttribute('aria-expanded', 'false');
-                    searchToggle.setAttribute('aria-label', 'Open search');
-                    searchToggle.dataset.tooltip = 'Open search';
-                });
-            }
+            const searchInput = mobileSearch.querySelector('input');
+            const setSearchOpen = (open) => {
+                const label = open ? 'Close search' : 'Open search';
+                searchToggle.setAttribute('aria-expanded', String(open));
+                searchToggle.setAttribute('aria-label', label);
+                searchToggle.dataset.tooltip = label;
+                mobileSearch.classList.toggle('hidden', !open);
+            };
+
+            searchToggle.addEventListener('click', () => {
+                const open = searchToggle.getAttribute('aria-expanded') !== 'true';
+                setSearchOpen(open);
+                if (open) searchInput.focus({ preventScroll: true });
+            });
+
+            mobileSearch.addEventListener('keydown', (event) => {
+                if (event.key !== 'Escape' || event.isComposing) return;
+                searchToggle.focus({ preventScroll: true });
+                setSearchOpen(false);
+            });
+
+            window.matchMedia('(min-width: 1024px)').addEventListener('change', (event) => {
+                if (event.matches) setSearchOpen(false);
+            });
 
         })();
     </script>
@@ -400,6 +403,8 @@
     <button type="button" id="back-to-top" class="back-to-top hidden" aria-label="Back to top">
         <x-icon name="arrow-up" size="md" />
     </button>
+
+    @include('layouts.partials.account-photo-dialog', ['user' => $workspaceUser])
 
     @stack('scripts')
     @include('layouts.partials.account-scripts')

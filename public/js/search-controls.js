@@ -71,10 +71,15 @@
         input.form?.addEventListener('reset', () => requestAnimationFrame(sync));
         clear.addEventListener('click', () => clearKeyword(input));
         input.addEventListener('keydown', (event) => {
-            if (event.key !== 'Escape' || event.isComposing) return;
+            if (event.isComposing || !input.value) return;
+            if (event.key === 'Enter' && input.form && !input.hasAttribute('aria-activedescendant')) {
+                event.preventDefault();
+                input.form.requestSubmit();
+                return;
+            }
+            if (event.key !== 'Escape') return;
             // Dismiss the suggestions before clearing the field.
             if (input.getAttribute('aria-expanded') === 'true') return;
-            if (!input.value) return;
             event.preventDefault();
             event.stopPropagation();
             clearKeyword(input);

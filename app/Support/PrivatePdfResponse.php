@@ -12,6 +12,8 @@ final class PrivatePdfResponse
 {
     public function make(string $path, string $filename, Request $request): StreamedResponse
     {
+        abort_if($request->header('Sec-Fetch-Mode') === 'navigate' || $request->header('Sec-Fetch-Dest') === 'document', 404);
+
         $disk = Storage::disk('local');
         $size = $disk->size($path);
         abort_if($size === false, 404);

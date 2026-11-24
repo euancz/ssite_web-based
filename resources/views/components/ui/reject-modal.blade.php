@@ -6,10 +6,12 @@
         <h2 id="{{ $id }}-title">Reject {{ $action ? $subject : 'post' }}</h2>
         <p>A rejection reason is required.</p>
         {{-- SECURITY: The server validates the reason and rechecks President authorization. --}}
-        <form method="POST" action="{{ $action }}">
+        <form class="reject-modal-form" method="POST" action="{{ $action }}">
             @csrf
-            <label for="{{ $id }}-reason">Reason</label>
-            <textarea id="{{ $id }}-reason" name="rejection_reason" placeholder="Explain what needs to change before this can be approved" rows="4" maxlength="255" required></textarea>
+            <div class="dashboard-form-field">
+                <label for="{{ $id }}-reason">Reason</label>
+                <textarea id="{{ $id }}-reason" name="rejection_reason" placeholder="Explain what needs to change before this can be approved" rows="4" maxlength="255" required></textarea>
+            </div>
             <div class="reject-modal-actions">
                 <button type="button" class="dashboard-button dashboard-button-secondary" data-modal-close="{{ $id }}">Cancel</button>
                 <button type="submit" class="dashboard-button">Reject {{ $subject }}</button>

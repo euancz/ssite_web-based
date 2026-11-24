@@ -6,7 +6,6 @@
         </div>
         <p class="login-success-eyebrow">SIGNED IN SUCCESSFULLY</p>
         <h2>Welcome to SSITE</h2>
-        <p>Opening your CMS<span class="login-success-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span></p>
     </div>
 </div>
 <noscript><style>.login-success { display: none; }</style></noscript>

@@ -1,4 +1,7 @@
-@php($canRemove = ! $onboarding && filled($user->profile_picture))
+@php
+    $canRemove = ! $onboarding && filled($user->profile_picture);
+    $inDialog = $inDialog ?? false;
+@endphp
 
 <section class="dashboard-panel profile-picture-section profile-photo-panel" aria-label="Profile picture">
     <div class="profile-picture-summary">
@@ -10,11 +13,17 @@
     <form method="POST" action="{{ route($onboarding ? 'profile.complete.store' : 'profile.picture.update') }}" enctype="multipart/form-data" class="profile-picture-upload-form">
         @csrf
         <div class="dashboard-form-field">
-            <label for="profile-picture-input">Choose a photo</label>
-            <input id="profile-picture-input" type="file" name="picture" accept=".jpg,.jpeg,.png"
-                aria-describedby="profile-picture-help @error('picture') profile-picture-error @enderror" @error('picture') aria-invalid="true" @enderror required>
-            <span id="profile-picture-help" class="profile-field-help">JPG or PNG · up to 2 MB</span>
-            @error('picture') <span id="profile-picture-error" class="profile-field-error" role="alert">{{ $message }}</span> @enderror
+            <x-workspace.attachment title="Attach a profile photo" help="JPG or PNG up to 2 MB" help-id="profile-picture-help">
+                <input id="profile-picture-input" type="file" name="picture" accept=".jpg,.jpeg,.png" aria-label="Attach a profile photo"
+                    aria-describedby="profile-picture-help{{ $inDialog || $errors->has('picture') ? ' profile-picture-error' : '' }}"
+                    @if ($inDialog) autofocus @elseif ($errors->has('picture')) aria-invalid="true" @endif required>
+            </x-workspace.attachment>
+            <x-workspace.upload-status input-id="profile-picture-input" :max-kb="2048" />
+            @if ($inDialog)
+                <span id="profile-picture-error" class="profile-field-error" role="alert"></span>
+            @else
+                @error('picture') <span id="profile-picture-error" class="profile-field-error" role="alert">{{ $message }}</span> @enderror
+            @endif
         </div>
         @if ($onboarding)
             <label class="profile-policy-consent">

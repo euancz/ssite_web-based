@@ -162,13 +162,9 @@
                         </button>
                         <div id="account-menu" class="account-menu hidden" role="menu" aria-label="Account menu">
                             <div class="account-menu-identity" role="presentation">
-                                <x-ui.avatar :user="$user" size="md" />
+                                @include('layouts.partials.account-avatar', ['user' => $user])
                                 <div class="account-menu-identity-copy"><strong>{{ $user->name }}</strong><span>{{ $roleLabel }}</span></div>
                             </div>
-                            @if ($user->hasCompletedProfile())
-                                <a href="{{ route('profile.edit') }}" class="account-menu-action" role="menuitem">Profile</a>
-                            @endif
-                            <div class="account-menu-divider" role="separator"></div>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="account-menu-logout" role="menuitem">Logout</button>

@@ -80,17 +80,28 @@ class ProfileController extends Controller
         return view('profile.edit', ['user' => $request->user()]);
     }
 
-    public function updatePicture(UpdateProfilePictureRequest $request, ProfilePictures $pictures): RedirectResponse
+    public function updatePicture(UpdateProfilePictureRequest $request, ProfilePictures $pictures): Response|RedirectResponse
     {
         $pictures->replace($request->user(), $request->file('picture'));
 
-        return redirect()->route('profile.edit')->with('status', 'Your profile picture has been updated.');
+        return $this->pictureResponse($request, 'Your profile picture has been updated.');
     }
 
-    public function removePicture(Request $request, ProfilePictures $pictures): RedirectResponse
+    public function removePicture(Request $request, ProfilePictures $pictures): Response|RedirectResponse
     {
         $pictures->replace($request->user(), null);
 
-        return redirect()->route('profile.edit')->with('status', 'Your profile picture has been removed.');
+        return $this->pictureResponse($request, 'Your profile picture has been removed.');
+    }
+
+    private function pictureResponse(Request $request, string $message): Response|RedirectResponse
+    {
+        if ($request->expectsJson()) {
+            $request->session()->flash('profile_picture_status', $message);
+
+            return response()->noContent();
+        }
+
+        return redirect()->route('profile.edit')->with('status', $message);
     }
 }

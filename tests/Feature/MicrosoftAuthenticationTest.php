@@ -165,6 +165,44 @@ class MicrosoftAuthenticationTest extends TestCase
         Storage::disk('public')->assertMissing($updated->profile_picture);
     }
 
+    public function test_account_menu_edits_the_photo_in_a_dialog(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create([
+            'role' => User::ROLE_OFFICER,
+            'officer_position' => 'President',
+            'profile_completed_at' => now(),
+        ]);
+        $this->actingAs($user);
+
+        foreach (['home', 'notifications.index', 'workspace.create'] as $page) {
+            $this->get(route($page))->assertOk()
+                ->assertSee('class="account-photo-edit"', false)
+                ->assertSee('<dialog id="account-photo-dialog"', false)
+                ->assertSee('class="article-attachment-dropzone"', false)
+                ->assertSee('data-upload-input="profile-picture-input"', false)
+                ->assertDontSee('My Profile');
+        }
+
+        $this->withHeader('Accept', 'application/json')->post(route('profile.picture.update'), [
+            'picture' => $this->webp('photo.webp'),
+        ])->assertUnprocessable()->assertJsonValidationErrors('picture');
+
+        $this->post(route('profile.picture.update'), [
+            'picture' => $this->picture(),
+        ])->assertNoContent();
+        $picture = $user->fresh()->profile_picture;
+        Storage::disk('public')->assertExists($picture);
+
+        $this->actingAs($user->fresh())->get(route('home'))->assertOk()
+            ->assertSee('Your profile picture has been updated.')
+            ->assertSee('Remove photo');
+
+        $this->post(route('profile.picture.remove'), ['_method' => 'DELETE'])->assertNoContent();
+        $this->assertNull($user->fresh()->profile_picture);
+        Storage::disk('public')->assertMissing($picture);
+    }
+
     public function test_first_mobile_sign_in_returns_a_code_only_after_photo_and_consent(): void
     {
         Storage::fake('public');

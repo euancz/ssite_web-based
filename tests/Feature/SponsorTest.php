@@ -57,7 +57,8 @@ class SponsorTest extends TestCase
             $this->delete(route('workspace.sponsors.destroy', $sponsor))->assertForbidden();
         }
         $this->actingAs($this->actor())->get(route('workspace.sponsors.index'))->assertOk()->assertSee('Add sponsor');
-        $this->get(route('workspace.sponsors.create'))->assertOk();
+        $this->get(route('workspace.sponsors.create'))->assertOk()
+            ->assertSee('Attach a sponsor logo')->assertSee('accept=".jpg,.jpeg,.png"', false);
         $this->get(route('workspace.sponsors.edit', $sponsor))->assertOk();
     }
 
@@ -70,6 +71,8 @@ class SponsorTest extends TestCase
         $sponsor = Sponsor::firstOrFail();
         $firstLogo = $sponsor->logo_path;
         Storage::disk('public')->assertExists($firstLogo);
+        $this->get(route('workspace.sponsors.edit', $sponsor))->assertOk()
+            ->assertSee('Replace logo (optional)')->assertSee('id="sponsor-logo-preview"', false);
         $this->put(route('workspace.sponsors.update', $sponsor), $this->data([
             'logo' => $this->logo(), 'is_active' => 0,
         ]))->assertSessionHasNoErrors()->assertRedirect();
@@ -101,6 +104,25 @@ class SponsorTest extends TestCase
             'sort_order' => -1,
         ]))->assertSessionHasErrors(['logo', 'sort_order']);
         $this->assertDatabaseCount('sponsors', 0);
+    }
+
+    public function test_webp_logos_are_rejected_by_extension_and_content(): void
+    {
+        $this->actingAs($this->actor());
+        $png = $this->logo();
+        $this->post(route('workspace.sponsors.store'), $this->data([
+            'logo' => new UploadedFile($png->path(), 'partner.webp', test: true),
+        ]))->assertSessionHasErrors('logo');
+        $this->assertDatabaseCount('sponsors', 0);
+
+        $webp = UploadedFile::fake()->createWithContent('partner.webp', base64_decode(
+            'UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA'
+        ));
+        $sponsor = Sponsor::create($this->data());
+        $this->put(route('workspace.sponsors.update', $sponsor), $this->data([
+            'logo' => new UploadedFile($webp->path(), 'partner.png', test: true),
+        ]))->assertSessionHasErrors('logo');
+        $this->assertNull($sponsor->fresh()->logo_path);
     }
 
     public function test_workspace_can_save_edit_and_clear_a_footer_style_sponsor_link(): void
@@ -160,21 +182,4 @@ class SponsorTest extends TestCase
         $this->get(route('home'))->assertOk()->assertSee('Our partners and sponsors will be announced soon.');
     }
 
-    public function test_shared_mobile_feed_tracks_sponsor_changes_and_visibility(): void
-    {
-        (require database_path('migrations/2026_11_14_000001_create_mobile_publications.php'))->up();
-        Storage::fake('mobile');
-        config(['mobile.sync_enabled' => true]);
-        $sponsor = Sponsor::create($this->data());
-        $this->assertDatabaseHas('mobile_publications', ['module' => 'sponsors', 'record_id' => $sponsor->id]);
-        $sponsor->update(['name' => 'Updated Partner', 'sort_order' => 9]);
-        $row = DB::table('mobile_publications')->where('module', 'sponsors')->first();
-        $this->assertSame('Updated Partner', json_decode($row->payload, true)['name']);
-        $this->assertSame(9, $row->sort_order);
-        $sponsor->update(['is_active' => false]);
-        $this->assertDatabaseCount('mobile_publications', 0);
-        $sponsor->update(['is_active' => true]);
-        $sponsor->delete();
-        $this->assertDatabaseCount('mobile_publications', 0);
-    }
 }

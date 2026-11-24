@@ -12,8 +12,6 @@ use App\Models\User;
 use App\Support\InitialPageData;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 /** Supplies role-assignment dashboards with counts only and no private post details. */
 class DashboardController extends Controller
@@ -44,20 +42,6 @@ class DashboardController extends Controller
         $advisers = auth()->user()->isAdmin()
             ? User::query()->where('role', User::ROLE_ADVISER)->orderBy('name')->get(['id', 'name', 'email'])
             : collect();
-        $roleHistory = collect();
-        if (auth()->user()->isAdmin()
-            && Schema::hasColumns('role_changes', ['user_id', 'changed_by_user_id', 'old_role', 'new_role', 'old_officer_position', 'new_officer_position', 'created_at'])) {
-            $roleHistory = DB::table('role_changes as changes')
-                ->leftJoin('users as target', 'target.id', '=', 'changes.user_id')
-                ->leftJoin('users as actor', 'actor.id', '=', 'changes.changed_by_user_id')
-                ->orderByDesc('changes.created_at')
-                ->limit(10)
-                ->get([
-                    'changes.old_role', 'changes.new_role', 'changes.old_officer_position',
-                    'changes.new_officer_position', 'changes.created_at',
-                    'target.name as target_name', 'actor.name as actor_name',
-                ]);
-        }
 
         return view('adviser.dashboard', [
             'pendingByModule' => $pendingByModule,
@@ -66,7 +50,6 @@ class DashboardController extends Controller
             'totalOfficers' => User::query()->where('role', User::ROLE_OFFICER)->count(),
             'totalStudents' => User::query()->where('role', User::ROLE_STUDENT)->count(),
             'advisers' => $advisers,
-            'roleHistory' => $roleHistory,
         ]);
     }
 }

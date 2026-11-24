@@ -42,6 +42,76 @@
                     accountMenu.classList.add('hidden');
                     if (returnFocus) accountMenuToggle.focus();
                 };
+                const photoDialog = document.getElementById('account-photo-dialog');
+                if (photoDialog?.showModal) {
+                    const photoEdit = accountMenu.querySelector('[data-photo-edit]');
+                    const closePhoto = photoDialog.querySelector('[data-photo-close]');
+                    const photoInput = photoDialog.querySelector('#profile-picture-input');
+                    const photoError = photoDialog.querySelector('#profile-picture-error');
+                    const photoControls = photoDialog.querySelectorAll('button, input[type="file"]');
+                    let savingPhoto = false;
+
+                    const clearPhotoError = () => {
+                        photoError.textContent = '';
+                        photoInput.removeAttribute('aria-invalid');
+                    };
+
+                    photoEdit.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        closeAccountMenu(true);
+                        photoDialog.showModal();
+                    });
+                    closePhoto.addEventListener('click', () => photoDialog.close());
+                    photoDialog.addEventListener('cancel', (event) => {
+                        if (savingPhoto) event.preventDefault();
+                    });
+                    photoDialog.addEventListener('close', () => {
+                        photoInput.form.reset();
+                        photoInput.dispatchEvent(new Event('change'));
+                        accountMenuToggle.focus();
+                    });
+                    photoInput.addEventListener('change', clearPhotoError);
+
+                    photoDialog.addEventListener('submit', async (event) => {
+                        if (event.defaultPrevented) return;
+                        event.preventDefault();
+                        if (savingPhoto) return;
+
+                        const form = event.target;
+                        const body = new FormData(form);
+                        clearPhotoError();
+                        savingPhoto = true;
+                        photoControls.forEach((control) => { control.disabled = true; });
+
+                        try {
+                            const response = await fetch(form.action, {
+                                method: 'POST',
+                                headers: { Accept: 'application/json' },
+                                body,
+                            });
+                            if (response.status === 204) {
+                                window.location.reload();
+                                return;
+                            }
+                            if (response.status === 422) {
+                                const result = await response.json();
+                                photoError.textContent = result.errors?.picture?.[0] || 'Check the photo and try again.';
+                                photoInput.setAttribute('aria-invalid', 'true');
+                            } else if (response.status === 413) {
+                                photoError.textContent = 'The profile picture must be no larger than 2 MB.';
+                                photoInput.setAttribute('aria-invalid', 'true');
+                            } else {
+                                throw new Error('Photo request failed.');
+                            }
+                        } catch {
+                            photoError.textContent = 'Could not update your profile picture. Try again.';
+                        } finally {
+                            savingPhoto = false;
+                            photoControls.forEach((control) => { control.disabled = false; });
+                        }
+                        (photoInput.hasAttribute('aria-invalid') ? photoInput : event.submitter)?.focus();
+                    });
+                }
                 accountMenuToggle.addEventListener('click', () => {
                     const isOpen = accountMenuToggle.getAttribute('aria-expanded') === 'true';
                     accountMenuToggle.setAttribute('aria-expanded', String(!isOpen));

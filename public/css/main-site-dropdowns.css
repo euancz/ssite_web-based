@@ -107,7 +107,7 @@ body.site-body select:disabled { opacity: .6; cursor: not-allowed; }
 body.site-body select:focus-visible { outline: 3px solid var(--control-focus); outline-offset: 3px; }
 body.main-site-body main :is(.documents-select, .transparency-select) > svg { display: none; }
 
-/* Search fields share the select geometry across the masthead and every listing. */
+/* Search fields share the select geometry across listings. */
 body.site-body.main-site-body :is(.site-search-input, input[type="search"]),
 body.site-body.workspace-site-body .workspace-content input[type="search"] {
     box-sizing: border-box;
@@ -163,6 +163,35 @@ body.site-body.main-site-body :is(.search-results-controls, .discover-filters, .
 body.site-body :is(.site-search-input, input[type="search"]):focus-visible {
     outline: 3px solid var(--control-focus);
     outline-offset: 3px;
+}
+
+.public-home-header :is(.account-toggle, .account-notifications, .mobile-search-toggle),
+body.site-body.main-site-body .public-home-header .site-search-input {
+    border: 2px solid var(--color-brand-primary);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-brand-primary);
+    box-shadow: 0 2px 5px rgb(23 50 77 / 20%);
+}
+
+.public-home-header .account-toggle {
+    padding: 0;
+    background: var(--color-brand-primary);
+}
+
+.public-home-header .account-toggle:hover {
+    opacity: 1;
+}
+
+body.site-body.main-site-body .public-home-header .search-form > :is(.search-submit-icon, .search-clear-button) {
+    top: 50%;
+}
+
+@media (max-width: 1023px) {
+    body.site-body.main-site-body .public-home-header .mobile-search .site-search-input {
+        min-height: 48px;
+        font-size: 16px;
+    }
 }
 
 /* All floating menus use the same surface, spacing, and interactive states. */

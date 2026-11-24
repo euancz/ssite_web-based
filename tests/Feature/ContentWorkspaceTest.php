@@ -250,7 +250,7 @@ class ContentWorkspaceTest extends TestCase
         $this->get($url)->assertNotFound();
     }
 
-    public function test_full_pdfs_open_in_new_tabs_with_existing_access_checks(): void
+    public function test_pdf_previews_stay_in_the_viewer_with_existing_access_checks(): void
     {
         Storage::fake('local');
         foreach (['documents' => ['document', 'Secretary', 'documents'], 'liquidations' => ['liquidation', 'Auditor', 'liquidation']] as $module => [$parameter, $position, $directory]) {
@@ -258,16 +258,19 @@ class ContentWorkspaceTest extends TestCase
             $id = $this->makePost($module, $owner->id, 'approved');
             Storage::disk('local')->put($directory.'/'.str_repeat('a', 40).'.pdf', '%PDF-0123456789');
             $url = URL::temporarySignedRoute($module.'.view', now()->addMinutes(5), [$parameter => $id]);
-            $this->actingAs($owner)->get($url, ['Sec-Fetch-Dest' => 'document'])
+            $fetchHeaders = ['Sec-Fetch-Mode' => 'cors', 'Sec-Fetch-Dest' => 'empty'];
+            $this->actingAs($owner)->get($url, $fetchHeaders)
                 ->assertOk()->assertHeader('Content-Type', 'application/pdf');
+            $this->get($url, ['Sec-Fetch-Mode' => 'navigate', 'Sec-Fetch-Dest' => 'document'])->assertNotFound();
             $this->get(route($module.'.index'))->assertOk()
-                ->assertSee('target="_blank"', false)->assertSee('Open full PDF in a new tab')
+                ->assertSee('data-pdf-url=', false)
+                ->assertDontSee('Open full PDF in a new tab')
                 ->assertDontSee('data-selection-expand', false);
-            $this->get(route($module.'.view', $id), ['Sec-Fetch-Dest' => 'document'])->assertNotFound();
+            $this->get(route($module.'.view', $id), $fetchHeaders)->assertNotFound();
             DB::table($module)->where('id', $id)->update(['approval_status' => 'pending']);
-            $this->actingAs($this->actor('student', null))->get($url, ['Sec-Fetch-Dest' => 'document'])->assertNotFound();
+            $this->actingAs($this->actor('student', null))->get($url, $fetchHeaders)->assertNotFound();
             $this->travel(6)->minutes();
-            $this->actingAs($owner)->get($url, ['Sec-Fetch-Dest' => 'document'])->assertNotFound();
+            $this->actingAs($owner)->get($url, $fetchHeaders)->assertNotFound();
             $this->travelBack();
         }
     }

@@ -1,6 +1,6 @@
 @props(['post'])
 
-@if (! $post->isApproved() || $post->isArchived())
+@if (request()->query('review_preview') !== '1' && (! $post->isApproved() || $post->isArchived()))
     <section class="workspace-review-summary" aria-label="Submission status">
         <div class="workspace-review-heading">
             <h2>Submission status</h2>

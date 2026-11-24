@@ -107,7 +107,9 @@
         });
         input.addEventListener('compositionstart', close);
         input.addEventListener('compositionend', suggest);
-        input.addEventListener('focus', suggest);
+        input.addEventListener('click', () => {
+            if (list.classList.contains('hidden')) suggest();
+        });
         input.addEventListener('blur', close);
         input.addEventListener('keydown', (event) => {
             if (event.isComposing || list.classList.contains('hidden')) return;
@@ -128,7 +130,6 @@
                 window.searchPopover.reveal(list, option);
             }
         });
-        suggest();
     };
 
     const closeInForm = (event) => {

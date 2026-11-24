@@ -5,13 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     @include('layouts.partials.font-preloads')
-    <meta name="description" content="The official SSITE community at Mabalacat City College. Sign in for student news, activities, achievements, documents, and organization reports.">
+    <meta name="description" content="The official SSITE website at Mabalacat City College. Sign in for articles, activities, achievements, documents, and financial reports.">
     <meta name="theme-color" content="#7bd0ed">
     <title>@yield('title', 'SSITE | Mabalacat City College')</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('images/ssite-favicon.svg') }}">
-    <link rel="stylesheet" href="{{ asset('css/landing.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/landing.css') }}?v={{ filemtime(public_path('css/landing.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/interface-polish.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/landing-chrome.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/landing-chrome.css') }}?v={{ filemtime(public_path('css/landing-chrome.css')) }}">
     @include('layouts.partials.typography')
     <script src="{{ asset('js/landing.js') }}" defer></script>
     @if (auth()->user()?->isAdviser())
@@ -86,7 +86,7 @@
         <div class="footer-return"><a class="back-top" href="#top">{{ $siteContent->value('landing-footer', 'return_link') }} <x-icon name="arrow-up" size="sm" /></a></div>
         <div class="footer-bottom">
             <p class="footer-copyright">
-                &copy; {{ date('Y') }} Student Society in Information Technology — Mabalacat City College
+                &copy; {{ date('Y') }} Student Society in Information Technology Education, Mabalacat City College
             </p>
         </div>
     </footer>

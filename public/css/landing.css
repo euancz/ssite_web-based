@@ -40,7 +40,7 @@ h2 { font-size: clamp(28px, 3vw, 38px); line-height: 1.2; letter-spacing: -1.3px
 .hero-explore { display: inline-flex; align-items: center; gap: 12px; min-height: 44px; margin-top: 20px; font-size: 12px; }
 .hero-explore:hover { text-decoration: underline; text-underline-offset: 5px; }
 .hero-visual { width: 100%; max-width: 390px; min-width: 0; justify-self: end; }
-.mascot-poster { position: relative; overflow: hidden; padding: 22px 24px 0; background: #fff8eb; border: 1px solid #b5b7ad; border-radius: 3px; box-shadow: 5px 5px 0 #17324d; }
+.mascot-poster { position: relative; overflow: hidden; padding: 22px 24px 0; background: #fff; border: 1px solid #b5b7ad; border-radius: 3px; box-shadow: 5px 5px 0 #17324d; }
 .poster-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 7px; font-weight: 600; letter-spacing: .6px; line-height: 1.7; }
 .poster-meta img { width: 36px; height: 36px; }
 .poster-word { display: block; margin-top: 14px; font-size: clamp(64px, 7vw, 96px); font-weight: 600; line-height: 1.05; letter-spacing: -5px; text-align: center; }

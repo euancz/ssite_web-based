@@ -1,11 +1,41 @@
 {{-- SECURITY: This multipart form posts only validated snapshot fields to adviser-only routes. --}}
-<section class="dashboard-panel">
-    @if ($errors->any())<div class="dashboard-error" role="alert">@foreach ($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div>@endif
-    <form method="POST" action="{{ $action }}" enctype="multipart/form-data" class="dashboard-form">
-        @csrf @if ($method !== 'POST') @method($method) @endif
-        <div class="dashboard-form-field"><label for="academic_year">Academic year</label><select id="academic_year" name="academic_year" required>@foreach ($years as $year)<option value="{{ $year }}" @selected(old('academic_year', $officer->academic_year) === $year)>{{ $year }}</option>@endforeach</select></div>
-        <div class="dashboard-form-field"><label for="position">Position</label><select id="position" name="position" required><option value="">Choose position</option>@foreach ($positions as $position)<option value="{{ $position }}" @selected(old('position', $officer->position) === $position)>{{ $position }}</option>@endforeach</select></div>
-        <div class="dashboard-form-field"><label for="name">Name</label><input id="name" name="name" value="{{ old('name', $officer->name) }}" maxlength="100" required></div>
+<section class="dashboard-panel workspace-composer-panel" aria-label="Officer form">
+    <x-ui.form-errors />
+
+    <form method="POST" action="{{ $action }}" enctype="multipart/form-data" class="profile-form" data-content-form>
+        @csrf
+        @if ($method !== 'POST')
+            @method($method)
+        @endif
+
+        <div class="profile-form-grid">
+            <div class="dashboard-form-field">
+                <label for="academic_year">Academic year</label>
+                <select id="academic_year" name="academic_year" required>
+                    @foreach ($years as $year)
+                        <option value="{{ $year }}" @selected(old('academic_year', $officer->academic_year) === $year)>{{ $year }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="dashboard-form-field">
+                <label for="position">Position</label>
+                <select id="position" name="position" required>
+                    <option value="">Choose position</option>
+                    @foreach ($positions as $position)
+                        <option value="{{ $position }}" @selected(old('position', $officer->position) === $position)>{{ $position }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="dashboard-form-field">
+                <label for="name">Name</label>
+                <input id="name" name="name" value="{{ old('name', $officer->name) }}" maxlength="100" required>
+            </div>
+            <div class="dashboard-form-field">
+                <label for="sort_order">Sort order</label>
+                <input id="sort_order" type="number" name="sort_order" min="0" max="255" value="{{ old('sort_order', $officer->sort_order ?? 0) }}" required>
+            </div>
+        </div>
+
         <div class="dashboard-form-field" data-officer-user-picker>
             <label for="user_id">Link to a user (optional)</label>
             <select id="user_id" name="user_id">
@@ -18,12 +48,29 @@
                 <input id="officer-user-search" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="officer-user-results" aria-describedby="officer-user-help officer-user-status" autocomplete="off" placeholder="Search by name or email">
                 <div id="officer-user-results" class="officer-user-results" role="listbox" aria-label="User accounts" hidden></div>
             </div>
-            <small id="officer-user-help">Search by name or email, then select an account to link it.</small>
-            <small id="officer-user-status" role="status" aria-live="polite"></small>
+            <small id="officer-user-help" class="profile-field-help">Search by name or email, then select an account to link it.</small>
+            <small id="officer-user-status" class="profile-field-help" role="status" aria-live="polite"></small>
         </div>
-        <div class="dashboard-form-field"><label for="photo">Officer photo (JPG, PNG, WebP; up to 2 MB)</label><input id="photo" type="file" name="photo" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"></div>
-        <div class="dashboard-form-field"><label for="sort_order">Sort order</label><input id="sort_order" type="number" name="sort_order" min="0" max="255" value="{{ old('sort_order', $officer->sort_order ?? 0) }}" required></div>
-        <div class="dashboard-actions"><button class="dashboard-button" type="submit">Save officer</button><a class="dashboard-button dashboard-button-secondary" href="{{ route('adviser.officers.index', ['academic_year' => old('academic_year', $officer->academic_year)]) }}">Cancel</a></div>
+
+        @php($photoUrl = $officer->photoUrl())
+        <div class="dashboard-form-field">
+            <label for="photo">{{ $photoUrl ? 'Replace officer photo (optional)' : 'Officer photo (optional)' }}</label>
+            <x-workspace.attachment title="Attach an officer photo" help="JPG, JPEG or PNG up to 2 MB">
+                <input id="photo" name="photo" type="file" accept=".jpg,.jpeg,.png" data-image-preview="officer-photo-preview" @error('photo') aria-invalid="true" aria-describedby="officer-photo-error" @enderror>
+            </x-workspace.attachment>
+            <x-workspace.upload-status input-id="photo" :max-kb="2048" />
+            @error('photo') <span id="officer-photo-error" class="profile-field-error">{{ $message }}</span> @enderror
+            @if ($photoUrl)
+                <img id="officer-photo-preview" class="article-form-preview" src="{{ $photoUrl }}" alt="Officer photo preview">
+            @else
+                <span id="officer-photo-preview-mount" hidden></span>
+            @endif
+        </div>
+
+        <div class="profile-form-actions">
+            <button class="dashboard-button" type="submit">Save officer</button>
+            <a class="dashboard-button dashboard-button-secondary" href="{{ route('adviser.officers.index', ['academic_year' => old('academic_year', $officer->academic_year)]) }}">Cancel</a>
+        </div>
     </form>
 </section>
 @push('styles')

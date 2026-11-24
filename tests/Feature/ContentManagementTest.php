@@ -87,6 +87,9 @@ class ContentManagementTest extends TestCase
         $this->assertCount(5, $response->viewData('posts'));
         foreach (ContentModules::all() as $key => $module) {
             $response->assertSee(route($key.'.approve', 1), false)->assertSee('Reject '.strtolower($module['singular']));
+            $previewUrl = route('workspace.posts.'.$key.'.show', [1, 'review_preview' => 1]);
+            $response->assertSee('href="'.$previewUrl.'"', false);
+            $this->get($previewUrl)->assertOk()->assertSee($key.' submission')->assertDontSee('class="workspace-review-summary"', false);
         }
         $this->makePost('articles', $president, ['title' => 'Reviewed article', 'approval_status' => 'rejected',
             'reviewed_at' => '2026-10-20 14:30:00', 'reviewed_by_user_id' => $president->id,

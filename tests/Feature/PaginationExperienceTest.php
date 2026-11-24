@@ -110,7 +110,10 @@ class PaginationExperienceTest extends TestCase
                 ->assertSee('css/pagination.css?v=', false);
         }
         $manager = User::forceCreate(['name' => 'Pagination Adviser', 'email' => 'pagination-adviser@mcc.edu.ph', 'role' => 'adviser', 'profile_completed_at' => now()]);
-        $this->actingAs($manager)->get(route('adviser.users.index', ['page' => 999]))->assertOk()
+        $this->actingAs($manager)->get(route('adviser.users.index', ['role' => 'officer', 'search' => 'Pagination President', 'page' => 999]))->assertOk()
+            ->assertSee('class="workspace-list-toolbar"', false)
+            ->assertSee('name="search" maxlength="100" value="Pagination President"', false)
+            ->assertSee('value="officer" selected', false)->assertSee('Pagination President')
             ->assertSee('class="ssite-pagination"', false)->assertSee('css/pagination.css?v=', false)
             ->assertDontSee('aria-label="User pagination"', false);
     }

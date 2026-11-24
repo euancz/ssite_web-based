@@ -23,7 +23,7 @@ class StoreOfficerTermRequest extends FormRequest
             'position' => ['required', 'string', 'max:100', Rule::in(config('school.officer_positions', []))],
             'name' => ['required', 'string', 'max:100'],
             'user_id' => ['nullable', 'integer', 'exists:users,id'],
-            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'photo' => ['bail', 'nullable', 'image', 'mimes:jpg,jpeg,png', 'extensions:jpg,jpeg,png', 'max:2048'],
             'sort_order' => ['required', 'integer', 'min:0', 'max:255'],
         ];
     }
@@ -34,7 +34,9 @@ class StoreOfficerTermRequest extends FormRequest
             'academic_year.regex' => 'Choose an academic year in YYYY-YYYY format.',
             'position.in' => 'Choose a position from the approved list.',
             'user_id.exists' => 'The selected user account could not be found.',
-            'photo.image' => 'Upload a JPG, PNG, or WebP image.',
+            'photo.image' => 'Upload a JPG, JPEG, or PNG image.',
+            'photo.mimes' => 'Upload a JPG, JPEG, or PNG image.',
+            'photo.extensions' => 'Use a .jpg, .jpeg, or .png file extension for the officer photo.',
             'photo.max' => 'The officer photo must be 2 MB or smaller.',
         ];
     }

@@ -53,9 +53,8 @@ body:has(.document-selection[open]) { overflow: hidden; }
 .document-selection-badges { display: flex; flex-wrap: wrap; gap: 12px 16px; margin-top: 20px; }
 .document-selection-badges > span { display: inline-flex; align-items: center; gap: 10px; border-radius: 10px; padding: 5px 10px; background: #b9edfc; font-size: 15px; line-height: 21px; }
 .document-selection .document-selection-preview { height: auto; margin: 40px 0 0; padding: 0 22px 24px; overflow: hidden; border: 1px solid #ededed; border-radius: 11px; background: #fafafa; }
-.document-selection-preview-heading { display: flex; min-height: 46px; align-items: center; justify-content: space-between; gap: 12px; padding: 0 4px; }
+.document-selection-preview-heading { display: flex; min-height: 46px; align-items: center; padding: 0 4px; }
 .document-selection-preview-heading h3 { margin: 0; font: 600 15px/1.4 'Poppins', sans-serif; }
-.document-selection-preview-heading .document-selection-open { display: grid; width: 40px; height: 40px; place-items: center; border: 0; border-radius: 6px; background: transparent; color: #083747; cursor: pointer; }
 .document-selection .document-pdf-stage { display: block; flex: none; height: 464px; min-height: 0; max-height: 464px; padding: 0; overflow: auto; border-radius: 9px 9px 0 0; background: #fff; }
 .document-selection .document-pdf-canvas { display: block; margin: 0 auto; max-width: 100%; box-shadow: 0 3px 4px rgb(0 0 0 / 20%); }
 .document-selection-controls { display: none; justify-content: center; align-items: center; flex-wrap: wrap; gap: 16px; padding-top: 16px; font-size: 13px; }

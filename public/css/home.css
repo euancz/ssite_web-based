@@ -991,14 +991,19 @@ body.main-site-body .public-home-header ~ main .home-page .home-leaders .section
 }
 
 .public-home-header ~ main .home-page .leaders-grid {
+    --leaders-gap: 1rem;
+    --visible-leaders: 3;
+    --leader-preview-space: 0px;
+
     display: flex;
     align-items: stretch;
     max-width: none;
     margin: 0;
-    gap: 1rem;
+    gap: var(--leaders-gap);
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scroll-behavior: smooth;
+    scroll-padding-inline: var(--leader-preview-space);
     scrollbar-width: none;
     scroll-snap-type: x mandatory;
 }
@@ -1009,7 +1014,7 @@ body.main-site-body .public-home-header ~ main .home-page .home-leaders .section
 
 .public-home-header ~ main .home-page .leader-card {
     display: flex;
-    flex: 0 0 calc((100% - 2rem) / 3);
+    flex: 0 0 calc((100% + var(--leaders-gap) - 2 * var(--leader-preview-space)) / var(--visible-leaders) - var(--leaders-gap));
     flex-direction: column;
     min-width: 0;
     overflow: hidden;
@@ -1022,15 +1027,29 @@ body.main-site-body .public-home-header ~ main .home-page .home-leaders .section
     container-type: inline-size;
 }
 
-@media (max-width: 1000px) {
-    .public-home-header ~ main .home-page .leader-card {
-        flex-basis: calc((100% - 1rem) / 2);
+@media (width > 1000px) {
+    .public-home-header ~ main .home-page .leaders-grid:has(> .leader-card:nth-child(4)) {
+        --leader-preview-space: calc(var(--leaders-gap) + 2rem);
+    }
+}
+
+@media (560px < width <= 1000px) {
+    .public-home-header ~ main .home-page .leaders-grid {
+        --visible-leaders: 2;
+    }
+
+    .public-home-header ~ main .home-page .leaders-grid:has(> .leader-card:nth-child(3)) {
+        --leader-preview-space: calc(var(--leaders-gap) + 1.5rem);
     }
 }
 
 @media (max-width: 560px) {
-    .public-home-header ~ main .home-page .leader-card {
-        flex-basis: 100%;
+    .public-home-header ~ main .home-page .leaders-grid {
+        --visible-leaders: 1;
+    }
+
+    .public-home-header ~ main .home-page .leaders-grid:has(> .leader-card:nth-child(2)) {
+        --leader-preview-space: calc(var(--leaders-gap) + 1rem);
     }
 }
 
@@ -1202,7 +1221,7 @@ body.main-site-body .public-home-header ~ main .home-page section.home-sponsors 
     }
 
     .public-home-header ~ main .home-page .leaders-grid {
-        gap: 0.75rem;
+        --leaders-gap: 0.75rem;
     }
 
     .public-home-header ~ main .home-page .leaders-carousel {

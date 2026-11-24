@@ -4,7 +4,11 @@
 
 @section('content')
 <div class="dashboard-page president-officers-page">
-    <x-ui.page-header title="Manage Officers" subtitle="Maintain the annual officer snapshots shown on About." />
+    <x-ui.page-header title="Manage Officers" subtitle="Maintain the annual officer snapshots shown on About.">
+        <x-slot:actions>
+            <a class="dashboard-button" href="{{ route('adviser.officers.create', ['academic_year' => $year]) }}"><x-workspace.icon name="plus" />Add officer</a>
+        </x-slot:actions>
+    </x-ui.page-header>
     @if (session('status')) <p class="dashboard-success" role="status" data-flash-toast>{{ session('status') }}</p> @endif
     @if ($errors->any()) <div class="dashboard-error" role="alert">@foreach ($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div> @endif
     <section class="dashboard-panel">
@@ -17,7 +21,6 @@
                     @endforeach
                 </select>
             </div>
-            <a class="dashboard-button" href="{{ route('adviser.officers.create', ['academic_year' => $year]) }}"><x-workspace.icon name="plus" />Add officer</a>
         </form>
         <p class="workspace-review-list-summary">{{ $officers->count() }} {{ \Illuminate\Support\Str::plural('officer', $officers->count()) }} recorded for A.Y. {{ $year }}</p>
         <x-ui.data-table label="Officers for {{ $year }}">

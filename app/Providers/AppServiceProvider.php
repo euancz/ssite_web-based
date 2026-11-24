@@ -41,9 +41,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         \Illuminate\Pagination\Paginator::defaultView('vendor.pagination.ssite');
-        foreach (\App\Services\MobilePublisher::MODELS as $model) {
-            $model::observe(\App\Observers\MobilePublicationObserver::class);
-        }
         // SECURITY: Apply account-and-IP limits with a short plain-text response when clients exceed them.
         $rateLimitedResponse = static fn (Request $request, array $headers) =>
             response('Too many requests. Please wait a minute before trying again.', 429, $headers);

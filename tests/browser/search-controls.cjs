@@ -137,6 +137,13 @@ const timeout = setTimeout(() => { browser.kill(); throw new Error('Browser chec
     assert.deepEqual(await evaluate(`[window.scrollY,document.documentElement.scrollHeight]`),await evaluate('searchScrollStart'));
     assert.equal(await evaluate(`document.getElementById(docQuery.getAttribute('aria-activedescendant')).textContent`),'Workshop kickoff');
     console.log('PASS: typing and moving through suggestions near the bottom keep the page in place');
+    await evaluate(`docQuery.value='exact phrase';docQuery.dispatchEvent(new Event('input',{bubbles:true}));`);
+    await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter'},sessionId);
+    await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter'},sessionId);
+    assert.equal(await evaluate('submissions.at(-1).q'),'exact phrase');
+    await evaluate(`const field=docQuery.parentElement;const refreshed=field.cloneNode(true);refreshed.querySelectorAll('.search-clear-button,.search-suggestions').forEach(node=>node.remove());const input=refreshed.querySelector('input');for(const attr of ['role','aria-expanded','aria-controls','aria-autocomplete'])input.removeAttribute(attr);field.replaceWith(refreshed);input.focus({preventScroll:true});`);
+    assert.equal(await evaluate(`docQuery.getAttribute('aria-expanded')`),'false');
+    console.log('PASS: Enter submits the typed keyword and restored focus keeps suggestions closed');
 })().catch((error) => { console.error(error); process.exitCode = 1; }).finally(async () => {
     clearTimeout(timeout);
     try { await send('Browser.close'); } catch {}

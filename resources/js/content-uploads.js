@@ -1,7 +1,37 @@
-export function initContentUploads(form) {
-    form.querySelectorAll('[data-upload-status]').forEach((panel) => {
+function initImagePreview(input) {
+    let preview = document.getElementById(input.dataset.imagePreview);
+    const mount = document.getElementById(`${input.dataset.imagePreview}-mount`);
+    if (!preview && !mount) return;
+    const original = preview?.getAttribute('src');
+    let objectUrl = null;
+    input.addEventListener('change', () => {
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        const file = input.files?.[0];
+        objectUrl = file?.type.startsWith('image/') ? URL.createObjectURL(file) : null;
+        if (objectUrl || original) {
+            if (!preview) {
+                preview = document.createElement('img');
+                preview.id = input.dataset.imagePreview;
+                preview.className = 'article-form-preview';
+                preview.alt = 'Selected image preview';
+                mount.after(preview);
+            }
+            preview.src = objectUrl || original;
+            preview.hidden = false;
+        } else {
+            preview?.remove();
+            preview = null;
+        }
+    });
+    window.addEventListener('pagehide', () => { if (objectUrl) URL.revokeObjectURL(objectUrl); });
+}
+
+export function initContentUploads() {
+    document.querySelectorAll('[data-upload-status]').forEach((panel) => {
+        const form = panel.closest('form');
         const input = document.getElementById(panel.dataset.uploadInput);
-        if (!input || input.form !== form) return;
+        if (!form || !input || input.form !== form) return;
+        if (input.dataset.imagePreview) initImagePreview(input);
         const summary = panel.querySelector('[data-upload-summary]');
         const clear = panel.querySelector('[data-upload-clear]');
         const maxKb = Number(panel.dataset.uploadMaxKb);

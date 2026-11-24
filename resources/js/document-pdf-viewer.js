@@ -5,6 +5,30 @@ import '../css/document-pdf-viewer.css';
 // Both modules use the same canvas-only reader, and each request keeps the signed URL policy checks.
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
+function drawWatermark(context) {
+    const { width, height } = context.canvas;
+    const fontSize = Math.min(width, height) * 0.05;
+    const maxTextWidth = Math.min(width, height) * 0.82;
+    const lineOffset = fontSize * 0.6;
+
+    context.save();
+    context.fillStyle = 'rgba(8, 55, 71, 0.17)';
+    context.font = `bold ${fontSize}px sans-serif`;
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+
+    for (const offset of [0.22, 0.5, 0.78]) {
+        context.save();
+        context.translate(width / 2, height * offset);
+        context.rotate(-Math.PI / 7);
+        context.fillText('Student Society in', 0, -lineOffset, maxTextWidth);
+        context.fillText('Information Technology Education', 0, lineOffset, maxTextWidth);
+        context.restore();
+    }
+
+    context.restore();
+}
+
 export function initPrivatePdfViewer(viewer) {
     if (!viewer) return;
 
@@ -149,6 +173,7 @@ export function initPrivatePdfViewer(viewer) {
             await renderTask.promise;
             if (sequence !== renderSequence) return;
             renderTask = null;
+            drawWatermark(context);
             status.textContent = 'Document ready.';
             status.dataset.ready = 'true';
             status.setAttribute('role', 'status');

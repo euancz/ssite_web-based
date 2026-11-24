@@ -93,3 +93,27 @@ body.main-site-body main .stories-banner-description {
     color: #174b5c;
     line-height: 1.5;
 }
+
+@media (max-width: 767px) {
+    .stories-banner-copy {
+        min-height: clamp(9rem, 26cqw, 12rem);
+        padding: 18px 14px;
+    }
+
+    body.main-site-body main .stories-banner-eyebrow {
+        margin-bottom: 4px;
+        font-size: clamp(.75rem, 2.4cqw, 1rem);
+    }
+
+    body.main-site-body main .stories-banner h1 {
+        font-size: clamp(1.6rem, 6.5cqw, 2.75rem);
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    body.main-site-body main .stories-banner-description {
+        max-width: 46ch;
+        margin-top: 8px;
+        font-size: clamp(.875rem, 2.3cqw, 1rem);
+    }
+}
