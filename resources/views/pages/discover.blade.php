@@ -1,3 +1,4 @@
+@inject('siteContent', 'App\Support\SiteContent')
 @extends(request()->header('X-SSITE-Page-Data') === '1' ? 'layouts.page-data' : 'layouts.app')
 
 @section('title', 'Discover')
@@ -279,9 +280,10 @@
     <div class="discover-page">
         <div class="discover-main site-page">
             <x-ui.stories-banner
-                eyebrow="Articles • Activities • Achievements"
-                title="Stories & Highlights"
-                description="Discover the stories, activities, and achievements that highlight our students’ creativity, experiences, and accomplishments."
+            edit-section="discover"
+                :eyebrow="$siteContent->value('discover', 'eyebrow')"
+                :title="$siteContent->value('discover', 'title')"
+                :description="$siteContent->value('discover', 'description')"
                 labelledby="discover-title"
             />
 

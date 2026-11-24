@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Adviser\DashboardController;
 use App\Http\Controllers\Adviser\UserController;
+use App\Http\Controllers\Adviser\SiteSectionController;
 use App\Http\Controllers\Adviser\OfficerTermController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,3 +30,11 @@ Route::prefix('adviser')->name('adviser.')->middleware(['auth', 'profile.complet
     Route::patch('/officers/{officer}', [OfficerTermController::class, 'update'])->name('officers.update');
     Route::post('/officers/copy-previous', [OfficerTermController::class, 'copyPrevious'])->name('officers.copy-previous');
 });
+
+Route::prefix('adviser/site')->name('adviser.site.')
+    ->middleware(['auth', 'role:adviser', 'profile.complete'])
+    ->group(function () {
+        Route::view('/landing', 'pages.landing')->name('landing');
+        Route::get('/sections/{section}', [SiteSectionController::class, 'edit'])->name('edit');
+        Route::put('/sections/{section}', [SiteSectionController::class, 'update'])->name('update');
+    });

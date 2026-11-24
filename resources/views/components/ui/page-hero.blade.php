@@ -1,6 +1,7 @@
 @props([
     'title',
     'description' => null,
+    'editSection' => null,
     'eyebrow' => null,
     'labelledby' => 'page-hero-title',
     'class' => '',
@@ -15,7 +16,7 @@
         @if ($eyebrow)
             <p class="page-hero-eyebrow">{{ $eyebrow }}</p>
         @endif
-        <h1 id="{{ $labelledby }}">{{ $title }}</h1>
+        <h1 id="{{ $labelledby }}">{{ $title }} @if ($editSection)<x-section-pencil :section="$editSection" />@endif</h1>
         @if ($description)
             <p class="page-hero-description">{{ $description }}</p>
         @endif

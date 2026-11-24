@@ -1,3 +1,4 @@
+@inject('siteContent', 'App\Support\SiteContent')
 @extends('layouts.app')
 
 @section('title', 'About Us')
@@ -9,26 +10,27 @@
 @section('content')
 <div class="about-page site-page">
 	<x-ui.stories-banner
-		eyebrow="About the organization"
-		title="Get to know SSITE"
-		description="Discover who we are, what we stand for, and the vision that brings our community of aspiring IT professionals together."
+            edit-section="about"
+		:eyebrow="$siteContent->value('about', 'eyebrow')"
+		:title="$siteContent->value('about', 'title')"
+		:description="$siteContent->value('about', 'description')"
 		labelledby="about-hero-title"
 	/>
 
 	<section class="mission-vision-grid" aria-label="SSITE mission and vision">
 		<article class="mission-card">
-			<h2>Mission</h2>
-			<p>SSITE provides hands-on, research-based, and values-centered learning experiences, equipping students with the skills needed to excel in both local and global IT industries while fulfilling their social responsibilities.</p>
+			<h2>{{ $siteContent->value('about-mission', 'heading') }} <x-section-pencil section="about-mission" /></h2>
+			<p>{{ $siteContent->value('about-mission', 'description') }}</p>
 		</article>
 		<article class="vision-card">
-			<h2>Vision</h2>
-			<p>SSITE aims to cultivate competitive Information Technology professionals capable of thriving in both local and international IT industries while upholding ethical standards.</p>
+			<h2>{{ $siteContent->value('about-vision', 'heading') }} <x-section-pencil section="about-vision" /></h2>
+			<p>{{ $siteContent->value('about-vision', 'description') }}</p>
 		</article>
 	</section>
 
 	<section class="officers-section" aria-labelledby="officers-heading">
 		<div class="officer-heading-row">
-			<h2 id="officers-heading" class="about-section-title">SSITE Officers A.Y. {{ $current }}</h2>
+			<h2 id="officers-heading" class="about-section-title">{{ $siteContent->value('about-officers', 'roster_heading') }} {{ $current }} <x-section-pencil section="about-officers" /></h2>
 		</div>
 		{{-- Officer snapshots stay independent of later changes to user roles and profiles. --}}
 		<div class="officers-grid">
@@ -42,12 +44,12 @@
 
 	@if ($history->isNotEmpty())
 	<section class="leadership-section" aria-labelledby="leadership-heading">
-		<h2 id="leadership-heading" class="about-section-title">Leadership History</h2>
+		<h2 id="leadership-heading" class="about-section-title">{{ $siteContent->value('about-officers', 'history_heading') }}</h2>
 		<div class="leadership-list">
 			@foreach ($history as $year => $yearOfficers)
 				<details class="leadership-item" @if ($loop->first) open @endif>
 					<summary>
-						<span>SSITE Officers A.Y. {{ $year }}</span>
+						<span>{{ $siteContent->value('about-officers', 'roster_heading') }} {{ $year }}</span>
 						<x-icon name="chevron-down" size="sm" class="leadership-chevron" />
 					</summary>
 					<div class="officers-grid history-grid">

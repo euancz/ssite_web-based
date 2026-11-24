@@ -1,3 +1,4 @@
+@inject('siteContent', 'App\Support\SiteContent')
 @extends('layouts.app')
 
 @section('title', 'Transparency')
@@ -17,9 +18,10 @@
     @endif
 
     <x-ui.stories-banner
-        eyebrow="Financial transparency • Accountability • Trust"
-        title="Funds with purpose"
-        description="Explore SSITE’s financial records, expense reports, and liquidation documents to see how organization funds are managed and utilized."
+            edit-section="transparency"
+        :eyebrow="$siteContent->value('transparency', 'eyebrow')"
+        :title="$siteContent->value('transparency', 'title')"
+        :description="$siteContent->value('transparency', 'description')"
         labelledby="transparency-title"
     />
 
@@ -80,7 +82,7 @@
 
     <section class="transparency-register" aria-labelledby="transactions-title">
         <div class="transparency-register-heading">
-            <h2 id="transactions-title">Transactions</h2>
+            <h2 id="transactions-title">{{ $siteContent->value('transparency', 'register_heading') }}</h2>
         </div>
 
         <div class="transparency-table-wrap" role="region" aria-label="Published transactions" tabindex="0">

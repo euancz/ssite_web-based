@@ -1,14 +1,16 @@
+@inject('siteContent', 'App\Support\SiteContent')
 @extends('layouts.app')
 
 @section('title', 'Achievements')
 
 @section('content')
 <x-posts.feed-frame
+    edit-section="achievements"
     variant="index"
     :initial-loading="$pageDataPending ?? false"
     stylesheet="achievements"
-    title="Achievements"
-    description="Read and manage SSITE achievements."
+    :title="$siteContent->value('achievements', 'title')"
+    :description="$siteContent->value('achievements', 'description')"
     :policy-class="\App\Models\Achievement::class"
     create-route="achievements.create"
     composer-prompt="Post an achievement…"

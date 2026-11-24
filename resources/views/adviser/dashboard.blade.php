@@ -8,6 +8,11 @@
     @if (auth()->user()->isAdviser())
         <x-workspace.welcome title="Organization overview" description="Manage accounts and check pending submissions." :action-url="route('adviser.users.index')" action-label="Manage accounts" />
 
+        <nav class="site-edit-shortcuts" aria-label="Website editing">
+            <a class="site-edit-shortcut" href="{{ route('adviser.site.landing') }}"><x-icon name="pencil" size="sm" /> Edit landing page</a>
+            <a class="site-edit-shortcut" href="{{ route('home') }}"><x-icon name="pencil" size="sm" /> Edit community website</a>
+        </nav>
+
         <section class="workspace-governance-summary" aria-labelledby="governance-summary-title">
             <div class="workspace-governance-section-heading"><div><h2 id="governance-summary-title">People and publishing</h2></div></div>
             <ul class="workspace-governance-counts">

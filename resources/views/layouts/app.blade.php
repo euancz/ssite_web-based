@@ -1,3 +1,4 @@
+@inject('siteContent', 'App\Support\SiteContent')
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -70,6 +71,9 @@
         <script src="{{ asset('js/initial-page-data.js') }}" defer></script>
     @endif
 </head>
+    @if (auth()->user()?->isAdviser())
+        <link rel="stylesheet" href="{{ asset('css/site-editor.css') }}?v={{ filemtime(public_path('css/site-editor.css')) }}">
+    @endif
 <body class="{{ $workspaceEnabled ? 'site-body workspace-site-body' : 'site-body main-site-body' }} {{ request()->routeIs('discover') ? 'discover-site-body' : '' }} {{ $isPublicLanding ? 'home-landing-body' : '' }}">
     @if ($pageDataPending ?? false)
         <p data-page-data-fallback role="status" class="dashboard-error" hidden>
@@ -118,18 +122,27 @@
         <div class="site-header-main">
             <a href="{{ $roleHomeUrl }}" class="site-brand">
                 {{-- LOGO PLACEHOLDER --}}
-                <img src="{{ asset('images/SSITE LOGO.png') }}"
+                <img src="{{ $siteContent->image('app-header', 'logo_image') }}"
                      alt="SSITE Logo"
                      class="site-logo">
                 <span class="site-brand-name">
-                    <span class="brand-full">STUDENT SOCIETY IN INFORMATION<br>TECHNOLOGY EDUCATION</span>
-                    <span class="brand-short">SSITE</span><span class="brand-campus">Mabalacat City College</span>
+                    <span class="brand-full">{{ $siteContent->value('app-header', 'brand_line_one') }}<br>{{ $siteContent->value('app-header', 'brand_line_two') }}</span>
+                    <span class="brand-short">{{ $siteContent->value('app-header', 'initials') }}</span><span class="brand-campus">{{ $siteContent->value('app-header', 'campus') }}</span>
                 </span>
             </a>
 
             @unless ($isPublicLanding)
             <div class="site-header-actions">
                 {{-- SECURITY: Both search forms use the public suggestions endpoint; suggestions contain visible content only. --}}
+                @if (auth()->user()?->isAdviser())
+                    <details class="site-edit-menu" @if (in_array(session('saved_section'), ['navigation', 'app-header'])) open @endif>
+                        <summary aria-label="Edit header or navigation" title="Edit header or navigation"><x-icon name="pencil" size="sm" /></summary>
+                        <div class="site-edit-menu-links">
+                            <x-section-pencil section="app-header" labelled />
+                            <x-section-pencil section="navigation" labelled />
+                        </div>
+                    </details>
+                @endif
                 <div class="site-search-desktop search-shell">
                     <form method="GET" action="{{ route('search.index') }}" class="search-form">
                         <input type="text" name="q" value="{{ request()->routeIs('search.index') && isset($query) ? $query : '' }}" placeholder="Discover something from SSITE..."
@@ -329,46 +342,46 @@
             <div class="footer-organization">
                 <div class="footer-brand">
                     {{-- LOGO PLACEHOLDER --}}
-                    <img src="{{ asset('images/SSITE LOGO.png') }}"
+                    <img src="{{ $siteContent->image('app-footer', 'organization_logo_image') }}"
                          alt="SSITE Logo"
                         class="footer-logo">
                     <span class="footer-brand-name">
-                        STUDENT SOCIETY IN INFORMATION<br>
-                        TECHNOLOGY EDUCATION
+                        {{ $siteContent->value('app-footer', 'organization_line_one') }}<br>
+                        {{ $siteContent->value('app-footer', 'organization_line_two') }}
                     </span>
                 </div>
                 <p class="footer-description">
-                    The Official Organization of Information Technology Education in MCC
+                    {{ $siteContent->value('app-footer', 'description') }}
                 </p>
 
                 <div class="footer-badges">
                     {{-- BADGE PLACEHOLDERS --}}
-                    <img src="{{ asset('images/ICS LOGO 1.png') }}" alt="Badge 1" class="footer-badge">
-                    <img src="{{ asset('images/MCC LOGO 1.png') }}" alt="Badge 2" class="footer-badge">
-                    <img src="{{ asset('images/ssite - revamp logo 2.png') }}" alt="Badge 3" class="footer-badge">
+                    <img src="{{ $siteContent->image('app-footer', 'institute_logo_image') }}" alt="Badge 1" class="footer-badge">
+                    <img src="{{ $siteContent->image('app-footer', 'college_logo_image') }}" alt="Badge 2" class="footer-badge">
+                    <img src="{{ $siteContent->image('app-footer', 'society_logo_image') }}" alt="Badge 3" class="footer-badge">
                 </div>
             </div>
 
             {{-- Right: contact --}}
             <div class="footer-contact">
-                <h4 class="footer-heading">Contact Us</h4>
+                <h4 class="footer-heading">{{ $siteContent->value('app-footer', 'contact_heading') }} <x-section-pencil section="app-footer" /></h4>
                 <ul class="footer-contact-list">
                     <li class="footer-contact-item">
-                        <a href="https://www.google.com/maps/search/?api=1&amp;query=Mabalacat%20City%20College%20Dolores" class="footer-contact-button" target="_blank" rel="noopener noreferrer">
+                        <a href="{{ $siteContent->value('app-footer', 'map_url') }}" class="footer-contact-button" target="_blank" rel="noopener noreferrer">
                             <x-icon name="map-pin" size="md" class="footer-contact-icon" />
-                            <span>Dolores, Mabalacat City College</span>
+                            <span>{{ $siteContent->value('app-footer', 'address') }}</span>
                         </a>
                     </li>
                     <li class="footer-contact-item">
-                        <a href="https://www.facebook.com/ICSSSITE" class="footer-contact-button" target="_blank" rel="noopener noreferrer">
+                        <a href="{{ $siteContent->value('app-footer', 'facebook_url') }}" class="footer-contact-button" target="_blank" rel="noopener noreferrer">
                             <x-icon name="facebook" size="md" class="footer-contact-icon" />
-                            <span>SSITE on Facebook</span>
+                            <span>{{ $siteContent->value('app-footer', 'facebook_label') }}</span>
                         </a>
                     </li>
                     <li class="footer-contact-item">
-                        <a href="mailto:ssite@gmail.com" class="footer-contact-button">
+                        <a href="mailto:{{ $siteContent->value('app-footer', 'contact_email') }}" class="footer-contact-button">
                             <x-icon name="mail" size="md" class="footer-contact-icon" />
-                            <span>ssite@gmail.com</span>
+                            <span>{{ $siteContent->value('app-footer', 'contact_email') }}</span>
                         </a>
                     </li>
                 </ul>

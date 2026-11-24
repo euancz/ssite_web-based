@@ -1,3 +1,4 @@
+@inject('siteContent', 'App\Support\SiteContent')
 @extends('layouts.app')
 
 @section('title', 'Documents')
@@ -10,9 +11,10 @@
 @section('content')
 <div class="documents-page site-page">
     <x-ui.stories-banner
-        eyebrow="Documents • Records • Archives"
-        title="Official records"
-        description="Browse SSITE’s official documents and organizational records in one accessible location."
+            edit-section="documents"
+        :eyebrow="$siteContent->value('documents', 'eyebrow')"
+        :title="$siteContent->value('documents', 'title')"
+        :description="$siteContent->value('documents', 'description')"
         labelledby="documents-title"
     />
 

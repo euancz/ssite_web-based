@@ -12,7 +12,8 @@ class LandingPageTest extends TestCase
 
         $this->get('/')
             ->assertOk()
-            ->assertSee('Download app')
+            ->assertSee('>Mobile app</a>', false)
+            ->assertSee('SSITE mobile app')
             ->assertSee('App download coming soon')
             ->assertSee('disabled aria-describedby="app-status"', false)
             ->assertSee('Continue in your browser')

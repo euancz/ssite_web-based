@@ -1,5 +1,6 @@
 @props([
     'variant' => 'index',
+    'editSection' => null,
     'initialLoading' => false,
     'backUrl' => null,
     'backLabel' => 'Back to posts',
@@ -44,6 +45,7 @@
         <x-ui.page-hero
             :title="$title"
             :description="$description"
+            :edit-section="$editSection"
             class="post-feed-heading"
             labelledby="post-feed-title"
         />

@@ -1,14 +1,16 @@
+@inject('siteContent', 'App\Support\SiteContent')
 @extends('layouts.app')
 
 @section('title', 'Activities')
 
 @section('content')
 <x-posts.feed-frame
+    edit-section="activities"
     variant="index"
     :initial-loading="$pageDataPending ?? false"
     stylesheet="activities"
-    title="Activities"
-    description="Read and manage SSITE activities."
+    :title="$siteContent->value('activities', 'title')"
+    :description="$siteContent->value('activities', 'description')"
     :policy-class="\App\Models\Activity::class"
     create-route="activities.create"
     composer-prompt="Post an activity…"

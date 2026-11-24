@@ -1,3 +1,4 @@
+@inject('siteContent', 'App\Support\SiteContent')
 @extends(request()->header('X-SSITE-Page-Data') === '1' ? 'layouts.page-data' : 'layouts.app')
 
 @section('title', 'Home')
@@ -13,37 +14,37 @@
     <section class="community-hero" aria-labelledby="home-hero-title">
         <div class="community-hero-inner">
             <div class="community-hero-copy">
-                <h1 id="home-hero-title">SSITE</h1>
-                <p class="community-hero-campus">Mabalacat City College</p>
-                <p class="community-hero-description">Catch up on campus stories, student activities, and achievements.</p>
+                <h1 id="home-hero-title">{{ $siteContent->value('home-banner', 'heading') }} <x-section-pencil section="home-banner" /></h1>
+                <p class="community-hero-campus">{{ $siteContent->value('home-banner', 'campus') }}</p>
+                <p class="community-hero-description">{{ $siteContent->value('home-banner', 'description') }}</p>
                 <div class="community-hero-actions">
-                    <a class="community-hero-button" href="{{ route('discover') }}">Browse posts <x-icon name="arrow-right" size="sm" /></a>
-                    <a class="community-hero-more" href="#home-news-title">Latest updates <x-icon name="chevron-down" size="sm" /></a>
+                    <a class="community-hero-button" href="{{ route('discover') }}">{{ $siteContent->value('home-banner', 'browse_button') }} <x-icon name="arrow-right" size="sm" /></a>
+                    <a class="community-hero-more" href="#home-news-title">{{ $siteContent->value('home-banner', 'updates_link') }} <x-icon name="chevron-down" size="sm" /></a>
                 </div>
             </div>
             <figure class="community-hero-identity">
                 <div class="community-hero-seal">
-                    <img src="{{ asset('images/SSITE LOGO.png') }}" alt="" width="240" height="240" fetchpriority="high" decoding="async">
+                    <img src="{{ $siteContent->image('home-banner', 'logo_image') }}" alt="" width="240" height="240" fetchpriority="high" decoding="async">
                 </div>
-                <figcaption>Student Society in Information Technology Education</figcaption>
+                <figcaption>{{ $siteContent->value('home-banner', 'caption') }}</figcaption>
             </figure>
         </div>
     </section>
 
     <section class="home-intro" aria-labelledby="home-intro-title">
         <div class="home-intro-image">
-            <img src="{{ asset('images/rawri-community-cutout.png') }}" alt="SSITE wolf mascot wearing a hoodie" width="360" height="316" loading="eager" decoding="async">
+            <img src="{{ $siteContent->image('home-welcome', 'mascot_image') }}" alt="{{ $siteContent->value('home-welcome', 'mascot_description') }}" width="360" height="316" loading="eager" decoding="async">
         </div>
         <div class="home-hero-copy">
-            <p class="home-eyebrow">Student Society in Information Technology Education</p>
-            <h2 id="home-intro-title">Welcome to the SSITE Community!</h2>
-            <p>Welcome to the official website of the Student Society in Information Technology Education (SSITE) of Mabalacat City College. Stay connected with our latest announcements, activities, articles, and achievements as we bring IT students together through collaboration, innovation, and meaningful experiences.</p>
+            <p class="home-eyebrow">{{ $siteContent->value('home-welcome', 'eyebrow') }}</p>
+            <h2 id="home-intro-title">{{ $siteContent->value('home-welcome', 'heading') }} <x-section-pencil section="home-welcome" /></h2>
+            <p>{{ $siteContent->value('home-welcome', 'description') }}</p>
         </div>
     </section>
 
     <section class="home-section home-news" aria-labelledby="home-news-title">
         <div class="section-heading">
-            <h2 id="home-news-title">What's New at SSITE</h2>
+            <h2 id="home-news-title">{{ $siteContent->value('home-news', 'heading') }} <x-section-pencil section="home-news" /></h2>
         </div>
 
         <div class="news-grid" data-page-data="news" @if ($pageDataPending ?? false) aria-busy="true" @endif>
@@ -118,8 +119,8 @@
 
     <section class="home-leaders" aria-labelledby="home-leaders-title">
         <div class="section-heading">
-            <h2 id="home-leaders-title">Meet the Leaders of SSITE!</h2>
-            <p>Meet the SSITE-MCC student leaders dedicated to serving the IT community, bringing ideas to life, and creating meaningful opportunities for students.</p>
+            <h2 id="home-leaders-title">{{ $siteContent->value('home-leaders', 'heading') }} <x-section-pencil section="home-leaders" /></h2>
+            <p>{{ $siteContent->value('home-leaders', 'description') }}</p>
         </div>
         <div class="leaders-carousel" data-leaders-carousel>
             <button type="button" class="leaders-carousel-button leaders-carousel-button--previous" data-leaders-previous aria-label="View previous leaders"><span aria-hidden="true">‹</span></button>
@@ -161,8 +162,8 @@
 
     <section class="home-sponsors home-section" aria-labelledby="home-sponsors-title">
         <div class="section-heading">
-            <h2 id="home-sponsors-title">The Network Behind SSITE</h2>
-            <p>Recognizing the partners and sponsors whose support, collaboration, and shared vision help SSITE create meaningful opportunities for IT students and the community.</p>
+            <h2 id="home-sponsors-title">{{ $siteContent->value('home-sponsors', 'heading') }} <x-section-pencil section="home-sponsors" /></h2>
+            <p>{{ $siteContent->value('home-sponsors', 'description') }}</p>
         </div>
         <div class="sponsor-grid" data-page-data="sponsors" @if ($pageDataPending ?? false) aria-busy="true" @endif>
             @if ($pageDataPending ?? false)

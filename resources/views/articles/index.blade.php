@@ -1,14 +1,16 @@
+@inject('siteContent', 'App\Support\SiteContent')
 @extends('layouts.app')
 
 @section('title', 'Articles')
 
 @section('content')
 <x-posts.feed-frame
+    edit-section="articles"
     variant="index"
     :initial-loading="$pageDataPending ?? false"
     stylesheet="articles"
-    title="Articles"
-    description="Read and manage SSITE articles."
+    :title="$siteContent->value('articles', 'title')"
+    :description="$siteContent->value('articles', 'description')"
     :policy-class="\App\Models\Article::class"
     create-route="articles.create"
     composer-prompt="Post an article…"
